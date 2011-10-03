@@ -104,6 +104,7 @@ class SerialDeviceServer( LabradServer ):
             if timeout is not None: ser.timeout( timeout )
             if baudrate is not None: ser.baudrate( baudrate )
             self.write = lambda s: ser.write( s )
+            self.writeline = lambda s: ser.write_line(s)
             self.read = lambda x = 0: ser.read( x )
             self.readline = lambda: ser.read_line()
             self.close = lambda: ser.close()
