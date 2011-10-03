@@ -1,0 +1,29 @@
+﻿Build started 4/6/2011 2:56:41 PM.
+     1>Project "c:\Users\data-user\documents\visual studio 2010\Projects\startWLM\startWLM\startWLM.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching "Debug\startWLM.unsuccessfulbuild".
+       ClCompile:
+         All outputs are up-to-date.
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\startWLM.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt startWLM.cpp
+         startWLM.cpp
+       ManifestResourceCompile:
+         All outputs are up-to-date.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\data-user\documents\visual studio 2010\Projects\startWLM\Debug\startWLM.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\startWLM.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"c:\users\data-user\documents\visual studio 2010\Projects\startWLM\Debug\startWLM.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\data-user\documents\visual studio 2010\Projects\startWLM\Debug\startWLM.lib" /MACHINE:X86 Debug\startWLM.exe.embed.manifest.res
+         Debug\startWLM.obj
+         Debug\stdafx.obj
+         "..\..\..\..\Wavelength Meter\startWLM\startWLM\wlmData.lib"
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\startWLM.exe.embed.manifest" /manifest Debug\startWLM.exe.intermediate.manifest
+         All outputs are up-to-date.
+       LinkEmbedManifest:
+         All outputs are up-to-date.
+         startWLM.vcxproj -> c:\users\data-user\documents\visual studio 2010\Projects\startWLM\Debug\startWLM.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\startWLM.unsuccessfulbuild".
+         Touching "Debug\startWLM.lastbuildstate".
+     1>Done Building Project "c:\Users\data-user\documents\visual studio 2010\Projects\startWLM\startWLM\startWLM.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.81
