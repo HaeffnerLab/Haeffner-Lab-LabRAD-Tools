@@ -38,14 +38,12 @@ class doublePassWidget(QtGui.QWidget):
         yield self.server.addListener(listener = self.followSignal, source = None, ID = SIGNALID)
     
     def followSignal(self, x, (chanName,typ , value)):
-        print (chanName,typ , value)
         widget = self.d[chanName]
         if typ == 'frequency':
             widget.spinFreq.blockSignals(True)
             widget.spinFreq.setValue(value)
             widget.spinFreq.blockSignals(False)
         elif typ == 'amplitude':
-            print value
             widget.spinPower.blockSignals(True)
             widget.spinPower.setValue(value)
             widget.spinPower.blockSignals(False)
@@ -67,7 +65,7 @@ class doublePassWidget(QtGui.QWidget):
             ampl = yield self.server.amplitude()
             outp = yield self.server.output()
             freqRange = yield self.server.frequency_range()
-            amplRange = yield self.server.amplitude_range()         
+            amplRange = yield self.server.amplitude_range()      
             widget = self.d[chanName]
             widget.setPowerRange(amplRange)
             widget.setFreqRange(freqRange)
