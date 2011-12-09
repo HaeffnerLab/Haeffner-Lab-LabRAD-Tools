@@ -1,12 +1,11 @@
 #Created on Aug 08, 2011
 #@author: Michael Ramm, Haeffner Lab
 #Thanks for code ideas from Quanta Lab, MIT
-
-"""
+'''
 ### BEGIN NODE INFO
 [info]
 name = TimeResolvedFPGA
-version = 1.0
+version = 2.0
 description = 
 instancename = TimeResolvedFPGA
 
@@ -18,7 +17,7 @@ timeout = 20
 message = 987654321
 timeout = 20
 ### END NODE INFO
-"""
+'''
 
 import ok
 from labrad.server import LabradServer, setting
@@ -90,7 +89,8 @@ class TimeResolvedFPGA(LabradServer):
         self.singleReadingDeferred = Deferred()
         yield deferToThread(self._resetBoard)
         reactor.callLater(0, self.doSingleReading, buflength)
-        yield deferToThread(time.sleep, 0.020) #delay to make sure the previous command got to the  ReadFromBlockPipeOut line
+        #delay to make sure the previous command got to the  ReadFromBlockPipeOut line and FPGA is ready to be triggered
+        yield deferToThread(time.sleep, 0.020) 
     
     @inlineCallbacks
     def doSingleReading(self, buflength):
@@ -100,6 +100,7 @@ class TimeResolvedFPGA(LabradServer):
         self.xem.ActivateTriggerIn(0x40,0) #reset the board and FIFO
         
     def _singleReading(self, buflength):
+        #xem API does not allow for timeouts, so the only way to get out of ReadFromBlockPipeOut is to have the function complete
         buf = '\x00'*buflength
         self.xem.ReadFromBlockPipeOut(0xa0,1024,buf)
         self.inRequest = False
@@ -122,30 +123,19 @@ class TimeResolvedFPGA(LabradServer):
         times = powers * 8 * timeResolution
         return times
         
-    @setting(1, 'Get Result of Measurement', returns = '((wvv)?)')
+    @setting(1, 'Get Result of Measurement', returns = '*v')
     def getSingleResult(self, c):
         """
         Acquires the result of a single reading requested earlier
-        Output:
-        The raw data is a binary expression where each 0 corresponds to no photons
-        and 1 corresponds to a hit per one clock cycle of the FPGA clock.
-        The function compresses the data and put into a 2D numpy array by doing the following:
-        1. The binary data is split into a list of bytes (LB), and each byte gets converted to decimal
-        where most bytes are 0 as no counts took place in 8 clock cycles
-        2. We return a 2D numpy array, where the first row is the position of nonzero elements in LB
-        and the second row are those corresponding elements.
-        There operations have been found to be much faster than the data transfer rate from FPGA
+        The output are the time tags of arriving photons
         """
-        #may need to implement a timeout by checking if  self.singleReadingDeferred has fired by asking
-        #of self.inRequest and only yielding to self.singleReadingDeferred when False
         if self.singleReadingDeferred is None: raise "Single reading was not previously requested"
         raw = yield self.singleReadingDeferred
         self.singleReadingDeferred = None
-        data = numpy.fromstring(raw, dtype = numpy.uint16)        
-        nzindeces = numpy.array(data.nonzero()[0], dtype=numpy.int)
-        nzelems = numpy.array(data[nzindeces],dtype=numpy.int)
-        result = numpy.vstack((nzindeces,nzelems)).transpose()
-        returnValue(((data.size, self.timelength, timeResolution),result))
+        data = numpy.fromstring(raw, dtype = numpy.uint16)
+        timetags = data.nonzero()[0]*timeResolution * 16
+        del(data)
+        returnValue(timetags)
         
     @setting(2, 'Set Time Length', timelength = 'v[s]', returns = '')
     def setTimeLength(self, c, timelength):
