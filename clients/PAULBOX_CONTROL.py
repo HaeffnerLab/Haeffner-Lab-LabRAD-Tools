@@ -1,114 +1,146 @@
 import sys
-from PyQt4 import QtGui
-from PyQt4 import QtCore, uic
-import os
+from PyQt4 import QtGui, QtCore
 import labrad
 
-NUM_ENTRIES = 7
+class script():
+    def __init__(self, name):
+        self.name = name
+        self.floatDict = {}
+        self.boolDict = {}
+    
+    def addFloat(self, name, value, min, max):
+        self.floatDict[name] = [value, min, max]
+
+class floatLayout():
+    def __init__(self):
+        self.NUM_ENTRIES = 10
+        self.d = {}
+        self.makeLayout()
+        
+    def makeLayout(self):
+        self.layout = QtGui.QGridLayout()
+        for entry in range(self.NUM_ENTRIES):
+            name = QtGui.QLineEdit()
+            val = QtGui.QDoubleSpinBox()
+            val.setMinimum(0.0)
+            val.setMaximum(100000000.0)
+            min = QtGui.QLineEdit()
+            max = QtGui.QLineEdit()           
+            self.layout.addWidget(name, entry, 0)
+            self.layout.addWidget(val, entry, 1)
+            self.layout.addWidget(min, entry, 2)
+            self.layout.addWidget(max, entry, 3)
+            self.d[entry] = [name, val, min, max]
+            
+    def getLayout(self):
+        return self.layout
+    
+    def setFloats(self, script):
+        for position,name in enumerate(script.floatDict.keys()):
+            [value, min, max] = script.floatDict[name]
+            [nameWidget, valWidget, minWidget, maxWidget] = self.d[position]
+            nameWidget.setText(name)
+            valWidget.setValue(float(value))
+            minWidget.setText(min)
+            maxWidget.setText(max)
+        for position in range(position+1, self.NUM_ENTRIES): #clear the rest
+            self.clearEntry(position)
+    
+    def clearEntry(self, position):
+        for widget in self.d[position]:
+            widget.clear()
+    
+    def getFloats(self):
+        list = []
+        for entry in self.d.itervalues():
+            name = entry[0].text()
+            value = entry[1].value()
+            if name.length():
+                list.append(['FLOAT',str(name),str(value)])
+        return list
 
 class PAULBOX_CONTROL( QtGui.QWidget ):
-    def __init__( self,server, parent = None ):
+    def __init__( self, server, parent = None ):
         QtGui.QWidget.__init__( self, parent )
-        basepath = os.environ.get('LABRADPATH',None)
-        if not basepath:
-            raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'lattice/clients/qtui/paulboxfrontend.ui')
-        uic.loadUi(path,self)
         self.pbox = server
-        self.floatnames = [''] * NUM_ENTRIES
-        self.floatval = [''] * NUM_ENTRIES
-        self.minfloatval = [''] * NUM_ENTRIES
-        self.maxfloatval = [''] * NUM_ENTRIES
-        self.floatnameledits = [self.fnamelineEdit_1, self.fnamelineEdit_2, self.fnamelineEdit_3, self.fnamelineEdit_4, self.fnamelineEdit_5, self.fnamelineEdit_6, self.fnamelineEdit_7]
-        self.floatvalsbox = [self.fvaldoubleSpinBox_1, self.fvaldoubleSpinBox_2, self.fvaldoubleSpinBox_3, self.fvaldoubleSpinBox_4, self.fvaldoubleSpinBox_5, self.fvaldoubleSpinBox_6, self.fvaldoubleSpinBox_7]
-        self.minfloatvalledits = [self.minlineEdit_1, self.minlineEdit_2, self.minlineEdit_3, self.minlineEdit_4, self.minlineEdit_5, self.minlineEdit_6, self.minlineEdit_7]
-        self.maxfloatvalledits = [self.maxlineEdit_1, self.maxlineEdit_2, self.maxlineEdit_3, self.maxlineEdit_4, self.maxlineEdit_5, self.maxlineEdit_6, self.maxlineEdit_7]
-        #also do above for boolean names and default values
-	    #connect functions
-        self.connect( self.scriptBox, QtCore.SIGNAL( 'currentIndexChanged(int)' ), self.scriptSelected )
-        self.connect( self.execButton, QtCore.SIGNAL( 'clicked()' ), self.executeScript )
-        self.loadscriptnames()
+        self.script = script
+        self.scriptDict = {}
+        self.floatLayout = floatLayout()
+        self.createLayout()
+        self.loadScriptNames()
+        self.loadIntoLayout()
 
-    def loadscriptnames( self ):
-        for name in self.pbox.get_available_scripts():
-            self.scriptBox.addItem( name )
+    def createLayout(self):
+        def makeTitle():
+            title = QtGui.QLabel("Paul\'s Box Control")
+            title.setAlignment(QtCore.Qt.AlignHCenter)
+            title.setFont(QtGui.QFont("MS Shell Dlg",12, 75))
+            return title
+        
+        def makeSubTitle():
+            subtitle = QtGui.QHBoxLayout()
+            label = QtGui.QLabel("Script")
+            scriptbox = QtGui.QComboBox()
+            scriptbox.setFont(QtGui.QFont("MS Shell Dlg",10))
+            execute = QtGui.QPushButton("Execute")
+            refresh = QtGui.QPushButton("Refresh")
+            for widget in [label, scriptbox, execute, refresh]:
+                subtitle.addWidget(widget)
+            #connect functions
+            scriptbox.currentIndexChanged.connect(self.scriptSelected)
+            execute.clicked.connect(self.executeScript)
+            refresh.clicked.connect(self.reloadScripts)
+            self.scriptBox = scriptbox
+            return subtitle
+        
+        layout = QtGui.QVBoxLayout()
+        title = makeTitle()
+        subtitle = makeSubTitle()
+        layout.addWidget(title)
+        layout.addLayout(subtitle)
+        fl = self.floatLayout.getLayout()
+        layout.addLayout(fl)
+        self.setLayout(layout)
 
-    #once the user select the script, fills in the floatnames/floatval... data structure with variables
-    #pertaining to that script
+    def loadScriptNames( self ):
+        self.pbox.reload_scripts()
+        for scriptname in self.pbox.get_available_scripts():
+            script = self.script(scriptname)
+            varlist = self.pbox.get_variable_list( scriptname )
+            for entry in varlist:
+                if entry[1] =='float':
+                    floatname = entry[0]
+                    value = entry[2]
+                    min = entry[3]
+                    max = entry[4]
+                    script.addFloat(floatname, value, min, max)
+            self.scriptDict[scriptname]=script
+        
+    def loadIntoLayout(self):
+        names = self.scriptDict.keys()
+        names.sort()
+        for name in names:
+            self.scriptBox.addItem(name, name)
+    
+    def reloadScripts(self):
+        for item in self.scriptDict.itervalues():
+            del(item)
+        self.scriptBox.clear()
+        self.scriptDict = {}
+        self.loadScriptNames()
+        self.loadIntoLayout()
+
     def scriptSelected( self, item ):
-        selectedname = str( self.scriptBox.itemText( item ) )
-        varlist = self.pbox.get_variable_list( selectedname )
-        #clears existing information
-        self.floatnames = [''] * NUM_ENTRIES
-        self.floatval = [''] * NUM_ENTRIES
-        self.minfloatval = [''] * NUM_ENTRIES
-        self.maxfloatval = [''] * NUM_ENTRIES
-        currentfloat = 0#determines how many fields have been filled so far
-        currentbool = 0
-        for setting in varlist:
-            if setting:#fix to make sure empty sequences are displayed
-                varname = setting[0]
-                vartype = setting[1]
-                defvalue = setting[2]
-                if len( setting ) > 3:
-                    minvalue = setting[3]
-                    maxvalue = setting[4]
-                else:
-                    minvalue = ''
-                    maxvalue = ''
-                if vartype == 'float':
-                    self.floatnames[currentfloat] = varname
-                    self.floatval[currentfloat] = defvalue
-                    self.minfloatval[currentfloat] = minvalue
-                    self.maxfloatval[currentfloat] = maxvalue
-                    currentfloat = currentfloat + 1
-                elif vartype == 'bool':
-                    pass #populate booleans
-        self.drawValues()
-
-    def drawValues( self ):
-        for i in range( NUM_ENTRIES ):
-            #add names
-            name = self.floatnames[i]
-            if name != '':
-                self.floatnameledits[i].setEnabled( True )
-                self.floatnameledits[i].setText( name )
-            else:
-                self.floatnameledits[i].setEnabled( False )
-                self.floatnameledits[i].setText( '' )
-            #add min/max
-            min = self.minfloatval[i]
-            if min != '':
-                self.minfloatvalledits[i].setEnabled( True )
-                self.minfloatvalledits[i].setText( min )
-            else:
-                self.minfloatvalledits[i].setEnabled( False )
-                self.minfloatvalledits[i].setText( '' )
-            max = self.maxfloatval[i]
-            if max != '':
-                self.maxfloatvalledits[i].setEnabled( True )
-                self.maxfloatvalledits[i].setText( max )
-            else:
-                self.maxfloatvalledits[i].setEnabled( False )
-                self.maxfloatvalledits[i].setText( '' )
-            val = self.floatval[i]
-            if val != '':
-                self.floatvalsbox[i].setEnabled( True )
-                self.floatvalsbox[i].setValue( float( val ) )
-            else:
-                self.floatvalsbox[i].setValue( 0 )
-                self.floatvalsbox[i].setEnabled( False )
+        name = str(self.scriptBox.itemData(item).toString())
+        if name in self.scriptDict.keys():
+            script = self.scriptDict[name]
+            self.floatLayout.setFloats(script)
+                
     def executeScript( self ):
-        #TODO in the future, add support for booleans by also reading them out
-        name = str( self.scriptBox.currentText() )
-        varlist = []
-        for i in range( NUM_ENTRIES ):
-            if self.floatnameledits[i].isEnabled():
-                varname = str( self.floatnameledits[i].text() )
-                varvalue = str( self.floatvalsbox[i].value() )
-                varlist.append( ['FLOAT', varname, varvalue] )
-        self.pbox.send_command( name, varlist )
-        print 'Paul Box Script Sent'
+        item = self.scriptBox.currentIndex() 
+        name = str(self.scriptBox.itemData(item).toString())
+        floatlist = self.floatLayout.getFloats()
+        self.pbox.send_command( name, floatlist )
 
 if __name__=='__main__':
     cxn = labrad.connect()
