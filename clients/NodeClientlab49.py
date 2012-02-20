@@ -12,14 +12,11 @@ except:
 
 #keys are possible node servers, values is list of servers that should
 #be started on each node server
-nodeDict = {'node_lattice_pc':
-				['Data Vault', 'Serial Server', 'DC Box', 'HP Server', 'RS Server red', 'PMT server', 'Direct Ethernet', 'Time Resolved Server', 'Agilent Server', 'Compensation Box','RS Server blue'],
+nodeDict = {
 			'node_lab_49':
 				['Serial Server', 'LaserDAC'],
-			'node_paul_s_box':
-				['Paul Box']
 			}
-
+			
 for node in ['node_lab_49']:
 	#make sure all node servers are up
 	if not node in cxn.servers: print node + ' is not running'
@@ -37,4 +34,6 @@ for node in ['node_lab_49']:
 				except:
 					print 'ERROR with ' + server
 					
-time.sleep(10)
+
+print 'DONE'
+time.sleep(3)

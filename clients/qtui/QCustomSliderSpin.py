@@ -9,7 +9,7 @@ class QCustomSliderSpin(QtGui.QWidget):
         basepath = os.environ.get('LABRADPATH',None)
         if not basepath:
             raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'lattice/clients/qtui/sliderspin.ui')
+        path = os.path.join(basepath,'clients/qtui/sliderspin.ui')
         uic.loadUi(path,self)
         self.title.setText(title)
         self.unit.setText(unit)

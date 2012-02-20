@@ -1,8 +1,25 @@
-'''
-Created on Jan 26, 2011
-Last Modified July 25, 2011
-@author: Christopher Reilly, Michael Ramm
-'''
+#Created on Jan 26, 2011
+#Last Modified July 25, 2011
+#@author: Christopher Reilly, Michael Ramm
+
+"""
+### BEGIN NODE INFO
+[info]
+name = LaserDAC
+version = 1.1
+description = 
+instancename = LaserDAC
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 20
+### END NODE INFO
+"""
+
 from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
 from twisted.internet import reactor
 from twisted.internet.defer import returnValue

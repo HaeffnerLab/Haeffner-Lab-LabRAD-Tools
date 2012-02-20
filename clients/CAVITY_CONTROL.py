@@ -102,9 +102,9 @@ class cavityWidget(QtGui.QWidget):
         yield self.registry.cd(['','Clients','Cavity Control'],True)
         try:
             range = yield self.registry.get(rangeName)
-        except Error, e:
-            if e.code is 21:
-                range = [0,2500] #default min and max levels
+        except:
+            print 'problem with acquiring range from registry'
+            range = [0,2500]
         returnValue( range )
     
     #if inputs are updated by user, send the values to server

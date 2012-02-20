@@ -46,7 +46,7 @@ class multiplexerWidget(QtGui.QWidget):
         basepath = os.environ.get('LABRADPATH',None)
         if not basepath:
             raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'lattice/clients/qtui/Multiplexer.ui')
+        path = os.path.join(basepath,'clients/qtui/Multiplexer.ui')
         uic.loadUi(path,self)
         self.createDict()
         self.connect() 
@@ -62,10 +62,14 @@ class multiplexerWidget(QtGui.QWidget):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
+        from labrad.types import Error
         self.cxn = yield connectAsync()
-        self.server = yield self.cxn.multiplexer_server
-        yield self.initializeGUI()
-        yield self.setupListeners()
+        try:
+            self.server = yield self.cxn.multiplexer_server
+            yield self.initializeGUI()
+            yield self.setupListeners()
+        except:
+            self.setEnabled(False)
         
     @inlineCallbacks
     def initializeGUI(self):
@@ -169,7 +173,7 @@ class multiplexerChannel(QtGui.QWidget):
         basepath = os.environ.get('LABRADPATH',None)
         if not basepath:
             raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'lattice/clients/qtui/MultiplexerChannel.ui')
+        path = os.path.join(basepath,'clients/qtui/MultiplexerChannel.ui')
         uic.loadUi(path,self)
         self.RGBconverter = RGB.RGBconverter()
         self.setColor(wavelength)
