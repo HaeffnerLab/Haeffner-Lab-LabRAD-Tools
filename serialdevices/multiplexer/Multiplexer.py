@@ -132,6 +132,10 @@ class Multiplexer( SerialDeviceServer ):
         self.info.addChannel(chanName = '866', chanNumber = 5, wavelength = '866')
         self.info.addChannel(chanName = '732', chanNumber = 9, wavelength = '732')
         self.info.addChannel(chanName = '397s', chanNumber = 10, wavelength = '397')
+        self.info.addChannel(chanName = '729', chanNumber = 2, wavelength = '729')
+        self.info.addChannel(chanName = '854', chanNumber = 1, wavelength = '854')
+        self.info.addChannel(chanName = '405', chanNumber = 11, wavelength = '405')
+        
         
     @inlineCallbacks
     def loadChannelInfo(self):
