@@ -66,7 +66,7 @@ class multiplexerWidget(QtGui.QWidget):
     def connect(self):
         from labrad.wrappers import connectAsync
         from labrad.types import Error
-        self.cxn = yield connectAsync('192.168.169.49')
+        self.cxn = yield connectAsync()
         try:
             self.server = yield self.cxn.multiplexer_server
             yield self.initializeGUI()
