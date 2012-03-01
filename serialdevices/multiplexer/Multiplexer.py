@@ -15,7 +15,7 @@ from labrad.server import Signal
 NUMCHANNELS = 16
 TIMEOUT = 1.0
 BAUDRATE = 115200
-DelayWhenSwtch = 300.0 #additional delay needed to complete switching
+DelayWhenSwtch = 600.0 #300.0 works for short exposures#additional delay needed to complete switching
 SetExposureFile = 'setExposure.exe'
 GetFreqFile = 'getFreq.exe'
 NotMeasuredCode = -6.0
@@ -211,9 +211,9 @@ class Multiplexer( SerialDeviceServer ):
         self.listeners.remove(c.ID)
     
     def getOtherListeners(self,c):
-     notified = self.listeners.copy()
-     notified.remove(c.ID)
-     return notified
+        notified = self.listeners.copy()
+        notified.remove(c.ID)
+        return notified
     
     @setting(0,'Start Cycling', returns = '')
     def startCycling(self,c):
