@@ -15,7 +15,8 @@ from labrad.server import Signal
 NUMCHANNELS = 16
 TIMEOUT = 1.0
 BAUDRATE = 115200
-DelayWhenSwtch = 600.0 #300.0 works for short exposures#additional delay needed to complete switching
+DelayWhenSwtch = 100.0 #300.0 works for short exposures#additional delay needed to complete switching
+CycleDelay = 100.0 #wait time in between cycles
 SetExposureFile = 'setExposure.exe'
 GetFreqFile = 'getFreq.exe'
 NotMeasuredCode = -6.0
@@ -192,7 +193,7 @@ class Multiplexer( SerialDeviceServer ):
         yield self._setExposure(curExp)
         if switch:
             prevExp = self.info.lastExposure
-            waittime = prevExp + curExp + DelayWhenSwtch
+            waittime = 2*prevExp + 2*curExp + DelayWhenSwtch
             yield deferToThread(time.sleep, waittime / 1000.0)
             self.info.lastExposure = curExp
         else:
@@ -201,7 +202,7 @@ class Multiplexer( SerialDeviceServer ):
         if freq is not self.info.getFreq(next) and self.info.getState(next) and self.isCycling: #if a new frequency is found and still need to measure
             self.info.setFreq(next, freq)
             self.onNewFreq((next, freq))
-        reactor.callLater(0,self.measureChan)
+        reactor.callLater(CycleDelay / 1000.0,self.measureChan)
     
     def initContext(self, c):
         """Initialize a new context object."""
