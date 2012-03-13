@@ -128,15 +128,15 @@ class Multiplexer( SerialDeviceServer ):
     
     def createChannelInfo(self):
         self.info = channelInfo()
-        self.info.addChannel(chanName = '397', chanNumber = 4, wavelength = '397')
-        self.info.addChannel(chanName = '422', chanNumber = 3, wavelength = '422')
-        self.info.addChannel(chanName = '866', chanNumber = 5, wavelength = '866')
-        self.info.addChannel(chanName = '732', chanNumber = 9, wavelength = '732')
-        self.info.addChannel(chanName = '397s', chanNumber = 10, wavelength = '397')
-        self.info.addChannel(chanName = '729', chanNumber = 2, wavelength = '729')
-        self.info.addChannel(chanName = '854', chanNumber = 1, wavelength = '854')
-        self.info.addChannel(chanName = '405', chanNumber = 11, wavelength = '405')
-        
+        self.info.addChannel(chanName = '397', chanNumber = 5, wavelength = '397')
+        self.info.addChannel(chanName = '422', chanNumber = 4, wavelength = '422')
+        self.info.addChannel(chanName = '866', chanNumber = 6, wavelength = '866')
+        self.info.addChannel(chanName = '732', chanNumber = 10, wavelength = '732')
+        self.info.addChannel(chanName = '397s', chanNumber = 11, wavelength = '397')
+        self.info.addChannel(chanName = '729', chanNumber = 3, wavelength = '729')
+        self.info.addChannel(chanName = '854', chanNumber = 2, wavelength = '854')
+        self.info.addChannel(chanName = '405', chanNumber = 12, wavelength = '405')
+        self.info.addChannel(chanName = '397diode', chanNumber = 1, wavelength = '397')
         
     @inlineCallbacks
     def loadChannelInfo(self):
@@ -176,7 +176,7 @@ class Multiplexer( SerialDeviceServer ):
     
     @inlineCallbacks
     def _switchChannel(self, chan):
-        line = 'I1 ' + str(chan+ 1) +'\r' #format specified by DiCon Manual p7
+        line = 'I1 ' + str(chan) +'\r' #format specified by DiCon Manual p7
         yield self.ser.write(line)
             
     @inlineCallbacks

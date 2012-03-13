@@ -61,6 +61,7 @@ class multiplexerWidget(QtGui.QWidget):
         self.d['729'] = widgetWrapper(chanName = '729',wavelength = '729', hint = '411.04196') 
         self.d['854'] = widgetWrapper(chanName = '854',wavelength = '854', hint = '854.00000') 
         self.d['405'] = widgetWrapper(chanName = '405',wavelength = '405', hint = '405.00000') 
+        self.d['397diode'] = widgetWrapper(chanName = '397diode',wavelength = '397', hint = '377.61131')
     
     @inlineCallbacks
     def connect(self):
@@ -102,6 +103,7 @@ class multiplexerWidget(QtGui.QWidget):
         self.grid.addWidget(self.d['729'].widget,2,1)
         self.grid.addWidget(self.d['854'].widget,3,0)
         self.grid.addWidget(self.d['405'].widget,3,1)
+        self.grid.addWidget(self.d['397diode'].widget,4,0)
         
         #connect functions
         self.pushButton.toggled.connect(self.setOnOff)
