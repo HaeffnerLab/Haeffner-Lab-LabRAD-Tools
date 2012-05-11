@@ -67,7 +67,7 @@ class multiplexerWidget(QtGui.QWidget):
     def connect(self):
         from labrad.wrappers import connectAsync
         from labrad.types import Error
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync('192.168.169.49')
         try:
             self.server = yield self.cxn.multiplexer_server
             yield self.initializeGUI()
@@ -101,10 +101,9 @@ class multiplexerWidget(QtGui.QWidget):
         self.grid.addWidget(self.d['732'].widget,1,1)
         self.grid.addWidget(self.d['397s'].widget,2,0)
         self.grid.addWidget(self.d['729'].widget,2,1)
-        self.grid.addWidget(self.d['854'].widget,3,0)
+        self.grid.addWidget(self.d['397diode'].widget,3,0)
         self.grid.addWidget(self.d['405'].widget,3,1)
-        self.grid.addWidget(self.d['397diode'].widget,4,0)
-        
+        self.grid.addWidget(self.d['397inject'].widget,4,0)
         #connect functions
         self.pushButton.toggled.connect(self.setOnOff)
         for widgetWrapper in self.d.values():
