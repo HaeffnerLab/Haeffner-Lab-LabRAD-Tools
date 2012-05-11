@@ -59,9 +59,9 @@ class multiplexerWidget(QtGui.QWidget):
         self.d['732'] = widgetWrapper(chanName = '732',wavelength = '732', hint = '409.09585') 
         self.d['397s'] = widgetWrapper(chanName = '397s',wavelength = '397', hint = '377.61131') 
         self.d['729'] = widgetWrapper(chanName = '729',wavelength = '729', hint = '411.04196') 
-        self.d['854'] = widgetWrapper(chanName = '854',wavelength = '854', hint = '854.00000') 
+        self.d['397diode'] = widgetWrapper(chanName = '397diode',wavelength = '397', hint = '755.22262') 
         self.d['405'] = widgetWrapper(chanName = '405',wavelength = '405', hint = '405.00000') 
-        self.d['397diode'] = widgetWrapper(chanName = '397diode',wavelength = '397', hint = '377.61131')
+        self.d['397inject'] = widgetWrapper(chanName = '397diode',wavelength = '397', hint = '755.22262')
     
     @inlineCallbacks
     def connect(self):

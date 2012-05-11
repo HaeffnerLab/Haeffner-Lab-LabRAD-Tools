@@ -15,8 +15,8 @@ from labrad.server import Signal
 NUMCHANNELS = 16
 TIMEOUT = 1.0
 BAUDRATE = 115200
-DelayWhenSwtch = 100.0 #300.0 works for short exposures#additional delay needed to complete switching
-CycleDelay = 100.0 #wait time in between cycles
+DelayWhenSwtch = 100.0
+CycleDelay = 100.0
 SetExposureFile = 'setExposure.exe'
 GetFreqFile = 'getFreq.exe'
 NotMeasuredCode = -6.0
@@ -134,9 +134,9 @@ class Multiplexer( SerialDeviceServer ):
         self.info.addChannel(chanName = '732', chanNumber = 10, wavelength = '732')
         self.info.addChannel(chanName = '397s', chanNumber = 11, wavelength = '397')
         self.info.addChannel(chanName = '729', chanNumber = 3, wavelength = '729')
-        self.info.addChannel(chanName = '854', chanNumber = 2, wavelength = '854')
+        self.info.addChannel(chanName = '397diode', chanNumber = 2, wavelength = '397diode')
         self.info.addChannel(chanName = '405', chanNumber = 12, wavelength = '405')
-        self.info.addChannel(chanName = '397diode', chanNumber = 1, wavelength = '397')
+        self.info.addChannel(chanName = '397inject', chanNumber = 1, wavelength = '397')
         
     @inlineCallbacks
     def loadChannelInfo(self):
