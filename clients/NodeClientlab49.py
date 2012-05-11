@@ -14,7 +14,7 @@ except:
 #be started on each node server
 nodeDict = {
 			'node_lab_49':
-				['Serial Server', 'LaserDAC'],
+				['Serial Server', 'LaserDAC', 'GPIB Bus','GPIB Device Manager', 'RohdeSchwarz Server'],
 			}
 			
 for node in ['node_lab_49']:
