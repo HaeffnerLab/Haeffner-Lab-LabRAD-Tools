@@ -43,10 +43,8 @@ class multiplexerWidget(QtGui.QWidget):
     def __init__(self, reactor, parent = None):
         super(multiplexerWidget, self).__init__(parent)
         self.reactor = reactor
-        basepath = os.environ.get('LABRADPATH',None)
-        if not basepath:
-            raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'clients/qtui/Multiplexer.ui')
+        basepath =  os.path.dirname(__file__)
+        path = os.path.join(basepath,'..','qtui','Multiplexer.ui')
         uic.loadUi(path,self)
         self.createDict()
         self.connect() 
@@ -124,13 +122,16 @@ class multiplexerWidget(QtGui.QWidget):
         yield self.server.addListener(listener = self.followNewCycling, source = None, ID = SIGNALID4)
     
     def followNewState(self,x,(chanName,state)):
-        self.d[chanName].setState(state, True)
+        if chanName in self.d.keys():
+            self.d[chanName].setState(state, True)
         
     def followNewExposure(self, x, (chanName,exp)):
-        self.d[chanName].setExposure(exp, True)
+        if chanName in self.d.keys():
+            self.d[chanName].setExposure(exp, True)
     
     def followNewFreq(self, x, (chanName, freq)):
-        self.d[chanName].setFreq(freq)
+        if chanName in self.d.keys():
+            self.d[chanName].setFreq(freq)
     
     def followNewCycling(self, x, cycling):
         self.pushButton.blockSignals(True)
@@ -173,14 +174,11 @@ class multiplexerWidget(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()  
 
-                
 class multiplexerChannel(QtGui.QWidget):
     def __init__(self, wavelength, hint, name, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        basepath = os.environ.get('LABRADPATH',None)
-        if not basepath:
-            raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'clients/qtui/MultiplexerChannel.ui')
+        basepath =  os.path.dirname(__file__)
+        path = os.path.join(basepath,'..','qtui','MultiplexerChannel.ui')
         uic.loadUi(path,self)
         self.RGBconverter = RGB.RGBconverter()
         self.setColor(wavelength)

@@ -6,10 +6,8 @@ import os
 class QCustomFreqPower(QtGui.QWidget):
     def __init__(self, title, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        basepath = os.environ.get('LABRADPATH',None)
-        if not basepath:
-            raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'lattice/clients/qtui/powerfreqspin.ui')
+        basepath =  os.path.dirname(__file__)
+        path = os.path.join(basepath, 'powerfreqspin.ui')
         uic.loadUi(path,self)
         self.title.setText(title)
         self.buttonSwitch.clicked.connect(self.setText)
@@ -29,7 +27,7 @@ class QCustomFreqPower(QtGui.QWidget):
     def setFreqNoSignal(self, freq):
         self.spinFreq.blockSignals(True)
         self.spinFreq.setValue(freq)
-        self.spinPower.blockSignals(False)
+        self.spinFreq.blockSignals(False)
     
     def setStateNoSignal(self, state):
         self.buttonSwitch.blockSignals(True)

@@ -8,10 +8,8 @@ class pmtWidget(QtGui.QWidget):
     def __init__(self, reactor, parent=None):
         super(pmtWidget, self).__init__(parent)
         self.reactor = reactor
-        basepath = os.environ.get('LABRADPATH',None)
-        if not basepath:
-            raise Exception('Please set your LABRADPATH environment variable')
-        path = os.path.join(basepath,'lattice/clients/qtui/pmtfrontend.ui')
+        basepath =  os.path.dirname(__file__)
+        path = os.path.join(basepath,"qtui", "pmtfrontend.ui")
         uic.loadUi(path,self)
         self.connect()
         
@@ -41,6 +39,8 @@ class pmtWidget(QtGui.QWidget):
         self.pushButton.setChecked(running)
         self.setText(self.pushButton)
         duration = yield self.server.get_time_length()
+        range = yield self.server.get_time_length_range()
+        self.doubleSpinBox.setRange(*range)
         self.doubleSpinBox.setValue(duration)
     
     def followSignal(self,signal,value):
