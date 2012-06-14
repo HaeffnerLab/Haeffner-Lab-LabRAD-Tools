@@ -1,3 +1,22 @@
+"""
+### BEGIN NODE INFO
+[info]
+name = HighVoltA
+version = 1.1
+description = 
+instancename = HighVoltA
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 20
+### END NODE INFO
+"""
+
+
 '''
 Created on April 5, 2011
 
@@ -7,7 +26,7 @@ Created on April 5, 2011
 from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
 from labrad.types import Error
 from twisted.internet import reactor
-import binascii
+from labrad.server import Signal
 
 SERVERNAME = 'HighVoltA'
 MINRANGE = 0.0
@@ -20,8 +39,6 @@ TIMEOUT = 1.0
 RESP_STRING = 'r'
 #time to wait if correct response not received
 ERROR_TIME = 1.0
-
-
 
 class HighVoltBoxError( SerialConnectionError ):
     errorDict = {
@@ -39,6 +56,8 @@ class HighVoltBoxA( SerialDeviceServer ):
     port = None
     serNode = 'lattice-pc'
     timeout = TIMEOUT
+    
+    onNewVoltage = Signal(795474, 'signal: new voltage', 'v')
 
     @inlineCallbacks
     def initServer( self ):
@@ -52,6 +71,7 @@ class HighVoltBoxA( SerialDeviceServer ):
         
         @raise SerialDeviceError: (For subclass author) Define regKey and serNode attributes
         """
+        self.listeners = set()
         self.createDict()
         self.queue = []
         if not self.regKey or not self.serNode: raise SerialDeviceError( 'Must define regKey and serNode attributes' )
@@ -187,6 +207,7 @@ class HighVoltBoxA( SerialDeviceServer ):
         self.validateInput( voltage )
         self.tryToSend( voltage )
         self.dict['voltage'] = voltage
+        self.notifyOtherListeners(c, voltage, self.onNewVoltage)
 
     @setting( 1 , returns = 'v: voltage' )
     def getVoltage( self, c ):
@@ -196,7 +217,29 @@ class HighVoltBoxA( SerialDeviceServer ):
         value = self.dict['voltage']
         if value is not None: return value
         else: raise HighVoltBoxA( 4 )
-
+    
+    @setting(2, 'Get Range', returns = '(vv)')
+    def getRange(self, c):
+        """
+        Retrieve the voltage range for the device
+        """
+        return MINRANGE,RANGE
+    
+    def initContext(self, c):
+        """Initialize a new context object."""
+        self.listeners.add(c.ID)
+    
+    def expireContext(self, c):
+        self.listeners.remove(c.ID)
+    
+    def notifyOtherListeners(self, context, message, f):
+        """
+        Notifies all listeners except the one in the given context, executing function f
+        """
+        notified = self.listeners.copy()
+        notified.remove(context.ID)
+        f(message,notified)
+        
 if __name__ == "__main__":
     from labrad import util
     util.runServer( HighVoltBoxA() )
