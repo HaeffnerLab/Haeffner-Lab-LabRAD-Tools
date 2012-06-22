@@ -105,7 +105,7 @@ class laserDACServer( SerialDeviceServer ):
         self.channelList.append(Channel(0,'397',397,(0.0,2500.0)))
         self.channelList.append(Channel(1,'866',866,(0.0,2500.0)))
         self.channelList.append(Channel(2,'422',422,(0.0,2500.0)))
-        self.channelList.append(Channel(3,'397S',397,(0.0,2500.0)))
+        self.channelList.append(Channel(3,'854',854,(0.0,2500.0)))
         self.channelList.append(Channel(4,'397D',397,(0.0,2500.0)))
  
     @inlineCallbacks
