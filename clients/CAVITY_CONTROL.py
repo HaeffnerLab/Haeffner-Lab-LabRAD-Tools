@@ -31,10 +31,10 @@ class cavityWidget(QtGui.QWidget):
     
     def createDict(self):
         self.d = {}
-        self.d['397'] =  widgetWrapper( serverName = '397', displayName = '397 Cavity', regName = 'range397', globalRange = (0,2500))
+        self.d['397'] =  widgetWrapper( serverName = '397', displayName = '397 SHG Cavity', regName = 'range397', globalRange = (0,2500))
         self.d['866'] =  widgetWrapper( serverName = '866', displayName = '866 Cavity', regName = 'range866', globalRange = (0,2500))
         self.d['422'] =  widgetWrapper( serverName = '422', displayName = '422 Offset', regName = 'range422', globalRange = (0,2500))
-        self.d['854'] = widgetWrapper( serverName = '854',displayName = '854', regName = 'range854', globalRange = (0,2500))
+        self.d['854'] = widgetWrapper( serverName = '854',displayName = '854 Cavity', regName = 'range854', globalRange = (0,2500))
         self.d['397D'] =  widgetWrapper( serverName = '397D', displayName = '397 Diode Cavity', regName = 'range397D', globalRange = (0,2500))
         
     @inlineCallbacks
