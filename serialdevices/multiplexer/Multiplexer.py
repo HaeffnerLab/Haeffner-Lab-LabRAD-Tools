@@ -135,7 +135,7 @@ class Multiplexer( SerialDeviceServer ):
         self.info.addChannel(chanName = '397s', chanNumber = 11, wavelength = '397')
         self.info.addChannel(chanName = '729', chanNumber = 3, wavelength = '729')
         self.info.addChannel(chanName = '397diode', chanNumber = 2, wavelength = '397')
-        self.info.addChannel(chanName = '405', chanNumber = 12, wavelength = '405')
+        self.info.addChannel(chanName = '854', chanNumber = 12, wavelength = '854')
         self.info.addChannel(chanName = '397inject', chanNumber = 1, wavelength = '397')
         
     @inlineCallbacks
