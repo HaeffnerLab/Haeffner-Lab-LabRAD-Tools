@@ -47,6 +47,8 @@ class Sequence():
             updated = settings.nonzero()
             state[updated] = settings[updated]
             for i in range(len(state)):
+                print state[i]
+                print type(state[i])
                 totalState[i] += self.parent._intToBuf(state[i])
         #add termination
         for i in range(len(totalState)):
