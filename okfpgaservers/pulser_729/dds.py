@@ -76,14 +76,14 @@ class DDS(LabradServer):
         sequence = c.get('sequence')
         #simple error checking
         if not sequence: raise Exception ("Please create new sequence first")
-        if len(values) == 3: #phase not provided
-            for start,freq,ampl in values:
-                sett = self._valToInt(channel, freq, ampl)
-                sequence.addDDS(hardwareAddr, start, sett)
-        else:
-            for start,freq,ampl,phase in values:
-                sett = self._valToInt(channel, freq, ampl, phase)
-                sequence.addDDS(hardwareAddr, start, sett)
+        for value in values:
+            try:
+                start,freq,ampl = value
+                phase  = 0.0
+            except ValueError:
+                start,freq,ampl,phase = value
+            sett = self._valToInt(channel, freq, ampl, phase)
+            sequence.addDDS(hardwareAddr, start, sett)
         
     @setting(46, 'Get DDS Amplitude Range', returns = '(vv)')
     def getDDSAmplRange(self, c):
