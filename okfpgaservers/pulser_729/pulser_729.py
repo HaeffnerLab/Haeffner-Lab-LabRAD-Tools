@@ -58,6 +58,27 @@ class Pulser_729(LabradServer, DDS):
         reactor.callLater(seconds, d.callback, result)
         return d
     
+    @setting(0, "New Sequence", returns = '')
+    def newSequence(self, c):
+        """
+        Create New Pulse Sequence
+        """
+        c['sequence'] = Sequence()
+    
+    @setting(1, "Program Sequence", returns = '')
+    def programSequence(self, c, sequence):
+        """
+        Programs Pulser with the current sequence.
+        """
+        sequence = c.get('sequence')
+        if not sequence: raise Exception ("Please create new sequence first")
+        if sequence.userAddedDDS():
+            self._addDDSInitial(sequence)
+        dds = sequence.progRepresentation()
+        yield self.inCommunication.acquire()
+        if dds is not None: yield deferToThread(self._programDDSSequence, dds)
+        self.inCommunication.release()
+    
     def notifyOtherListeners(self, context, message, f):
         """
         Notifies all listeners except the one in the given context, executing function f
