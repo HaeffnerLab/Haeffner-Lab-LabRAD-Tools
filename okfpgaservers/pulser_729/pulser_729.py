@@ -63,7 +63,7 @@ class Pulser_729(LabradServer, DDS):
         """
         Create New Pulse Sequence
         """
-        c['sequence'] = Sequence()
+        c['sequence'] = Sequence(self)
     
     @setting(1, "Program Sequence", returns = '')
     def programSequence(self, c, sequence):
