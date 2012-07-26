@@ -17,7 +17,7 @@ class Sequence():
             if self.ddsSettings[timeStep][chan]: raise Exception ('Double setting at time {} for DDS channel {}'.format(timeStep, chan))
         else:
             #else, create it
-            self.ddsSettings[timeStep] = numpy.zeros(self.ddsChannelTotal, dtype = numpy.uint32)
+            self.ddsSettings[timeStep] = numpy.zeros(self.ddsChannelTotal, dtype = numpy.uint64)
         self.ddsSettings[timeStep][chan] = setting
 
     def secToStep(self, sec):
