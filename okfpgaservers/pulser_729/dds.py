@@ -148,7 +148,7 @@ class DDS(LabradServer):
         '''
         config = self.ddsDict[chan]
         ans = 0
-        for val,r,m, precision in [(freq,config.boardfreqrange, 1, 32), (ampl,config.boardamplrange, 2 ** 32,  16), (phase,config.boardphaserangge, 2 ** 48,  16)]:
+        for val,r,m, precision in [(freq,config.boardfreqrange, 1, 32), (ampl,config.boardamplrange, 2 ** 32,  16), (phase,config.boardphaserange, 2 ** 48,  16)]:
             minim, maxim = r
             resolution = (maxim - minim) / float(2**precision - 1)
             seq = int((val - minim)/resolution) #sequential representation
@@ -166,8 +166,7 @@ class DDS(LabradServer):
         phase_ampl_num = num // 2**32
         a, b = phase_ampl_num // 256**2, phase_ampl_num % 256**2
         phase_ampl_arr = array.array('B', [a % 256 ,a // 256, b % 256, b // 256])
-        
-        ans = phase_ampl_arr.tostring() + freq_arr.to_string()
+        ans = phase_ampl_arr.tostring() + freq_arr.tostring()
         return ans
     
 #xem.ActivateTriggerIn(0x40,6) #reprogram DDS, implement separately
