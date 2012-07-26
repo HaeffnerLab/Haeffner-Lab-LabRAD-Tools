@@ -42,7 +42,7 @@ class Sequence():
         '''
         if not self.userAddedDDS(): return None
         totalState = ['']*self.ddsChannelTotal
-        state = numpy.zeros(self.ddsChannelTotal, dtype = numpy.uint32)
+        state = numpy.zeros(self.ddsChannelTotal, dtype = numpy.uint64)
         for key,settings in sorted(self.ddsSettings.iteritems()):
             updated = settings.nonzero()
             state[updated] = settings[updated]
