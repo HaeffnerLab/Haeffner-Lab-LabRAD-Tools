@@ -15,16 +15,10 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 '''
-#TODO1 : remove unused imports
-#TODO2 : DDS Signal
-#reset
-#switch off
-
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
-from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
+from twisted.internet.defer import DeferredLock, Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
-import numpy
 from api import api
 from sequence import Sequence
 from dds import DDS
@@ -78,6 +72,11 @@ class Pulser_729(LabradServer, DDS):
         yield self.inCommunication.acquire()
         if dds is not None: yield deferToThread(self._programDDSSequence, dds)
         self.inCommunication.release()
+    
+    @setting(8, "Stop Sequence")
+    def stopSequence(self, c):
+        """Stops any currently running sequence"""
+        self.ddsLock = False
     
     def notifyOtherListeners(self, context, message, f):
         """
