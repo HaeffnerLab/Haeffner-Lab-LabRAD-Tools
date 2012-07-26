@@ -152,6 +152,7 @@ class DDS(LabradServer):
             minim, maxim = r
             resolution = (maxim - minim) / float(2**precision - 1)
             seq = int((val - minim)/resolution) #sequential representation
+            print val, seq, 2**32
             ans += m*seq
         return ans
     
@@ -159,7 +160,8 @@ class DDS(LabradServer):
         '''
         takes the integer representing the setting and returns the buffer string for dds programming
         '''
-        freq_num = num // 2**32
+        freq_num = num % 2**32
+        print freq_num
         a, b = freq_num // 256**2, freq_num % 256**2
         freq_arr = array.array('B', [b % 256 ,b // 256, a % 256, a // 256])
         
@@ -167,6 +169,8 @@ class DDS(LabradServer):
         a, b = phase_ampl_num // 256**2, phase_ampl_num % 256**2
         phase_ampl_arr = array.array('B', [a % 256 ,a // 256, b % 256, b // 256])
         ans = phase_ampl_arr.tostring() + freq_arr.tostring()
+        print [ans]
+        #ans = '\x00\x00\xff\xff\x00\x00\x00\x40'
         return ans
     
 #xem.ActivateTriggerIn(0x40,6) #reprogram DDS, implement separately
