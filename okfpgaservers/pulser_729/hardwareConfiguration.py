@@ -25,8 +25,8 @@ class hardwareConfiguration():
     ddsChannelTotal = 1
     timeResolution = 40.0e-9 #seconds
     okDeviceID = 'Pulser729'
-    okDeviceFile = 'photon.bit'#'pulser729.bit'
+    okDeviceFile = 'pulser729.bit'
     #don't exceed 400 =  boardfreqrangemax / 2.0 for the allowed range
     ddsDict = {
-               '729DP':ddsConfiguration(0, (0.0, 800.0), (0.0,250.0), (-63.0,-3.0), (-63.0,-3.0), (0.0,360.0), 220.0, -33.0)
+               '729DP':ddsConfiguration(0, (0.0, 800.0), (0.0,250.0), (-63.0,-3.0), (-63.0,-3.0), (0.0,360.0), 230.0, -33.0)
                }
