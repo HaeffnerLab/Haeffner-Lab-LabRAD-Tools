@@ -65,9 +65,10 @@ class DDS(LabradServer):
         frequency = self.ddsDict[name].frequency
         returnValue(frequency)
     
-    @setting(45, 'Add DDS Pulses', channel = 's', values = '*(vvv)')
+    @setting(45, 'Add DDS Pulses', channel = 's', values = ['*(vvv)','*(vvvv)'])
     def addDDSPulse(self, c, channel, values):
-        """Takes the name of the DDS channel, and the list of values in the form [(start, frequency, amplitude)]
+        """Takes the name of the DDS channel, and the list of values in the form [(start, frequency, amplitude, phase)] or 
+        [(start, frequency, amplitude)]
         where frequency is in MHz, and amplitude is in dBm
         """
         if channel not in self.ddsDict.keys(): raise Exception("Unknown DDS channel {}".format(channel))
@@ -75,10 +76,15 @@ class DDS(LabradServer):
         sequence = c.get('sequence')
         #simple error checking
         if not sequence: raise Exception ("Please create new sequence first")
-        for start,freq,ampl in values:
-            sett = self._valToInt(channel, freq, ampl)
-            sequence.addDDS(hardwareAddr, start, sett)
-    
+        if len(values) == 3: #phase not provided
+            for start,freq,ampl in values:
+                sett = self._valToInt(channel, freq, ampl)
+                sequence.addDDS(hardwareAddr, start, sett)
+        else:
+            for start,freq,ampl,phase in values:
+                sett = self._valToInt(channel, freq, ampl, phase)
+                sequence.addDDS(hardwareAddr, start, sett)
+        
     @setting(46, 'Get DDS Amplitude Range', returns = '(vv)')
     def getDDSAmplRange(self, c):
         name = c.get('ddschan')
