@@ -97,6 +97,13 @@ class DDS(LabradServer):
         if name is None: raise Exception ("Channel not provided and not selected")
         return self.ddsDict[name].allowedfreqrange
     
+    @setting(48, 'Reset DDS', returns = '')
+    def resetDDS(self , c):
+        yield self.inCommunication.acquire()
+        yield deferToThread(self.api.resetAllDDS)
+        self.inCommunication.release()
+        self.ddsLock = False
+    
     def _checkRange(self, t, name, val):
         if t == 'amplitude':
             r = self.ddsDict[name].allowedamplrange
@@ -175,35 +182,3 @@ class DDS(LabradServer):
         
         ans = phase_ampl_arr.tostring() + freq_arr.tostring()
         return ans
-    
-#xem.ActivateTriggerIn(0x40,6) #reprogram DDS, implement separately
-#xem.ActivateTriggerIn(0x40,4) #reset RAM to position 0 
-#xem.SetWireInValue(0x04,0x00) #set channel
-#xem.UpdateWireIns()
-#
-#data1 = "\x00\x00\xff\xff"
-#freq = 220.0  ### in MHz
-#
-##absolute #0 < freq < 400
-##190 < freq < 250
-##switching - both
-#
-##ampl: -63 < x < -3
-#
-##phase: 16 bit repr of 0-360
-#
-#
-#a, b = freq_round // 256**2, freq_round % 256**2
-#arr = array.array('B', [b % 256 ,b // 256, a % 256, a // 256])
-#data2 = arr.tostring()
-#data = data1 + data2
-
-####phase: \xLSB\xMSB amplitude: \xLSB\xMSB freq: \xLSB\xlSB\xmSB\xMSB
-
-### data = "\x00\x00\x00\x80\x00\x00x\00x\80"
-
-
-
-#xem.WriteToBlockPipeIn(0x81, 2, data)
-#
-#xem.WriteToBlockPipeIn(0x81, 2, "\x00\x00") #terminate
