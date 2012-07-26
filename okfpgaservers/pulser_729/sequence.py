@@ -47,8 +47,9 @@ class Sequence():
             updated = settings.nonzero()
             state[updated] = settings[updated]
             for i in range(len(state)):
-                totalState[i] += self._intToBuf(state[i])
+                totalState[i] += self.parent._intToBuf(state[i])
         #add termination
         for i in range(len(totalState)):
             totalState[i] +=  '\x00\x00'
         return totalState
+    
