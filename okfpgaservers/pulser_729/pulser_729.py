@@ -48,7 +48,7 @@ class Pulser_729(LabradServer):
         yield deferToThread(self.api.resetAllDDS)
         self.inCommunication.release()
         
-    @setting(1, "Program DDS", returns = '*(is)')
+    @setting(1, "Program DDS", program = '*(is)', returns = '')
     def programDDS(self, c, program):
         """
         Programs the DDS, the input is a tuple of channel numbers and buf objects for the channels
@@ -60,6 +60,8 @@ class Pulser_729(LabradServer):
     def _programDDSSequence(self, program):
         '''takes the parsed dds sequence and programs the board with it'''
         for chan, buf in program:
+            buf = '\x00\x00\xff\xff\x00\x00\x00\x40'
+            buf = buf + '\x00\x00' #adding termination
             self.api.setDDSchannel(chan)
             self.api.programDDS(buf)
         self.api.resetAllDDS()

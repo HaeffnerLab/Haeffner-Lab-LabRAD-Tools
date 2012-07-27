@@ -1,3 +1,3 @@
 class hardwareConfiguration(object):
-    okDeviceID = 'Pulser'
-    okDeviceFile = 'photon.bit'
+    okDeviceID = 'Pulser729'
+    okDeviceFile = 'pulser729.bit'
