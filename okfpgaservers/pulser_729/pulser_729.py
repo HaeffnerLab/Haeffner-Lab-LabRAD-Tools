@@ -2,7 +2,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser_729
-version = 0.2
+version = 1.0
 description =
 instancename = Pulser_729
 
@@ -16,8 +16,9 @@ timeout = 20
 ### END NODE INFO
 '''
 from labrad.server import LabradServer, setting
-from twisted.internet.defer import DeferredLock, inlineCallbacks
+from twisted.internet.defer import Deferred, DeferredLock, inlineCallbacks
 from twisted.internet.threads import deferToThread
+from twisted.internet import reactor
 from api import api
 
 class Pulser_729(LabradServer):
@@ -62,6 +63,12 @@ class Pulser_729(LabradServer):
             self.api.setDDSchannel(chan)
             self.api.programDDS(buf)
         self.api.resetAllDDS()
+    
+    def wait(self, seconds, result=None):
+        """Returns a deferred that will be fired later"""
+        d = Deferred()
+        reactor.callLater(seconds, d.callback, result)
+        return d
         
 if __name__ == "__main__":
     from labrad import util
