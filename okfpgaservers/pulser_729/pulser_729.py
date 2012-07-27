@@ -2,7 +2,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser_729
-version = 0.1
+version = 0.2
 description =
 instancename = Pulser_729
 
@@ -15,28 +15,20 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 '''
-from labrad.server import LabradServer, setting, Signal
-from twisted.internet import reactor
-from twisted.internet.defer import DeferredLock, Deferred, inlineCallbacks
+from labrad.server import LabradServer, setting
+from twisted.internet.defer import DeferredLock, inlineCallbacks
 from twisted.internet.threads import deferToThread
 from api import api
-from sequence import Sequence
-from dds import DDS
-from hardwareConfiguration import hardwareConfiguration
 
-class Pulser_729(LabradServer, DDS):
-    name = 'Pulser_729'
-    onSwitch = Signal(611052, 'signal: switch toggled', '(ss)')
+class Pulser_729(LabradServer):
+    
+    name = 'pulser_729'
     
     @inlineCallbacks    
     def initServer(self):
         self.api  = api()
-        self.timeResolution = hardwareConfiguration.timeResolution
-        self.ddsDict = hardwareConfiguration.ddsDict
         self.inCommunication = DeferredLock()
         yield self.initializeBoard()
-        yield self.initializeDDS()
-        self.listeners = set()
     
     @inlineCallbacks
     def initializeBoard(self):
@@ -46,53 +38,31 @@ class Pulser_729(LabradServer, DDS):
             yield self.wait(10.0)
             connected = self.api.connectOKBoard()
     
-    def wait(self, seconds, result=None):
-        """Returns a deferred that will be fired later"""
-        d = Deferred()
-        reactor.callLater(seconds, d.callback, result)
-        return d
-    
-    @setting(0, "New Sequence", returns = '')
-    def newSequence(self, c):
+    @setting(0, 'Reset DDS', returns = '')
+    def resetDDS(self , c):
         """
-        Create New Pulse Sequence
+        Reset the DDS position
         """
-        c['sequence'] = Sequence(self)
-    
-    @setting(1, "Program Sequence", returns = '')
-    def programSequence(self, c, sequence):
-        """
-        Programs Pulser with the current sequence.
-        """
-        sequence = c.get('sequence')
-        if not sequence: raise Exception ("Please create new sequence first")
-        if sequence.userAddedDDS():
-            self._addDDSInitial(sequence)
-        dds = sequence.progRepresentation()
         yield self.inCommunication.acquire()
-        if dds is not None: yield deferToThread(self._programDDSSequence, dds)
+        yield deferToThread(self.api.resetAllDDS)
+        self.inCommunication.release()
+        
+    @setting(1, "Program DDS", returns = '*(is)')
+    def programDDS(self, c, program):
+        """
+        Programs the DDS, the input is a tuple of channel numbers and buf objects for the channels
+        """
+        yield self.inCommunication.acquire()
+        yield deferToThread(self._programDDSSequence, program)
         self.inCommunication.release()
     
-    @setting(8, "Stop Sequence")
-    def stopSequence(self, c):
-        """Stops any currently running sequence"""
-        self.ddsLock = False
-    
-    def notifyOtherListeners(self, context, message, f):
-        """
-        Notifies all listeners except the one in the given context, executing function f
-        """
-        notified = self.listeners.copy()
-        notified.remove(context.ID)
-        f(message,notified)
-    
-    def initContext(self, c):
-        """Initialize a new context object."""
-        self.listeners.add(c.ID)
-    
-    def expireContext(self, c):
-        self.listeners.remove(c.ID)
-
+    def _programDDSSequence(self, program):
+        '''takes the parsed dds sequence and programs the board with it'''
+        for chan, buf in program:
+            self.api.setDDSchannel(chan)
+            self.api.programDDS(buf)
+        self.api.resetAllDDS()
+        
 if __name__ == "__main__":
     from labrad import util
     util.runServer( Pulser_729() )

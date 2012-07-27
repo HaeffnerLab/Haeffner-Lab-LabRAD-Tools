@@ -29,7 +29,6 @@ class Sequence():
         else:
             #else, create it
             self.ddsSettings[timeStep] = numpy.zeros(self.ddsChannelTotal, dtype = numpy.uint32)
-        print 'adding setting', setting
         self.ddsSettings[timeStep][chan] = setting
             
     def addPulse(self, channel, start, duration):

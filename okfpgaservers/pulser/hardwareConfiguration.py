@@ -1,4 +1,4 @@
-class channelConfiguration():
+class channelConfiguration(object):
     """
     Stores complete configuration for each of the channels
     """
@@ -8,30 +8,30 @@ class channelConfiguration():
         self.manualstate = manualstate
         self.manualinv = manualinversion
         self.autoinv = autoinversion
-    
-class ddsConfiguration():
+        
+class ddsConfiguration(object):
     """
     Stores complete configuration of each DDS board
     """
-    def __init__(self, address, boardfreqrange, allowedfreqrange, boardamplrange, allowedamplrange, frequency = None, amplitude = None):
-        '''
-        address is the hardware address
-        board settings refer to the DIP settings on the board
-        allowed settings are allowed to be set by the user
-        frequencies are in MHz
-        amplitudes are in dBm
-        
-        frequency and amplitude provide optional initialization parameters
-        '''
+    def __init__(self, address, allowedfreqrange, allowedamplrange, frequency, amplitude, **args):
         self.channelnumber = address
-        self.boardfreqrange = boardfreqrange
         self.allowedfreqrange = allowedfreqrange
-        self.boardamplrange = boardamplrange
         self.allowedamplrange = allowedamplrange
         self.frequency = frequency
         self.amplitude = amplitude
+        self.boardfreqrange = args.get('boardfreqrange', (0.0, 800.0))
+        self.boardamplrange = args.get('boardamplrange', (-63.0, -3.0))
+        self.boardphaserange = args.get('boardphaserange', (0.0, 360.0))
+        self.remote = args.get('remote', False)        
+
+class remoteChannel(object):
+    def __init__(self, ip, server, reset, program):
+        self.ip = ip
+        self.server = server
+        self.reset = reset
+        self.program = program
         
-class hardwareConfiguration():
+class hardwareConfiguration(object):
     channelTotal = 32
     ddsChannelTotal = 8
     timeResolution = 40.0e-9 #seconds
@@ -41,6 +41,8 @@ class hardwareConfiguration():
     sequenceType = None #none for not programmed, can be 'one' or 'infinite'
     collectionMode = 'Normal' #default PMT mode
     collectionTime = {'Normal':0.100,'Differential':0.100} #default counting rates
+    okDeviceID = 'Pulser'
+    okDeviceFile = 'photon.bit'
     
     #name: (channelNumber, ismanual, manualstate,  manualinversion, autoinversion)
     channelDict = {
@@ -50,19 +52,31 @@ class hardwareConfiguration():
                    '110DP':channelConfiguration(3, False, True, True, False),
                    'axial':channelConfiguration(4, False, True, True, True),
                    'camera':channelConfiguration(5, False, False, True, True),
-                   #future channels
-                   '729DP':channelConfiguration(10, False, True, True, False),
-                   '854DP':channelConfiguration(11, False, True, True, False),
+                   
+                   ### 7 is channel 1 on the optical to electric translator
+                   'pump':channelConfiguration(7, False, True, True, False),
                    #------------INTERNAL CHANNELS----------------------------------------#
                    'DiffCountTrigger':channelConfiguration(16, False, False, False, False),
                    'TimeResolvedCount':channelConfiguration(17, False, False, False, False),
                    'AdvanceDDS':channelConfiguration(18, False, False, False, False),
-                   'ResetDDS':channelConfiguration(19, False, False, False, False)
-                   }
-    
+                   'ResetDDS':channelConfiguration(19, False, False, False, False),
+                   'ReadoutCount':channelConfiguration(20, False, False, False, False),
+                   'AdvanceDDS729':channelConfiguration(21, False, False, False, False),
+                   'ResetDDS729':channelConfiguration(22, False, False, False, False),
+                }
+    #address, allowedfreqrange, allowedamplrange, frequency, amplitude, **args):
     ddsDict = {
-               '866DP':ddsConfiguration(0, (30.0,130.0), (70.0,90.0), (-63.0,-3.0), (-63.0,-3.0), 80.0, -33.0),
-               '110DP':ddsConfiguration(1, (60.0,160.0), (90.0,130.0), (-63.0,-3.0), (-63.0,-3.0), 110.0, -33.0),
-               'axial':ddsConfiguration(2, (170.0,270.0), (190.0,250.0), (-63.0,-3.0), (-63.0,-3.0), 220.0, -33.0),
-               '854DP':ddsConfiguration(3, (30.0,130.0), (70.0,90.0), (-63.0,-3.0), (-63.0,-3.0), 80.0, -33.0),
+               #local channels
+               '866DP':ddsConfiguration(0, (70.0,90.0), (-63.0,-3.0), 80.0, -33.0, boardfreqrange = (30.0,130.0)),
+               '110DP':ddsConfiguration(1, (90.0,130.0), (-63.0,-3.0), 110.0, -33.0, boardfreqrange = (60.0,160.0)),
+               'axial':ddsConfiguration(2, (190.0,250.0), (-63.0,-3.0), 220.0, -33.0, boardfreqrange = (170.0,270.0)),
+               '854DP':ddsConfiguration(3, (70.0,90.0), (-63.0,-3.0), 80.0, -33.0, boardfreqrange = (30.0,130.0)),
+               'pump':ddsConfiguration(4, (90.0,130.0), (-63.0,-10.0), 110.0, -33.0, boardfreqrange = (60.0,160.0)),
+               #remote channels
+               '729DP':ddsConfiguration(0, (190.0,250.0),  (-63.0,-3.0), 220.0, -33.0, remote = 'pulser_729')
                }
+    
+    remoteChannels = {
+                      'pulser_729': remoteChannel('192.168.169.49', 'pulser_729','reset_dds','program_dds')
+                      }
+    
