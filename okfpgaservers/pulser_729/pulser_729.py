@@ -25,18 +25,12 @@ from labrad.types import Error
 class Pulser_729(LabradServer):
     
     name = 'pulser_729'
-    users = {
-             'lattice': 0x00,
-             'cct':     0x01,
-             'sqip':    0x02,
-             }
     
     @inlineCallbacks    
     def initServer(self):
         self.api  = api()
         self.inCommunication = DeferredLock()
         yield self.initializeBoard()
-        self.in_control = None
     
     @inlineCallbacks
     def initializeBoard(self):
@@ -72,44 +66,9 @@ class Pulser_729(LabradServer):
         """
         Reprograms the DDS chip to its initial state
         """
-        self.check_control(c)
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.initializeDDS)
         self.inCommunication.release()
-     
-    @setting(3, "Control", shouldSet = 'b', returns = 's')
-    def control(self, c, shouldSet = False):
-        if shouldSet:
-            user = c.get('user')
-            if user is None: raise Error(code = 2, msg = 'User Not Set')
-            addr = self.users[user]
-            yield deferToThread(self.api.setControl, addr)
-            self.in_control = user
-        if self.in_control is None: 
-            ans = ''
-        else:
-            ans = self.in_control
-        returnValue(ans)
-    
-    @setting(4, 'User', name = 's', returns = 's')
-    def user(self, c, name = None):
-        if name is not None:
-            if name not in self.users.keys(): raise Exception ("Select users among {}".format(self.users.keys()))
-            c['user'] = name
-        setName = c.get('user')
-        if setName is None: setName = ''
-        return setName
-    
-    def check_control(self, c):
-        '''checks for which context controls the channel'''
-        user = c.get('user')
-        #if user name not set, raise error
-        if user is None: raise Error(code = 2, msg = 'User Not Set')
-        #if someone else already in control, notify
-        print 'in control', self.in_control
-        print user
-        if self.in_control != user:
-            raise Error(code = 1, msg = 'Not in Control')
     
     def _programDDSSequence(self, program):
         '''takes the parsed dds sequence and programs the board with it'''
