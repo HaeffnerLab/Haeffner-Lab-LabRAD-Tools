@@ -26,10 +26,9 @@ class Pulser_729(LabradServer):
     
     name = 'pulser_729'
     users = {
-             'lattice':(),
-             'sqip':(),
-             'cct':(),
-             'tester':()
+             'lattice': 0x00,
+             'cct':     0x01,
+             'sqip':    0x10,
              }
     
     @inlineCallbacks    
@@ -82,6 +81,8 @@ class Pulser_729(LabradServer):
         if shouldSet:
             user = c.get('user')
             if user is None: raise Error(code = 2, msg = 'User Not Set')
+            addr = self.users[user]
+            yield deferToThread(self.api.setControl(addr))
             self.in_control = user
         if self.in_control is None: return ''
         return self.in_control
@@ -100,9 +101,6 @@ class Pulser_729(LabradServer):
         user = c.get('user')
         #if user name not set, raise error
         if user is None: raise Error(code = 2, msg = 'User Not Set')
-        #if no one is in control, firt one to access gets control
-        elif self.in_control is None:
-            self.in_control = user
         #if someone else already in control, notify
         elif self.in_control != user:
             raise Error(code = 1, msg = 'Not in Control')

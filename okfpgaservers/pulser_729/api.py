@@ -54,3 +54,7 @@ class api():
     def initializeDDS(self):
         '''force reprogram of all dds chips during initialization'''
         self.xem.ActivateTriggerIn(0x40,6)
+        
+    def setControl(self, addr):
+        self.xem.SetWireInValue(0x00,addr)
+        self.xem.UpdateWireIns()
