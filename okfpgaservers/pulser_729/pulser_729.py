@@ -20,6 +20,7 @@ from twisted.internet.defer import Deferred, DeferredLock, inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 from api import api
+from labrad.types import Error
 
 class Pulser_729(LabradServer):
     
@@ -70,10 +71,11 @@ class Pulser_729(LabradServer):
         yield deferToThread(self.api.initializeDDS)
         self.inCommunication.release()
     
-    @setting(3, "Control", shouldSet = 'b', returns = 'b')
+    @setting(3, "Control", shouldSet = 'b', returns = '(ww)')
     def getControl(self, c, shouldSet = False):
         if shouldSet:
-            self.in_control = c
+            self.in_control = c.ID
+        if self.in_control is None: return (0,0)
         return self.in_control
     
     def check_control(self, c):
@@ -81,7 +83,7 @@ class Pulser_729(LabradServer):
         if self.in_control is None:
             self.in_control = c
         elif self.in_control != c:
-            raise Exception ("Trying to Change Remote Channel 729DP while not in control")
+            raise Error(code = 1, msg = 'Not in Control')
     
     def _programDDSSequence(self, program):
         '''takes the parsed dds sequence and programs the board with it'''
@@ -95,6 +97,10 @@ class Pulser_729(LabradServer):
         d = Deferred()
         reactor.callLater(seconds, d.callback, result)
         return d
+    
+    def expireContext(self, c):
+        if c.ID == self.in_control:
+            self.in_control = None
         
 if __name__ == "__main__":
     from labrad import util
