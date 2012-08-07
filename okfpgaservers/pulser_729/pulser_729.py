@@ -30,6 +30,7 @@ class Pulser_729(LabradServer):
         self.api  = api()
         self.inCommunication = DeferredLock()
         yield self.initializeBoard()
+        self.in_control = None
     
     @inlineCallbacks
     def initializeBoard(self):
@@ -44,6 +45,7 @@ class Pulser_729(LabradServer):
         """
         Reset the ram position to 0
         """
+        self.check_control(c)
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetAllDDS)
         self.inCommunication.release()
@@ -53,6 +55,7 @@ class Pulser_729(LabradServer):
         """
         Programs the DDS, the input is a tuple of channel numbers and buf objects for the channels
         """
+        self.check_control(c)
         yield self.inCommunication.acquire()
         yield deferToThread(self._programDDSSequence, program)
         self.inCommunication.release()
@@ -62,14 +65,26 @@ class Pulser_729(LabradServer):
         """
         Reprograms the DDS chip to its initial state
         """
+        self.check_control(c)
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.initializeDDS)
         self.inCommunication.release()
     
+    @setting(3, "Control", shouldSet = 'b', returns = 'b')
+    def getControl(self, c, shouldSet = False):
+        if shouldSet:
+            self.in_control = c
+        return self.in_control
+    
+    def check_control(self, c):
+        '''checks for which context controls the channel'''
+        if self.in_control is None:
+            self.in_control = c
+        elif self.in_control != c:
+            raise Exception ("Trying to Change Remote Channel 729DP while not in control")
+    
     def _programDDSSequence(self, program):
         '''takes the parsed dds sequence and programs the board with it'''
-        print 'programming'
-        print program
         for chan, buf in program:
             self.api.setDDSchannel(chan)
             self.api.programDDS(buf)
