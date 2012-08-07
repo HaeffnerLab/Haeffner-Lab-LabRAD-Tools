@@ -1,3 +1,3 @@
 class hardwareConfiguration(object):
     okDeviceID = 'Pulser729'
-    okDeviceFile = 'photon729.bit.aug7'
+    okDeviceFile = 'photon729.bit.today'
