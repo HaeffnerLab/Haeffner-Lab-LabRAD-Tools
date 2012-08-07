@@ -16,7 +16,7 @@ timeout = 20
 ### END NODE INFO
 '''
 from labrad.server import LabradServer, setting
-from twisted.internet.defer import Deferred, DeferredLock, inlineCallbacks
+from twisted.internet.defer import Deferred, DeferredLock, inlineCallbacks, returnValue
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 from api import api
@@ -82,10 +82,13 @@ class Pulser_729(LabradServer):
             user = c.get('user')
             if user is None: raise Error(code = 2, msg = 'User Not Set')
             addr = self.users[user]
-            yield deferToThread(self.api.setControl(addr))
+            yield deferToThread(self.api.setControl, addr)
             self.in_control = user
-        if self.in_control is None: return ''
-        return self.in_control
+        if self.in_control is None: 
+            ans = ''
+        else:
+            ans = self.in_control
+        returnValue(ans)
     
     @setting(4, 'User', name = 's', returns = 's')
     def user(self, c, name = None):
