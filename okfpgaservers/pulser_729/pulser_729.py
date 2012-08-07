@@ -28,7 +28,7 @@ class Pulser_729(LabradServer):
     users = {
              'lattice': 0x00,
              'cct':     0x01,
-             'sqip':    0x10,
+             'sqip':    0x02,
              }
     
     @inlineCallbacks    
@@ -62,6 +62,7 @@ class Pulser_729(LabradServer):
         Programs the DDS, the input is a tuple of channel numbers and buf objects for the channels
         """
         self.check_control(c)
+        print program
         yield self.inCommunication.acquire()
         yield deferToThread(self._programDDSSequence, program)
         self.inCommunication.release()
@@ -105,7 +106,9 @@ class Pulser_729(LabradServer):
         #if user name not set, raise error
         if user is None: raise Error(code = 2, msg = 'User Not Set')
         #if someone else already in control, notify
-        elif self.in_control != user:
+        print 'in control', self.in_control
+        print user
+        if self.in_control != user:
             raise Error(code = 1, msg = 'Not in Control')
     
     def _programDDSSequence(self, program):
@@ -120,12 +123,6 @@ class Pulser_729(LabradServer):
         d = Deferred()
         reactor.callLater(seconds, d.callback, result)
         return d
-    
-    def expireContext(self, c):
-        user = c.get('user')
-        #user gives up control on exit
-        if (user == self.in_control):
-            self.in_control = None
         
 if __name__ == "__main__":
     from labrad import util
