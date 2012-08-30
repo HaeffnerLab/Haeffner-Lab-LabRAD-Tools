@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt4 import QtGui, uic
 import os
 import RGBconverter as RGB
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 SIGNALID1 = 187567
 SIGNALID2 = 187568
@@ -14,7 +14,7 @@ class widgetWrapper():
         self.wavelength = wavelength
         self.hint = hint
         self.widget = None
-        self.codeDict = codeDict = {-3.0: 'UnderExposed', -4.0: 'OverExposed', -5.0: 'NeedStartWM', -6.0 :'NotMeasured'}
+        self.codeDict = {-3.0: 'UnderExposed', -4.0: 'OverExposed', -5.0: 'NeedStartWM', -6.0 :'NotMeasured'}
         self.widget = multiplexerChannel(self.wavelength, self.hint, self.chanName)           
         
     def setFreq(self, freq):
@@ -53,18 +53,17 @@ class multiplexerWidget(QtGui.QWidget):
         self.d = {}
         self.d['397'] = widgetWrapper(chanName = '397',wavelength = '397', hint = '377.61131')
         self.d['866'] = widgetWrapper(chanName = '866',wavelength = '866', hint = '346.00002')
-        self.d['422'] = widgetWrapper(chanName = '422',wavelength = '422', hint = '354.53921') 
+        self.d['422'] = widgetWrapper(chanName = '422',wavelength = '422', hint = '354.53919') 
         self.d['732'] = widgetWrapper(chanName = '732',wavelength = '732', hint = '409.09585') 
         self.d['397s'] = widgetWrapper(chanName = '397s',wavelength = '397', hint = '377.61131') 
-        self.d['729'] = widgetWrapper(chanName = '729',wavelength = '729', hint = '411.04196') 
+        self.d['729'] = widgetWrapper(chanName = '729',wavelength = '729', hint = '411.04243') 
         self.d['397diode'] = widgetWrapper(chanName = '397diode',wavelength = '397', hint = '755.22262') 
-        self.d['854'] = widgetWrapper(chanName = '854',wavelength = '854', hint = '854.21100') 
+        self.d['854'] = widgetWrapper(chanName = '854',wavelength = '854', hint = '350.86275') 
         self.d['397inject'] = widgetWrapper(chanName = '397inject',wavelength = '397', hint = '755.22262')
     
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        from labrad.types import Error
         self.cxn = yield connectAsync('192.168.169.49')
         try:
             self.server = yield self.cxn.multiplexer_server
@@ -79,13 +78,13 @@ class multiplexerWidget(QtGui.QWidget):
         availableNames = yield self.server.get_available_channels()
         for chanName in self.d.keys():
             if chanName not in availableNames:
-                raise('Error chanName not found on the multiplexer server')
+                print "{0} channel is not found on the multiplexer server".format(chanName)
+                raise Exception ('Error chanName not found on the multiplexer server')
         #get initial values
         state = yield self.server.is_cycling()
         self.pushButton.setChecked(state)
         self.setButtonText()
         for name in self.d.keys():
-            
             freq = yield self.server.get_frequency(name)
             self.d[name].setFreq(float(freq))
             exp = yield self.server.get_exposure(name)
@@ -101,6 +100,7 @@ class multiplexerWidget(QtGui.QWidget):
         self.grid.addWidget(self.d['729'].widget,2,1)
         self.grid.addWidget(self.d['397diode'].widget,3,0)
         self.grid.addWidget(self.d['854'].widget,3,1)
+        #self.grid.addWidget(self.d['405'].widget,3,1)
         self.grid.addWidget(self.d['397inject'].widget,4,0)
         #connect functions
         self.pushButton.toggled.connect(self.setOnOff)
