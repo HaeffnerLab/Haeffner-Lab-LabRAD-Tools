@@ -5,7 +5,7 @@
 ### BEGIN NODE INFO
 [info]
 name = NormalPMTFlow
-version = 1.0
+version = 1.31
 description = 
 instancename = NormalPMTFlow
 
@@ -20,8 +20,10 @@ timeout = 20
 """
 
 from labrad.server import LabradServer, setting, Signal
-from twisted.internet.defer import Deferred, returnValue, inlineCallbacks, DeferredLock
-from twisted.internet import reactor
+from labrad import types as T
+from twisted.internet.defer import Deferred, returnValue, inlineCallbacks
+from twisted.internet.task import LoopingCall
+import time
 
 SIGNALID = 331483
 
@@ -29,70 +31,150 @@ class NormalPMTFlow( LabradServer):
     
     name = 'NormalPMTFlow'
     onNewCount = Signal(SIGNALID, 'signal: new count', 'v')
+    onNewSetting = Signal(SIGNALID+1, 'signal: new setting', '(ss)')
     
     @inlineCallbacks
     def initServer(self):
-        #improve on this to start in arbitrary order
-        self.dv = yield self.client.data_vault
-        self.n = yield self.client.normalpmtcountfpga
-        self.pbox = yield self.client.paul_box
-        self.trigger = yield self.client.trigger
         self.saveFolder = ['','PMT Counts']
         self.dataSetName = 'PMT Counts'
-        self.dataSet = None
-        self.collectTimes = {'Normal':0.100, 'Differential':0.100}
+        self.modes = ['Normal', 'Differential']
+        self.collection_period= T.Value(0.100,'s')
         self.lastDifferential = {'ON': 0, 'OFF': 0}
         self.currentMode = 'Normal'
-        self.running = DeferredLock()
+        self.dv = None
+        self.pulser = None
+        self.collectTimeRange = None
+        self.openDataSet = None
+        self.recordingInterrupted = False
         self.requestList = []
-        self.keepRunning = False
-    
-#    @inlineCallbacks
-#    def confirmPBoxScripting(self):
-#        self.script = 'DifferentialPMTCount.py'
-#        self.variable = 'CountingInterval'
-#        allScripts = yield self.pbox.get_available_scripts()
-#        if script not in allScripts: raise Exception('Pauls Box script {} does not exist'.format(script))
-#        allVariables = yield self.pbox.get_variable_list(script)
-#        if variable not in allVariables[0]: raise Exception('Variable {} not found'.format(variable))
+        self.listeners = set()
+        self.recording = LoopingCall(self._record)
+        yield self.connect_data_vault()
+        yield self.connect_pulser()
+        yield self.setupListeners()
     
     @inlineCallbacks
-    def makeNewDataSet(self):
-        dir = self.saveFolder
-        name = self.dataSetName
-        yield self.dv.cd(dir, True)
-        self.dataSet = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
-        yield self.addParameters()
+    def setupListeners(self):
+        yield self.client.manager.subscribe_to_named_message('Server Connect', 9898989, True)
+        yield self.client.manager.subscribe_to_named_message('Server Disconnect', 9898989+1, True)
+        yield self.client.manager.addListener(listener = self.followServerConnect, source = None, ID = 9898989)
+        yield self.client.manager.addListener(listener = self.followServerDisconnect, source = None, ID = 9898989+1)
     
     @inlineCallbacks
-    def addParameters(self):
+    def followServerConnect(self, cntx, serverName):
+        serverName = serverName[1]
+        if serverName == 'Pulser':
+            yield self.connect_pulser()
+        elif serverName == 'Data Vault':
+            yield self.connect_data_vault()
+    
+    @inlineCallbacks
+    def followServerDisconnect(self, cntx, serverName):
+        serverName = serverName[1]
+        if serverName == 'Pulser':
+            yield self.disconnect_pulser()
+        elif serverName == 'Data Vault':
+            yield self.disconnect_data_vault()  
+       
+    @inlineCallbacks
+    def connect_data_vault(self):
+        try:
+            #reconnect to data vault and navigate to the directory
+            self.dv = yield self.client.data_vault
+            yield self.dv.cd(self.saveFolder, True)    
+            if self.openDataSet is not None:
+                self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)        
+                self.onNewSetting(('dataset', self.openDataSet))
+            print 'Connected: Data Vault'
+        except AttributeError:
+            self.dv = None
+            print 'Not Connected: Data Vault'
+    
+    @inlineCallbacks
+    def disconnect_data_vault(self):
+        print 'Not Connected: Data Vault'
+        self.dv = None
         yield None
+    
+    @inlineCallbacks
+    def connect_pulser(self):
+        try:
+            self.pulser = yield self.client.pulser
+            self.collectTimeRange = yield self.pulser.get_collection_time()
+            if self.recordingInterrupted:
+                yield self.dorecordData()
+                self.onNewSetting(('state', 'on'))
+                self.recordingInterrupted = False
+            print 'Connected: Pulser'
+        except AttributeError:
+            self.pulser = None
+            print 'Not Connected: Pulser'
+    
+    @inlineCallbacks
+    def disconnect_pulser(self):
+        print 'Not Connected: Pulser'
+        self.pulser = None
+        if self.recording.running:
+            yield self.recording.stop()
+            self.onNewSetting(('state', 'off'))
+            self.recordingInterrupted = True
+            
+    def initContext(self, c):
+        """Initialize a new context object."""
+        self.listeners.add(c.ID)
+
+    def expireContext(self, c):
+        self.listeners.remove(c.ID)
+  
+    def getOtherListeners(self,c):
+        notified = self.listeners.copy()
+        notified.remove(c.ID)
+        return notified  
+       
+    @inlineCallbacks
+    def makeNewDataSet(self, folder, name):
+        yield self.dv.cd(folder, True)
+        newSet = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
+        self.startTime = time.time()
+        yield self.addParameters(self.startTime)
+        name = newSet[1]
+        returnValue(name)
+    
+    @inlineCallbacks
+    def addParameters(self, start):
+        yield self.dv.add_parameter("Window", ["PMT Counts"])
+        yield self.dv.add_parameter('plotLive',True)
+        yield self.dv.add_parameter('startTime',start)
     
     @setting(0, 'Set Save Folder', folder = '*s', returns = '')
     def setSaveFolder(self,c , folder):
         yield self.dv.cd(folder, True)
         self.saveFolder = folder
     
-    @setting(1, 'Start New Dataset', setName = 's', returns = '')
+    @setting(1, 'Start New Dataset', setName = 's', returns = 's')
     def setNewDataSet(self, c, setName = None):
         """Starts new dataset, if name not provided, it will be the same"""
         if setName is not None: self.dataSetName = setName
-        yield self.makeNewDataSet()
+        self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
+        otherListeners = self.getOtherListeners(c)
+        self.onNewSetting(('dataset', self.openDataSet), otherListeners)
+        returnValue(self.openDataSet)
     
     @setting( 2, "Set Mode", mode = 's', returns = '' )
     def setMode(self,c, mode):
         """
         Start recording Time Resolved Counts into Data Vault
         """
-        if mode not in self.collectTimes.keys(): raise('Incorrect Mode')
-        if not self.keepRunning:
+        if mode not in self.modes: raise Exception('Incorrect Mode')
+        if not self.recording.running:
             self.currentMode = mode
-            yield self.n.set_mode(mode)
+            yield self.pulser.set_mode(mode)
         else:
             yield self.dostopRecording()
             self.currentMode = mode
-            yield self.n.set_mode(mode)
             yield self.dorecordData()
+        otherListeners = self.getOtherListeners(c)      
+        self.onNewSetting(('mode', mode), otherListeners)
 
     @setting(3, 'getCurrentMode', returns = 's')
     def getCurrentMode(self, c):
@@ -106,63 +188,76 @@ class NormalPMTFlow( LabradServer):
         """
         Starts recording data of the current PMT mode into datavault
         """
-        yield self.dorecordData()
+        setname = yield self.dorecordData()
+        otherListeners = self.getOtherListeners(c)
+        if setname is not None:
+            setname = setname[1]
+            self.onNewSetting(('dataset', setname), otherListeners)
+        self.onNewSetting(('state', 'on'), otherListeners)
     
     @inlineCallbacks
     def dorecordData(self):
+        #begins the process of data record
+        #sets the collection time and mode, programs the pulser if necessary and opens the dataset if necessasry
+        #then starts the recording loop
+        newSet = None
         self.keepRunning = True
-        yield self.n.set_collection_time(self.collectTimes[self.currentMode], self.currentMode)
-        yield self.n.set_mode(self.currentMode)
+        yield self.pulser.set_collection_time(self.collection_period, self.currentMode)
+        yield self.pulser.set_mode(self.currentMode)
         if self.currentMode == 'Differential':
-            yield self._programPBOXDiff()
-        if self.dataSet is None:
-            yield self.makeNewDataSet()
-        reactor.callLater(0, self._record)
-    
+            yield self._programPulserDiff()
+        if self.openDataSet is None:
+            self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
+        self.recording.start(self.collection_period['s']/2.0)
+        returnValue(newSet)
+        
     @setting(5, returns = '')
     def stopRecording(self,c):
         """
         Stop recording counts into Data Vault
         """
         yield self.dostopRecording()
+        otherListeners = self.getOtherListeners(c)
+        self.onNewSetting(('state', 'off'), otherListeners)
     
     @inlineCallbacks
     def dostopRecording(self):
-        self.keepRunning = False
-        yield self.running.acquire()
-        self.running.release()
-        yield self._programPBOXEmpty()
-        
+        yield self.recording.stop()
+        if self.currentMode == 'Differential':
+            yield self._stopPulserDiff()
+            
     @setting(6, returns = 'b')
     def isRunning(self,c):
         """
         Returns whether or not currently recording
         """
-        return self.keepRunning
+        return self.recording.running
         
     @setting(7, returns = 's')
     def currentDataSet(self,c):
-        if self.dataSet is None: return ''
-        name = self.dataSet[1]
-        return name
+        if self.openDataSet is None: return ''
+        return self.openDataSet
     
-    @setting(8, 'Set Time Length', timelength = 'v', mode = 's')
-    def setTimeLength(self, c, timelength, mode = None):
-        if mode is None: mode = self.currentMode
-        if mode not in self.collectTimes.keys(): raise('Incorrect Mode')
-        if not 0 < timelength < 5.0: raise ('Incorrect Recording Time')
-        self.collectTimes[mode] = timelength
-        if mode == self.currentMode:
-            yield self.running.acquire()
-            yield self.n.set_collection_time(timelength, mode)
+    @setting(8, 'Set Time Length', timelength = 'v[s]')
+    def setTimeLength(self, c, timelength):
+        """Sets the time length for the current mode"""
+        mode = self.currentMode
+        if not self.collectTimeRange[0] <= timelength['s'] <= self.collectTimeRange[1]: raise Exception ('Incorrect Recording Time')
+        self.collection_period = timelength
+        initrunning = self.recording.running #if recording when the call is made, need to stop and restart
+        if initrunning:
+            yield self.recording.stop()
+        yield self.pulser.set_collection_time(timelength['s'], mode)
+        if initrunning:
             if mode == 'Differential':
-                yield self._programPBOXDiff()
-            self.running.release()
-        else:
-            yield self.n.set_collection_time(timelength, mode)
-        
-    @setting(9, 'Get Next Counts', type = 's', number = 'w', average = 'b', returns = ['*v', 'v'])
-    def getNextCounts(self, c, type, number, average = False):
+                yield self._stopPulserDiff()
+                yield self._programPulserDiff()
+            self.recording.start(timelength['s']/2.0)
+        otherListeners = self.getOtherListeners(c)      
+        self.onNewSetting(('timelength', str(timelength['s'])), otherListeners)
+    
+    @setting(9, 'Get Next Counts', kind = 's', number = 'w', average = 'b', returns = ['*v', 'v'])
+    def getNextCounts(self, c, kind, number, average = False):
         """
         Acquires next number of counts, where type can be 'ON' or 'OFF' or 'DIFF'
         Average is optionally True if the counts should be averaged
@@ -170,12 +265,12 @@ class NormalPMTFlow( LabradServer):
         Note in differential mode, Diff counts get updates every time, but ON and OFF
         get updated every 2 times.
         """
-        if type not in ['ON', 'OFF','DIFF']: raise('Incorrect type')
-        if type in ['OFF','DIFF'] and self.currentMode == 'Normal':raise('in the wrong mode to process this request')
-        if not 0 < number < 1000: raise('Incorrect Number')
-        if not self.keepRunning: raise('Not currently recording')
+        if kind not in ['ON', 'OFF','DIFF']: raise Exception('Incorrect type')
+        if kind in ['OFF','DIFF'] and self.currentMode == 'Normal':raise Exception('in the wrong mode to process this request')
+        if not 0 < number < 1000: raise Exception('Incorrect Number')
+        if not self.recording.running: raise Exception('Not currently recording')
         d = Deferred()
-        self.requestList.append(self.readingRequest(d, type, number))
+        self.requestList.append(self.readingRequest(d, kind, number))
         data = yield d
         if average:
             data = sum(data) / len(data)
@@ -186,59 +281,70 @@ class NormalPMTFlow( LabradServer):
         """
         Returns the current timelength of in the current mode
         """
-        return self.collectTimes[self.currentMode]
+        return self.collection_period
+
+    @setting(11, 'Get Time Length Range', returns = '(vv)')
+    def get_time_length_range(self, c):
+        return self.collectTimeRange
     
     @inlineCallbacks
-    def _programPBOXDiff(self):
-        yield self.pbox.send_command('DifferentialPMTCount.py',[['FLOAT','CountingInterval',str(10**6 * self.collectTimes['Differential'])]])
-        yield self.trigger.trigger('PaulBox')
+    def _programPulserDiff(self):
+        yield self.pulser.new_sequence()
+        yield self.pulser.add_ttl_pulse('DiffCountTrigger', T.Value(0.0,'us'), T.Value(10.0,'us'))
+        yield self.pulser.add_ttl_pulse('DiffCountTrigger', self.collection_period, T.Value(10.0,'us'))
+        yield self.pulser.add_ttl_pulse('866DP', T.Value(0.0,'us'), self.collection_period)
+        yield self.pulser.extend_sequence_length(2 * self.collection_period)
+        yield self.pulser.program_sequence()
+        yield self.pulser.start_infinite()
     
     @inlineCallbacks
-    def _programPBOXEmpty(self):
-        yield self.pbox.send_command('emptySequence.py',[['FLOAT','nothing','0']])
-        yield self.trigger.trigger('PaulBox')
+    def _stopPulserDiff(self):
+        yield self.pulser.complete_infinite_iteration()
+        yield self.pulser.wait_sequence_done()
+        yield self.pulser.stop_sequence()
         
     class readingRequest():
-        def __init__(self, d, type, count):
+        def __init__(self, d, kind, count):
             self.d = d
             self.count = count
-            self.type = type
+            self.kind = kind
             self.data = []
+        
+        def is_fulfilled(self):
+            return len(self.data) == self.count
     
     def processRequests(self, data):
+        if not len(self.requestList): return
         for dataPoint in data:
-            for req in self.requestList:
-                if dataPoint[1] != 0 and req.type == 'ON':
+            for item,req in enumerate(self.requestList):
+                if dataPoint[1] != 0 and req.kind == 'ON':
                     req.data.append(dataPoint[1])
-                    if len(req.data) == req.count:
-                        req.d.callback(req.data)
-                if dataPoint[2] != 0 and req.type == 'OFF':
+                if dataPoint[2] != 0 and req.kind == 'OFF':
                     req.data.append(dataPoint[1])
-                    if len(req.data) == req.count:
-                        req.d.callback(req.data)
-                if dataPoint[3] != 0 and req.type == 'DIFF':
+                if dataPoint[3] != 0 and req.kind == 'DIFF':
                     req.data.append(dataPoint[1])
-                    if len(req.data) == req.count:
-                        req.d.callback(req.data)
-                        
+                if req.is_fulfilled():
+                    req.d.callback(req.data)
+                    del(self.requestList[item])
+                    
     @inlineCallbacks
     def _record(self):
-        yield self.running.acquire()
-        if self.keepRunning:
-            rawdata = yield self.n.get_all_counts()
-            if len(rawdata) != 0:
-                if self.currentMode == 'Normal':
-                    toDataVault = [ [elem[2], elem[0], 0, 0] for elem in rawdata] # converting to format [time, normal count, 0 , 0]
-                elif self.currentMode =='Differential':
-                    toDataVault = self.convertDifferential(rawdata)
-                self.processRequests(toDataVault)
-                self.processSignals(toDataVault)
+        try:
+            rawdata = yield self.pulser.get_pmt_counts()
+        except:
+            print 'Not Able to Get PMT Counts'
+            rawdata = []
+        if len(rawdata) != 0:
+            if self.currentMode == 'Normal':
+                toDataVault = [ [elem[2] - self.startTime, elem[0], 0, 0] for elem in rawdata] # converting to format [time, normal count, 0 , 0]
+            elif self.currentMode =='Differential':
+                toDataVault = self.convertDifferential(rawdata)
+            self.processRequests(toDataVault) #if we have any requests, process them
+            self.processSignals(toDataVault)
+            try:
                 yield self.dv.add(toDataVault)
-            self.running.release()
-            delayTime = self.collectTimes[self.currentMode]/2 #set to half the collection time no to miss anythign
-            reactor.callLater(delayTime,self._record)
-        else:
-            self.running.release()
+            except:
+                print 'Not Able to Save To Data Vault'
     
     def processSignals(self, data):
         lastPt = data[-1]
@@ -251,9 +357,9 @@ class NormalPMTFlow( LabradServer):
             t = str(dataPoint[1])
             self.lastDifferential[t] = float(dataPoint[0])
             diff = self.lastDifferential['ON'] - self.lastDifferential['OFF']
-            totalData.append( [ dataPoint[2], self.lastDifferential['ON'], self.lastDifferential['OFF'], diff ] )
+            totalData.append( [ dataPoint[2] - self.startTime, self.lastDifferential['ON'], self.lastDifferential['OFF'], diff ] )
         return totalData
-            
+
 if __name__ == "__main__":
     from labrad import util
     util.runServer( NormalPMTFlow() )

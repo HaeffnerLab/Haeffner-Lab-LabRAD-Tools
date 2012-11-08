@@ -27,6 +27,7 @@ from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, Ser
 from labrad.types import Error
 from twisted.internet import reactor
 from labrad.server import Signal
+from labrad import types as T
 
 SERVERNAME = 'HighVoltA'
 MINRANGE = 0.0
@@ -39,6 +40,7 @@ TIMEOUT = 1.0
 RESP_STRING = 'r'
 #time to wait if correct response not received
 ERROR_TIME = 1.0
+
 
 class HighVoltBoxError( SerialConnectionError ):
     errorDict = {
@@ -54,8 +56,8 @@ class HighVoltBoxA( SerialDeviceServer ):
     name = SERVERNAME
     regKey = 'HighVoltA'
     port = None
-    serNode = 'lattice-pc'
-    timeout = TIMEOUT
+    serNode = 'lattice_control'
+    timeout = T.Value(TIMEOUT,'s')
     
     onNewVoltage = Signal(795474, 'signal: new voltage', 'v')
 
@@ -89,7 +91,7 @@ class HighVoltBoxA( SerialDeviceServer ):
                 print 'Error opening serial connection'
                 print 'Check set up and restart serial server'
             else: raise
-        self.populateDict()
+        yield self.populateDict()
         self.free = True
     
     def createDict(self):
@@ -99,6 +101,8 @@ class HighVoltBoxA( SerialDeviceServer ):
     def populateDict(self):
         yield self.ser.write('r')
         reading = yield self.ser.read(5)
+        print'reading'
+        print reading
         form = int(reading[0:4])
         self.dict['voltage'] = self.formatToVoltage(form)
         print self.dict

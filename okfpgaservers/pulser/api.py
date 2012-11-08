@@ -7,6 +7,8 @@ class api():
         self.xem = None
         self.okDeviceID = hardwareConfiguration.okDeviceID
         self.okDeviceFile = hardwareConfiguration.okDeviceFile
+        self.haveSecondPMT = hardwareConfiguration.secondPMT
+        self.haveDAC = hardwareConfiguration.DAC
         
     def checkConnection(self):
         if self.xem is None: raise Exception("FPGA not connected")
@@ -19,10 +21,10 @@ class api():
             serial = fp.GetDeviceListSerial(i)
             tmp = ok.FrontPanel()
             tmp.OpenBySerial(serial)
-            id = tmp.GetDeviceID()
-            if id == self.okDeviceID:
+            iden = tmp.GetDeviceID()
+            if iden == self.okDeviceID:
                 self.xem = tmp
-                print 'Connected to {}'.format(id)
+                print 'Connected to {}'.format(iden)
                 self.programOKBoard()
                 return True
         return False
@@ -172,3 +174,27 @@ class api():
     def initializeDDS(self):
         '''force reprogram of all dds chips during initialization'''
         self.xem.ActivateTriggerIn(0x40,6)
+    
+    #Methods relating to using the optional second PMT
+    def getSecondaryNormalTotal(self):
+        if not self.haveSecondPMT: raise Exception ("No Second PMT")
+        self.xem.SetWireInValue(0x00,0xa0,0xf0)
+        self.xem.UpdateWireIns()
+        self.xem.UpdateWireOuts()
+        done = self.xem.GetWireOutValue(0x21)
+        return done
+    
+    def getSecondaryNormalCounts(self, number):
+        if not self.haveSecondPMT: raise Exception ("No Second PMT")
+        buf = "\x00"* ( number * 2 )
+        self.xem.ReadFromBlockPipeOut(0xa3,2,buf)
+        return buf
+    
+    #Methods relating to using optional DAC
+    def resetFIFODAC(self):
+        if not self.haveDAC: raise Exception ("No DAC")
+        self.xem.ActivateTriggerIn(0x40,8)  
+        
+    def setDACVoltage(self, volstr):
+        if not self.haveDAC: raise Exception ("No DAC")
+        self.xem.WriteToBlockPipeIn(0x82, 2, volstr)   

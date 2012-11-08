@@ -18,6 +18,7 @@ from twisted.internet.reactor import callLater
 
 from labrad.server import (LabradServer, setting,
                            inlineCallbacks, returnValue)
+from labrad import types as T
 
 """
 ### BEGIN NODE INFO
@@ -128,7 +129,7 @@ class GPIBDeviceManager(LabradServer):
         or the query fails, the name will be listed as '<unknown>'.
         """
         p = self.client.servers[server].packet()
-        p.address(channel).timeout(1).write('*IDN?').read()
+        p.address(channel).timeout(T.Value(1,'s')).write('*IDN?').read()
         print 'Sending *IDN? to', server, channel
         resp = None
         try:

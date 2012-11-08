@@ -186,7 +186,6 @@ class SerialDeviceServer( LabradServer ):
         """
         reg = self.client.registry
         try:
-            #change this back to 'Ports'
             yield reg.cd( ['', 'Ports'] )
             portDir = yield reg.dir()
             portKeys = portDir[1]

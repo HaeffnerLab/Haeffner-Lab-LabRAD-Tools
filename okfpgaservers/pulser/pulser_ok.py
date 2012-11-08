@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser
-version = 0.4
+version = 1.0
 description =
 instancename = Pulser
 
@@ -19,21 +19,17 @@ timeout = 20
 '''
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
-from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
+from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, Deferred
 from twisted.internet.threads import deferToThread
-import numpy
 import time
 from hardwareConfiguration import hardwareConfiguration
 from sequence import Sequence
 from dds import DDS
 from api import api
-
-devicePollingPeriod = 10
-MIN_SEQUENCE = 0
-MAX_SEQUENCE = 85 #seconds
-collectionTimeRange = (0.010, 5.0)
+import numpy
 
 class Pulser(LabradServer, DDS):
+    
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
     
@@ -45,10 +41,15 @@ class Pulser(LabradServer, DDS):
         self.collectionMode = hardwareConfiguration.collectionMode
         self.sequenceType = hardwareConfiguration.sequenceType
         self.isProgrammed = hardwareConfiguration.isProgrammed
-        self.timeResolution = hardwareConfiguration.timeResolution
+        self.timeResolution = float(hardwareConfiguration.timeResolution)
         self.ddsDict = hardwareConfiguration.ddsDict
         self.timeResolvedResolution = hardwareConfiguration.timeResolvedResolution
         self.remoteChannels = hardwareConfiguration.remoteChannels
+        self.devicePollingPeriod = hardwareConfiguration.devicePollingPeriod
+        self.collectionTimeRange = hardwareConfiguration.collectionTimeRange
+        self.sequenceTimeRange = hardwareConfiguration.sequenceTimeRange
+        self.haveSecondPMT = hardwareConfiguration.secondPMT
+        self.haveDAC = hardwareConfiguration.DAC
         self.inCommunication = DeferredLock()
         self.initializeBoard()
         yield self.initializeRemote()
@@ -58,10 +59,8 @@ class Pulser(LabradServer, DDS):
 
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
-        while not connected:
-            print 'not connected, waiting for 10 seconds to try again'
-            self.wait(10.0)
-            connected = self.api.connectOKBoard()
+        if not connected:
+            raise Exception ("Pulser Not Found")
             
     def initializeSettings(self):
         for channel in self.channelDict.itervalues():
@@ -78,14 +77,19 @@ class Pulser(LabradServer, DDS):
         if len(self.remoteChannels):
             from labrad.wrappers import connectAsync
             for name,rc in self.remoteChannels.iteritems():
-                self.remoteConnections[name] = yield connectAsync(rc.ip)
+                try:
+                    self.remoteConnections[name] = yield connectAsync(rc.ip)
+                    print 'Connected to {}'.format(name)
+                except:
+                    print 'Not Able to connect to {}'.format(name)
+                    self.remoteConnections[name] = None
 
     @setting(0, "New Sequence", returns = '')
     def newSequence(self, c):
         """
         Create New Pulse Sequence
         """
-        c['sequence'] = Sequence()
+        c['sequence'] = Sequence(self)
     
     @setting(1, "Program Sequence", returns = '')
     def programSequence(self, c, sequence):
@@ -94,12 +98,10 @@ class Pulser(LabradServer, DDS):
         """
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
-        if sequence.userAddedDDS():
-            self._addDDSInitial(sequence)
         dds,ttl = sequence.progRepresentation()
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.programBoard, ttl)
-        if dds is not None: yield deferToThread(self._programDDSSequence, dds)
+        if dds is not None: yield self._programDDSSequence(dds)
         self.inCommunication.release()
         self.isProgrammed = True
     
@@ -129,7 +131,7 @@ class Pulser(LabradServer, DDS):
         self.sequenceType = 'One'
         self.inCommunication.release()
     
-    @setting(5, 'Add TTL Pulse', channel = 's', start = 'v', duration = 'v')
+    @setting(5, 'Add TTL Pulse', channel = 's', start = 'v[s]', duration = 'v[s]')
     def addTTLPulse(self, c, channel, start, duration):
         """
         Add a TTL Pulse to the sequence, times are in seconds
@@ -137,13 +139,15 @@ class Pulser(LabradServer, DDS):
         if channel not in self.channelDict.keys(): raise Exception("Unknown Channel {}".format(channel))
         hardwareAddr = self.channelDict.get(channel).channelnumber
         sequence = c.get('sequence')
+        start = start['s']
+        duration = duration['s']
         #simple error checking
-        if not (MIN_SEQUENCE <= start,start + duration <= MAX_SEQUENCE): raise Exception ("Time boundaries are out of range")
+        if not ( (self.sequenceTimeRange[0] <= start <= self.sequenceTimeRange[1]) and (self.sequenceTimeRange[0] <= start + duration <= self.sequenceTimeRange[1])): raise Exception ("Time boundaries are out of range")
         if not duration >= self.timeResolution: raise Exception ("Incorrect duration")
         if not sequence: raise Exception ("Please create new sequence first")
         sequence.addPulse(hardwareAddr, start, duration)
     
-    @setting(6, 'Add TTL Pulses', pulses = '*(svv)')
+    @setting(6, 'Add TTL Pulses', pulses = '*(sv[s]v[s])')
     def addTTLPulses(self, c, pulses):
         """
         Add multiple TTL Pulses to the sequence, times are in seconds. The pulses are a list in the same format as 'add ttl pulse'.
@@ -154,15 +158,15 @@ class Pulser(LabradServer, DDS):
             duration = pulse[2]
             yield self.addTTLPulse(c, channel, start, duration)
     
-    @setting(7, "Extend Sequence Length", timeLength = 'v')
+    @setting(7, "Extend Sequence Length", timeLength = 'v[s]')
     def extendSequenceLength(self, c, timeLength):
         """
         Allows to optionally extend the total length of the sequence beyond the last TTL pulse.
         """
         sequence = c.get('sequence')
-        if not (MIN_SEQUENCE <= timeLength <= MAX_SEQUENCE): raise Exception ("Time boundaries are out of range")
+        if not (self.sequenceTimeRange[0] <= timeLength['s'] <= self.sequenceTimeRange[1]): raise Exception ("Time boundaries are out of range")
         if not sequence: raise Exception ("Please create new sequence first")
-        sequence.extendSequenceLength(timeLength)
+        sequence.extendSequenceLength(timeLength['s'])
         
     @setting(8, "Stop Sequence")
     def stopSequence(self, c):
@@ -194,17 +198,27 @@ class Pulser(LabradServer, DDS):
         self.sequenceType = 'Number'
         self.inCommunication.release()
 
-    @setting(10, "Human Readable", returns = '*2s')
-    def humanReadable(self, c):
+    @setting(10, "Human Readable TTL", returns = '*2s')
+    def humanReadableTTL(self, c):
         """
         Returns a readable form of the programmed sequence for debugging
         """
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
-        ans = sequence.humanRepresentation()
-        return ans.tolist()
+        ttl,dds = sequence.humanRepresentation()
+        return ttl.tolist()
     
-    @setting(11, 'Get Channels', returns = '*(sw)')
+    @setting(11, "Human Readable DDS", returns = '*(svv)')
+    def humanReadableDDS(self, c):
+        """
+        Returns a readable form of the programmed sequence for debugging
+        """
+        sequence = c.get('sequence')
+        if not sequence: raise Exception ("Please create new sequence first")
+        ttl,dds = sequence.humanRepresentation()
+        return dds
+    
+    @setting(12, 'Get Channels', returns = '*(sw)')
     def getChannels(self, c):
         """
         Returns all available channels, and the corresponding hardware numbers
@@ -214,7 +228,7 @@ class Pulser(LabradServer, DDS):
         numbers = [d[key].channelnumber for key in keys]
         return zip(keys,numbers)
     
-    @setting(12, 'Switch Manual', channelName = 's', state= 'b')
+    @setting(13, 'Switch Manual', channelName = 's', state= 'b')
     def switchManual(self, c, channelName, state = None):
         """
         Switches the given channel into the manual mode, by default will go into the last remembered state but can also
@@ -236,7 +250,7 @@ class Pulser(LabradServer, DDS):
         else:
             self.notifyOtherListeners(c,(channelName,'ManualOff'), self.onSwitch)
     
-    @setting(13, 'Switch Auto', channelName = 's', invert= 'b')
+    @setting(14, 'Switch Auto', channelName = 's', invert= 'b')
     def switchAuto(self, c, channelName, invert = None):
         """
         Switches the given channel into the automatic mode, with an optional inversion.
@@ -254,7 +268,7 @@ class Pulser(LabradServer, DDS):
         self.inCommunication.release()
         self.notifyOtherListeners(c,(channelName,'Auto'), self.onSwitch)
 
-    @setting(14, 'Get State', channelName = 's', returns = '(bbbb)')
+    @setting(15, 'Get State', channelName = 's', returns = '(bbbb)')
     def getState(self, c, channelName):
         """
         Returns the current state of the switch: in the form (Manual/Auto, ManualOn/Off, ManualInversionOn/Off, AutoInversionOn/Off)
@@ -264,11 +278,12 @@ class Pulser(LabradServer, DDS):
         answer = (channel.ismanual,channel.manualstate,channel.manualinv,channel.autoinv)
         return answer
     
-    @setting(15, 'Wait Sequence Done', timeout = 'v', returns = 'b')
-    def waitSequenceDone(self, c, timeout = MAX_SEQUENCE):
+    @setting(16, 'Wait Sequence Done', timeout = 'v', returns = 'b')
+    def waitSequenceDone(self, c, timeout = None):
         """
         Returns true if the sequence has completed within a timeout period
         """
+        if timeout is None: timeout = self.sequenceTimeRange[1]
         requestCalls = int(timeout / 0.050 ) #number of request calls
         for i in range(requestCalls):
             yield self.inCommunication.acquire()
@@ -278,7 +293,7 @@ class Pulser(LabradServer, DDS):
             yield self.wait(0.050)
         returnValue(False)
     
-    @setting(16, 'Repeatitions Completed', returns = 'w')
+    @setting(17, 'Repeatitions Completed', returns = 'w')
     def repeatitionsCompleted(self, c):
         """Check how many repeatitions have been completed in for the infinite or number modes"""
         yield self.inCommunication.acquire()
@@ -314,7 +329,7 @@ class Pulser(LabradServer, DDS):
         Sets how long to collect photonslist in either 'Normal' or 'Differential' mode of operation
         """
         new_time = float(new_time)
-        if not collectionTimeRange[0]<=new_time<=collectionTimeRange[1]: raise Exception('incorrect collection time')
+        if not self.collectionTimeRange[0]<=new_time<=self.collectionTimeRange[1]: raise Exception('incorrect collection time')
         if mode not in self.collectionTime.keys(): raise("Incorrect mode")
         if mode == 'Normal':
             prev_time = self.collectionTime[mode]
@@ -325,13 +340,16 @@ class Pulser(LabradServer, DDS):
             #clear existing counts
             c =  yield deferToThread(self.api.getNormalTotal);
             yield deferToThread(self.api.getNormalCounts,c)
+            if self.haveSecondPMT:
+                d = yield deferToThread(self.api.getSecondaryNormalTotal);
+                yield deferToThread(self.api.getSecondaryNormalCounts,d)
             self.inCommunication.release()
         elif mode == 'Differential':
             self.collectionTime[mode] = new_time
     
     @setting(23, 'Get Collection Time', returns = '(vv)')
     def getCollectTime(self, c):
-        return collectionTimeRange
+        return self.collectionTimeRange
     
     @setting(24, 'Reset FIFO Normal', returns = '')
     def resetFIFONormal(self,c):
@@ -403,21 +421,21 @@ class Pulser(LabradServer, DDS):
         count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
         return count
     
-    def convertKCperSec(self, input):
-        [rawCount,type] = input
+    def convertKCperSec(self, inp):
+        [rawCount,typ] = inp
         countKCperSec = float(rawCount) / self.collectionTime[self.collectionMode] / 1000.
-        return [countKCperSec, type]
+        return [countKCperSec, typ]
         
-    def appendTimes(self, list, timeLast):
+    def appendTimes(self, l, timeLast):
         #in the case that we received multiple PMT counts, uses the current time
         #and the collectionTime to guess the arrival time of the previous readings
         #i.e ( [[1,2],[2,3]] , timeLAst = 1.0, normalupdatetime = 0.1) ->
         # ( [(1,2,0.9),(2,3,1.0)])
         collectionTime = self.collectionTime[self.collectionMode]
-        for i in range(len(list)):
-            list[-i - 1].append(timeLast - i * collectionTime)
-            list[-i - 1] = tuple(list[-i - 1])
-        return list
+        for i in range(len(l)):
+            l[-i - 1].append(timeLast - i * collectionTime)
+            l[-i - 1] = tuple(l[-i - 1])
+        return l
     
     def split_len(self,seq, length):
         '''useful for splitting a string in length-long pieces'''
@@ -451,6 +469,41 @@ class Pulser(LabradServer, DDS):
     def getTimeTagResolution(self, c):
         return self.timeResolvedResolution
     
+    #Methods relating to using optional DAC
+    @setting(34, "Set DAC Voltage", stringy = 's', returns = '')
+    def setDACVoltages(self, c, stringy):
+        if not self.haveDAC: raise Exception ("No DAC")
+        yield self.inCommunication.acquire()
+        yield deferToThread(self.api.setDACVoltage, stringy)
+        self.inCommunication.release()
+    
+    @setting(35, "Reset FIFO DAC", returns = '')
+    def resetFIFODAC(self, c):
+        if not self.haveDAC: raise Exception ("No DAC")
+        yield self.inCommunication.acquire()
+        yield deferToThread(self.api.resetFIFODAC)        
+        self.inCommunication.release()
+    
+    #Methods relating to using the optional second PMT
+    @setting(36, 'Get Secondary PMT Counts', returns = '*(vsv)')
+    def getAllSecondaryCounts(self, c):
+        if not self.haveSecondPMT: raise Exception ("No Second PMT")
+        yield self.inCommunication.acquire()
+        countlist = yield deferToThread(self.doGetAllSecondaryCounts)
+        self.inCommunication.release()
+        returnValue(countlist)
+            
+    def doGetAllSecondaryCounts(self):
+        if not self.haveSecondPMT: raise Exception ("No Second PMT")
+        inFIFO = self.api.getSecondaryNormalTotal()
+        reading = self.api.getSecondaryNormalCounts(inFIFO)
+        split = self.split_len(reading, 4)
+        countlist = map(self.infoFromBuf, split)
+        countlist = map(self.convertKCperSec, countlist)
+        countlist = self.appendTimes(countlist, time.time())
+        return countlist        
+
+
     def wait(self, seconds, result=None):
         """Returns a deferred that will be fired later"""
         d = Deferred()
@@ -460,7 +513,7 @@ class Pulser(LabradServer, DDS):
     def cnot(self, control, inp):
         if control:
             inp = not inp
-        return input
+        return inp
     
     def notifyOtherListeners(self, context, message, f):
         """

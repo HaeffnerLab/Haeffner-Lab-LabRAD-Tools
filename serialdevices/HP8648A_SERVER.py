@@ -2,7 +2,7 @@
 ### BEGIN NODE INFO
 [info]
 name = HP Server
-version = 1.0
+version = 1.1
 description = 
 instancename = %LABRADNODE% HP Server
 
@@ -17,13 +17,7 @@ timeout = 20
 """
 
 from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
-from labrad.types import Error
-from twisted.internet import reactor
 from twisted.internet.defer import returnValue
-from labrad.server import Signal
-
-SIGNALID = 209057
-SIGNALID1 = 209058
 
 class HPServer( SerialDeviceServer ):
     """Controls HP8648A Signal Generator"""
@@ -31,11 +25,9 @@ class HPServer( SerialDeviceServer ):
     name = '%LABRADNODE% HP Server'
     regKey = 'HPsiggen'
     port = None
-    serNode = 'lattice-pc'
+    serNode = 'lattice-imaging'
     timeout = 1.0
     gpibaddr = 0
-    onNewUpdate = Signal(SIGNALID, 'signal: settings updated', '(sv)')
-    onStateUpdate = Signal(SIGNALID1, 'signal: state updated', 'b')
     
     @inlineCallbacks
     def initServer( self ):
@@ -56,7 +48,7 @@ class HPServer( SerialDeviceServer ):
                 print 'Check set up and restart serial server'
             else: raise
             
-        self.ser.write(self.SetAddrStr(self.gpibaddr)) #set gpib address
+        yield self.ser.write(self.SetAddrStr(self.gpibaddr)) #set gpib address
         self.SetControllerWait(0) #turns off automatic listen after talk, necessary to stop line unterminated errors
         yield self.populateDict()
         self.listeners = set()
@@ -66,10 +58,9 @@ class HPServer( SerialDeviceServer ):
         d['state'] = None #state is a boolean
         d['power'] = None #power is in dBm
         d['freq'] = None #frequency is in MHz
-        d['powerrange'] = (-5.9,5.0)
-        d['freqrange'] = (14.5,15.5) #MHz
+        d['powerrange'] = (-136.0,13.0) #dBm
+        d['freqrange'] = (0.1,1000.0) #MHz
         self.hpDict = d
-
     
     @inlineCallbacks
     def populateDict(self):
@@ -79,88 +70,47 @@ class HPServer( SerialDeviceServer ):
         self.hpDict['state'] = bool(state) 
         self.hpDict['power'] = float(power)
         self.hpDict['freq'] = float(freq)
-    
-    def initContext(self, c):
-        """Initialize a new context object."""
-        self.listeners.add(c.ID)
-    
-    def expireContext(self, c):
-        self.listeners.remove(c.ID)
-        
-    def getOtherListeners(self,c):
-        notified = self.listeners.copy()
-        notified.remove(c.ID)
-        return notified
+
     
     @setting(1, "Identify", returns='s')
-    def Identify(self, c):
+    def identify(self, c):
         '''Ask instrument to identify itself'''
         command = self.IdenStr()
-        self.ser.write(command)
+        yield self.ser.write(command)
         self.ForceRead() #expect a reply from instrument
         answer = yield self.ser.readline()
         returnValue(answer[:-1])
-
-    @setting(2, "GetFreq", returns='v')
-    def GetFreq(self,c):
-        '''Returns current frequency'''
-        return self.hpDict['freq']
-
-    @setting(3, "SetFreq", freq = 'v', returns = "")
-    def SetFreq(self,c,freq):
-        '''Sets frequency, enter value in MHZ'''
-        command = self.FreqSetStr(freq)
-        self.ser.write(command)
-        self.hpDict['freq'] = freq
-        notified = self.getOtherListeners(c)
-        self.onNewUpdate(('freq',freq),notified )
-      
-    @setting(4, "GetState", returns='b')
-    def GetState(self,c):
-        '''Request current on/off state of instrument'''
-        return self.hpDict['state']
+        
+    @setting(2, 'Frequency', f=['v[MHz]'], returns=['v[MHz]'])
+    def frequency(self, c, f = None):
+        """Get or set the CW frequency."""
+        if f is not None:
+            f = float(f)
+            self.checkFreq(f)
+            command = self.FreqSetStr(f)
+            yield self.ser.write(command)
+            self.hpDict['freq'] = f
+        returnValue( self.hpDict['freq'] )    
+        
+    @setting(3, 'Amplitude', a=['v[dBm]'], returns=['v[dBm]'])
+    def amplitude(self, c, a = None):
+        """Get or set the CW amplitude."""
+        if a is not None:
+            a = float(a)
+            self.checkPower(a)
+            command = self.PowerSetStr(a)
+            yield self.ser.write(command)
+            self.hpDict['power'] = a    
+        returnValue( self.hpDict['power'] )
     
-    @setting(5, "SetState", state= 'b', returns = "")
-    def SetState(self,c, state):
-        '''Sets on/off '''
-        command = self.StateSetStr(state)
-        self.ser.write(command)
-        self.hpDict['state'] = state
-        notified = self.getOtherListeners(c)
-        self.onStateUpdate(state,notified)
-    
-    @setting(6, "GetPower", returns = 'v')
-    def GetPower(self,c):
-        ''' Returns current power level in dBm'''
-        return self.hpDict['power']
-    
-    @setting(7, "SetPower", level = 'v',returns = "")
-    def SetPower(self,c, level):
-        '''Sets power level, enter power in dBm'''
-        self.checkPower(level)
-        command = self.PowerSetStr(level)
-        self.ser.write(command)
-        self.hpDict['power'] = level
-        notified = self.getOtherListeners(c)
-        self.onNewUpdate(('power',level),notified)
-    
-    @setting(8, "Get Power Range", returns = "*v:")
-    def GetPowerRange(self,c):
-        return self.hpDict['powerrange']
-    
-    @setting(9, "Get Frequency Range", returns = "*v:")
-    def getFreqRange(self,c):
-        return self.hpDict['freqrange']
-    
-    def checkPower(self, level):
-        MIN,MAX = self.hpDict['powerrange']
-        if not MIN <= level <= MAX:
-            raise('Power Out of Allowed Range')
-    
-    def checkFreq(self, freq):
-        MIN,MAX = self.hpDict['freqrange']
-        if not MIN <= freq <= MAX:
-            raise('Frequency Out of Allowed Range')
+    @setting(4, 'Output', os=['b'], returns=['b'])
+    def output(self, c, os=None):
+        """Get or set the output status."""
+        if os is not None:
+            command = self.StateSetStr(os)
+            yield self.ser.write(command)
+            self.hpDict['state'] = os
+        returnValue( self.hpDict['state'] )     
     
     @inlineCallbacks
     def _GetState(self):
@@ -168,7 +118,7 @@ class HPServer( SerialDeviceServer ):
         yield self.ser.write(command)
         yield self.ForceRead() #expect a reply from instrument
         answer = yield self.ser.readline()
-        answer = bool(answer)
+        answer = bool(int(answer)) #returns a string
         returnValue(answer)
     
     @inlineCallbacks
@@ -177,16 +127,26 @@ class HPServer( SerialDeviceServer ):
         yield self.ser.write(command)
         yield self.ForceRead() #expect a reply from instrument
         freq = yield self.ser.readline()
-        freq = float(freq) / 10**6 #state is in MHz 
+        freq = float(freq) / 10.0**6 #state is in MHz 
         returnValue(freq)
         
     @inlineCallbacks
     def _GetPower(self):
         command = self.PowerReqStr()
-        yield  self.ser.write(command)
+        yield self.ser.write(command)
         yield self.ForceRead() #expect a reply from instrument
         answer = yield self.ser.readline()
         returnValue(answer)
+    
+    def checkPower(self, level):
+        MIN,MAX = self.hpDict['powerrange']
+        if not MIN <= level <= MAX:
+            raise Exception('Power Out of Allowed Range')
+    
+    def checkFreq(self, freq):
+        MIN,MAX = self.hpDict['freqrange']
+        if not MIN <= freq <= MAX:
+            raise Exception('Frequency Out of Allowed Range')
         
     #send message to controller to indicate whether or not (status = 1 or 0)
     #a response is expected from the instrument
