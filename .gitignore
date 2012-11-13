@@ -6,3 +6,5 @@ Errors.log
 .recent.ini
 .DS_store
 .directory
+SWITCH_CONTROL_config.py
+DDS_CONTROL_config.py
