@@ -11,7 +11,7 @@ class TPSserver( SerialDeviceServer ):
     name = '%LABRADNODE% TPS Server'
     regKey = 'TPSscope'
     port = None
-    serNode = 'soenkeDesk'
+    serNode = 'lattic-imaging'
     timeout = 1.0
 
     @inlineCallbacks

@@ -354,6 +354,7 @@ class SerialServer(LabradServer):
 
         if data:
             delim, skip = data, ''
+        
         else:
             delim, skip = '\n', '\r'
 
