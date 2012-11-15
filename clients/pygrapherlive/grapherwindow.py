@@ -101,7 +101,7 @@ class GrapherWindow(QtGui.QWidget):
             if (self.datasetCheckboxes[dataset, directory, index] != None):
                 # if the checkbox does exist, then just reassign it.
                 self.datasetCheckboxes[dataset, directory, index] = datasetCheckbox
-                self.datasetCheckboxListWidget.setItemWidget(self.datasetCheckboxListWidget.item(self.datasetCheckboxPositionDict[dataset, directory]), datasetCheckbox)
+                self.datasetCheckboxListWidget.setItemWidget(self.datasetCheckboxListWidget.item(self.datasetCheckboxPositionDict[dataset, directory, index]), datasetCheckbox)
         except:
             self.datasetCheckboxes[dataset, directory, index] = datasetCheckbox
             # The trick here is to create an item with enough text to activate the scrollbar, and then hide the text.
@@ -110,7 +110,6 @@ class GrapherWindow(QtGui.QWidget):
             item.setText('     ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             item.setTextColor(QtGui.QColor(255, 255, 255))
             self.datasetCheckboxListWidget.addItem(item)
-    #        self.datasetCheckboxListWidget.addItem(str(dataset) + ' ' + str(directory[-1]))
             self.datasetCheckboxListWidget.setItemWidget(self.datasetCheckboxListWidget.item(self.datasetCheckboxCounter), datasetCheckbox)
             self.datasetCheckboxPositionDict[dataset, directory, index] = self.datasetCheckboxCounter
             self.datasetCheckboxCounter = self.datasetCheckboxCounter + 1

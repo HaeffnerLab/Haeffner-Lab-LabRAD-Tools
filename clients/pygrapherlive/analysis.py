@@ -287,6 +287,7 @@ class AnalysisWidget(QtGui.QWidget):
         fitFunc = p[0]*x + p[1]
         return fitFunc
     
+    @inlineCallbacks
     def fitParabola(self, dataset, directory, index, label, parameters):
         dataX, dataY = self.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         dataX = np.array(dataX)

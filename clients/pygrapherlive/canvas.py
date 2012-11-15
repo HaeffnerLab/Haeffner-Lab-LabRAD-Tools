@@ -182,13 +182,20 @@ class Qt4MplCanvas(FigureCanvas):
         numberOfDependentVariables = data.shape[1] - 1 # total number of variables minus the independent variable           
         numberOfDataPoints = data.shape[0]
         if (self.dataDict[dataset, directory] == None):        
-            if (directory[-1][-5:len(directory[-1])] != 'Model'):
+            if (directory[-1][-5:len(directory[-1])] != 'Model'): # Check if this is a model
                 for i in range(numberOfDependentVariables):
                     label = self.datasetLabelsDict[dataset, directory][i]
                     self.parent.createDatasetCheckbox(dataset, directory, label, i)
                     self.parent.createDatasetAnalysisCheckbox(dataset, directory, label, i)
-            else:
-                self.parent.createDatasetCheckbox(dataset, directory, directory[-1][-5:len(directory[-1])], 0)                
+#            else:
+#                # check if this model already exists!
+#                for i in range(self.parent.datasetCheckboxCounter):
+#                    if (self.parent.datasetCheckboxListWidget.item(i).text() == str('     ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + directory[-1][-5:len(directory[-1])])):
+#                        self.parent.datasetCheckboxListWidget.takeItem(i)
+#                        print 'taken'
+            else:    
+                self.parent.createDatasetCheckbox(dataset, directory, directory[-1][-5:len(directory[-1])], 0)
+
             self.dataDict[dataset, directory] = [[np.zeros([MAXDATASETSIZE]), np.zeros([MAXDATASETSIZE*numberOfDependentVariables]).reshape(numberOfDependentVariables, MAXDATASETSIZE)]]#, [np.zeros([MAXDATASETSIZE]), np.zeros([MAXDATASETSIZE*numberOfDependentVariables]).reshape(numberOfDependentVariables, MAXDATASETSIZE)]]           
             self.plotDict[dataset, directory] = [[]]*numberOfDependentVariables
 #            self.parent.createDatasetCheckbox(dataset, directory)
