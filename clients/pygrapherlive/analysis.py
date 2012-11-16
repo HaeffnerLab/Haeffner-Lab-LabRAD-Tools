@@ -66,6 +66,12 @@ class AnalysisWidget(QtGui.QWidget):
         mainLayout.addWidget(fitButton)
         
         # button to fit data on screen
+        drawButton = QtGui.QPushButton("Draw Curves", self)
+        drawButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
+        drawButton.clicked.connect(self.drawCurvesSignal)        
+        mainLayout.addWidget(drawButton)        
+        
+        # button to fit data on screen
         togglePointsButton = QtGui.QPushButton("Toggle Points", self)
         togglePointsButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         togglePointsButton.clicked.connect(self.togglePointsSignal)        
@@ -93,8 +99,11 @@ class AnalysisWidget(QtGui.QWidget):
                     
     def fitCurvesSignal(self, evt):
         self.fitCurves()
+        
+    def drawCurvesSignal(self, evt):
+        self.fitCurves(drawCurves = True)
 
-    def fitCurves(self, parameters = None):
+    def fitCurves(self, parameters = None, drawCurves = False):
         self.solutionsDictionary = {}
         for dataset,directory,index in self.parent.datasetAnalysisCheckboxes.keys():
             # if dataset is intended to be drawn (a checkbox governs this)
@@ -105,12 +114,13 @@ class AnalysisWidget(QtGui.QWidget):
 #                        print dataset, directory, index, key
                         # MULTIPLE LINES IN THE SAME DATASET!!!!
                         fitFunction = self.fitCurveDictionary[key]
-                        fitFunction(dataset, directory, index, labels[index], parameters)
-        self.solutionsWindow = SolutionsWindow(self, self.context, self.solutionsDictionary)
-        self.solutionsWindow.show()
+                        fitFunction(dataset, directory, index, labels[index], parameters, drawCurves)
+        if (drawCurves == False):                        
+            self.solutionsWindow = SolutionsWindow(self, self.context, self.solutionsDictionary)
+            self.solutionsWindow.show()
 
     @inlineCallbacks
-    def fitGaussian(self, dataset, directory, index, label, parameters):
+    def fitGaussian(self, dataset, directory, index, label, parameters, drawCurves):
         dataX, dataY = self.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         dataX = np.array(dataX)
         xmin, xmax = self.parent.qmc.ax.get_xlim()
@@ -139,14 +149,15 @@ class AnalysisWidget(QtGui.QWidget):
             sigma =  parameters[2]
             offset = parameters[3]
             
-               
-        height, center, sigma, offset = self.fit(self.fitFuncGaussian, [height, center, sigma, offset], newYData, dataX)
-        
-        self.solutionsDictionary[dataset, directory, label, 'Gaussian', '[Height, Center, Sigma, Offset]', index] = [height, center, sigma, offset]
-
-        yield self.cxn.data_vault.cd(directory, context = self.context)
-        yield self.cxn.data_vault.open(dataset, context = self.context)
-        yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Gaussian', [height, center, sigma, offset], context = self.context)        
+        if (drawCurves == False):
+              
+            height, center, sigma, offset = self.fit(self.fitFuncGaussian, [height, center, sigma, offset], newYData, dataX)
+            
+            self.solutionsDictionary[dataset, directory, label, 'Gaussian', '[Height, Center, Sigma, Offset]', index] = [height, center, sigma, offset]
+    
+            yield self.cxn.data_vault.cd(directory, context = self.context)
+            yield self.cxn.data_vault.open(dataset, context = self.context)
+            yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Gaussian', [height, center, sigma, offset], context = self.context)        
                
         modelX = np.linspace(dataX[0], dataX[-1], len(dataX)*4)
         modelY = self.fitFuncGaussian(modelX, [height, center, sigma, offset])
@@ -172,7 +183,7 @@ class AnalysisWidget(QtGui.QWidget):
         return fitFunc
 
     @inlineCallbacks
-    def fitLorentzian(self, dataset, directory, index, label, parameters):
+    def fitLorentzian(self, dataset, directory, index, label, parameters, drawCurves):
         dataX, dataY = self.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         dataX = np.array(dataX)
         xmin, xmax = self.parent.qmc.ax.get_xlim()
@@ -202,14 +213,15 @@ class AnalysisWidget(QtGui.QWidget):
             I = parameters[2]
             offset = parameters[3]
            
+        if (drawCurves == False):
         
-        gamma, center, I, offset = self.fit(self.fitFuncLorentzian, [gamma, center, I, offset], newYData, dataX)
-        
-        self.solutionsDictionary[dataset, directory, label, 'Lorentzian', '[Gamma, Center, I, Offset]', index] = [gamma, center, I, offset] 
-               
-        yield self.cxn.data_vault.cd(directory, context = self.context)
-        yield self.cxn.data_vault.open(dataset, context = self.context)
-        yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Lorentzian', [gamma, center, I, offset], context = self.context)        
+            gamma, center, I, offset = self.fit(self.fitFuncLorentzian, [gamma, center, I, offset], newYData, dataX)
+            
+            self.solutionsDictionary[dataset, directory, label, 'Lorentzian', '[Gamma, Center, I, Offset]', index] = [gamma, center, I, offset] 
+                   
+            yield self.cxn.data_vault.cd(directory, context = self.context)
+            yield self.cxn.data_vault.open(dataset, context = self.context)
+            yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Lorentzian', [gamma, center, I, offset], context = self.context)        
         
         modelX = np.linspace(dataX[0], dataX[-1], len(dataX)*4)
         modelY = self.fitFuncLorentzian(modelX, [gamma, center, I, offset])
@@ -235,7 +247,7 @@ class AnalysisWidget(QtGui.QWidget):
         return fitFunc
 
     @inlineCallbacks
-    def fitLine(self, dataset, directory, index, label, parameters):
+    def fitLine(self, dataset, directory, index, label, parameters, drawCurves):
         dataX, dataY = self.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         dataX = np.array(dataX)
         xmin, xmax = self.parent.qmc.ax.get_xlim()
@@ -255,14 +267,16 @@ class AnalysisWidget(QtGui.QWidget):
         else:
             slope = parameters[0]
             offset = parameters[1]
+
+        if (drawCurves == False):
             
-        slope, offset = self.fit(self.fitFuncLine, [slope, offset], newYData, dataX)
-        
-        self.solutionsDictionary[dataset, directory, label, 'Line', '[Slope, Offset]', index] = [slope, offset] 
-        
-        yield self.cxn.data_vault.cd(directory, context = self.context)
-        yield self.cxn.data_vault.open(dataset, context = self.context)
-        yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Line', [slope, offset], context = self.context)        
+            slope, offset = self.fit(self.fitFuncLine, [slope, offset], newYData, dataX)
+            
+            self.solutionsDictionary[dataset, directory, label, 'Line', '[Slope, Offset]', index] = [slope, offset] 
+            
+            yield self.cxn.data_vault.cd(directory, context = self.context)
+            yield self.cxn.data_vault.open(dataset, context = self.context)
+            yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Line', [slope, offset], context = self.context)        
         
         
         modelX = np.linspace(dataX[0], dataX[-1], len(dataX)*4)
@@ -288,7 +302,7 @@ class AnalysisWidget(QtGui.QWidget):
         return fitFunc
     
     @inlineCallbacks
-    def fitParabola(self, dataset, directory, index, label, parameters):
+    def fitParabola(self, dataset, directory, index, label, parameters, drawCurves):
         dataX, dataY = self.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         dataX = np.array(dataX)
         xmin, xmax = self.parent.qmc.ax.get_xlim()
@@ -312,13 +326,15 @@ class AnalysisWidget(QtGui.QWidget):
             B = parameters[1]
             C = parameters[2]
 
-        A, B, C = self.fit(self.fitFuncParabola, [A, B, C], newYData, dataX)
-        
-        self.solutionsDictionary[dataset, directory, label, 'Parabola', '[A, B, C]', index] = [A, B, C] 
-        
-        yield self.cxn.data_vault.cd(directory, context = self.context)
-        yield self.cxn.data_vault.open(dataset, context = self.context)
-        yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Parabola', [A, B, C], context = self.context)               
+        if (drawCurves == False):
+            
+            A, B, C = self.fit(self.fitFuncParabola, [A, B, C], newYData, dataX)
+            
+            self.solutionsDictionary[dataset, directory, label, 'Parabola', '[A, B, C]', index] = [A, B, C] 
+            
+            yield self.cxn.data_vault.cd(directory, context = self.context)
+            yield self.cxn.data_vault.open(dataset, context = self.context)
+            yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Parabola', [A, B, C], context = self.context)               
         
         modelX = np.linspace(dataX[0], dataX[-1], len(dataX)*4)
         modelY = self.fitFuncParabola(modelX, [A, B, C])
@@ -378,29 +394,41 @@ class ParameterWindow(QtGui.QWidget):
         self.gaussianHeightDoubleSpinBox.setDecimals(6)
         self.gaussianHeightDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.gaussianHeightDoubleSpinBox.setValue(1)
+        self.gaussianHeightDoubleSpinBox.setSingleStep(.1)
         self.gaussianHeightDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.gaussianHeightDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.gaussianHeightDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
         
         gaussianCenterLabel = QtGui.QLabel('Center')
         self.gaussianCenterDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.gaussianCenterDoubleSpinBox.setDecimals(6)
         self.gaussianCenterDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.gaussianCenterDoubleSpinBox.setValue(1)
+        self.gaussianCenterDoubleSpinBox.setSingleStep(.1)
         self.gaussianCenterDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-         
+        self.gaussianCenterDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.gaussianCenterDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
+          
         gaussianSigmaLabel = QtGui.QLabel('Sigma')
         self.gaussianSigmaDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.gaussianSigmaDoubleSpinBox.setDecimals(6)
         self.gaussianSigmaDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.gaussianSigmaDoubleSpinBox.setValue(1)
+        self.gaussianSigmaDoubleSpinBox.setSingleStep(.1)
         self.gaussianSigmaDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-
+        self.gaussianSigmaDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.gaussianSigmaDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
+ 
         gaussianOffsetLabel = QtGui.QLabel('Offset')
         self.gaussianOffsetDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.gaussianOffsetDoubleSpinBox.setDecimals(6)
         self.gaussianOffsetDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.gaussianOffsetDoubleSpinBox.setValue(1)
+        self.gaussianOffsetDoubleSpinBox.setSingleStep(.1)
         self.gaussianOffsetDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-
+        self.gaussianOffsetDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.gaussianOffsetDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
+ 
         # Lorentzian
 
         lorentzianGammaLabel = QtGui.QLabel('Gamma')
@@ -408,28 +436,40 @@ class ParameterWindow(QtGui.QWidget):
         self.lorentzianGammaDoubleSpinBox.setDecimals(6)
         self.lorentzianGammaDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.lorentzianGammaDoubleSpinBox.setValue(1)
+        self.lorentzianGammaDoubleSpinBox.setSingleStep(.1)
         self.lorentzianGammaDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.lorentzianGammaDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.lorentzianGammaDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
         
         lorentzianCenterLabel = QtGui.QLabel('Center')
         self.lorentzianCenterDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.lorentzianCenterDoubleSpinBox.setDecimals(6)
         self.lorentzianCenterDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.lorentzianCenterDoubleSpinBox.setValue(1)
+        self.lorentzianCenterDoubleSpinBox.setSingleStep(.1)
         self.lorentzianCenterDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.lorentzianCenterDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.lorentzianCenterDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
          
         lorentzianILabel = QtGui.QLabel('I')
         self.lorentzianIDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.lorentzianIDoubleSpinBox.setDecimals(6)
         self.lorentzianIDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.lorentzianIDoubleSpinBox.setValue(1)
+        self.lorentzianIDoubleSpinBox.setSingleStep(.1)
         self.lorentzianIDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.lorentzianIDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.lorentzianIDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
 
         lorentzianOffsetLabel = QtGui.QLabel('Offset')
         self.lorentzianOffsetDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.lorentzianOffsetDoubleSpinBox.setDecimals(6)
         self.lorentzianOffsetDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.lorentzianOffsetDoubleSpinBox.setValue(1)
+        self.lorentzianOffsetDoubleSpinBox.setSingleStep(.1)
         self.lorentzianOffsetDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.lorentzianOffsetDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.lorentzianOffsetDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
 
         # Line
 
@@ -438,14 +478,20 @@ class ParameterWindow(QtGui.QWidget):
         self.lineSlopeDoubleSpinBox.setDecimals(6)
         self.lineSlopeDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.lineSlopeDoubleSpinBox.setValue(1)
+        self.lineSlopeDoubleSpinBox.setSingleStep(.1)
         self.lineSlopeDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.lineSlopeDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.lineSlopeDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
         
         lineOffsetLabel = QtGui.QLabel('Offset')
         self.lineOffsetDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.lineOffsetDoubleSpinBox.setDecimals(6)
         self.lineOffsetDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.lineOffsetDoubleSpinBox.setValue(1)
+        self.lineOffsetDoubleSpinBox.setSingleStep(.1)
         self.lineOffsetDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.lineOffsetDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.lineOffsetDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
 
         # Parabola
 
@@ -454,21 +500,30 @@ class ParameterWindow(QtGui.QWidget):
         self.parabolaADoubleSpinBox.setDecimals(6)
         self.parabolaADoubleSpinBox.setRange(-1000000000, 1000000000)
         self.parabolaADoubleSpinBox.setValue(1)
+        self.parabolaADoubleSpinBox.setSingleStep(.1)
         self.parabolaADoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.parabolaADoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.parabolaADoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
         
         parabolaBLabel = QtGui.QLabel('B')
         self.parabolaBDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.parabolaBDoubleSpinBox.setDecimals(6)
         self.parabolaBDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.parabolaBDoubleSpinBox.setValue(1)
+        self.parabolaBDoubleSpinBox.setSingleStep(.1)
         self.parabolaBDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.parabolaBDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.parabolaBDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
 
         parabolaCLabel = QtGui.QLabel('C')
         self.parabolaCDoubleSpinBox = QtGui.QDoubleSpinBox()
         self.parabolaCDoubleSpinBox.setDecimals(6)
         self.parabolaCDoubleSpinBox.setRange(-1000000000, 1000000000)
         self.parabolaCDoubleSpinBox.setValue(1)
+        self.parabolaCDoubleSpinBox.setSingleStep(.1)
         self.parabolaCDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.parabolaCDoubleSpinBox.setKeyboardTracking(False)
+        self.connect(self.parabolaCDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
 
         # Layout
         self.grid = QtGui.QGridLayout()
