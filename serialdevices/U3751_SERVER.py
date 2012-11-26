@@ -8,7 +8,7 @@ port = 'COM3'
 
 class U3751Server( LabradServer ):
     """Controls U3751 Spectrum Analyzer"""
-    name = '%LABRADNODE% U3751 Server'
+    name = 'U3751 Server'
     regKey = ''
     gpibaddr = 1
 
