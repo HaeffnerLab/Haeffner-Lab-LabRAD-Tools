@@ -6,8 +6,11 @@ class config(object):
      ('Test', 'Exp1'):  ('common.clients.guiscriptcontrol.experiments.Test', 'Test'),
      ('Test', 'Exp2'):  ('common.clients.guiscriptcontrol.experiments.Test2', 'Test2'),
      ('Test', 'Exp3'):  ('common.clients.guiscriptcontrol.experiments.Test3', 'Test3'),
-     ('729Experiments','Spectrum'):  ('cct.scripts.experiments.Experiments729.spectrum', 'spectrum'),
-     ('729Experiments','RabiFlopping'):  ('cct.scripts.experiments.Experiments729.rabi_flopping', 'rabi_flopping'),
+     ('SimpleMeasurements', 'ADCPowerMonitor'):  ('lattice.scripts.simpleMeasurements.ADCpowerMonitor', 'ADCPowerMonitor'),
+     ('729Experiments','Spectrum'):  ('lattice.scripts.experiments.Experiments729.spectrum', 'spectrum'),
+     ('729Experiments','RabiFlopping'):  ('lattice.scripts.experiments.Experiments729.rabi_flopping', 'rabi_flopping'),
+     ('729Experiments','BlueHeating'):  ('lattice.scripts.experiments.Experiments729.blue_heating_rabi_flopping', 'blue_heating_rabi_flopping'),
+     ('BranchingRatio',):  ('lattice.scripts.experiments.BranchingRatio.branching_ratio', 'branching_ratio')
      }
     
     
@@ -19,4 +22,6 @@ class config(object):
     ('SimpleMeasurements', 'ADCPowerMonitor'):  [('SimpleMeasurements', 'ADCPowerMonitor')],
     ('729Experiments','Spectrum'):  [('729Experiments','Spectrum')],
     ('729Experiments','RabiFlopping'):  [('729Experiments','RabiFlopping')],
+    ('729Experiments','BlueHeating'):[('729Experiments','BlueHeating')],
+    ('BranchingRatio',):[('BranchingRatio',)]
     }

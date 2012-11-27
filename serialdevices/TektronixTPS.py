@@ -8,7 +8,7 @@ import numpy
 class TPSserver( SerialDeviceServer ):
     """Controls TPS 2000 and 1000 series Oscilloscope"""
 
-    name = 'TPS Server'
+    name = '%LABRADNODE% TPS Server'
     regKey = 'TPSscope'
     port = None
     serNode = 'lattic-imaging'
