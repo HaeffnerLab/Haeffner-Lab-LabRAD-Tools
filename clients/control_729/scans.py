@@ -161,7 +161,7 @@ class scans_connection(scans, async_semaphore):
                 tuple(c.spectrum_excitation_time): Parameter(c.spectrum_excitation_time, self.spectrum.duration.setNewDuration_blocking, self.spectrum.duration.new_duration, self.spectrum.duration.duration.setRange, 'us'),
                 tuple(c.spectrum_amplitude_729): Parameter(c.spectrum_amplitude_729, setValueBlocking(self.spectrum.ampl_729), self.spectrum.ampl_729.valueChanged, self.spectrum.ampl_729.setRange, 'dBm'),
                 tuple(c.spectrum_use_saved):Parameter(c.spectrum_use_saved, self.spectrum.use_saved_line.setChecked, updateSignal = self.spectrum.use_saved_line.toggled),
-                tuple(c.spectrum_saved_freq):Parameter(c.spectrum_saved_freq, self.spectrum.dropdown.set_selected, self.spectrum.dropdown.currentIndexChanged[QtCore.QString], do_nothing, None), 
+                tuple(c.spectrum_saved_freq):Parameter(c.spectrum_saved_freq, self.spectrum.dropdown.set_selected, self.spectrum.dropdown.new_selection, do_nothing, None), 
                 #list
                 tuple(c.spectrum_frequencies):Parameter(c.spectrum_frequencies, do_nothing, self.spectrum.limitWidget.new_list_signal, self.spectrum.limitWidget.setRange, 'MHz'),
                 tuple(c.rabi_frequency): Parameter(c.rabi_frequency, self.rabi.freq729.set_freq_value_no_signals, self.rabi.freq729.valueChanged, self.rabi.freq729.setRange, 'MHz'),

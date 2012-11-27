@@ -299,6 +299,9 @@ class saved_frequencies_table(QtGui.QTableWidget):
         self.reactor.stop()
         
 class dropdown(QtGui.QComboBox):
+    
+    new_selection = QtCore.pyqtSignal(str)
+     
     def __init__(self, font = None, names = [], info_position = None, parent = None ):
         super(dropdown, self).__init__(parent)
         self.info_position = info_position
@@ -308,6 +311,7 @@ class dropdown(QtGui.QComboBox):
         self.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
         self.SizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.set_dropdown(names)
+        self.currentIndexChanged[QtCore.QString].connect(self.on_user_selection)
         
     def set_selected(self, text):
         self.selected = text
@@ -316,6 +320,10 @@ class dropdown(QtGui.QComboBox):
             self.blockSignals(True)
             self.setCurrentIndex(item)
             self.blockSignals(False)
+    
+    def on_user_selection(self,text):
+        self.selected = text
+        self.new_selection.emit(text)
     
     def set_dropdown(self, info):
         self.blockSignals(True)
@@ -523,7 +531,7 @@ class frequency_wth_dropdown(QtGui.QWidget):
     def connect_layout(self):
         self.freq.valueChanged.connect(self.valueChanged.emit)
         self.select_line.toggled.connect(self.useSaved.emit)
-        self.dropdown.currentIndexChanged[QtCore.QString].connect(self.useSavedLine)
+        self.dropdown.new_selection.connect(self.useSavedLine)
         
     def set_selected(self, text):
         self.dropdown.set_selected(text)
@@ -553,8 +561,8 @@ if __name__=="__main__":
     from twisted.internet import reactor
 #    widget = limitsWidget(reactor, suffix = 'us', abs_range = (0,100))
 #    widget = durationWdiget(reactor)
-#    widget = saved_frequencies(reactor)
+    widget = frequency_wth_dropdown(reactor)
 #    widget = saved_frequencies_table(reactor)
-    widget = lineinfo_table(reactor)
+#    widget = lineinfo_table(reactor)
     widget.show()
     reactor.run()
