@@ -22,7 +22,7 @@ from twisted.internet.defer import returnValue
 class HPServer( SerialDeviceServer ):
     """Controls HP8648A Signal Generator"""
 
-    name = '%LABRADNODE% HP Server'
+    name = 'HP Server'
     regKey = 'HPsiggen'
     port = None
     serNode = 'lattice-imaging'

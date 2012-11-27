@@ -19,7 +19,7 @@
 name = Serial Server
 version = 1.2
 description = 
-instancename = %LABRADNODE% Serial Server
+instancename = Serial Server
 
 [startup]
 cmdline = %PYTHON% %FILE%
