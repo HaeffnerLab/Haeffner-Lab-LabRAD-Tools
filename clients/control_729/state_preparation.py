@@ -361,6 +361,7 @@ class state_preparation_connection(state_preparation, async_semaphore):
                 tuple(c.optical_pumping_pulsed_duration_between_pulses):Parameter(c.optical_pumping_pulsed_duration_between_pulses, setValueBlocking(self.optical_pumping_frame.between_pulses), self.optical_pumping_frame.between_pulses.valueChanged, self.optical_pumping_frame.between_pulses.setRange, 'us'), 
                 tuple(c.saved_lines_729):Parameter(c.saved_lines_729, self.optical_pumping_frame.freq729.set_dropdown, no_signal, do_nothing, c.line_parameter_units), 
                 tuple(c.optical_pumping_use_saved_line):Parameter(c.optical_pumping_use_saved_line, self.optical_pumping_frame.freq729.set_selected, self.optical_pumping_frame.freq729.useSavedLine, do_nothing, None), 
+                
                 tuple(c.optical_pumping_use_saved):Parameter(c.optical_pumping_use_saved, self.optical_pumping_frame.freq729.set_use_saved, updateSignal = self.optical_pumping_frame.freq729.useSaved),
                 #heating
                 tuple(c.background_heating_duration): Parameter(c.background_heating_duration, setValueBlocking(self.heating), self.heating.valueChanged, self.heating.setRange, 'ms'),
