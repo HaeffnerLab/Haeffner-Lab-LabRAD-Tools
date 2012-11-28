@@ -16,7 +16,7 @@ timeout = 5
 """
 from labrad.server import setting, LabradServer, Signal
 from labrad.units import WithUnit
-from twisted.internet.defer import returnValue
+from twisted.internet.defer import returnValue, inlineCallbacks
 import time
 from SD_tracker_config import config as conf
 from SD_calculator import double_pass, Transitions_SD, fitter
@@ -28,6 +28,7 @@ class SDTracker(LabradServer):
     
     onNewFit = Signal( 768120, 'signal: new fit', '' )
     
+    @inlineCallbacks
     def initServer(self):
         self.start_time = time.time()
         self.keep_measurements = conf.keep_measurements
@@ -40,6 +41,48 @@ class SDTracker(LabradServer):
         self.measurements = []
         self.B_fit = None
         self.line_center_fit = None
+        self.dv = None
+        yield self.connect_data_vault()
+        yield self.setupListeners()
+    
+    @inlineCallbacks
+    def connect_data_vault(self):
+        try:
+            #reconnect to data vault and navigate to the directory
+            self.dv = yield self.client.data_vault
+            directory = list(conf.save_folder)
+            localtime = time.localtime()
+            dirappend = [time.strftime("%Y%b%d",localtime)]
+            directory.extend(dirappend)
+            yield self.dv.cd(directory, True)
+            datasetNameAppend = time.strftime("%Y%b%d_%H%M_%S",localtime)
+            save_name = '{0} {1}'.format(conf.dataset_name, datasetNameAppend)
+            self.line_center_dataset = yield self.dv.new(save_name, [('t', 'sec')], [('Cavity Drift','Line Center','MHz'),('Cavity Drift','B Field','gauss')])
+            yield self.dv.add_parameter('start_time', time.time())
+        except AttributeError:
+            self.dv = None
+        
+    @inlineCallbacks
+    def setupListeners(self):
+        yield self.client.manager.subscribe_to_named_message('Server Connect', conf.signal_id, True)
+        yield self.client.manager.subscribe_to_named_message('Server Disconnect', conf.signal_id+1, True)
+        yield self.client.manager.addListener(listener = self.followServerConnect, source = None, ID = conf.signal_id)
+        yield self.client.manager.addListener(listener = self.followServerDisconnect, source = None, ID = conf.signal_id+1)
+    
+    @inlineCallbacks
+    def followServerConnect(self, cntx, serverName):
+        serverName = serverName[1]
+        if serverName == 'Data Vault':
+            yield self.connect_data_vault()
+        else:
+            yield None
+    
+    @inlineCallbacks
+    def followServerDisconnect(self, cntx, serverName):
+        serverName = serverName[1]
+        if serverName == 'Data Vault':
+            self.dv = None
+        yield None
     
     @setting(1, 'Get Transition Names', returns = '*s')
     def get_transitions(self, c):
@@ -64,7 +107,17 @@ class SDTracker(LabradServer):
         self.t_measure = numpy.append(self.t_measure , t_measure)
         self.B_field = numpy.append(self.B_field , B['gauss'])
         self.line_center = numpy.append(self.line_center , freq['MHz'])
+        #try to save to data vault
+        yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
         self.do_fit()
+    
+    @inlineCallbacks
+    def save_result_datavault(self, t_measure, freq, b_field):
+        try:
+            yield self.dv.add((t_measure, freq, b_field))
+        except AttributeError:
+            print 'Data Vault Not Available, not saving'
+            yield None
     
     @setting(3, "Get Measurements", returns = '*(vsv[MHz])')
     def get_measurements(self, c):
