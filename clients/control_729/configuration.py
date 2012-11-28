@@ -30,6 +30,7 @@ class config_729_spectrum(object):
     spectrum_amplitude_729 = ['729Experiments','Spectrum','spectrum_amplitude_729']
     spectrum_use_saved = ['729Experiments','Spectrum','spectrum_use_saved_frequency']
     spectrum_saved_freq = ['729Experiments','Spectrum','spectrum_saved_frequency']
+    spectrum_saved_freq_favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP', 'S+1/2D+5/2':'carrier'}
     #rabi flop
     saved_lines_729 = ['729Experiments','saved_lines_729']
     
@@ -38,6 +39,7 @@ class config_729_spectrum(object):
     rabi_amplitude_729 = ['729Experiments','RabiFlopping','rabi_amplitude_729']
     rabi_use_saved = ['729Experiments','RabiFlopping','rabi_flopping_use_saved_frequency']
     rabi_saved_freq = ['729Experiments','RabiFlopping','rabi_flopping_saved_frequency']
+    rabi_saved_freq_favorites = {'S+1/2D+5/2':'carrier'}
     #saved freq
     line_parameter_names = ['Name', 'Center', 'Scan Span','Scan Resolution','Scan Amplitude', 'Scan Excitation Duration']
     line_parameter_units = ['MHz', 'kHz', 'kHz', 'dBm', 'us']
@@ -77,6 +79,7 @@ class config_729_state_preparation(object):
     optical_pumping_pulsed_duration_between_pulses = ['729Experiments','optical_pumping_pulsed_duration_between_pulses']
     optical_pumping_use_saved = ['729Experiments','optical_pumping_use_saved']
     optical_pumping_use_saved_line =  ['729Experiments','optical_pumping_use_saved_line']
+    optical_pumping_use_saved_line_favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP'}
     saved_lines_729 = ['729Experiments','saved_lines_729']
     #heating
     background_heating_duration = ['729Experiments','background_heating_time']
@@ -88,3 +91,4 @@ class config_729_tracker(object):
     
     frequency_limit = (150, 250) #MHz
     saved_lines_729 = ['729Experiments','saved_lines_729']
+    favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP', 'S+1/2D+5/2':'carrier'}

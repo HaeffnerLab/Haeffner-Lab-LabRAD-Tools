@@ -300,28 +300,45 @@ class saved_frequencies_table(QtGui.QTableWidget):
         
 class dropdown(QtGui.QComboBox):
     
+    '''
+    dropdown is a QComboBox used for selecting of 729 line names
+    
+    @param favorites: favorite is an optical parameter that's a replacement ditionary of the names that should be displayed
+    i.e favorites = {'S-1/2D-1/2': 'best'} will show 'best' in the dropdown menu instead of 'S-1/2D-1/2'.
+    '''
+    
     new_selection = QtCore.pyqtSignal(str)
      
-    def __init__(self, font = None, names = [], info_position = None, parent = None ):
+    def __init__(self, reactor, font = None, names = [], favorites = {}, info_position = None, only_show_favorites = False, parent = None ):
         super(dropdown, self).__init__(parent)
+        self.reactor = reactor
         self.info_position = info_position
         self.selected = None
+        self.favorites = favorites
+        self.only_show_favorites = only_show_favorites
         if font is not None:
             self.setFont(font)
         self.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
         self.SizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.set_dropdown(names)
-        self.currentIndexChanged[QtCore.QString].connect(self.on_user_selection)
+        self.currentIndexChanged[int].connect(self.on_user_selection)
         
-    def set_selected(self, text):
-        self.selected = text
-        item = self.findText(text)
-        if item is not -1:
-            self.blockSignals(True)
-            self.setCurrentIndex(item)
-            self.blockSignals(False)
+    def set_selected(self, linename):
+        '''
+        set the selection by finding the entry where linename is saved as the stored data
+        '''
+        self.selected = linename
+        index = self.findData(linename)
+        #if the returned index is -1, then calling setCurrentIndex(-1) selects no items.
+        self.blockSignals(True)
+        self.setCurrentIndex(index)
+        self.blockSignals(False)
     
-    def on_user_selection(self,text):
+    def set_favorites(self, favorites):
+        self.favorites = favorites
+    
+    def on_user_selection(self,index):
+        text = self.itemData(index).toString()
         self.selected = text
         self.new_selection.emit(text)
     
@@ -329,19 +346,26 @@ class dropdown(QtGui.QComboBox):
         self.blockSignals(True)
         for values in info:
             if self.info_position is not None:
-                name = values[self.info_position]
+                linename = values[self.info_position]
             else:
-                name = values
-            self.addItem(name)
+                linename = values
+            display_name = self.favorites.get(linename, linename)
+            #the name to be display is provided through the dictionary of favorites. if not in the dictionary display the name of the line.
+            if not linename in self.favorites.keys() and self.only_show_favorites:
+                #if linename was not in the favorites, and we are only showing the favorites, don't add the item
+                pass
+            else:
+                self.addItem(display_name, userData = linename)
         if self.selected is not None:
             self.set_selected(self.selected)
         self.blockSignals(False)
 
 class saved_frequencies_dropdown(QtGui.QTableWidget):
-    def __init__(self, reactor, limits = (0,500), sig_figs = 4, names = [], entries = 2, suffix = '', parent=None):
+    def __init__(self, reactor, limits = (0,500), sig_figs = 4, names = [], entries = 2, suffix = '', favorites = {}, parent=None):
         super(saved_frequencies_dropdown, self).__init__(parent)
         self.font = QtGui.QFont('MS Shell Dlg 2',pointSize=12)
         self.limits = limits
+        self.favorites = favorites
         self.sig_figs = sig_figs
         self.names = names
         self.entries = entries
@@ -360,7 +384,7 @@ class saved_frequencies_dropdown(QtGui.QTableWidget):
         if names is not None:
             self.names = names
         for i in range(self.entries):
-            drop = dropdown(names = self.names, font=self.font)
+            drop = dropdown(self.reactor, names = self.names, font=self.font, favorites = self.favorites)
             self.setCellWidget(i ,0 , drop)
             sample = QtGui.QDoubleSpinBox()
             sample.setFont(self.font)
@@ -369,13 +393,13 @@ class saved_frequencies_dropdown(QtGui.QTableWidget):
             sample.setSingleStep(10**-self.sig_figs)
             sample.setSuffix(self.suffix)
             self.setCellWidget(i, 1, sample)
-    
+
     def get_info(self):
         info = []
         for i in range(self.entries):
-            duration = self.cellWidget(i, 0)
-            text = duration.currentText()
-            text = str(text)
+            dropdown = self.cellWidget(i, 0)
+            index = dropdown.currentIndex()
+            text = str(dropdown.itemData(index).toString())
             spin =  self.cellWidget( i, 1)
             val = spin.value()
             info.append((text, val))
@@ -478,10 +502,11 @@ class frequency_wth_dropdown(QtGui.QWidget):
     useSaved = QtCore.pyqtSignal(bool)
     useSavedLine = QtCore.pyqtSignal(str)
     
-    def __init__(self, reactor, limits = (0,500), parameter_name = 'Frequency', sig_figs = 4, names = [], suffix = ' MHz', font = None, parent=None):
+    def __init__(self, reactor, limits = (0,500), parameter_name = 'Frequency', sig_figs = 4, names = [], suffix = ' MHz', font = None, only_show_favorites = False, parent=None):
         super(frequency_wth_dropdown, self).__init__(parent)  
         self.reactor = reactor
         self.parameter_name = parameter_name
+        self.only_show_favorites = only_show_favorites
         self.limits = limits
         self.sig_figs =  sig_figs
         self.names = names
@@ -493,7 +518,6 @@ class frequency_wth_dropdown(QtGui.QWidget):
         self.initializeGUI()
         self.connect_layout()
 
-    
     def initializeGUI(self):  
         layout = QtGui.QGridLayout()
         #frequency spin box  
@@ -515,7 +539,7 @@ class frequency_wth_dropdown(QtGui.QWidget):
         self.select_freq.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         layout.addWidget(self.select_freq, 1, 0)
         layout.addWidget(self.select_line, 1, 2)
-        self.dropdown = dropdown(font = self.font, names = self.names, info_position = 0)
+        self.dropdown = dropdown(self.reactor, font = self.font, names = self.names, info_position = 0, only_show_favorites = self.only_show_favorites)
         label = QtGui.QLabel(self.parameter_name)
         label.setFont(self.font)
         label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
@@ -548,6 +572,9 @@ class frequency_wth_dropdown(QtGui.QWidget):
     def set_dropdown(self, names):
         self.dropdown.set_dropdown(names)
     
+    def set_favorites(self, favorites):
+        self.dropdown.set_favorites(favorites)
+    
     def setRange(self, r_min, r_max):
         self.freq.setRange(r_min,r_max)
     
@@ -561,7 +588,8 @@ if __name__=="__main__":
     from twisted.internet import reactor
 #    widget = limitsWidget(reactor, suffix = 'us', abs_range = (0,100))
 #    widget = durationWdiget(reactor)
-    widget = frequency_wth_dropdown(reactor)
+    widget = dropdown(reactor)
+#    widget = frequency_wth_dropdown(reactor)
 #    widget = saved_frequencies_table(reactor)
 #    widget = lineinfo_table(reactor)
     widget.show()

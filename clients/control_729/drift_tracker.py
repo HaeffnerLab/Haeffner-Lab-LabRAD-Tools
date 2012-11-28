@@ -16,6 +16,11 @@ class drift_tracker(QtGui.QWidget):
         self.reactor = reactor
         self.cxn = cxn
         self.subscribed = False
+        #see if favoirtes are provided in the configuration. if not, use an empty dictionary
+        try:
+            self.favorites =  c.favorites
+        except AttributeError:
+            self.favorites = {}
         self.updater = LoopingCall(self.looping_update)
         self.create_layout()
         self.connect_labrad()
@@ -77,7 +82,7 @@ class drift_tracker(QtGui.QWidget):
     def create_widget_layout(self):
         layout = QtGui.QGridLayout()
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
-        self.entry_table = saved_frequencies_dropdown(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4)
+        self.entry_table = saved_frequencies_dropdown(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites)
         self.entry_button = QtGui.QPushButton("Submit")
         self.remove_button = QtGui.QPushButton("Remove")
         self.remove_count = QtGui.QSpinBox()
@@ -242,11 +247,6 @@ class drift_tracker(QtGui.QWidget):
         y = 1000 * numpy.polyval(p, 60*x)
         l = self.b_drift.plot(x, y, '-r')[0]
         self.b_drift_fit_line.append(l)
-        b_in_units = p[1] * 1000.0 * 60.0
-        a_in_units = p[0] * 1000* (60.0)**2
-        c_in_units = p[2] * 1000
-        label = self.b_drift.annotate('fit a*x**2 + b*x + c, a: {0:.1f} mgauss/min**2 b: {1:.1f} mgauss/min, c: {2:.1f} mgauss'.format(a_in_units, b_in_units, c_in_units), xy = (0.1, 0.9), xycoords = 'axes fraction', fontsize = 11.0)
-        self.b_drift_fit_line.append(label)
         self.drift_canvas.draw()
     
     def plot_fit_f(self, p):
@@ -261,12 +261,7 @@ class drift_tracker(QtGui.QWidget):
         y = 1000 * numpy.polyval(p, 60*x)
         l = self.line_drift.plot(x, y, '-r')[0]
         self.line_drift_fit_line.append(l)
-        b_in_units = p[1] * 1000.0 * 60.0
-        a_in_units = p[0] * (1000.0 * 60.0)**2
-        label = self.line_drift.annotate('fit a*x**2 + b*x + c, a: {0:.1f} KHz/min**2 b: {1:.1f} KHz/min, c: {2:.4f} MHz'.format(a_in_units, b_in_units, p[2]), xy = (0.1, 0.9), xycoords = 'axes fraction', fontsize = 11.0)
-        self.line_drift_fit_line.append(label)
         self.drift_canvas.draw()
-    
     
     @inlineCallbacks
     def update_lines(self):
@@ -312,31 +307,40 @@ class drift_tracker(QtGui.QWidget):
                 message = QtGui.QMessageBox()
                 message.setText(e.msg)
                 message.exec_()
-            
-            
     
     def update_track(self, meas, axes, lines):
-        #clear
+        #clear all current lines
         for i in range(len(lines)):
             line = lines.pop()
             line.remove()
         x = numpy.array([m[0] for m in meas])
         y = [m[1] for m in meas]
+        #annotate the last point
+        try:
+            last = y[-1]
+        except IndexError:
+            pass
+        else:
+            label = axes.annotate('Last Point: ' + str(last), xy = (0.5, 0.9), xycoords = 'axes fraction', fontsize = 13.0)
+            lines.append(label)
         line = axes.plot(x,y, 'b*')[0]
         lines.append(line)
         self.drift_canvas.draw()
         
     def update_spectrum(self, lines):
-        #clear
+        #clear all lines by removing them from the self.spectral_lines list
         for i in range(len(self.spectral_lines)):
             line = self.spectral_lines.pop()
             line.remove()
+        #sort by frequency to add them in the right order
         srt = sorted(lines, key = lambda x: x[1])
         num = len(srt)
-        for i, (name, freq) in enumerate(srt):
+        for i, (linename, freq) in enumerate(srt):
             line = self.spec.axvline(freq['MHz'], linewidth=1.0, ymin = 0, ymax = 1)
             self.spectral_lines.append(line)
-            label = self.spec.annotate(name, xy = (freq['MHz'], 0.9 - i * 0.7 / num), xycoords = 'data', fontsize = 13.0)
+            #check to see if linename in the favorites dictionary, if not use the linename for display
+            display_name = self.favorites.get(linename, linename)
+            label = self.spec.annotate(display_name, xy = (freq['MHz'], 0.9 - i * 0.7 / num), xycoords = 'data', fontsize = 13.0)
             self.spectral_lines.append(label)
         self.spec_canvas.draw()
 

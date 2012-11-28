@@ -40,7 +40,8 @@ class optical_pumping_frame(QtGui.QFrame):
         layout.addWidget(self.pulsed, 4, 3)
         bg.setExclusive(True)
         #frequencies and amplitudes
-        self.freq729 = frequency_wth_dropdown(self.reactor, parameter_name = 'Frequency 729', suffix = 'MHz', sig_figs = 4, font = font)
+        self.freq729 = frequency_wth_dropdown(self.reactor, parameter_name = 'Frequency 729', suffix = 'MHz', sig_figs = 4, font = font, only_show_favorites = True)
+        self.freq729.set_favorites(c.optical_pumping_use_saved_line_favorites)
         self.freq854 = QtGui.QDoubleSpinBox()
         self.freq866 = QtGui.QDoubleSpinBox()
         self.ampl729 = QtGui.QDoubleSpinBox()
