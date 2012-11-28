@@ -294,6 +294,12 @@ class saved_frequencies_table(QtGui.QTableWidget):
                 sample = QtGui.QTableWidgetItem(val_name)
                 sample.setFont(self.font)
                 self.setItem(enum , 1 , sample)
+        for col in range(self.columnCount()):
+            self.resizeColumnToContents(col)
+    
+    def resizeEvent(self, event):
+        for col in range(self.columnCount()):
+            self.resizeColumnToContents(col)
             
     def closeEvent(self, x):
         self.reactor.stop()
@@ -393,6 +399,12 @@ class saved_frequencies_dropdown(QtGui.QTableWidget):
             sample.setSingleStep(10**-self.sig_figs)
             sample.setSuffix(self.suffix)
             self.setCellWidget(i, 1, sample)
+        for col in range(self.columnCount()):
+            self.resizeColumnToContents(col)
+        
+    def resizeEvent(self, event):
+        for col in range(self.columnCount()):
+            self.resizeColumnToContents(col)
 
     def get_info(self):
         info = []
@@ -492,7 +504,7 @@ class lineinfo_table(QtGui.QTableWidget):
                 l.append(val)
             info.append(tuple(l))
         return info
-    
+
     def closeEvent(self, x):
         self.reactor.stop()
 
