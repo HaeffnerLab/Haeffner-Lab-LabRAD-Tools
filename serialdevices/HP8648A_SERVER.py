@@ -4,7 +4,7 @@
 name = HP Server
 version = 1.1
 description = 
-instancename = %LABRADNODE% HP Server
+instancename = HP Server
 
 [startup]
 cmdline = %PYTHON% %FILE%
