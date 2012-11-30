@@ -8,7 +8,7 @@ class config(object):
     keep_measurements = 24 * 3600 #seconds, how long to keep measurements
     
     #data vault saving configuration
-    save_folder = ['', 'Drfit Tracking', 'Cavity729']
+    save_folder = ['', 'Drift_Tracking', 'Cavity729']
     dataset_name = 'Cavity Drift'
     #signaling
     signal_id = 9898991
