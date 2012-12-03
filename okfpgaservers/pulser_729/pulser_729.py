@@ -44,7 +44,6 @@ class Pulser_729(LabradServer):
         """
         Reset the ram position to 0
         """
-        self.check_control(c)
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetAllDDS)
         self.inCommunication.release()
@@ -54,8 +53,6 @@ class Pulser_729(LabradServer):
         """
         Programs the DDS, the input is a tuple of channel numbers and buf objects for the channels
         """
-        self.check_control(c)
-        print program
         yield self.inCommunication.acquire()
         yield deferToThread(self._programDDSSequence, program)
         self.inCommunication.release()
