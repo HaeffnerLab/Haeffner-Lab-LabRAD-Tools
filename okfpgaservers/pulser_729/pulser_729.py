@@ -2,7 +2,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser_729
-version = 1.0
+version = 1.01
 description =
 instancename = Pulser_729
 
@@ -16,11 +16,10 @@ timeout = 20
 ### END NODE INFO
 '''
 from labrad.server import LabradServer, setting
-from twisted.internet.defer import Deferred, DeferredLock, inlineCallbacks, returnValue
+from twisted.internet.defer import Deferred, DeferredLock, inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 from api import api
-from labrad.types import Error
 
 class Pulser_729(LabradServer):
     
