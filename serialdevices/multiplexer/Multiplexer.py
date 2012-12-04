@@ -11,9 +11,9 @@ import time
 import subprocess as sp
 from twisted.internet import reactor
 from labrad.server import Signal
+from labrad.units import WithUnit
 
 NUMCHANNELS = 16
-TIMEOUT = 1.0
 BAUDRATE = 115200
 DelayWhenSwtch = 100.0
 CycleDelay = 100.0
@@ -96,7 +96,7 @@ class Multiplexer( SerialDeviceServer ):
     regKey = 'Multiplexer'
     port = None
     serNode = 'lab-49'
-    timeout = TIMEOUT
+    timeout = WithUnit(1.0, 's')
     
     onNewState = Signal(SIGNALID1, 'signal: channel toggled', '(sb)')
     onNewExposure = Signal(SIGNALID2, 'signal: new exposure set', '(sv)')
@@ -131,9 +131,9 @@ class Multiplexer( SerialDeviceServer ):
         self.info.addChannel(chanName = '397', chanNumber = 5, wavelength = '397')
         self.info.addChannel(chanName = '422', chanNumber = 4, wavelength = '422')
         self.info.addChannel(chanName = '866', chanNumber = 6, wavelength = '866')
-        self.info.addChannel(chanName = '732', chanNumber = 10, wavelength = '732')
+        self.info.addChannel(chanName = '732', chanNumber = 3, wavelength = '732')
         self.info.addChannel(chanName = '397s', chanNumber = 11, wavelength = '397')
-        self.info.addChannel(chanName = '729', chanNumber = 3, wavelength = '729')
+        self.info.addChannel(chanName = '729', chanNumber = 10, wavelength = '729')
         self.info.addChannel(chanName = '397diode', chanNumber = 2, wavelength = '397')
         self.info.addChannel(chanName = '854', chanNumber = 12, wavelength = '854')
         self.info.addChannel(chanName = '397inject', chanNumber = 1, wavelength = '397')

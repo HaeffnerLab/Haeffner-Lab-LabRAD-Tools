@@ -2,7 +2,8 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import returnValue, inlineCallbacks
 from twisted.internet.threads import deferToThread
 import array
-from labrad import types as T
+from labrad.units import WithUnit
+from errors import dds_access_locked
 
 class DDS(LabradServer):
     
@@ -30,7 +31,7 @@ class DDS(LabradServer):
         """Get or set the amplitude of the named channel or the selected channel"""
         #get the hardware channel
         if self.ddsLock and amplitude is not None: 
-            raise Exception("DDS access is locked. Running pulse sequence.")
+            raise dds_access_locked()
         channel = self._getChannel(c, name)
         if amplitude is not None:
             #setting the ampplitude
@@ -41,7 +42,7 @@ class DDS(LabradServer):
                 yield self._setAmplitude(channel, amplitude)
             channel.amplitude = amplitude
             self.notifyOtherListeners(c, (name, 'amplitude', channel.amplitude), self.on_dds_param)
-        amplitude = T.Value(channel.amplitude, 'dBm')
+        amplitude = WithUnit(channel.amplitude, 'dBm')
         returnValue(amplitude)
 
     @setting(44, "Frequency", name = 's', frequency = ['v[MHz]'], returns = ['v[MHz]'])
@@ -49,7 +50,7 @@ class DDS(LabradServer):
         """Get or set the frequency of the named channel or the selected channel"""
         #get the hardware channel
         if self.ddsLock and frequency is not None: 
-            raise Exception("DDS access is locked. Running pulse sequence.")
+            raise dds_access_locked()
         channel = self._getChannel(c, name)
         if frequency is not None:
             #setting the frequency
@@ -60,7 +61,7 @@ class DDS(LabradServer):
                 yield self._setFrequency(channel, frequency)
             channel.frequency = frequency
             self.notifyOtherListeners(c, (name, 'frequency', channel.frequency), self.on_dds_param)
-        frequency = T.Value(channel.frequency, 'MHz')
+        frequency = WithUnit(channel.frequency, 'MHz')
         returnValue(frequency)
     
     @setting(45, 'Add DDS Pulses',  values = ['*(sv[s]v[s]v[MHz]v[dBm])','*(sv[s]v[s]v[MHz]v[dBm]v)'])
@@ -125,7 +126,7 @@ class DDS(LabradServer):
         to the off_parameters provided in the configuration.
         """
         if self.ddsLock and state is not None: 
-            raise Exception("DDS access is locked. Running pulse sequence.")
+            raise dds_access_locked()
         channel = self._getChannel(c, name)
         if state is not None:
             if state and not channel.state:

@@ -16,6 +16,8 @@ class DDS_CHAN(QCustomFreqPower):
         
     def import_labrad(self):
         from labrad import types as T
+        from labrad.types import Error
+        self.Error = Error
         self.T = T
         self.setupWidget()
 
@@ -50,16 +52,37 @@ class DDS_CHAN(QCustomFreqPower):
     @inlineCallbacks
     def powerChanged(self, pwr):
         val = self.T.Value(pwr, 'dBm')
-        yield self.server.amplitude(self.chan, val, context = self.context)
-        
+        try:
+            yield self.server.amplitude(self.chan, val, context = self.context)
+        except self.Error as e:
+            old_value =  yield self.server.amplitude(self.chan, context = self.context)
+            self.setPowerNoSignal(old_value)
+            self.displayError(e.msg)
+            
     @inlineCallbacks
     def freqChanged(self, freq):
         val = self.T.Value(freq, 'MHz')
-        yield self.server.frequency(self.chan, val, context = self.context)
+        try:
+            yield self.server.frequency(self.chan, val, context = self.context)
+        except self.Error as e:
+            old_value =  yield self.server.frequency(self.chan, context = self.context)
+            self.setFreqNoSignal(old_value)
+            self.displayError(e.msg)
+            
     
     @inlineCallbacks
     def switchChanged(self, pressed):
-        yield self.server.output(self.chan,pressed, context = self.context)
+        try:
+            yield self.server.output(self.chan,pressed, context = self.context)
+        except self.Error as e:
+            old_value =  yield self.server.frequency(self.chan, context = self.context)
+            self.setStateNoSignal(old_value)
+            self.displayError(e.msg)
+    
+    def displayError(self, text):
+        message = QtGui.QMessageBox()
+        message.setText(text)
+        message.exec_()
 
     def closeEvent(self, x):
         self.reactor.stop()

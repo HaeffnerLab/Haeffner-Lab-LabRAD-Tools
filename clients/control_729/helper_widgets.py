@@ -361,7 +361,9 @@ class dropdown(QtGui.QComboBox):
                 #if linename was not in the favorites, and we are only showing the favorites, don't add the item
                 pass
             else:
-                self.addItem(display_name, userData = linename)
+                #avoid dupilcates by checking if display_name is alrady in the dropdwon
+                if self.findText(display_name) == -1:
+                    self.addItem(display_name, userData = linename)
         if self.selected is not None:
             self.set_selected(self.selected)
         self.blockSignals(False)

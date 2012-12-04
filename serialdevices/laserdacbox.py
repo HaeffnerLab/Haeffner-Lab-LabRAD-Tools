@@ -25,13 +25,12 @@ from twisted.internet import reactor
 from twisted.internet.defer import returnValue
 import binascii
 from labrad.server import Signal
+from labrad.units import WithUnit
 
 SERVERNAME = 'LaserDAC'
 PREC_BITS = 16.
 DAC_MAX = 2500.
 MAX_QUEUE_SIZE = 1000
-#time to wait for response from dc box
-TIMEOUT = 1.0
 #expected response from dc box after write
 RESP_STRING = 'r'
 #time to wait if correct response not received
@@ -66,7 +65,7 @@ class laserDACServer( SerialDeviceServer ):
     regKey = 'LaserRoomDac'
     port = None
     serNode = 'lab-49'
-    timeout = TIMEOUT
+    timeout = WithUnit(1.0, 's')
     onNewUpdate = Signal(SIGNALID, 'signal: channel has been updated', '(sv)')
        
 

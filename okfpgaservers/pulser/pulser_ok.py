@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser
-version = 1.0
+version = 1.0.1
 description =
 instancename = Pulser
 
@@ -45,7 +45,6 @@ class Pulser(LabradServer, DDS):
         self.ddsDict = hardwareConfiguration.ddsDict
         self.timeResolvedResolution = hardwareConfiguration.timeResolvedResolution
         self.remoteChannels = hardwareConfiguration.remoteChannels
-        self.devicePollingPeriod = hardwareConfiguration.devicePollingPeriod
         self.collectionTimeRange = hardwareConfiguration.collectionTimeRange
         self.sequenceTimeRange = hardwareConfiguration.sequenceTimeRange
         self.haveSecondPMT = hardwareConfiguration.secondPMT
