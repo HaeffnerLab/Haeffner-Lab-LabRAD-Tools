@@ -16,28 +16,24 @@ timeout = 20
 ### END NODE INFO
 '''
 from labrad.server import LabradServer, setting
-from twisted.internet.defer import Deferred, DeferredLock, inlineCallbacks
+from twisted.internet.defer import Deferred, DeferredLock
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 from api import api
 
 class Pulser_729(LabradServer):
     
-    name = 'pulser_729'
-    
-    @inlineCallbacks    
+    name = 'Pulser_729'
+       
     def initServer(self):
         self.api  = api()
         self.inCommunication = DeferredLock()
-        yield self.initializeBoard()
+        self.initializeBoard()
     
-    @inlineCallbacks
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
-        while not connected:
-            print 'not connected, waiting for 10 seconds to try again'
-            yield self.wait(10.0)
-            connected = self.api.connectOKBoard()
+        if not connected:
+            raise Exception("Pulser Not Found")
     
     @setting(0, 'Reset DDS', returns = '')
     def resetDDS(self , c):
