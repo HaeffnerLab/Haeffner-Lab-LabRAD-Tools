@@ -9,3 +9,4 @@ Errors.log
 SWITCH_CONTROL_config.py
 DDS_CONTROL_config.py
 APT_config.py
+*.exexs
