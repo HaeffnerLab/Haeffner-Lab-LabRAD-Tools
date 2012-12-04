@@ -375,25 +375,26 @@ class CCTDACServer( LabradServer ):
     def advDACs(self, reset = 0):        
         """Pulse Sequence"""
         import labrad.types as T
-        pulser = yield self.pulser
-        seq = ADV_DAC(pulser)        
-        pulser.new_sequence()
-        params = {
-                  'startIndex': self.DACIndex,
-                  'stopIndex': self.nextDACIndex,
-                  'maxIndex': self.maxDACIndex,
-                  'duration': 10e-4,
-                  'reset': reset
-                 }
-        seq.setVariables(**params)
-        seq.defineSequence()
-        pulser.program_sequence()
-        pulser.start_single()
-        pulser.wait_sequence_done()
-        pulser.stop_sequence()
-        pulser.reset_timetags()
-        if reset: self.nextDACIndex = 1
-        self.DACIndex = self.nextDACIndex
+        # pulser = yield self.pulser
+        # seq = ADV_DAC(pulser)        
+        # pulser.new_sequence()
+        # params = {
+        #           'startIndex': self.DACIndex,
+        #           'stopIndex': self.nextDACIndex,
+        #           'maxIndex': self.maxDACIndex,
+        #           'duration': T.Value(10e-4, 's'),
+        #           'reset': reset
+        #          }
+        # print params.items()
+        # seq.setVariables(**params)
+        # seq.defineSequence()
+        # pulser.program_sequence()
+        # pulser.start_single()
+        # pulser.wait_sequence_done()
+        # pulser.stop_sequence()
+        # pulser.reset_timetags()
+        # if reset: self.nextDACIndex = 1
+        # self.DACIndex = self.nextDACIndex
         
     @setting( 10, "Set Voltages", newPosition = 'i', index = 'i')
     def setVoltages(self, c, newPosition = positionIndex, index = nextDACIndex):        
