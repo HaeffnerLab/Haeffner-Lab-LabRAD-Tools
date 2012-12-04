@@ -11,9 +11,9 @@ import time
 import subprocess as sp
 from twisted.internet import reactor
 from labrad.server import Signal
+from labrad.units import WithUnit
 
 NUMCHANNELS = 16
-TIMEOUT = 1.0
 BAUDRATE = 115200
 DelayWhenSwtch = 100.0
 CycleDelay = 100.0
@@ -96,7 +96,7 @@ class Multiplexer( SerialDeviceServer ):
     regKey = 'Multiplexer'
     port = None
     serNode = 'lab-49'
-    timeout = TIMEOUT
+    timeout = WithUnit(1.0, 's')
     
     onNewState = Signal(SIGNALID1, 'signal: channel toggled', '(sb)')
     onNewExposure = Signal(SIGNALID2, 'signal: new exposure set', '(sv)')

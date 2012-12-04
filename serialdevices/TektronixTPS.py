@@ -4,6 +4,7 @@ from twisted.internet import reactor
 from twisted.internet.defer import returnValue
 from labrad.server import Signal
 import numpy
+from labrad.units import WithUnit
 
 class TPSserver( SerialDeviceServer ):
     """Controls TPS 2000 and 1000 series Oscilloscope"""
@@ -12,7 +13,7 @@ class TPSserver( SerialDeviceServer ):
     regKey = 'TPSscope'
     port = None
     serNode = 'lattic-imaging'
-    timeout = 1.0
+    timeout = WithUnit(1.0, 's')
 
     @inlineCallbacks
     def initServer( self ):
