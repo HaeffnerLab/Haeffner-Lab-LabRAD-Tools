@@ -38,7 +38,7 @@ class hardwareConfiguration(object):
     timeResolution = '40.0e-9' #seconds
     timeResolvedResolution = 10.0e-9
     maxSwitches = 1022
-    devicePollingPeriod = 10
+    resetstepDuration = 2 #duration of advanceDDS and resetDDS TTL pulses in units of timesteps
     collectionTimeRange = (0.010, 5.0) #range for normal pmt counting
     sequenceTimeRange = (0.0, 85.0) #range for duration of pulse sequence    
     isProgrammed = False

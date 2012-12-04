@@ -10,6 +10,7 @@ class Sequence():
         self.channelTotal = hardwareConfiguration.channelTotal
         self.timeResolution = Decimal(hardwareConfiguration.timeResolution)
         self.MAX_SWITCHES = hardwareConfiguration.maxSwitches
+        self.resetstepDuration = hardwareConfiguration.resetstepDuration
         #dictionary in the form time:which channels to switch
         #time is expressed as timestep with the given resolution
         #which channels to switch is a channelTotal-long array with 1 to switch ON, -1 to switch OFF, 0 to do nothing
@@ -86,14 +87,14 @@ class Sequence():
                     #still have unprogrammed entries
                     self.addToProgram(dds_program, state)
                     self._addNewSwitch(lastTime,self.advanceDDS,1)
-                    self._addNewSwitch(lastTime + 2,self.advanceDDS,-1)
+                    self._addNewSwitch(lastTime + self.resetstepDuration,self.advanceDDS,-1)
                 #add termination
                 for name in dds_program.iterkeys():
                     dds_program[name] +=  '\x00\x00'
                 #at the end of the sequence, reset dds
                 lastTTL = max(self.switchingTimes.keys())
                 self._addNewSwitch(lastTTL ,self.resetDDS, 1 )
-                self._addNewSwitch(lastTTL + 2 ,self.resetDDS,-1)
+                self._addNewSwitch(lastTTL + self.resetstepDuration ,self.resetDDS,-1)
                 return dds_program
             end_time, end_typ =  pulses_end[name]
             if start > lastTime:
@@ -102,7 +103,7 @@ class Sequence():
                 self.addToProgram(dds_program, state)
                 if not lastTime == 0:
                     self._addNewSwitch(lastTime,self.advanceDDS,1)
-                    self._addNewSwitch(lastTime + 2,self.advanceDDS,-1)
+                    self._addNewSwitch(lastTime + self.resetstepDuration,self.advanceDDS,-1)
                 lastTime = start
             if start == end_time:
                 #overwite only when extending pulse
