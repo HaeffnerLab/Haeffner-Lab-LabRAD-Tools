@@ -19,7 +19,7 @@ class DDS(LabradServer):
             freq,ampl = (channel.frequency, channel.amplitude)
             self._checkRange('amplitude', channel, ampl)
             self._checkRange('frequency', channel, freq)
-            yield self._setParameters(channel, freq, ampl)
+            yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
     
     @setting(41, "Get DDS Channels", returns = '*s')
     def getDDSChannels(self, c):
@@ -88,7 +88,6 @@ class DDS(LabradServer):
             freq = freq['MHz']
             ampl = ampl['dBm']
             freq_off, ampl_off = channel.off_parameters
-            print 'adding pulse', name, start, dur, freq, ampl, freq_off,ampl_off
             if freq == 0 or ampl == 0: #off state
                 freq, ampl = freq_off,ampl_off
             else:
@@ -129,17 +128,10 @@ class DDS(LabradServer):
             raise dds_access_locked()
         channel = self._getChannel(c, name)
         if state is not None:
-            if state and not channel.state:
-                #if asked to turn on and is currently off
-                yield self._setParameters(channel, channel.frequency, channel.amplitude)
-            elif (channel.state and not state):
-                #asked to turn off and is currently on
-                freq,ampl = channel.off_parameters
-                yield self._setParameters(channel, freq, ampl)
+            yield self._setOutput(channel, state)
             channel.state = state
             self.notifyOtherListeners(c, (name, 'state', channel.state), self.on_dds_param)
-        state = channel.state
-        returnValue(state)
+        returnValue(channel.state)
     
     @setting(49, 'Clear DDS Lock')
     def clear_dds_lock(self, c):
@@ -162,16 +154,20 @@ class DDS(LabradServer):
     @inlineCallbacks
     def _setAmplitude(self, channel, ampl):
         freq = channel.frequency
-        yield self.inCommunication.acquire()
-        yield self._setParameters( channel, freq, ampl)
-        self.inCommunication.release()
+        yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
         
     @inlineCallbacks
     def _setFrequency(self, channel, freq):
         ampl = channel.amplitude
-        yield self.inCommunication.acquire()
-        yield self._setParameters( channel, freq, ampl)
-        self.inCommunication.release()
+        yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
+    
+    @inlineCallbacks
+    def _setOutput(self, channel, state):
+        if state and not channel.state: #if turning on, and is currently off
+            yield self.inCommunication.run(self._setParameters, channel, channel.frequency, channel.amplitude)
+        elif (channel.state and not state): #if turning off and is currenly on
+            freq,ampl = channel.off_parameters
+            yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
     
     @inlineCallbacks
     def _programDDSSequence(self, dds):
