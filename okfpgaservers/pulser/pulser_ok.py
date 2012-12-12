@@ -320,7 +320,7 @@ class Pulser(LabradServer, DDS):
             yield deferToThread(self.api.setPMTCountRate, countRate)
         elif mode == 'Differential':
             yield deferToThread(self.api.setModeDifferential)
-        self.clear_next_pmt_counts = 2 #assign to clear next two counts
+        self.clear_next_pmt_counts = 3 #assign to clear next two counts
         self.inCommunication.release()
     
     @setting(22, 'Set Collection Time', new_time = 'v', mode = 's', returns = '')
@@ -335,11 +335,11 @@ class Pulser(LabradServer, DDS):
             self.collectionTime[mode] = new_time
             yield self.inCommunication.acquire()
             yield deferToThread(self.api.setPMTCountRate, new_time)
-            self.clear_next_pmt_counts = 2 #assign to clear next two counts
+            self.clear_next_pmt_counts = 3 #assign to clear next two counts
             self.inCommunication.release()
         elif mode == 'Differential':
             self.collectionTime[mode] = new_time
-            self.clear_next_pmt_counts = 2 #assign to clear next two counts
+            self.clear_next_pmt_counts = 3 #assign to clear next two counts
         
     @setting(23, 'Get Collection Time', returns = '(vv)')
     def getCollectTime(self, c):
