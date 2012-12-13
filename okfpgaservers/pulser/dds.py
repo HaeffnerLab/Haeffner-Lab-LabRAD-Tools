@@ -67,9 +67,13 @@ class DDS(LabradServer):
     @setting(45, 'Add DDS Pulses',  values = ['*(sv[s]v[s]v[MHz]v[dBm])','*(sv[s]v[s]v[MHz]v[dBm]v)'])
     def addDDSPulses(self, c, values):
         '''
-        [(name, start, duration, frequency, amplitude)] where duration is duration of the pulse in seconds and high/low is a boolean
-        [(name, start, duration, frequency, amplitude, phase)]
-        frequency is in MHz, and amplitude is in dBm
+        input in the form of a list [(name, start, duration, frequency, amplitude), ...]
+                                    [(name, start, duration, frequency, amplitude, phase)]
+        frequency is in MHz 
+        amplitude is in dBm
+        start is start time of the pulse in seconds
+        duration is duration of the pulse in seconds
+        the optional phase is unitless
         '''
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
@@ -98,7 +102,7 @@ class DDS(LabradServer):
                 num_off = self._valToInt(channel, freq_off, ampl_off)
             else:
                 num = self._valToInt_remote(channel, freq, ampl, phase)
-                num_off = self._valToInt_remote(channel, freq_off, ampl_off, phase)
+                num_off = self._valToInt_remote(channel, freq, ampl_off, phase) #note that keeping the frequency the same to preserve phase coherence
             #note < sign, because start can not be 0. 
             #this would overwrite the 0 position of the ram, and cause the dds to change before pulse sequence is launched
             if not self.sequenceTimeRange[0] < start <= self.sequenceTimeRange[1]: 
