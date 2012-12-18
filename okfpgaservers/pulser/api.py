@@ -74,6 +74,14 @@ class api():
         
     def resetFIFOReadout(self):
         self.xem.ActivateTriggerIn(0x40,4)
+        
+    def setLineTriggerOn(self):
+        self.xem.SetWireInValue(0x00,0x08,0x08)
+        self.xem.UpdateWireIns()    
+        
+    def setLineTriggerOff(self):
+        self.xem.SetWireInValue(0x00,0x00,0x08)
+        self.xem.UpdateWireIns()            
     
     def setModeNormal(self):
         """user selects PMT counting rate"""
