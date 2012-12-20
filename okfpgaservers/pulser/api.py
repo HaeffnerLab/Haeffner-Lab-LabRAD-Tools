@@ -1,7 +1,7 @@
 import ok
 from hardwareConfiguration import hardwareConfiguration
 
-class api():
+class api(object):
     '''class containing all commands for interfacing with the fpga'''
     def __init__(self):
         self.xem = None
@@ -75,14 +75,21 @@ class api():
     def resetFIFOReadout(self):
         self.xem.ActivateTriggerIn(0x40,4)
         
+############ line triggering stuff ###########        
     def setLineTriggerOn(self):
         self.xem.SetWireInValue(0x00,0x08,0x08)
         self.xem.UpdateWireIns()    
         
     def setLineTriggerOff(self):
         self.xem.SetWireInValue(0x00,0x00,0x08)
-        self.xem.UpdateWireIns()            
-    
+        self.xem.UpdateWireIns()     
+               
+    def setLineTriggerDelay(self):
+        delay = 65535 ### delay in us
+        self.xem.SetWireInValue(0x06,delay)
+        self.xemUpdateWireIns()
+##############################################
+ 
     def setModeNormal(self):
         """user selects PMT counting rate"""
         self.xem.SetWireInValue(0x00,0x00,0x01)
