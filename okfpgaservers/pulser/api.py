@@ -74,21 +74,6 @@ class api(object):
         
     def resetFIFOReadout(self):
         self.xem.ActivateTriggerIn(0x40,4)
-        
-############ line triggering stuff ###########        
-    def setLineTriggerOn(self):
-        self.xem.SetWireInValue(0x00,0x08,0x08)
-        self.xem.UpdateWireIns()    
-        
-    def setLineTriggerOff(self):
-        self.xem.SetWireInValue(0x00,0x00,0x08)
-        self.xem.UpdateWireIns()     
-               
-    def setLineTriggerDelay(self):
-        delay = 65535 ### delay in us
-        self.xem.SetWireInValue(0x06,delay)
-        self.xemUpdateWireIns()
-##############################################
  
     def setModeNormal(self):
         """user selects PMT counting rate"""
@@ -189,6 +174,19 @@ class api(object):
     def initializeDDS(self):
         '''force reprogram of all dds chips during initialization'''
         self.xem.ActivateTriggerIn(0x40,6)
+    
+    #Methods relating to line triggering
+    def enableLineTrigger(self, delay = 0):
+        '''sets delay value in microseconds'''
+        min_delay, max_delay = hardwareConfiguration.lineTriggerLimits 
+        if not min_delay <= delay <= max_delay: raise Exception("Incorrect Delay Time for Line Triggering")
+        self.xem.SetWireInValue(0x06,delay)
+        self.xem.SetWireInValue(0x00,0x08,0x08)
+        self.xem.UpdateWireIns()    
+        
+    def disableLineTrigger(self):
+        self.xem.SetWireInValue(0x00,0x00,0x08)
+        self.xem.UpdateWireIns()     
     
     #Methods relating to using the optional second PMT
     def getSecondaryNormalTotal(self):

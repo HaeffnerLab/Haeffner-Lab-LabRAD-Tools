@@ -26,9 +26,10 @@ from hardwareConfiguration import hardwareConfiguration
 from sequence import Sequence
 from dds import DDS
 from api import api
+from linetrigger import LineTrigger
 import numpy
 
-class Pulser(LabradServer, DDS):
+class Pulser(LabradServer, DDS, LineTrigger):
     
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
