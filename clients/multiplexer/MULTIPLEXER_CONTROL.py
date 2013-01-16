@@ -2,13 +2,14 @@ from PyQt4 import QtGui, uic
 import os
 import RGBconverter as RGB
 from twisted.internet.defer import inlineCallbacks
+from MULTIPLEXER_CONTROL_config import multiplexer_control_config as config
 
 SIGNALID1 = 187567
 SIGNALID2 = 187568
 SIGNALID3 = 187569
 SIGNALID4 = 187570
 
-class widgetWrapper():
+class widgetWrapper(object):
     def __init__(self, chanName, wavelength, hint):
         self.chanName = chanName
         self.wavelength = wavelength
@@ -46,20 +47,8 @@ class multiplexerWidget(QtGui.QWidget):
         basepath =  os.path.dirname(__file__)
         path = os.path.join(basepath,'..','qtui','Multiplexer.ui')
         uic.loadUi(path,self)
-        self.createDict()
-        self.connect() 
-    
-    def createDict(self):
         self.d = {}
-        self.d['397'] = widgetWrapper(chanName = '397',wavelength = '397', hint = '377.61131')
-        self.d['866'] = widgetWrapper(chanName = '866',wavelength = '866', hint = '346.00002')
-        self.d['422'] = widgetWrapper(chanName = '422',wavelength = '422', hint = '354.53919') 
-        self.d['732'] = widgetWrapper(chanName = '732',wavelength = '732', hint = '409.09585') 
-        self.d['397s'] = widgetWrapper(chanName = '397s',wavelength = '397', hint = '377.61131') 
-        self.d['729'] = widgetWrapper(chanName = '729',wavelength = '729', hint = '411.04243') 
-        self.d['397diode'] = widgetWrapper(chanName = '397diode',wavelength = '397', hint = '755.22262') 
-        self.d['854'] = widgetWrapper(chanName = '854',wavelength = '854', hint = '350.86275') 
-        self.d['397inject'] = widgetWrapper(chanName = '397inject',wavelength = '397', hint = '755.22262')
+        self.connect() 
     
     @inlineCallbacks
     def connect(self):
@@ -74,42 +63,34 @@ class multiplexerWidget(QtGui.QWidget):
         
     @inlineCallbacks
     def initializeGUI(self):
-        #make sure channel names we have are found on the server
-        availableNames = yield self.server.get_available_channels()
-        for chanName in self.d.keys():
-            if chanName not in availableNames:
-                print "{0} channel is not found on the multiplexer server".format(chanName)
-                raise Exception ('Error chanName not found on the multiplexer server')
         #get initial values
         state = yield self.server.is_cycling()
         self.pushButton.setChecked(state)
         self.setButtonText()
-        for name in self.d.keys():
+        #fill out information in all available channels
+        all_channels = yield self.server.get_available_channels()
+        for name in all_channels:
+            wavelength = yield self.server.get_wavelength_from_channel(name)
+            widget_config = config.info.get(name, None)
+            if widget_config is not None: 
+                user_hint,  location = widget_config
+            else:
+                continue
+            wrapper = widgetWrapper(name, wavelength, user_hint)
             freq = yield self.server.get_frequency(name)
-            self.d[name].setFreq(float(freq))
+            wrapper.setFreq(float(freq))
             exp = yield self.server.get_exposure(name)
-            self.d[name].setExposure(exp)
+            wrapper.setExposure(exp)
             state = yield self.server.get_state(name)
-            self.d[name].setState(state)
-        #add items to grid layout
-        self.grid.addWidget(self.d['397'].widget,0,0)
-        self.grid.addWidget(self.d['866'].widget,1,0)
-        self.grid.addWidget(self.d['422'].widget,0,1)
-        self.grid.addWidget(self.d['732'].widget,1,1)
-        self.grid.addWidget(self.d['397s'].widget,2,0)
-        self.grid.addWidget(self.d['729'].widget,2,1)
-        self.grid.addWidget(self.d['397diode'].widget,3,0)
-        self.grid.addWidget(self.d['854'].widget,3,1)
-        #self.grid.addWidget(self.d['405'].widget,3,1)
-        self.grid.addWidget(self.d['397inject'].widget,4,0)
+            wrapper.setState(state)
+            self.grid.addWidget(wrapper.widget,location[0], location[1])
+            #connect widgets
+            wrapper.widget.checkBox.stateChanged.connect(self.setStateWrapper(name))
+            wrapper.widget.spinBox.valueChanged.connect(self.setExposureWrapper(name))
+            self.d[name] = wrapper
         #connect functions
         self.pushButton.toggled.connect(self.setOnOff)
-        for widgetWrapper in self.d.values():
-            widget = widgetWrapper.widget
-            name = widgetWrapper.chanName
-            widget.checkBox.stateChanged.connect(self.setStateWrapper(name))
-            widget.spinBox.valueChanged.connect(self.setExposureWrapper(name))
-    
+
     @inlineCallbacks
     def setupListeners(self):
         yield self.server.signal__channel_toggled(SIGNALID1)

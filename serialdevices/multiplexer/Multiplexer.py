@@ -1,8 +1,21 @@
 '''
-Created on Apr 7, 2011
-Modified July 26, 2011
-@author: Michael Ramm, Christopher Reilly
+### BEGIN NODE INFO
+[info]
+name = Multiplexer Server
+version = 1.03
+description =
+instancename = Multiplexer Server
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 20
+### END NODE INFO
 '''
+#@author: Michael Ramm, Christopher Reilly
 from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
 from twisted.internet.defer import returnValue
 from twisted.internet.threads import deferToThread
@@ -12,6 +25,7 @@ import subprocess as sp
 from twisted.internet import reactor
 from labrad.server import Signal
 from labrad.units import WithUnit
+from Multiplexer_config import multiplexer_config as config
 
 NUMCHANNELS = 16
 BAUDRATE = 115200
@@ -26,7 +40,7 @@ SIGNALID2 = 270581
 SIGNALID3 = 270582
 SIGNALID4 = 270583
 
-class channelInfo():
+class channelInfo(object):
     def __init__(self):
         self.channelDict = {}
         self.lastMeasured = None
@@ -128,15 +142,9 @@ class Multiplexer( SerialDeviceServer ):
     
     def createChannelInfo(self):
         self.info = channelInfo()
-        self.info.addChannel(chanName = '397', chanNumber = 5, wavelength = '397')
-        self.info.addChannel(chanName = '422', chanNumber = 4, wavelength = '422')
-        self.info.addChannel(chanName = '866', chanNumber = 6, wavelength = '866')
-        self.info.addChannel(chanName = '732', chanNumber = 3, wavelength = '732')
-        self.info.addChannel(chanName = '397s', chanNumber = 11, wavelength = '397')
-        self.info.addChannel(chanName = '729', chanNumber = 10, wavelength = '729')
-        self.info.addChannel(chanName = '397diode', chanNumber = 2, wavelength = '397')
-        self.info.addChannel(chanName = '854', chanNumber = 12, wavelength = '854')
-        self.info.addChannel(chanName = '397inject', chanNumber = 1, wavelength = '397')
+        for channel_name, channel_info in config.info.iteritems():
+            channel_number, channel_wavelength = channel_info
+            self.info.addChannel(channel_name, channel_number, channel_wavelength)
         
     @inlineCallbacks
     def loadChannelInfo(self):
@@ -294,5 +302,4 @@ class Multiplexer( SerialDeviceServer ):
     
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(Multiplexer())    
-
+    util.runServer(Multiplexer())
