@@ -1,8 +1,21 @@
 '''
-Created on Apr 7, 2011
-Modified July 26, 2011
-@author: Michael Ramm, Christopher Reilly
+### BEGIN NODE INFO
+[info]
+name = Multiplexer Server
+version = 1.02
+description =
+instancename = Multiplexer Server
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 20
+### END NODE INFO
 '''
+#@author: Michael Ramm, Christopher Reilly
 from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
 from twisted.internet.defer import returnValue
 from twisted.internet.threads import deferToThread
@@ -294,5 +307,4 @@ class Multiplexer( SerialDeviceServer ):
     
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(Multiplexer())    
-
+    util.runServer(Multiplexer())

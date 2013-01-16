@@ -12,7 +12,7 @@ except:
 
 nodeDict = {
 			'node_lab_49':
-				['Serial Server', 'LaserDAC', 'Pulser_729'],
+				['Serial Server', 'LaserDAC', 'Pulser_729','Multiplexer Server'],
 			}
 
 for node in ['node_lab_49']: #sets the order of opening
