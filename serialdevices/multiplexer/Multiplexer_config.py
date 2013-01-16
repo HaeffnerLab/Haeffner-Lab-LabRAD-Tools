@@ -10,6 +10,7 @@ class multiplexer_config(object):
             '729': (10, '729'),
             '397 diode': (2, '397'),
             '854': (12, '854'),   
+            '397 lattice room': (1, '397')
             #'397 injected' (1, '397')
             #'732':(3,'732')
             }
