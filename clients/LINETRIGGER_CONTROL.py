@@ -73,11 +73,11 @@ class linetriggerWidget(QtGui.QFrame):
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         #get initial parameters and use them to create the layout
         #button
-        self.button = TextChangingButton()
-        self.button.setCheckable(True)
+        self.button_linetrig = TextChangingButton()
+        self.button_linetrig.setCheckable(True)
         state = yield server.line_trigger_state(context = self.context)
-        self.button.setChecked(state)
-        self.button.toggled.connect(self.setState)
+        self.button_linetrig.setChecked(state)
+        self.button_linetrig.toggled.connect(self.setState)
         #duration
         self.spinbox = QtGui.QSpinBox()
         self.spinbox.setSuffix(' us')
@@ -87,15 +87,26 @@ class linetriggerWidget(QtGui.QFrame):
         self.spinbox.setRange(*limits)
         self.spinbox.setValue(duration)
         self.spinbox.valueChanged.connect(self.setDuration)
+        #putton for dds Reset
+        button_reset_dds = QtGui.QPushButton()
+        button_reset_dds.pressed.connect(self.resetDDS)
         label = QtGui.QLabel("Line Triggering")
         layout.addWidget(label, 0, 0)
-        layout.addWidget(self.button, 0, 1)
+        layout.addWidget(self.button_linetrig, 0, 1)
         label = QtGui.QLabel("Offset Duration")
         layout.addWidget(label, 1, 0)
         layout.addWidget(self.spinbox, 1, 1)
+        label = QtGui.QLabel("Clear DDS Lock")
+        layout.addWidget(label, 2, 0)
+        layout.addWidget(button_reset_dds, 2, 1)
         self.setLayout(layout)
         self.initialized = True
     
+    @inlineCallbacks
+    def resetDDS(self):
+        server = self.cxn.servers['Pulser']
+        yield server.clear_dds_lock(context = self.context)
+        
     @inlineCallbacks
     def setDuration(self, duration):
         duration = self.WithUnit(duration, 'us')
@@ -115,7 +126,7 @@ class linetriggerWidget(QtGui.QFrame):
     
     def followSignal(self, x, (state, duration)):
         self.spinbox.blockSignals(True)
-        self.button.setChecked(state)
+        self.button_linetrig.setChecked(state)
         self.spinbox.setValue(duration)
         self.spinbox.blockSignals(False)
 
