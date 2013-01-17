@@ -46,8 +46,7 @@ class linetriggerWidget(QtGui.QFrame):
             yield self.initializeGUI()
             yield self.setupListeners()
         except Exception, e:
-            print e
-            print 'linetriggerWidgetL: Pulser not available'
+            print 'linetriggerWidget: Pulser not available'
             self.setDisabled(True)
         self.cxn.on_connect['Pulser'].append( self.reinitialize)
         self.cxn.on_disconnect['Pulser'].append( self.disable)
