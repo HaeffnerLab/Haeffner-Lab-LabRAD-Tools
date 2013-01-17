@@ -52,6 +52,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         self.haveDAC = hardwareConfiguration.DAC
         self.inCommunication = DeferredLock()
         self.clear_next_pmt_counts = 0
+        LineTrigger.initialize(self)
         self.initializeBoard()
         yield self.initializeRemote()
         self.initializeSettings()
