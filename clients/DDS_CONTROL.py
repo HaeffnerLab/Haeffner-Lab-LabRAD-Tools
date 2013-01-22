@@ -162,8 +162,9 @@ class DDS_CONTROL(QtGui.QFrame):
     
     def followSignal(self, x, y):
         chan, param, val = y
-        w = self.widgets[chan]
-        w.setParamNoSignal(param, val)
+        if chan in self.widgets.keys():
+            #this check is neeed in case signal comes in about a channel that is not displayed
+            self.widgets[chan].setParamNoSignal(param, val)
 
     def closeEvent(self, x):
         self.reactor.stop()
