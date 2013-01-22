@@ -1,5 +1,5 @@
 from PyQt4 import QtGui,QtCore
-from helper_widgets import durationWdiget, limitsWidget, frequency_wth_dropdown, lineinfo_table, dropdown
+from helper_widgets import durationWdiget, limitsWidget, frequency_wth_dropdown, lineinfo_table, dropdown, sideband_selector_widget
 from configuration import config_729_spectrum as c
 from async_semaphore import async_semaphore, Parameter
 
@@ -46,23 +46,25 @@ class spectrum(QtGui.QFrame):
         self.ampl_729.setFont(font)
         label = QtGui.QLabel("Spectrum Amplitude 729", font = font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft)
+        self.spectrum_amplitude_label = label
         layout.addWidget(label, 0, 3)
         layout.addWidget(self.ampl_729, 1, 3, 1, 1)
         self.limitWidget = limitsWidget(self.reactor, 'MHz', sigfigs = 4)
-        layout.addWidget(self.limitWidget, 4, 0, 1, 4)
+        layout.addWidget(self.limitWidget, 2, 0, 1, 4)
         label = QtGui.QLabel("Use Saved Line Info", font = font)
         self.use_saved_line = QtGui.QCheckBox()
         self.dropdown = dropdown(self.reactor, font = font, info_position = 0)
         self.dropdown.set_favorites(c.spectrum_saved_freq_favorites)
-        self.setLayout(layout)
         layout.addWidget(label, 0, 5, 1, 1)
         layout.addWidget(self.use_saved_line, 0, 6, 1, 1)
         layout.addWidget(self.dropdown, 1, 5, 1, 2)
+#        self.sideband_selecor = sideband_selector_widget(self.reactor, font = font)
+#        layout.addWidget(self.sideband_selecor, 2, 5, 1, 1)
         self.use_saved_line.toggled.connect(self.on_use_saved)
         self.setLayout(layout)
     
     def on_use_saved(self, use_saved):
-        to_disable = [self.limitWidget, self.ampl_729, self.duration]
+        to_disable = [self.limitWidget, self.ampl_729, self.duration, self.spectrum_amplitude_label]
         if use_saved:
             for w in to_disable:
                 w.setDisabled(True)
@@ -98,10 +100,13 @@ class rabi(QtGui.QFrame):
         layout.addWidget(self.freq729, 0, 1, 2, 1)
         label = QtGui.QLabel("Rabi Amplitude 729", font = font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignLeft)
-        layout.addWidget(label, 0, 2, 1, 1)
-        layout.addWidget(self.ampl729, 1, 2, 1, 1)
+        layout.addWidget(label, 0, 4, 1, 1)
+        layout.addWidget(self.ampl729, 1, 4, 1, 1)
         self.lim = limitsWidget(self.reactor, '\265s')
         layout.addWidget(self.lim, 2, 0, 1, 4)
+        self.sideband_selecor = sideband_selector_widget(self.reactor, font = font)
+        self.sideband_selecor.layout().setContentsMargins(0,0,0,0)
+        layout.addWidget(self.sideband_selecor, 0, 2, 2, 2)
         self.setLayout(layout)
         
     def closeEvent(self, x):
@@ -172,6 +177,8 @@ class scans_connection(scans, async_semaphore):
                 tuple(c.rabi_excitation_times):Parameter(c.rabi_excitation_times, do_nothing, self.rabi.lim.new_list_signal, self.rabi.lim.setRange, 'us'),
                 tuple(c.rabi_saved_freq):Parameter(c.rabi_saved_freq, self.rabi.freq729.set_selected, self.rabi.freq729.useSavedLine, do_nothing, None), 
                 tuple(c.rabi_use_saved):Parameter(c.rabi_use_saved, self.rabi.freq729.set_use_saved, updateSignal = self.rabi.freq729.useSaved),
+                #sideband selector
+                tuple(c.rabi_sideband_selector):Parameter(c.rabi_sideband_selector, self.rabi.sideband_selecor.set_selector, self.rabi.sideband_selecor.on_new_sideband_selection, do_nothing, [None]),
                 #saved lines
                 tuple(c.saved_lines_729):[
                                           Parameter(c.saved_lines_729, self.rabi.freq729.set_dropdown, no_signal, do_nothing, c.line_parameter_units),

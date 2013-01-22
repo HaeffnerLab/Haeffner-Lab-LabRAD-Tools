@@ -594,6 +594,81 @@ class frequency_wth_dropdown(QtGui.QWidget):
     
     def closeEvent(self, x):
         self.reactor.stop()
+        
+class sideband_selector_widget(QtGui.QWidget):
+    
+    on_new_sideband_selection = QtCore.pyqtSignal(list)
+    
+    def __init__(self, reactor, sidebands = [("radial 1", 3), ( "radial 2", 3), ( "axial", 2), ("micromotion", 1)] , font = None, parent = None):
+        super(sideband_selector_widget, self).__init__(parent)
+        self.reactor = reactor
+        self.font = font
+        self.sidebands = sidebands
+        if self.font is None:
+            self.font = QtGui.QFont('MS Shell Dlg 2',pointSize=12)
+        self.dict_combo_box = {} #dictionary in the form sideband_name : corresponding combo_box
+        self.initializeGUI()
+        self.signal_map = QtCore.QSignalMapper()
+        self.connect_layout()
+    
+    def initializeGUI(self):
+        layout = QtGui.QGridLayout()
+        title = QtGui.QLabel("Sideband Selector", font = self.font)
+        title.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        for enum, (sideband_name, max_entry) in enumerate(self.sidebands):
+            combo = QtGui.QComboBox()
+            combo.setFont(self.font)
+            for i in range(-max_entry, max_entry + 1):
+                entry_text = self.number_to_string(i)
+                combo.addItem(entry_text , userData=QtCore.QVariant(i))
+            combo.setCurrentIndex(max_entry) #setting active entry to '0'
+            label = QtGui.QLabel(sideband_name, font = self.font)
+            label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            layout.addWidget(label, 1, enum)
+            layout.addWidget(combo, 2, enum)
+            self.dict_combo_box[sideband_name] = combo
+        layout.addWidget(title, 0, 0, 1, enum + 1)
+        self.setLayout(layout)
+    
+    def connect_layout(self):
+        for name,combo in self.dict_combo_box.iteritems():
+            combo.currentIndexChanged.connect(self.on_new_combo_selection)
+#        example of how to use signal mapping
+#        for name,combo in self.dict_combo_box.iteritems():
+#            combo.currentIndexChanged.connect(self.signal_map.map)
+#            self.signal_map.setMapping(combo, name)
+#        self.signal_map.mapped[QtCore.QString].connect(self.on_new_combo_selection)
+        
+    def on_new_combo_selection(self, x):
+        result = []
+        for name, combo in self.dict_combo_box.iteritems():
+            sideband = combo.itemData(combo.currentIndex()).toInt()[0]
+            result.append((name, sideband))
+        self.on_new_sideband_selection.emit(result)
+    
+    def number_to_string(self, num):
+        if num < 0:
+            fmt = '{0}'
+        elif num > 0:
+            fmt = '+{0}'
+        else:
+            fmt = '0'
+        return fmt.format(num)
+    
+    def set_selector(self, info):
+        info = dict(info)
+        for sideband_name, sideband in dict(info).iteritems():
+            combo = self.dict_combo_box[sideband_name]
+            entry_index = combo.findData(QtCore.QVariant(int(sideband)))
+            if entry_index == -1:
+                print "Selected Item Not Found in Sideband Selector"
+            else:
+                combo.blockSignals(True)
+                combo.setCurrentIndex(entry_index)
+                combo.blockSignals(False)
+    
+    def closeEvent(self, x):
+        self.reactor.stop()
 
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
@@ -602,9 +677,10 @@ if __name__=="__main__":
     from twisted.internet import reactor
 #    widget = limitsWidget(reactor, suffix = 'us', abs_range = (0,100))
 #    widget = durationWdiget(reactor)
-    widget = dropdown(reactor)
+#    widget = dropdown(reactor)
 #    widget = frequency_wth_dropdown(reactor)
 #    widget = saved_frequencies_table(reactor)
 #    widget = lineinfo_table(reactor)
+    widget = sideband_selector_widget(reactor)
     widget.show()
     reactor.run()

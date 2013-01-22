@@ -40,6 +40,7 @@ class config_729_spectrum(object):
     rabi_use_saved = ['729Experiments','RabiFlopping','rabi_flopping_use_saved_frequency']
     rabi_saved_freq = ['729Experiments','RabiFlopping','rabi_flopping_saved_frequency']
     rabi_saved_freq_favorites = {'S+1/2D+5/2':'carrier'}
+    rabi_sideband_selector = ['729Experiments','sideband_selection']
     #saved freq
     line_parameter_names = ['Name', 'Center', 'Scan Span','Scan Resolution','Scan Amplitude', 'Scan Excitation Duration']
     line_parameter_units = ['MHz', 'kHz', 'kHz', 'dBm', 'us']
