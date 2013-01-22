@@ -15,6 +15,12 @@ class TextChangingButton(QtGui.QPushButton):
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())
     
+    def set_value_no_signal(self, down):
+        self.blockSignals(True)
+        self.setChecked(down)
+        self.setAppearance(down)
+        self.blockSignals(False)
+    
     def setAppearance(self, down):
         if down:
             self.setText('I')
@@ -126,7 +132,7 @@ class linetriggerWidget(QtGui.QFrame):
     
     def followSignal(self, x, (state, duration)):
         self.spinbox.blockSignals(True)
-        self.button_linetrig.setChecked(state)
+        self.button_linetrig.set_value_no_signal(state)
         self.spinbox.setValue(duration)
         self.spinbox.blockSignals(False)
 
