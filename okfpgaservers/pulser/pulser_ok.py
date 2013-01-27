@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser
-version = 1.1
+version = 1.15
 description =
 instancename = Pulser
 

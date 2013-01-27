@@ -97,12 +97,12 @@ class DDS(LabradServer):
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
-            if not channel.remote:
-                num = self._valToInt(channel, freq, ampl)
-                num_off = self._valToInt(channel, freq_off, ampl_off)
+            num = self.settings_to_num(channel, freq, ampl)
+            if not channel.phase_coherent_model:
+                num_off = self.settings_to_num(channel, freq_off, ampl_off)
             else:
-                num = self._valToInt_remote(channel, freq, ampl, phase)
-                num_off = self._valToInt_remote(channel, freq, ampl_off, phase) #note that keeping the frequency the same to preserve phase coherence
+                #note that keeping the frequency the same when switching off to preserve phase coherence
+                num_off = self.settings_to_num(channel, freq, ampl_off, phase) 
             #note < sign, because start can not be 0. 
             #this would overwrite the 0 position of the ram, and cause the dds to change before pulse sequence is launched
             if not self.sequenceTimeRange[0] < start <= self.sequenceTimeRange[1]: 
@@ -178,25 +178,36 @@ class DDS(LabradServer):
         '''takes the parsed dds sequence and programs the board with it'''
         self.ddsLock = True
         for name,channel in self.ddsDict.iteritems():
-            addr = channel.channelnumber
             buf = dds[name]
-            if not channel.remote: 
-                yield deferToThread(self._setDDSLocal, addr, buf)
-            else:
-                yield self._setDDSRemote(channel, addr, buf)
+            yield self.program_dds_chanel(channel, buf)
     
     @inlineCallbacks
     def _setParameters(self, channel, freq, ampl):
+        buf = self.settings_to_buf(channel, freq, ampl)
+        yield self.program_dds_chanel(channel, buf)
+    
+    def settings_to_buf(self, channel, freq, ampl):
+        num = self.settings_to_num(channel, freq, ampl)
+        if not channel.phase_coherent_model:
+            buf = self._intToBuf(num)
+        else:
+            buf = self._intToBuf_coherent(num)
+        buf = buf + '\x00\x00' #adding termination
+        return buf
+    
+    def settings_to_num(self, channel, freq, ampl, phase = 0.0):
+        if not channel.phase_coherent_model:
+            num = self._valToInt(channel, freq, ampl)
+        else:
+            num = self._valToInt_coherent(channel, freq, ampl, phase)
+        return num
+    
+    @inlineCallbacks
+    def program_dds_chanel(self, channel, buf):
         addr = channel.channelnumber
         if not channel.remote:
-            num = self._valToInt(channel, freq, ampl)
-            buf = self._intToBuf(num)
-            buf = buf + '\x00\x00' #adding termination
             yield deferToThread(self._setDDSLocal, addr, buf)
         else:
-            num = self._valToInt_remote(channel, freq, ampl)
-            buf = self._intToBuf_remote(num)
-            buf = buf + '\x00\x00' #adding termination
             yield self._setDDSRemote(channel, addr, buf)
     
     def _setDDSLocal(self, addr, buf):
@@ -231,10 +242,7 @@ class DDS(LabradServer):
             self._checkRange('frequency', channel, freq)
         else:
             freq,ampl = channel.off_parameters
-        if not channel.remote:
-            num = self._valToInt(channel, freq, ampl)
-        else:
-            num = self._valToInt_remote(channel, freq, ampl)
+        num = self.settings_to_num(channel, freq, ampl)
         return num
         
     def _valToInt(self, channel, freq, ampl):
@@ -261,7 +269,7 @@ class DDS(LabradServer):
         ans = arr.tostring()
         return ans
     
-    def _valToInt_remote(self, channel, freq, ampl, phase = 0):
+    def _valToInt_coherent(self, channel, freq, ampl, phase = 0):
         '''
         takes the frequency and amplitude values for the specific channel and returns integer representation of the dds setting
         freq is in MHz
@@ -275,7 +283,7 @@ class DDS(LabradServer):
             ans += m*seq
         return ans
     
-    def _intToBuf_remote(self, num):
+    def _intToBuf_coherent(self, num):
         '''
         takes the integer representing the setting and returns the buffer string for dds programming
         '''
