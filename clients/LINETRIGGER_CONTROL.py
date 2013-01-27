@@ -86,6 +86,7 @@ class linetriggerWidget(QtGui.QFrame):
         self.button_linetrig.toggled.connect(self.setState)
         #duration
         self.spinbox = QtGui.QSpinBox()
+        self.spinbox.setKeyboardTracking(False)
         self.spinbox.setSuffix(' us')
         duration = yield server.line_trigger_duration(context = self.context)
         limits = yield server.get_line_trigger_limits()
