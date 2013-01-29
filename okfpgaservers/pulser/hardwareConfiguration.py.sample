@@ -48,7 +48,7 @@ class hardwareConfiguration(object):
     collectionTime = {'Normal':0.100,'Differential':0.100} #default counting rates
     okDeviceID = 'Pulser'
     okDeviceFile = 'photon.bit'
-    lineTriggerLimits = (0, 65535)#values in microseconds 
+    lineTriggerLimits = (0, 15000)#values in microseconds 
     secondPMT = False
     DAC = False
     
