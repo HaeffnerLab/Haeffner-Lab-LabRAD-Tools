@@ -245,6 +245,14 @@ class SolutionsWindow(QtGui.QWidget):
 
         # now you gotta set solutions to parameters!     
         # kinda ugly, let's debug first
+        # somehow you gotta get access to curveName and solutions from here!
+#        i = 0
+#        for parameter in self.parent.parameterWindow.parameterWidgets[self.curveName]:
+#            if (i % 2 == 0): #even
+#                pass
+#            else:
+#                self.parent.parameterWindow.parameterWidgets[self.curveName][i].value())
+#            i += 1
         
         # cycle through accept buttons, if it's the sender, gray it out
         # if any of the other accept buttons are still active, stop the loop!
