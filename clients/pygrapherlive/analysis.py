@@ -54,16 +54,7 @@ class AnalysisWidget(QtGui.QWidget):
             else:
                 self.grid.addWidget(self.analysisCheckboxes[key], ((i - 1) / 2), 1, QtCore.Qt.AlignLeft)                
             i += 1
-#        self.analysisCheckboxes['Gaussian'] = QtGui.QCheckBox('Gaussian', self)
-#        self.analysisCheckboxes['Lorentzian'] = QtGui.QCheckBox('Lorentzian', self)
-#        self.analysisCheckboxes['Parabola'] = QtGui.QCheckBox('Parabola', self)
-#        self.analysisCheckboxes['Line'] = QtGui.QCheckBox('Line', self)
-        
-#        self.grid.addWidget(self.analysisCheckboxes['Gaussian'], 1, 0, QtCore.Qt.AlignLeft)
-#        self.grid.addWidget(self.analysisCheckboxes['Lorentzian'], 1, 1, QtCore.Qt.AlignLeft)
-#        self.grid.addWidget(self.analysisCheckboxes['Parabola'], 2, 0, QtCore.Qt.AlignLeft)
-#        self.grid.addWidget(self.analysisCheckboxes['Line'], 2, 1, QtCore.Qt.AlignLeft)       
-        
+
         mainLayout.addLayout(self.grid)
         
         # Layout for keeping track of datasets on a graph and analysis
@@ -245,10 +236,26 @@ class SolutionsWindow(QtGui.QWidget):
     
     @inlineCallbacks
     def acceptSignal(self, evt):
-        directory, dataset, index = self.buttonIndexDict[self.sender()]
+        readyToClose = True
+        button = self.sender()
+        directory, dataset, index = self.buttonIndexDict[button]
         yield self.parent.cxn.data_vault.cd(directory, context = self.context)
         yield self.parent.cxn.data_vault.open(dataset, context = self.context)
-        yield self.parent.cxn.data_vault.add_parameter_over_write('Accept-' + str(index), True, context = self.context)        
+        yield self.parent.cxn.data_vault.add_parameter_over_write('Accept-' + str(index), True, context = self.context)
+
+        # now you gotta set solutions to parameters!     
+        # kinda ugly, let's debug first
+        
+        # cycle through accept buttons, if it's the sender, gray it out
+        # if any of the other accept buttons are still active, stop the loop!
+        for i in range(len(self.acceptButtons)):
+            if (button == self.acceptButtons[i]):
+                button.setEnabled(False)
+            else:
+                if self.acceptButtons[i].isEnabled():
+                    readyToClose = False
+        if (readyToClose):
+            self.close()   
         
     def refitSignal(self, evt):
         dataset, directory, index, curve, parameters = self.refitButtonIndexDict[self.sender()]
