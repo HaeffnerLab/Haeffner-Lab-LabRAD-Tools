@@ -248,7 +248,6 @@ class SolutionsWindow(QtGui.QWidget):
         # somehow you gotta get access to curveName and solutions from here!
         i = 0
         j = 0
-        print self.solutionsDictionary[dataset, directory, label, curve, parameters, index]
         for parameter in self.parent.parameterWindow.parameterWidgets[curve]:
             if (i % 2 == 0): #even
                 pass
