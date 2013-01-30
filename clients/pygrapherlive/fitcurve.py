@@ -68,7 +68,9 @@ class CurveFit():
             yield self.parent.cxn.data_vault.cd(directory, context = self.parent.context)
             yield self.parent.cxn.data_vault.open(dataset, context = self.parent.context)
 #            yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Gaussian', [height, center, sigma, offset], context = self.context)        
-            yield self.parent.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+self.curveName, solutions, context = self.parent.context)        
+            yield self.parent.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+self.curveName, solutions, context = self.parent.context)
+        else:
+            solutions = params
 
                
         modelX = np.linspace(dataX[0], dataX[-1], len(dataX)*4)

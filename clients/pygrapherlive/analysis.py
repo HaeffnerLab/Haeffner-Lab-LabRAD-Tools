@@ -196,11 +196,11 @@ class SolutionsWindow(QtGui.QWidget):
         self.solutionsDictionary = solutionsDictionary
         self.labels = []
         self.textBoxes = []
-        self.refitButtons = []
+#        self.refitButtons = []
         self.acceptButtons = []
         self.setWindowTitle('Solutions')
         self.buttonIndexDict = {}
-        self.refitButtonIndexDict = {}
+#        self.refitButtonIndexDict = {}
         self.setupUI()
    
     def setupUI(self):
@@ -214,22 +214,22 @@ class SolutionsWindow(QtGui.QWidget):
             textBox.setText('\'Fit\', [\'['+str(index)+']\', \''+ str(curve) + '\', ' + '\'' + str(self.solutionsDictionary[dataset, directory, label, curve, parameters, index]) + '\']')
             textBox.setMinimumWidth(550)
             self.textBoxes.append(textBox)
-            refitButton = QtGui.QPushButton("Refit Curve", self)
-            refitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
-            refitButton.clicked.connect(self.refitSignal)    
-            self.refitButtons.append(refitButton)
-            self.refitButtonIndexDict[refitButton] = [dataset, directory, index, curve, str(self.solutionsDictionary[dataset, directory, label, curve, parameters, index])]        
+#            refitButton = QtGui.QPushButton("Refit Curve", self)
+#            refitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
+#            refitButton.clicked.connect(self.refitSignal)    
+#            self.refitButtons.append(refitButton)
+#            self.refitButtonIndexDict[refitButton] = [dataset, directory, index, curve, str(self.solutionsDictionary[dataset, directory, label, curve, parameters, index])]        
             acceptButton = QtGui.QPushButton("Accept", self)
             acceptButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
             acceptButton.clicked.connect(self.acceptSignal)  
             self.acceptButtons.append(acceptButton)          
-            self.buttonIndexDict[acceptButton] = [directory, dataset, index]
+            self.buttonIndexDict[acceptButton] = [dataset, directory, label, curve, parameters, index]
         
         for i in range(len(self.labels)):
             self.grid.addWidget(self.labels[i], i, 0, QtCore.Qt.AlignCenter)
             self.grid.addWidget(self.textBoxes[i], i, 1, QtCore.Qt.AlignCenter)
-            self.grid.addWidget(self.refitButtons[i], i, 2, QtCore.Qt.AlignCenter)
-            self.grid.addWidget(self.acceptButtons[i], i, 3, QtCore.Qt.AlignCenter)
+#            self.grid.addWidget(self.refitButtons[i], i, 2, QtCore.Qt.AlignCenter)
+            self.grid.addWidget(self.acceptButtons[i], i, 2, QtCore.Qt.AlignCenter)
 
         self.setLayout(self.grid)
         self.show()
@@ -238,7 +238,7 @@ class SolutionsWindow(QtGui.QWidget):
     def acceptSignal(self, evt):
         readyToClose = True
         button = self.sender()
-        directory, dataset, index = self.buttonIndexDict[button]
+        dataset, directory, label, curve, parameters, index = self.buttonIndexDict[button]
         yield self.parent.cxn.data_vault.cd(directory, context = self.context)
         yield self.parent.cxn.data_vault.open(dataset, context = self.context)
         yield self.parent.cxn.data_vault.add_parameter_over_write('Accept-' + str(index), True, context = self.context)
@@ -246,13 +246,18 @@ class SolutionsWindow(QtGui.QWidget):
         # now you gotta set solutions to parameters!     
         # kinda ugly, let's debug first
         # somehow you gotta get access to curveName and solutions from here!
-#        i = 0
-#        for parameter in self.parent.parameterWindow.parameterWidgets[self.curveName]:
-#            if (i % 2 == 0): #even
-#                pass
-#            else:
-#                self.parent.parameterWindow.parameterWidgets[self.curveName][i].value())
-#            i += 1
+        i = 0
+        j = 0
+        print self.solutionsDictionary[dataset, directory, label, curve, parameters, index]
+        for parameter in self.parent.parameterWindow.parameterWidgets[curve]:
+            if (i % 2 == 0): #even
+                pass
+            else:
+                self.parent.parameterWindow.parameterWidgets[curve][i].blockSignals(True)
+                self.parent.parameterWindow.parameterWidgets[curve][i].setValue(self.solutionsDictionary[dataset, directory, label, curve, parameters, index][j])
+                self.parent.parameterWindow.parameterWidgets[curve][i].blockSignals(False)
+                j += 1
+            i += 1
         
         # cycle through accept buttons, if it's the sender, gray it out
         # if any of the other accept buttons are still active, stop the loop!
@@ -265,8 +270,8 @@ class SolutionsWindow(QtGui.QWidget):
         if (readyToClose):
             self.close()   
         
-    def refitSignal(self, evt):
-        dataset, directory, index, curve, parameters = self.refitButtonIndexDict[self.sender()]
-        scriptParameters = [str('['+str(index+1)+']'), str(curve), parameters]
-        print scriptParameters
-        self.parent.parent.fitFromScript(dataset, directory, 1, scriptParameters, True)
+#    def refitSignal(self, evt):
+#        dataset, directory, index, curve, parameters = self.refitButtonIndexDict[self.sender()]
+#        scriptParameters = [str('['+str(index+1)+']'), str(curve), parameters]
+#        print scriptParameters
+#        self.parent.parent.fitFromScript(dataset, directory, 1, scriptParameters, True)
