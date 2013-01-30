@@ -94,6 +94,7 @@ class AnalysisWidget(QtGui.QWidget):
         self.context = yield self.cxn.context()
 
     def setParameters(self, evt):
+        self.parameterWindow.setRanges()
         self.parameterWindow.show()
         # create the parameter window upstairs, spinboxes will be part of it
 
@@ -173,6 +174,33 @@ class ParameterWindow(QtGui.QWidget):
             for j in range(len(self.parameterWidgets[key])):
                 self.grid.addWidget(self.parameterWidgets[key][j], i, j+1, QtCore.Qt.AlignCenter)
             i += 1
+
+    def setRanges(self):
+        xmin, xmax = self.parent.parent.qmc.getDataXLimits()
+        fitRangeLabel = QtGui.QLabel('Fit Range: ')
+        self.minRange = QtGui.QDoubleSpinBox()
+        self.minRange.setDecimals(6)
+        self.minRange.setRange(xmin, xmax)
+        self.minRange.setValue(xmin)
+        self.minRange.setSingleStep(.1)
+        self.minRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.minRange.setKeyboardTracking(False)
+        self.connect(self.minRange, QtCore.SIGNAL('valueChanged(double)'), self.minRangeSignal)
+        self.maxRange = QtGui.QDoubleSpinBox()
+        self.maxRange = QtGui.QDoubleSpinBox()
+        self.maxRange.setDecimals(6)
+        self.maxRange.setRange(xmin, xmax)
+        self.maxRange.setValue(xmax)
+        self.maxRange.setSingleStep(.1)
+        self.maxRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.maxRange.setKeyboardTracking(False)  
+        self.connect(self.maxRange, QtCore.SIGNAL('valueChanged(double)'), self.maxRangeSignal)
+        
+        i = len(self.parameterWidgets.keys())
+        self.grid.addWidget(fitRangeLabel, i, 0, QtCore.Qt.AlignCenter)
+        self.grid.addWidget(self.minRange, i, 1, QtCore.Qt.AlignCenter)
+        self.grid.addWidget(self.maxRange, i, 2, QtCore.Qt.AlignCenter)             
+         
         # Title Labels       
         # Maybe there's no need to show the whole function
 #        gaussianLabel = QtGui.QLabel('Gaussian:  Height*exp(-(((x - center)/Sigma)**2)/2) + Offset')
@@ -182,6 +210,10 @@ class ParameterWindow(QtGui.QWidget):
 
         self.setFixedSize(1000, 200)
 
+    def minRangeSignal(self, evt):
+        self.minRange.setRange(self.minRange.minimum(), self.maxRange.value())
+    def maxRangeSignal(self, evt):
+        self.maxRange.setRange(self.minRange.value(), self.maxRange.maximum())
 
     def closeEvent(self, evt):
         self.hide()        
