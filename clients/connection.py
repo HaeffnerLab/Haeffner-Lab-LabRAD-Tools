@@ -1,15 +1,10 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
+from connection_config import configuration
 
 class connection(object):
-    
-    servers = {
-                'Data Vault':None,
-                'Semaphore':None,
-                'Pulser':None,
-                'SD Tracker':None,
-                }
-    
+        
     def __init__(self):
+        self.servers = {}.fromkeys(configuration.servers)
         self.on_connect = {}.fromkeys(self.servers)
         self.on_disconnect = {}.fromkeys(self.servers)
         #initialize these to empty lists
