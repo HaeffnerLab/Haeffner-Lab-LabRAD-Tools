@@ -7,6 +7,7 @@ from canvas import Qt4MplCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from datavault import DataVaultWidget
 from analysis import AnalysisWidget
+from analysiswindow import AnalysisWindow
 import time
 
 class GrapherWindow(QtGui.QWidget):
@@ -92,7 +93,7 @@ class GrapherWindow(QtGui.QWidget):
 
     # adds a checkbox when a new dataset is overlaid on the graph
     def createDatasetCheckbox(self, dataset, directory, label, index):
-        datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
+        datasetCheckbox = QtGui.QCheckBox(' ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
 #        datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + label, self)
         datasetCheckbox.toggle()
         datasetCheckbox.clicked.connect(self.datasetCheckboxSignal)
@@ -221,6 +222,11 @@ class GrapherWindow(QtGui.QWidget):
         self.parent.removeWindowFromWinDict(self.windowName)
 #        self.parent.removeWindowFromWinList(self)
         self.parent.cleanUp()
+        for window in self.datasetCheckboxListWidget.analysisWindows.keys():
+            try:
+                self.datasetCheckboxListWidget.analysisWindows[window].close()
+            except:
+                pass
         self.fileQuit()
 
 
@@ -286,14 +292,29 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
     def __init__(self, parent):
         QtGui.QListWidget.__init__(self)
         self.parent = parent
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.popup) 
+        
+        self.analysisWindows = {}       
         
     def mousePressEvent(self, event):
         """
         mouse clicks events
         """
-        button = event.button()
+        button = event.button()       
         item = self.itemAt(event.x(), event.y())
         if item:
             item.setSelected(True)
-    
-    
+
+    def popup(self, pos):
+        menu = QtGui.QMenu()
+        quitAction = menu.addAction("Fit")
+        action = menu.exec_(self.mapToGlobal(pos))
+        if action == quitAction:
+            item = self.itemAt(pos)
+            if (item == None):
+                print self.count()
+                item = self.item(self.count() - 1)                
+            print item.text()
+            self.analysisWindows[item.text()] = AnalysisWindow(self, item.text())
+
