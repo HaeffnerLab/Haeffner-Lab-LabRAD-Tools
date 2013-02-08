@@ -100,7 +100,6 @@ class AnalysisWindow(QtGui.QWidget):
 #            self.connect(self.parameterSpinBoxes[curveName], QtCore.SIGNAL('valueChanged(double)'), self.parent.parent.drawCurvesSignal)
 
         for i in range(len(self.parameterLabels.values())):
-            print i
             self.parameterTable.setCellWidget(i, 0, self.parameterLabels.values()[i])
 
         for i in range(len(self.parameterSpinBoxes.values())):
@@ -110,7 +109,6 @@ class AnalysisWindow(QtGui.QWidget):
         # this is where we remake the grid, yea just remake it, let's make a function
       
         self.setupParameterTable(self.combo.currentText()) 
-        print 'hello asshole'    
 
     @inlineCallbacks
     def createContext(self):
