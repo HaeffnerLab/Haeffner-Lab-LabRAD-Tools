@@ -108,10 +108,8 @@ class AnalysisWindow(QtGui.QWidget):
 
         for i in range(len(self.parameterSpinBoxes.values())):
             self.parameterTable.setCellWidget(i, 1, self.parameterSpinBoxes.values()[i])
-        
-        self.parameterTable.resizeColumnsToContents()
-        self.parameterTable.resizeRowsToContents()
-        self.resize(self.sizeHint())
+            
+        self.resizeWindow()
        
         
     def onActivated(self, text):
@@ -128,8 +126,22 @@ class AnalysisWindow(QtGui.QWidget):
     def fitCurves(self, parameters = None, drawCurves = False):
         labels = self.parent.parent.qmc.datasetLabelsDict[self.dataset, self.directory]
         self.fitCurveDictionary[self.curveName].fitCurve(self.dataset, self.directory, self.index, labels[self.index], parameters, drawCurves)
+        # now the solutions (dictionary) should be set, so we use them to fill the 3rd column
+        i = 0
+        for solution in self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName]:
+            item = QtGui.QTableWidgetItem()
+            item.setText(str(solution))
+            item.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.parameterTable.setItem(i, 2, item)
+            i += 1
 
+        self.resizeWindow()
+        
     @inlineCallbacks
     def createContext(self):
         self.context = yield self.cxn.context()
        
+    def resizeWindow(self):
+        self.parameterTable.resizeColumnsToContents()
+        self.parameterTable.resizeRowsToContents()
+        self.resize(self.sizeHint())

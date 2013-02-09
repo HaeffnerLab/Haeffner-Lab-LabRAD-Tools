@@ -60,8 +60,8 @@ class CurveFit():
 #            height, center, sigma, offset = self.fit(self.fitFuncGaussian, [height, center, sigma, offset], newYData, dataX)
             solutions = self.fit(self.fitFunc, params, newYData, dataX)
             
-            self.parent.solutionsDictionary[dataset, directory, label, self.curveName, str(self.parameterNames), index] = solutions
-    
+   #         self.parent.solutionsDictionary[dataset, directory, label, self.curveName, str(self.parameterNames), index] = solutions
+            self.parent.solutionsDictionary[dataset, directory, index, self.curveName] = solutions
             yield self.parent.cxn.data_vault.cd(directory, context = self.parent.context)
             yield self.parent.cxn.data_vault.open(dataset, context = self.parent.context)
 #            yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Gaussian', [height, center, sigma, offset], context = self.context)        
