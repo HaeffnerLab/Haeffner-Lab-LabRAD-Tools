@@ -72,7 +72,6 @@ class async_semaphore(object):
         for params in self.d.itervalues():
             try:
                 params.updateSignal.connect(self.set_labrad_parameter(params.path, params.units))
-#                print params.path
             except AttributeError:
                 for p in params:
                     p.updateSignal.connect(self.set_labrad_parameter(p.path, p.units))
