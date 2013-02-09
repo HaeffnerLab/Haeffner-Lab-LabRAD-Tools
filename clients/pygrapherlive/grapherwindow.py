@@ -20,6 +20,7 @@ class GrapherWindow(QtGui.QWidget):
         self.windowName = windowName
         self.parameterWindows = {}
         self.datasetCheckboxes = {}
+        self.datasetCheckboxesItems = {}
         self.datasetAnalysisCheckboxes = {}
         self.datasetCheckboxCounter = 0
         self.datasetCheckboxPositionDict = {}
@@ -108,6 +109,7 @@ class GrapherWindow(QtGui.QWidget):
             # The trick here is to create an item with enough text to activate the scrollbar, and then hide the text.
             # This must be done because a checkbox, even with a lot of text, does not activate the scroll bar horizontally
             item = QtGui.QListWidgetItem()
+            self.datasetCheckboxesItems[item] = [dataset, directory, index]
             item.setText('     ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             item.setTextColor(QtGui.QColor(255, 255, 255))
             self.datasetCheckboxListWidget.addItem(item)
@@ -308,13 +310,16 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
 
     def popup(self, pos):
         menu = QtGui.QMenu()
-        quitAction = menu.addAction("Fit")
-        action = menu.exec_(self.mapToGlobal(pos))
-        if action == quitAction:
-            item = self.itemAt(pos)
-            if (item == None):
-                print self.count()
-                item = self.item(self.count() - 1)                
-            print item.text()
-            self.analysisWindows[item.text()] = AnalysisWindow(self, item.text())
-
+        fitAction = menu.addAction("Fit")
+        item = self.itemAt(pos)
+        if (item == None):
+            pass # no item
+        elif (item.text()[-5:] == 'Model'):
+            pass # we're not going to fit to a model
+        else:
+            action = menu.exec_(self.mapToGlobal(pos))
+            if action == fitAction:
+    #                print self.count()
+    #                item = self.item(self.count() - 1)                
+                print item.text()
+                self.analysisWindows[item.text()] = AnalysisWindow(self, item.text(), self.parent.datasetCheckboxesItems[item])

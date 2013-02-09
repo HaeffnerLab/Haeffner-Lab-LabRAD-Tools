@@ -14,14 +14,16 @@ from fitparabola import FitParabola
 
 class AnalysisWindow(QtGui.QWidget):
     
-    def __init__(self, parent, text):
+    def __init__(self, parent, text, ident):
         super(AnalysisWindow, self).__init__()
         self.text = text
+        self.dataset, self.directory, self.index = ident
         self.parent = parent     
         self.cxn = self.parent.parent.parent.cxn
         self.createContext()
         self.parameterSpinBoxes = {}
         self.parameterLabels = {} 
+        self.solutionsDictionary = {}
 
         self.fitLine = FitLine(self)
         self.fitGaussian = FitGaussian(self)
@@ -55,8 +57,8 @@ class AnalysisWindow(QtGui.QWidget):
 
         self.combo.activated[str].connect(self.onActivated)        
          
-#        self.setGeometry(300, 300, 300, 200)
-
+#        self.setGeometry(300, 300, 500, 300)
+        
         self.parameterTable = QtGui.QTableWidget()
         self.parameterTable.setColumnCount(3)
 
@@ -72,22 +74,24 @@ class AnalysisWindow(QtGui.QWidget):
 #        self.grid.addWidget(self.combo, 0, 0, QtCore.Qt.AlignCenter)
         self.setupParameterTable(self.combo.itemText(0))
         
-        fitButton = QtGui.QPushButton("Fit", self)
-        fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
-        self.mainLayout.addWidget(fitButton)
+        self.fitButton = QtGui.QPushButton("Fit", self)
+        self.fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
+        self.fitButton.clicked.connect(self.fitCurveSignal)        
+
+        self.mainLayout.addWidget(self.fitButton)
         
         self.show()
 
     def setupParameterTable(self, curveName):
-        curveName = str(curveName)
+        self.curveName = str(curveName)
         
         # clear the existing widgets      
         self.parameterTable.clear()
         self.parameterLabels = {}
         self.parameterSpinBoxes = {}
-        self.parameterTable.setRowCount(len(self.fitCurveDictionary[curveName].parameterNames))
+        self.parameterTable.setRowCount(len(self.fitCurveDictionary[self.curveName].parameterNames))
 #        self.parameterTable.setRowCount(5)
-        for parameterName in self.fitCurveDictionary[curveName].parameterNames:
+        for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
             # Create things
             self.parameterLabels[parameterName] = QtGui.QLabel(parameterName)
             self.parameterSpinBoxes[parameterName] = QtGui.QDoubleSpinBox()
@@ -105,10 +109,25 @@ class AnalysisWindow(QtGui.QWidget):
         for i in range(len(self.parameterSpinBoxes.values())):
             self.parameterTable.setCellWidget(i, 1, self.parameterSpinBoxes.values()[i])
         
+        self.parameterTable.resizeColumnsToContents()
+        self.parameterTable.resizeRowsToContents()
+        self.resize(self.sizeHint())
+       
+        
     def onActivated(self, text):
         # this is where we remake the grid, yea just remake it, let's make a function
       
         self.setupParameterTable(self.combo.currentText()) 
+        
+    def fitCurveSignal(self, evt):
+        self.fitCurves()
+        
+    def drawCurvesSignal(self, evt):
+        self.fitCurves(drawCurves = True)
+
+    def fitCurves(self, parameters = None, drawCurves = False):
+        labels = self.parent.parent.qmc.datasetLabelsDict[self.dataset, self.directory]
+        self.fitCurveDictionary[self.curveName].fitCurve(self.dataset, self.directory, self.index, labels[self.index], parameters, drawCurves)
 
     @inlineCallbacks
     def createContext(self):
