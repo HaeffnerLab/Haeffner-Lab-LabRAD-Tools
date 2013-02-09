@@ -177,7 +177,7 @@ class Qt4MplCanvas(FigureCanvas):
         self.datasetLabelsDict[dataset, directory] = labels 
     
     # retrieve and store the new data from Connections
-    def setPlotData(self, dataset, directory, data):
+    def setPlotData(self, dataset, directory, data, fit=None):
         # First Time
         numberOfDependentVariables = data.shape[1] - 1 # total number of variables minus the independent variable           
         numberOfDataPoints = data.shape[0]
@@ -220,8 +220,8 @@ class Qt4MplCanvas(FigureCanvas):
 
             self.cidpress = self.mpl_connect('draw_event', self.on_draw)
             self.drawGraph()
-            if (len(self.dataDict.keys()) == 1):
-                self.fitData()
+            #if (len(self.dataDict.keys()) == 1) or (fit == True):
+            self.fitData()
         else:
             # New Data      
             
