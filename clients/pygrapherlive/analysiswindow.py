@@ -70,11 +70,11 @@ class AnalysisWindow(QtGui.QWidget):
 
         self.mainLayout = QtGui.QVBoxLayout()
         self.parameterLayout = QtGui.QHBoxLayout()
-        
-        
+        self.buttonLayout = QtGui.QHBoxLayout()
        
         self.setLayout(self.mainLayout)
         self.mainLayout.addLayout(self.parameterLayout)
+        self.mainLayout.addLayout(self.buttonLayout)
         self.parameterLayout.addWidget(self.combo)
         self.parameterLayout.addWidget(self.parameterTable)
 #        self.grid.addWidget(self.combo, 0, 0, QtCore.Qt.AlignCenter)
@@ -84,7 +84,17 @@ class AnalysisWindow(QtGui.QWidget):
         self.fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         self.fitButton.clicked.connect(self.fitCurveSignal)        
 
-        self.mainLayout.addWidget(self.fitButton)
+        self.acceptManualButton = QtGui.QPushButton("Accept Manual", self)
+        self.acceptManualButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
+        self.acceptManualButton.clicked.connect(self.acceptManualSignal) 
+        
+        self.acceptFittedButton = QtGui.QPushButton("Accept Fitted", self)
+        self.acceptFittedButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
+        self.acceptFittedButton.clicked.connect(self.acceptFittedSignal)   
+
+        self.buttonLayout.addWidget(self.fitButton)
+        self.buttonLayout.addWidget(self.acceptManualButton)
+        self.buttonLayout.addWidget(self.acceptFittedButton)
         
         self.show()
 
@@ -158,6 +168,27 @@ class AnalysisWindow(QtGui.QWidget):
     @inlineCallbacks
     def createContext(self):
         self.context = yield self.cxn.context()
+
+
+    @inlineCallbacks
+    def acceptManualSignal(self, evt):
+        yield self.parent.parent.parent.cxn.data_vault.cd(self.directory, context = self.context)
+        yield self.parent.parent.parent.cxn.data_vault.open(self.dataset, context = self.context)
+        yield self.parent.parent.parent.cxn.data_vault.add_parameter_over_write('Accept-' + str(self.index), True, context = self.context)
+        # the fitted solutions are already in data vault, this would overwrite them with the manual
+        solutions = []
+        for c in range(self.parameterTable.rowCount()):
+            solutions.append(self.parameterTable.cellWidget(c, 1).value())
+        yield self.parent.parent.parent.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(self.index)+'-'+self.curveName, solutions, context = self.context)
+        self.close()
+
+    @inlineCallbacks
+    def acceptFittedSignal(self, evt):
+        yield self.parent.parent.parent.cxn.data_vault.cd(self.directory, context = self.context)
+        yield self.parent.parent.parent.cxn.data_vault.open(self.dataset, context = self.context)
+        yield self.parent.parent.parent.cxn.data_vault.add_parameter_over_write('Accept-' + str(self.index), True, context = self.context)
+        self.close()
+        
        
     def resizeWindow(self):
         oldSize = self.parameterTable.sizeHint() # qsize
