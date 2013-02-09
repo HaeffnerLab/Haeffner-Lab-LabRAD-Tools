@@ -24,6 +24,7 @@ class AnalysisWindow(QtGui.QWidget):
         self.parameterSpinBoxes = {}
         self.parameterLabels = {} 
         self.solutionsDictionary = {}
+        self.firstOpenFlag = False
 
         self.fitLine = FitLine(self)
         self.fitGaussian = FitGaussian(self)
@@ -61,6 +62,11 @@ class AnalysisWindow(QtGui.QWidget):
         
         self.parameterTable = QtGui.QTableWidget()
         self.parameterTable.setColumnCount(3)
+#        self.parameterTable.setHorizontalHeaderLabels(QtCore.QStringList(['Parameters','Manual','Fitted']))
+        self.parameterTable.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem('Parameters'))
+        self.parameterTable.horizontalHeader().setStretchLastSection(True)
+#        self.horizontalHeader.setStretchLastSection(True)
+        self.parameterTable.verticalHeader().setVisible(False)
 
         self.mainLayout = QtGui.QVBoxLayout()
         self.parameterLayout = QtGui.QHBoxLayout()
@@ -87,6 +93,10 @@ class AnalysisWindow(QtGui.QWidget):
         
         # clear the existing widgets      
         self.parameterTable.clear()
+        self.parameterTable.setHorizontalHeaderLabels(QtCore.QStringList(['Parameters','Manual','Fitted']))
+#        self.parameterTable.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem('Parameters'))
+#        self.horizontalHeader = self.parameterTable.horizontalHeader()
+        
         self.parameterLabels = {}
         self.parameterSpinBoxes = {}
         self.parameterTable.setRowCount(len(self.fitCurveDictionary[self.curveName].parameterNames))
@@ -94,6 +104,7 @@ class AnalysisWindow(QtGui.QWidget):
         for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
             # Create things
             self.parameterLabels[parameterName] = QtGui.QLabel(parameterName)
+            self.parameterLabels[parameterName].setAlignment(QtCore.Qt.AlignCenter)
             self.parameterSpinBoxes[parameterName] = QtGui.QDoubleSpinBox()
             self.parameterSpinBoxes[parameterName].setDecimals(6)
             self.parameterSpinBoxes[parameterName].setRange(-1000000000, 1000000000)
@@ -101,7 +112,7 @@ class AnalysisWindow(QtGui.QWidget):
             self.parameterSpinBoxes[parameterName].setSingleStep(.1)
             self.parameterSpinBoxes[parameterName].setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
             self.parameterSpinBoxes[parameterName].setKeyboardTracking(False)
-#            self.connect(self.parameterSpinBoxes[curveName], QtCore.SIGNAL('valueChanged(double)'), self.parent.parent.drawCurvesSignal)
+            self.connect(self.parameterSpinBoxes[parameterName], QtCore.SIGNAL('valueChanged(double)'), self.drawCurvesSignal)
 
         for i in range(len(self.parameterLabels.values())):
             self.parameterTable.setCellWidget(i, 0, self.parameterLabels.values()[i])
@@ -109,8 +120,14 @@ class AnalysisWindow(QtGui.QWidget):
         for i in range(len(self.parameterSpinBoxes.values())):
             self.parameterTable.setCellWidget(i, 1, self.parameterSpinBoxes.values()[i])
             
+        for i in range(len(self.parameterSpinBoxes.values())):
+            item = QtGui.QTableWidgetItem()
+            item.setText('1.000000')
+            self.parameterTable.setItem(i, 2, item)
+
+#        self.resize(self.sizeHint())
         self.resizeWindow()
-       
+#        self.adjustSize()      
         
     def onActivated(self, text):
         # this is where we remake the grid, yea just remake it, let's make a function
@@ -127,13 +144,14 @@ class AnalysisWindow(QtGui.QWidget):
         labels = self.parent.parent.qmc.datasetLabelsDict[self.dataset, self.directory]
         self.fitCurveDictionary[self.curveName].fitCurve(self.dataset, self.directory, self.index, labels[self.index], parameters, drawCurves)
         # now the solutions (dictionary) should be set, so we use them to fill the 3rd column
-        i = 0
-        for solution in self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName]:
-            item = QtGui.QTableWidgetItem()
-            item.setText(str(solution))
-            item.setFlags(QtCore.Qt.ItemIsEnabled)
-            self.parameterTable.setItem(i, 2, item)
-            i += 1
+        if (drawCurves == False):
+            i = 0
+            for solution in self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName]:
+                item = QtGui.QTableWidgetItem()
+                item.setText(str(solution))
+                item.setFlags(QtCore.Qt.ItemIsEditable)
+                self.parameterTable.setItem(i, 2, item)
+                i += 1
 
         self.resizeWindow()
         
@@ -142,6 +160,30 @@ class AnalysisWindow(QtGui.QWidget):
         self.context = yield self.cxn.context()
        
     def resizeWindow(self):
+        oldSize = self.parameterTable.sizeHint() # qsize
+#        print 'old: ', oldSize
         self.parameterTable.resizeColumnsToContents()
         self.parameterTable.resizeRowsToContents()
-        self.resize(self.sizeHint())
+        w = 0
+        for c in range(self.parameterTable.columnCount()):
+            w = w + self.parameterTable.columnWidth(c)
+        w = w + self.parameterTable.verticalHeader().width() + self.parameterTable.autoScrollMargin()
+        h = 0
+        for c in range(self.parameterTable.rowCount()):
+            h = h + self.parameterTable.rowHeight(c)
+        h = h + self.parameterTable.horizontalHeader().height() + 5
+        
+#        print 'new w and h: ', w, h
+        finalSize = QtCore.QSize()
+        sizeHint = self.sizeHint()
+        sizeW = sizeHint.width()
+        sizeH = sizeHint.height()
+        if (self.firstOpenFlag == False):
+            sizeH += 32 # weird sizing issue at first open
+            self.firstOpenFlag = True
+#        print 'hint: ', sizeHint
+        finalSize.setWidth(sizeW + (w - oldSize.width()))
+        finalSize.setHeight(sizeH + (h - oldSize.height()))
+#        print 'final: ', finalSize
+        self.resize(finalSize)
+        
