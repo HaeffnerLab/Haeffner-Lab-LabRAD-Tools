@@ -28,7 +28,7 @@ class GrapherWindow(QtGui.QWidget):
         self.datasetAnalysisCheckboxCounter = 0
         self.manuallyLoaded = True
         self.setWindowTitle(self.windowName)
-   
+         
         # create a vertical box layout widget
         grapherLayout = QtGui.QVBoxLayout()
         # instantiate our Matplotlib canvas widget
@@ -299,6 +299,8 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
         self.parent = parent
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.popup) 
+        self.savedAnalysisParameters = {}
+
         
         self.analysisWindows = {}       
         

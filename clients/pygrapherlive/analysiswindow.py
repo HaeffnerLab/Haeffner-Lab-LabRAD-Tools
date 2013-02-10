@@ -24,7 +24,7 @@ class AnalysisWindow(QtGui.QWidget):
         self.parameterSpinBoxes = {}
         self.parameterLabels = {} 
         self.solutionsDictionary = {}
-        self.firstOpenFlag = False
+        self.parameterSpinBoxDict = {}
 
         self.fitLine = FitLine(self)
         self.fitGaussian = FitGaussian(self)
@@ -78,7 +78,6 @@ class AnalysisWindow(QtGui.QWidget):
         self.parameterLayout.addWidget(self.combo)
         self.parameterLayout.addWidget(self.parameterTable)
 #        self.grid.addWidget(self.combo, 0, 0, QtCore.Qt.AlignCenter)
-        self.setupParameterTable(self.combo.itemText(0))
         
         self.fitButton = QtGui.QPushButton("Fit", self)
         self.fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
@@ -96,6 +95,23 @@ class AnalysisWindow(QtGui.QWidget):
         self.buttonLayout.addWidget(self.acceptManualButton)
         self.buttonLayout.addWidget(self.acceptFittedButton)
         
+        self.manualTextLayout = QtGui.QHBoxLayout()
+        manualLabel = QtGui.QLabel("Manual values: ")
+        self.manualTextBox = QtGui.QLineEdit(readOnly=True)
+        self.manualTextLayout.addWidget(manualLabel)
+        self.manualTextLayout.addWidget(self.manualTextBox)
+        self.mainLayout.addLayout(self.manualTextLayout)
+
+        self.fittedTextLayout = QtGui.QHBoxLayout()
+        fittedLabel = QtGui.QLabel("Fitted values: ")
+        self.fittedTextBox = QtGui.QLineEdit(readOnly=True)
+        self.fittedTextLayout.addWidget(fittedLabel)
+        self.fittedTextLayout.addWidget(self.fittedTextBox)
+        self.mainLayout.addLayout(self.fittedTextLayout)
+ 
+        self.setupParameterTable(self.combo.itemText(0))
+ 
+        
         self.show()
 
     def setupParameterTable(self, curveName):
@@ -111,29 +127,43 @@ class AnalysisWindow(QtGui.QWidget):
         self.parameterSpinBoxes = {}
         self.parameterTable.setRowCount(len(self.fitCurveDictionary[self.curveName].parameterNames))
 #        self.parameterTable.setRowCount(5)
+
+        try:
+            test = self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName]
+        except:
+            # no previously saved parameters, create them
+            self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName] = [{}, {}]
+            for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
+                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][parameterName] = 1.0
+                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = 1.0
+
+        i = 0
         for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
             # Create things
             self.parameterLabels[parameterName] = QtGui.QLabel(parameterName)
             self.parameterLabels[parameterName].setAlignment(QtCore.Qt.AlignCenter)
             self.parameterSpinBoxes[parameterName] = QtGui.QDoubleSpinBox()
+            self.parameterSpinBoxDict[self.parameterSpinBoxes[parameterName]] = parameterName
             self.parameterSpinBoxes[parameterName].setDecimals(6)
             self.parameterSpinBoxes[parameterName].setRange(-1000000000, 1000000000)
-            self.parameterSpinBoxes[parameterName].setValue(1)
+            self.parameterSpinBoxes[parameterName].setValue(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][parameterName])                
             self.parameterSpinBoxes[parameterName].setSingleStep(.1)
             self.parameterSpinBoxes[parameterName].setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
             self.parameterSpinBoxes[parameterName].setKeyboardTracking(False)
             self.connect(self.parameterSpinBoxes[parameterName], QtCore.SIGNAL('valueChanged(double)'), self.drawCurvesSignal)
-
-        for i in range(len(self.parameterLabels.values())):
-            self.parameterTable.setCellWidget(i, 0, self.parameterLabels.values()[i])
-
-        for i in range(len(self.parameterSpinBoxes.values())):
-            self.parameterTable.setCellWidget(i, 1, self.parameterSpinBoxes.values()[i])
             
-        for i in range(len(self.parameterSpinBoxes.values())):
+            self.parameterTable.setCellWidget(i, 0, self.parameterLabels[parameterName])
+            self.parameterTable.setCellWidget(i, 1, self.parameterSpinBoxes[parameterName])
             item = QtGui.QTableWidgetItem()
-            item.setText('1.000000')
+            item.setText(str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName]))
+            item.setFlags(QtCore.Qt.ItemIsEditable)
             self.parameterTable.setItem(i, 2, item)
+
+            i += 1
+        
+        
+        self.manualTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
+        self.fittedTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
 
 #        self.resize(self.sizeHint())
         self.resizeWindow()
@@ -148,6 +178,9 @@ class AnalysisWindow(QtGui.QWidget):
         self.fitCurves()
         
     def drawCurvesSignal(self, evt):
+        sender = self.sender()
+        self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][self.parameterSpinBoxDict[sender]] = sender.value()
+        self.manualTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
         self.fitCurves(drawCurves = True)
 
     def fitCurves(self, parameters = None, drawCurves = False):
@@ -162,7 +195,12 @@ class AnalysisWindow(QtGui.QWidget):
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 self.parameterTable.setItem(i, 2, item)
                 i += 1
-
+            i = 0
+            for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
+                self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName][i]
+                i += 1
+            self.fittedTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
+            
         self.resizeWindow()
         
     @inlineCallbacks
@@ -209,9 +247,7 @@ class AnalysisWindow(QtGui.QWidget):
         sizeHint = self.sizeHint()
         sizeW = sizeHint.width()
         sizeH = sizeHint.height()
-        if (self.firstOpenFlag == False):
-            sizeH += 32 # weird sizing issue at first open
-            self.firstOpenFlag = True
+
 #        print 'hint: ', sizeHint
         finalSize.setWidth(sizeW + (w - oldSize.width()))
         finalSize.setHeight(sizeH + (h - oldSize.height()))
