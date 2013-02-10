@@ -9,6 +9,7 @@ from datavault import DataVaultWidget
 from analysis import AnalysisWidget
 from analysiswindow import AnalysisWindow
 import time
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 class GrapherWindow(QtGui.QWidget):
     """Creates the window for the new plot"""
@@ -206,9 +207,10 @@ class GrapherWindow(QtGui.QWidget):
         win.show()
         self.parameterWindows[dataset, directory] = win
 
+    @inlineCallbacks
     def getParameters(self, dataset, directory):
-        parameters = self.parent.getParameters(dataset, directory)
-        return parameters                   
+        parameters = yield self.parent.getParameters(dataset, directory)
+        returnValue( parameters )                   
      
     def fileQuit(self):
         self.close()
@@ -283,8 +285,9 @@ class ParameterWindow(QtGui.QWidget):
         self.populateList()
         tstartupdate = time.clock()
     
+    @inlineCallbacks
     def populateList(self):
-        self.parameters = self.parent.getParameters(self.dataset, self.directory)
+        self.parameters = yield self.parent.getParameters(self.dataset, self.directory)
         self.parameterListWidget.clear()
         if (self.parameters):
             for i in self.parameters:
