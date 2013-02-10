@@ -289,4 +289,6 @@ class AnalysisWindow(QtGui.QWidget):
         finalSize.setHeight(sizeH + (h - oldSize.height()))
 #        print 'final: ', finalSize
         self.resize(finalSize)
-        
+    
+    def closeEvent(self, evt):
+        self.parent.analysisWindows.pop(self.index)
