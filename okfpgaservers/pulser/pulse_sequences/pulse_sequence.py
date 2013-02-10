@@ -7,41 +7,26 @@ class pulse_sequence(object):
 	Version 1.0
 	'''
 	
+	required_parameters = []
+	required_subsequences = []
+	
 	def __init__(self, start = WithUnit(0, 's'), **kwargs):
 		self.start = start
 		self.end = start
 		self.dds_pulses = []
 		self.ttl_pulses = []
 		self.replace = kwargs
-		self.set_params(self.required_parameters() , **kwargs)
+		self.set_params(self.required_parameters , **kwargs)
 		self.sequence()
-	
-	@classmethod
-	def required_parameters(cls):
-		'''
-		implemented by the subclass
-		
-		returns a list of parameters required to executve the pulse sequence
-		'''	
-		return []
-	
-	@classmethod
-	def required_subsequences(cls):
-		'''
-		implemente by the subclass
-		
-		returns a list of of required subsequences
-		'''
-		return []
 	
 	@classmethod
 	def all_variables(cls):
 		'''
 		returns a list of all required variables for the current sequence and all used subsequences
 		'''
-		all_vars = set(cls.required_parameters())
-		for subsequence in cls.required_subsequences():
-			all_vars = all_vars.union(set(subsequence.required_parameters()))
+		all_vars = set(cls.required_parameters)
+		for subsequence in cls.required_subsequences:
+			all_vars = all_vars.union(set(subsequence.required_parameters))
 		return list(all_vars)
 	
 	def sequence(self):
@@ -60,7 +45,7 @@ class pulse_sequence(object):
 	def addSequence(self, sequence, position = None, **kwargs):
 		'''insert a subsequence, position is either time or None to insert at the end'''
 		#position where sequence is inserted
-		if sequence not in self.required_subsequences(): raise Exception ("Adding subsequence {0} that is not listed in the required subequences".format(sequence.__class__.__name__))
+		if sequence not in self.required_subsequences: raise Exception ("Adding subsequence {0} that is not listed in the required subequences".format(sequence.__class__.__name__))
 		if type(position) == dict: raise Exception ("Don't forget ** in front of replacement dictionary")
 		if position is None:
 			position = self.end
