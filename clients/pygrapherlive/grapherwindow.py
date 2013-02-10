@@ -134,43 +134,26 @@ class GrapherWindow(QtGui.QWidget):
         self.datasetAnalysisCheckboxCounter = self.datasetAnalysisCheckboxCounter + 1
 
     def fitFromScript(self, dataset, directory, numberDependentVariables, scriptParameters, fitOverride = None):
-        datasetsToFit = eval(scriptParameters[0])
+        datasetToFit = scriptParameters[0]
         curveToFit = scriptParameters[1]
         curveParameters = eval(scriptParameters[2])
         
-        # if no selection of datasets, fit all of them
-        if (len(datasetsToFit) == 0):
-            datasetsToFit = range(numberDependentVariables)
-        else:
-            # naming convention. Dataset 1, for purposes is this program, has an index of 0, not 1. Ex: datasetsToFit = [1, 2, 3] -> [0, 1, 2] 
-            for i in range(len(datasetsToFit)):
-                datasetsToFit[i] = datasetsToFit[i] - 1
+#        # if no selection of datasets, fit all of them
+#        if (len(datasetsToFit) == 0):
+#            datasetsToFit = range(numberDependentVariables)
+#        else:
+#            # naming convention. Dataset 1, for purposes is this program, has an index of 0, not 1. Ex: datasetsToFit = [1, 2, 3] -> [0, 1, 2] 
+#            for i in range(len(datasetsToFit)):
+#                datasetsToFit[i] = datasetsToFit[i] - 1
         
-        # cycle through all the dataset checkboxes and uncheck them.
-        for checkBoxDataset, checkBoxDirectory, checkBoxIndex in self.datasetAnalysisCheckboxes.keys():
-            if self.datasetAnalysisCheckboxes[checkBoxDataset, checkBoxDirectory, checkBoxIndex].isChecked():
-                 self.datasetAnalysisCheckboxes[checkBoxDataset, checkBoxDirectory, checkBoxIndex].toggle()
-        
-        # toggle the datasets we care about
-        for datasetToFit in datasetsToFit:
-            for checkBoxDataset, checkBoxDirectory, checkBoxIndex in self.datasetAnalysisCheckboxes.keys():
-                if (dataset == checkBoxDataset and directory == checkBoxDirectory and datasetToFit == checkBoxIndex):
-                    self.datasetAnalysisCheckboxes[dataset, directory, datasetToFit].toggle()
-                    
-        # cycle through the curves checkboxes and uncheck them.
-        for curve in self.analysisWidget.analysisCheckboxes.keys():
-            if self.analysisWidget.analysisCheckboxes[curve].isChecked():
-                self.analysisWidget.analysisCheckboxes[curve].toggle()
-        
-        # toggle the curve we care about
-        for curve in self.analysisWidget.analysisCheckboxes.keys():
-            if (curve == curveToFit):
-                self.analysisWidget.analysisCheckboxes[curveToFit].toggle()
 
         # everything is now set up to fit, so call fitCurves and pass in the parameters
-        if (fitOverride == None): 
-            self.qmc.fitData()        
+#        if (fitOverride == None): 
+#            self.qmc.fitData()        
+        
+        # need to open the correct analysis window and call fitcurves
         self.analysisWidget.fitCurves(curveParameters)
+        
 
     def datasetCheckboxSignal(self):
         self.qmc.drawLegend()
@@ -326,5 +309,7 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             if action == fitAction:
     #                print self.count()
     #                item = self.item(self.count() - 1)                
-                print item.text()
-                self.analysisWindows[item.text()] = AnalysisWindow(self, item.text(), self.parent.datasetCheckboxesItems[item])
+                try:
+                    test = self.analysisWindows[item.text()]
+                except: # prevent the same window from reopening!
+                    self.analysisWindows[item.text()] = AnalysisWindow(self, item.text(), self.parent.datasetCheckboxesItems[item])

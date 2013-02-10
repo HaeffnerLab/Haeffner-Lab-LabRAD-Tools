@@ -19,9 +19,9 @@ class CurveFit():
         # data retrieval problem solved
         dataX, dataY = self.parent.parent.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         dataX = np.array(dataX)
-        xmin, xmax = self.parent.parent.parent.qmc.ax.get_xlim()
-#        xmin = self.parent.parameterWindow.minRange.value()
-#        xmax = self.parent.parameterWindow.maxRange.value()
+#        xmin, xmax = self.parent.parent.parent.qmc.ax.get_xlim()
+        xmin = self.parent.minRange.value()
+        xmax = self.parent.maxRange.value()
         selectedXValues = np.where((dataX >= xmin) & (dataX <= xmax))[0]
         dataX = dataX[(dataX >= xmin) & (dataX <= xmax)]
         newYData = np.zeros(len(dataX))

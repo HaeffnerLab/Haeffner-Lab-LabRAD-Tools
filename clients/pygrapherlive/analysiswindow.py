@@ -91,6 +91,8 @@ class AnalysisWindow(QtGui.QWidget):
         self.acceptFittedButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         self.acceptFittedButton.clicked.connect(self.acceptFittedSignal)   
 
+        self.setRanges()
+
         self.buttonLayout.addWidget(self.fitButton)
         self.buttonLayout.addWidget(self.acceptManualButton)
         self.buttonLayout.addWidget(self.acceptFittedButton)
@@ -107,12 +109,43 @@ class AnalysisWindow(QtGui.QWidget):
         self.fittedTextBox = QtGui.QLineEdit(readOnly=True)
         self.fittedTextLayout.addWidget(fittedLabel)
         self.fittedTextLayout.addWidget(self.fittedTextBox)
-        self.mainLayout.addLayout(self.fittedTextLayout)
- 
+        self.mainLayout.addLayout(self.fittedTextLayout)      
+        
         self.setupParameterTable(self.combo.itemText(0))
  
         
         self.show()
+
+    def setRanges(self):
+        xmin, xmax = self.parent.parent.qmc.getDataXLimits()
+        fitRangeLabel = QtGui.QLabel('Fit Range: ')
+        self.minRange = QtGui.QDoubleSpinBox()
+        self.minRange.setDecimals(6)
+        self.minRange.setRange(xmin, xmax)
+        self.minRange.setValue(xmin)
+        self.minRange.setSingleStep(.1)
+        self.minRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.minRange.setKeyboardTracking(False)
+        self.connect(self.minRange, QtCore.SIGNAL('valueChanged(double)'), self.minRangeSignal)
+        self.maxRange = QtGui.QDoubleSpinBox()
+        self.maxRange = QtGui.QDoubleSpinBox()
+        self.maxRange.setDecimals(6)
+        self.maxRange.setRange(xmin, xmax)
+        self.maxRange.setValue(xmax)
+        self.maxRange.setSingleStep(.1)
+        self.maxRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.maxRange.setKeyboardTracking(False)  
+        self.connect(self.maxRange, QtCore.SIGNAL('valueChanged(double)'), self.maxRangeSignal)
+        
+        self.buttonLayout.addWidget(fitRangeLabel)
+        self.buttonLayout.addWidget(self.minRange)
+        self.buttonLayout.addWidget(self.maxRange)
+        
+    def minRangeSignal(self, evt):
+        self.minRange.setRange(self.minRange.minimum(), self.maxRange.value())
+    def maxRangeSignal(self, evt):
+        self.maxRange.setRange(self.minRange.value(), self.maxRange.maximum())
+
 
     def setupParameterTable(self, curveName):
         self.curveName = str(curveName)
@@ -162,8 +195,8 @@ class AnalysisWindow(QtGui.QWidget):
             i += 1
         
         
-        self.manualTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
-        self.fittedTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
+        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
+        self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
 
 #        self.resize(self.sizeHint())
         self.resizeWindow()
@@ -180,7 +213,7 @@ class AnalysisWindow(QtGui.QWidget):
     def drawCurvesSignal(self, evt):
         sender = self.sender()
         self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][self.parameterSpinBoxDict[sender]] = sender.value()
-        self.manualTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
+        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
         self.fitCurves(drawCurves = True)
 
     def fitCurves(self, parameters = None, drawCurves = False):
@@ -199,7 +232,7 @@ class AnalysisWindow(QtGui.QWidget):
             for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName][i]
                 i += 1
-            self.fittedTextBox.setText('\'Fit\', [\'['+str(self.index)+']\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
+            self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
             
         self.resizeWindow()
         
