@@ -60,8 +60,6 @@ class spectrum(QtGui.QFrame):
         layout.addWidget(label, 0, 5, 1, 1)
         layout.addWidget(self.use_saved_line, 0, 6, 1, 1)
         layout.addWidget(self.dropdown, 1, 5, 1, 2)
-#        self.sideband_selecor = sideband_selector_widget(self.reactor, font = font)
-#        layout.addWidget(self.sideband_selecor, 2, 5, 1, 1)
         self.use_saved_line.toggled.connect(self.on_use_saved)
         self.setLayout(layout)
     
@@ -176,7 +174,7 @@ class scans_connection(scans, async_semaphore):
                 tuple(c.rabi_excitation_times):Parameter(c.rabi_excitation_times, do_nothing, self.rabi.lim.new_list_signal, self.rabi.lim.setRange, 'us'),
                 #bool
                 tuple(c.rabi_line_selection):Parameter(c.rabi_line_selection, self.rabi.freq_selector.set_selection, self.rabi.freq_selector.on_new_selection, do_nothing, None), 
-                #saved lines
+#                #saved lines
                 tuple(c.rabi_use_line_selection):Parameter(c.rabi_use_line_selection, self.rabi.freq_selector.should_use_saved, updateSignal = self.rabi.freq_selector.use_selector),
                 tuple(c.saved_lines_729):[
                                           Parameter(c.saved_lines_729, self.rabi.freq_selector.set_dropdown, no_signal, do_nothing, c.line_parameter_units),

@@ -5,6 +5,7 @@ from state_preparation import state_preparation_connection
 from drift_tracker import drift_tracker
 from twisted.internet.defer import inlineCallbacks
 from state_readout_parameters import general_parameters_connection
+from sideband_cooling import sideband_cooling_connection
 
 class control_729(QtGui.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):
@@ -31,9 +32,11 @@ class control_729(QtGui.QWidget):
         histogram_layout.addWidget(general_parameters_connection(self.reactor, self.cxn))
         histogram_tab.setLayout(histogram_layout)
         self.state_preparation_tab = state_preparation_connection(self.reactor, self.cxn)
+        self.sideband_cooling_tab = sideband_cooling_connection(self.reactor, self.cxn)
         scans_tab =  scans_connection(self.reactor, self.cxn)
         tab.addTab(histogram_tab, 'State Readout')
         self.state_prep_index = tab.addTab(self.state_preparation_tab, 'State Preparation')
+        self.sideband_cool_index = tab.addTab(self.sideband_cooling_tab, "Sideband Cooling")
         tab.addTab(scans_tab, 'Scans')
         drift_tracker_tab = drift_tracker(self.reactor, self.cxn)
         tab.addTab(drift_tracker_tab, 'Drift Tracker')
@@ -44,6 +47,9 @@ class control_729(QtGui.QWidget):
         pumping_enable = self.state_preparation_tab.optical_pumping_frame.enable
         pumping_enable.stateChanged.connect(self.change_color(self.state_prep_index))
         self.change_color(self.state_prep_index)(pumping_enable.isChecked())
+        sideband_cool_enable = self.sideband_cooling_tab.cooling.enable
+        sideband_cool_enable.stateChanged.connect(self.change_color(self.sideband_cool_index))
+        self.change_color(self.sideband_cool_index)(sideband_cool_enable.isChecked())
             
     def change_color(self, index):
         def func(selected):

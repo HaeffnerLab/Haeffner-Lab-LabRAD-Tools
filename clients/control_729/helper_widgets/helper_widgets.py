@@ -328,6 +328,7 @@ class dropdown(QtGui.QComboBox):
         self.SizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.set_dropdown(names)
         self.currentIndexChanged[int].connect(self.on_user_selection)
+        #select the first item
         
     def set_selected(self, linename):
         '''
@@ -339,7 +340,7 @@ class dropdown(QtGui.QComboBox):
         self.blockSignals(True)
         self.setCurrentIndex(index)
         self.blockSignals(False)
-    
+        
     def set_favorites(self, favorites):
         self.favorites = favorites
     
@@ -366,6 +367,8 @@ class dropdown(QtGui.QComboBox):
                     self.addItem(display_name, userData = linename)
         if self.selected is not None:
             self.set_selected(self.selected)
+        elif self.count():
+            self.selected = self.itemData(1).toString()
         self.blockSignals(False)
 
 class lineinfo_table(QtGui.QTableWidget):
@@ -385,11 +388,11 @@ class lineinfo_table(QtGui.QTableWidget):
         self.initializeGUI()
         
     def initializeGUI(self):
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setColumnCount(len(self.column_names))
         self.setHorizontalHeaderLabels(self.column_names)
-    
+        
     def set_info(self, info):
         self.setRowCount(len(info))
         for enum, tup in enumerate(info):
@@ -420,6 +423,7 @@ class lineinfo_table(QtGui.QTableWidget):
                     spin.blockSignals(False)
                     spin.valueChanged.connect(self.on_new_info)
                     self.setCellWidget(enum, col, spin)
+        self.resizeColumnsToContents()
     
     def on_new_info(self, val):
         info = self.get_info()
@@ -452,13 +456,23 @@ class lineinfo_table(QtGui.QTableWidget):
                 l.append(val)
             info.append(tuple(l))
         return info
+    
+#    def sizeHint(self):
+#        width = 0
+#        for i in range(self.columnCount()):
+#            width += self.columnWidth(i)
+#        height = 0
+#        for i in range(self.rowCount()):
+#            height += self.rowHeight(i)
+#        print width, height
+#        return QtCore.QSize(width, height)
 
     def closeEvent(self, x):
         self.reactor.stop()
 
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from common.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
 #    widget = limitsWidget(reactor, suffix = 'us', abs_range = (0,100))

@@ -6,9 +6,10 @@ class line_selector_table(QtGui.QTableWidget):
     
     line_selector_new_selection = QtCore.pyqtSignal(list)
     
-    def __init__(self, reactor, sideband_titles = ['radial 1','radial 2', 'axial', 'micromotion'], max_sideband_input = 3, max_rows = 1, input_font = None, parent = None):
+    def __init__(self, reactor, sideband_titles = ['radial 1','radial 2', 'axial', 'micromotion'], max_sideband_input = 3, max_rows = 1, input_font = None, only_show_favorites = False, parent = None):
         super(line_selector_table, self).__init__(parent)
         self.reactor = reactor
+        self.only_show_favorites = only_show_favorites
         self.max_rows = max_rows
         self.setColumnCount(len(sideband_titles) + 1)
         self.sideband_titles = sideband_titles
@@ -21,20 +22,23 @@ class line_selector_table(QtGui.QTableWidget):
         self.favorites = None
         self.dropdown_info = None
         self.setup_layout()
-        self.connect_layout()
-        
-    
+
     def setup_layout(self):
         self.verticalHeader().hide()
         labels = ['line']
         labels.extend(self.sideband_titles)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.setHorizontalHeaderLabels(labels)
         self.setShowGrid(False)   
 
-    def add_row(self):
-        if self.rowCount() > self.max_rows: raise Exception ("Too many rows")
+    def do_add_row(self):
+        if self.rowCount() > self.max_rows + 1:
+                message = QtGui.QMessageBox()
+                message.setText("Too many rows")
+                message.exec_()
+                return
         self.setRowCount(self.rowCount()  + 1)
-        line_dropdown = dropdown(self.reactor, font = self.input_font, info_position = 0, only_show_favorites = False)
+        line_dropdown = dropdown(self.reactor, font = self.input_font, info_position = 0, only_show_favorites = self.only_show_favorites)
         line_dropdown.new_selection.connect(self.on_user_modified)
         if self.favorites is not None:
             line_dropdown.set_favorites(self.favorites)
@@ -51,7 +55,19 @@ class line_selector_table(QtGui.QTableWidget):
                 combo.setCurrentIndex(self.max_sideband_input) #setting active entry to '0'
             self.setCellWidget(self.rowCount() - 1, num + 1, combo)
             combo.currentIndexChanged.connect(self.on_user_modified)
+        self.adjustSize()
         self.resizeColumnsToContents()
+
+    
+    def add_row(self):
+        self.do_add_row()
+        self.on_user_modified(None)
+    
+    def remove_row(self):
+        row_count = self.rowCount()
+        if row_count > 1:
+            self.removeRow(row_count-1)
+            self.on_user_modified(None)
     
     def sizeHint(self):
         width = 0
@@ -59,7 +75,7 @@ class line_selector_table(QtGui.QTableWidget):
             width += self.columnWidth(i)
         height = 0
         for i in range(self.rowCount()):
-            height += self.rowHeight(i)
+            height += 50
         return QtCore.QSize(width, height)
     
     def on_user_modified(self, x):
@@ -108,9 +124,6 @@ class line_selector_table(QtGui.QTableWidget):
             widget.dropdown.set_dropdown(info)
         self.dropdown_info = info
     
-    def connect_layout(self):
-        pass
-    
     def set_selected(self, info):
         row = -1
         for name,value in info:
@@ -118,11 +131,13 @@ class line_selector_table(QtGui.QTableWidget):
                 row += 1
                 column  = 1
                 if row + 1 >  self.rowCount():
-                    self.add_row()
+                    self.do_add_row()
                 self.cellWidget(row, 0).set_selected(value)
             else:
                 self.select_sideband_dropdown(row, column, value)
                 column += 1
+        if row + 1 < self.rowCount():
+            self.removeRow(self.rowCount()-1)
     
     def select_sideband_dropdown(self, row, col, value):
         sideband_dropdown = self.cellWidget(row, col)
@@ -138,26 +153,30 @@ class line_selector_widget(QtGui.QWidget):
     
     on_user_modified = QtCore.pyqtSignal(list)
     
-    def __init__(self, reactor, expandable = False, sideband_columns = 3,  input_font = None):
+    def __init__(self, reactor, expandable = False, input_font = None, only_show_favorites = False):
         super(line_selector_widget, self).__init__()
         self.reactor = reactor
+        self.only_show_favorites = only_show_favorites
         self.input_font = input_font
         if self.input_font is None:
-            self.input_font = QtGui.QFont('MS Shell Dlg 2',pointSize=12)
+            self.input_font = QtGui.QFont('MS Shell Dlg 2',pointSize=10)
         self.expandable = expandable
-        self.sideband_columns = sideband_columns
         self.setup_layout()
         self.connect_layout()
         
     def setup_layout(self):
         layout = QtGui.QGridLayout()
-        self.table = line_selector_table(self.reactor)
-        layout.addWidget(self.table, 0, 0, 1, 1)
+        self.table = line_selector_table(self.reactor, only_show_favorites = self.only_show_favorites)
+        layout.addWidget(self.table, 0, 0, 2, 1)
         if self.expandable:
             add_button = QtGui.QPushButton('Add')
+            add_button.setFont(self.input_font)
             remove_button = QtGui.QPushButton('Remove')
-            layout.addWidget(add_button, 1, 1, 1, 1)
-            layout.addWidget(remove_button, 2, 1, 1, 1)
+            remove_button.setFont(self.input_font)
+            add_button.pressed.connect(self.table.add_row)
+            remove_button.pressed.connect(self.table.remove_row)
+            layout.addWidget(add_button, 0, 1, 1, 1)
+            layout.addWidget(remove_button, 1, 1, 1, 1)
         self.setLayout(layout)
     
     def connect_layout(self):

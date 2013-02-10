@@ -159,7 +159,7 @@ class frequency_wth_selector(QtGui.QWidget):
     on_new_selection = QtCore.pyqtSignal(list)
     use_selector = QtCore.pyqtSignal(bool)
     
-    def __init__(self, reactor, limits = (0,500), parameter_name = 'Frequency', sig_figs = 4, names = [], suffix = ' MHz', font = None, only_show_favorites = False, parent=None):
+    def __init__(self, reactor, limits = (0,500), parameter_name = 'Frequency', sig_figs = 4, names = [], suffix = ' MHz', font = None, only_show_favorites = False, expandable = False, parent=None):
         super(frequency_wth_selector, self).__init__(parent)  
         self.reactor = reactor
         self.parameter_name = parameter_name
@@ -168,6 +168,7 @@ class frequency_wth_selector(QtGui.QWidget):
         self.sig_figs =  sig_figs
         self.names = names
         self.suffix = suffix
+        self.expandable = expandable
         self.font = font
         self.selected = None
         if self.font is None:
@@ -196,7 +197,7 @@ class frequency_wth_selector(QtGui.QWidget):
         self.select_freq.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         layout.addWidget(self.select_freq, 1, 0)
         layout.addWidget(self.select_line, 1, 2)
-        self.selector = line_selector_widget(self.reactor, input_font = self.font)#, names = self.names, only_show_favorites = self.only_show_favorites)
+        self.selector = line_selector_widget(self.reactor, input_font = self.font, only_show_favorites = self.only_show_favorites, expandable = self.expandable)
         label = QtGui.QLabel(self.parameter_name)
         label.setFont(self.font)
         label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)

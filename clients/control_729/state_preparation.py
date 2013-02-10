@@ -1,7 +1,7 @@
 from PyQt4 import QtGui, QtCore
 from configuration import config_729_state_preparation as c
 from async_semaphore import async_semaphore, Parameter
-from helper_widgets.compound_widgets import frequency_wth_dropdown
+from helper_widgets.compound_widgets import frequency_wth_dropdown, frequency_wth_selector
 
 class optical_pumping_frame(QtGui.QFrame):
     def __init__(self, reactor, title, font, large_font):
@@ -24,16 +24,16 @@ class optical_pumping_frame(QtGui.QFrame):
         self.enable = QtGui.QCheckBox()
         layout.addWidget(self.enable, 0, 3)
         #exculsive check boxes
-        self.continous = QtGui.QRadioButton()
+        self.continuous = QtGui.QRadioButton()
         self.pulsed = QtGui.QRadioButton()
         bg = QtGui.QButtonGroup()
         #make them exclusive
-        bg.addButton(self.continous)
+        bg.addButton(self.continuous)
         bg.addButton(self.pulsed)
-        label = QtGui.QLabel('Continous', font = font)
+        label = QtGui.QLabel('Continuous', font = font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
         layout.addWidget(label, 4, 0)
-        layout.addWidget(self.continous, 4, 1)
+        layout.addWidget(self.continuous, 4, 1)
         label = QtGui.QLabel('Pulsed', font = font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
         layout.addWidget(label, 4, 2)
@@ -86,10 +86,10 @@ class optical_pumping_frame(QtGui.QFrame):
         layout.addWidget(label, 3, 2, 1, 1)
         layout.addWidget(self.ampl866, 3, 3, 1, 1)
         #durations
-        self.continous_duration = QtGui.QDoubleSpinBox()
+        self.continuous_duration = QtGui.QDoubleSpinBox()
         self.repump_additional = QtGui.QDoubleSpinBox()
         self.between_pulses = QtGui.QDoubleSpinBox()
-        for w in [self.continous_duration, self.repump_additional, self.between_pulses]:
+        for w in [self.continuous_duration, self.repump_additional, self.between_pulses]:
             w.setKeyboardTracking(False)
             w.setSuffix('us')
             w.setDecimals(1)
@@ -111,7 +111,7 @@ class optical_pumping_frame(QtGui.QFrame):
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
         layout.addWidget(label, 5, 0, 1, 1)
-        layout.addWidget(self.continous_duration, 5, 1, 1, 1)
+        layout.addWidget(self.continuous_duration, 5, 1, 1, 1)
         label =  QtGui.QLabel("Additional Repump")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
@@ -146,7 +146,6 @@ class optical_pumping_frame(QtGui.QFrame):
     
     def closeEvent(self, x):
         self.reactor.stop()
-        
 
 class state_preparation(QtGui.QWidget):
     def __init__(self, reactor, cxn = None, parent = None):
@@ -161,22 +160,16 @@ class state_preparation(QtGui.QWidget):
         heating_frame = self.make_heating_frame()
         doppler_cooling_frame = self.make_doppler_cooling_frame()
         self.optical_pumping_frame = self.make_optical_pumping_frame()
-#        sideband_cooling_frame = self.make_sideband_cooling_frame()
         widgetLayout = QtGui.QVBoxLayout()
         widgetLayout.addWidget(repump_d_frame)
         widgetLayout.addWidget(doppler_cooling_frame)
         widgetLayout.addWidget(self.optical_pumping_frame)
-#        widgetLayout.addWidget(sideband_cooling_frame)
         widgetLayout.addWidget(heating_frame)
         self.setLayout(widgetLayout)
     
     def make_optical_pumping_frame(self):
         frame = optical_pumping_frame(self.reactor, 'Optical Pumping', self.font, self.large_font)
         return frame
-    
-#    def make_sideband_cooling_frame(self):
-#        frame = optical_pumping_frame('Sideband Cooling', self.font, self.large_font)
-#        return frame
     
     def make_doppler_cooling_frame(self):
         frame = QtGui.QFrame()
@@ -301,7 +294,7 @@ class state_preparation(QtGui.QWidget):
 
     def closeEvent(self, x):
         self.reactor.stop()
-
+        
 class state_preparation_connection(state_preparation, async_semaphore):
     
     def __init__(self, reactor, cxn = None, parent = None):
@@ -347,14 +340,14 @@ class state_preparation_connection(state_preparation, async_semaphore):
                 tuple(c.doppler_cooling_amplitude_866): Parameter(c.doppler_cooling_amplitude_866, setValueBlocking(self.doppler_amplitude_866), self.doppler_amplitude_866.valueChanged, self.doppler_amplitude_866.setRange, 'dBm'),
                 #optical pumping
                 tuple(c.optical_pumping_enable):Parameter(c.optical_pumping_enable, setValueBlocking_cb(self.optical_pumping_frame.enable), updateSignal = self.optical_pumping_frame.enable.toggled),                          
-                tuple(c.optical_pumping_continuous):Parameter(c.optical_pumping_continuous, setValueBlocking_cb(self.optical_pumping_frame.continous), updateSignal = self.optical_pumping_frame.continous.toggled),
+                tuple(c.optical_pumping_continuous):Parameter(c.optical_pumping_continuous, setValueBlocking_cb(self.optical_pumping_frame.continuous), updateSignal = self.optical_pumping_frame.continuous.toggled),
                 tuple(c.optical_pumping_pulsed):Parameter(c.optical_pumping_pulsed, setValueBlocking_cb(self.optical_pumping_frame.pulsed), updateSignal = self.optical_pumping_frame.pulsed.toggled),
                 tuple(c.optical_pumping_pulsed_cycles):Parameter(c.optical_pumping_pulsed_cycles, setValueBlocking(self.optical_pumping_frame.pulses), self.optical_pumping_frame.pulses.valueChanged, self.optical_pumping_frame.pulses.setRange, None),
                 tuple(c.optical_pumping_frequency_729):Parameter(c.optical_pumping_frequency_729, self.optical_pumping_frame.freq729.set_freq_value_no_signals, self.optical_pumping_frame.freq729.valueChanged, self.optical_pumping_frame.freq729.setRange, 'MHz'),
                 tuple(c.optical_pumping_amplitude_729): Parameter(c.optical_pumping_amplitude_729, setValueBlocking(self.optical_pumping_frame.ampl729), self.optical_pumping_frame.ampl729.valueChanged, self.optical_pumping_frame.ampl729.setRange, 'dBm'),
                 tuple(c.optical_pumping_amplitude_854): Parameter(c.optical_pumping_amplitude_854, setValueBlocking(self.optical_pumping_frame.ampl854), self.optical_pumping_frame.ampl854.valueChanged, self.optical_pumping_frame.ampl854.setRange, 'dBm'),
                 tuple(c.optical_pumping_amplitude_866): Parameter(c.optical_pumping_amplitude_866, setValueBlocking(self.optical_pumping_frame.ampl866), self.optical_pumping_frame.ampl866.valueChanged, self.optical_pumping_frame.ampl866.setRange, 'dBm'),
-                tuple(c.optical_pumping_continuous_duration):Parameter(c.optical_pumping_continuous_duration, setValueBlocking(self.optical_pumping_frame.continous_duration), self.optical_pumping_frame.continous_duration.valueChanged, self.optical_pumping_frame.continous_duration.setRange, 'us'),
+                tuple(c.optical_pumping_continuous_duration):Parameter(c.optical_pumping_continuous_duration, setValueBlocking(self.optical_pumping_frame.continuous_duration), self.optical_pumping_frame.continuous_duration.valueChanged, self.optical_pumping_frame.continuous_duration.setRange, 'us'),
                 tuple(c.optical_pumping_continuous_pump_additional):Parameter(c.optical_pumping_continuous_pump_additional, setValueBlocking(self.optical_pumping_frame.repump_additional), self.optical_pumping_frame.repump_additional.valueChanged, self.optical_pumping_frame.repump_additional.setRange, 'us'),
                 tuple(c.optical_pumping_pulsed_duration_729):Parameter(c.optical_pumping_pulsed_duration_729, setValueBlocking(self.optical_pumping_frame.pulse_729), self.optical_pumping_frame.pulse_729.valueChanged, self.optical_pumping_frame.pulse_729.setRange, 'us'),
                 tuple(c.optical_pumping_pulsed_duration_repumps):Parameter(c.optical_pumping_pulsed_duration_repumps, setValueBlocking(self.optical_pumping_frame.pulse_repumps), self.optical_pumping_frame.pulse_repumps.valueChanged, self.optical_pumping_frame.pulse_repumps.setRange, 'us'),
@@ -362,7 +355,6 @@ class state_preparation_connection(state_preparation, async_semaphore):
                 tuple(c.optical_pumping_pulsed_duration_between_pulses):Parameter(c.optical_pumping_pulsed_duration_between_pulses, setValueBlocking(self.optical_pumping_frame.between_pulses), self.optical_pumping_frame.between_pulses.valueChanged, self.optical_pumping_frame.between_pulses.setRange, 'us'), 
                 tuple(c.saved_lines_729):Parameter(c.saved_lines_729, self.optical_pumping_frame.freq729.set_dropdown, no_signal, do_nothing, c.line_parameter_units), 
                 tuple(c.optical_pumping_use_saved_line):Parameter(c.optical_pumping_use_saved_line, self.optical_pumping_frame.freq729.set_selected, self.optical_pumping_frame.freq729.useSavedLine, do_nothing, None), 
-                
                 tuple(c.optical_pumping_use_saved):Parameter(c.optical_pumping_use_saved, self.optical_pumping_frame.freq729.should_use_saved, updateSignal = self.optical_pumping_frame.freq729.useSaved),
                 #heating
                 tuple(c.background_heating_duration): Parameter(c.background_heating_duration, setValueBlocking(self.heating), self.heating.valueChanged, self.heating.setRange, 'ms'),
