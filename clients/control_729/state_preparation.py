@@ -1,7 +1,7 @@
 from PyQt4 import QtGui, QtCore
 from configuration import config_729_state_preparation as c
 from async_semaphore import async_semaphore, Parameter
-from helper_widgets import frequency_wth_dropdown
+from helper_widgets.compound_widgets import frequency_wth_dropdown
 
 class optical_pumping_frame(QtGui.QFrame):
     def __init__(self, reactor, title, font, large_font):
@@ -363,7 +363,7 @@ class state_preparation_connection(state_preparation, async_semaphore):
                 tuple(c.saved_lines_729):Parameter(c.saved_lines_729, self.optical_pumping_frame.freq729.set_dropdown, no_signal, do_nothing, c.line_parameter_units), 
                 tuple(c.optical_pumping_use_saved_line):Parameter(c.optical_pumping_use_saved_line, self.optical_pumping_frame.freq729.set_selected, self.optical_pumping_frame.freq729.useSavedLine, do_nothing, None), 
                 
-                tuple(c.optical_pumping_use_saved):Parameter(c.optical_pumping_use_saved, self.optical_pumping_frame.freq729.set_use_saved, updateSignal = self.optical_pumping_frame.freq729.useSaved),
+                tuple(c.optical_pumping_use_saved):Parameter(c.optical_pumping_use_saved, self.optical_pumping_frame.freq729.should_use_saved, updateSignal = self.optical_pumping_frame.freq729.useSaved),
                 #heating
                 tuple(c.background_heating_duration): Parameter(c.background_heating_duration, setValueBlocking(self.heating), self.heating.valueChanged, self.heating.setRange, 'ms'),
                 #multiple keys connected to same widgets

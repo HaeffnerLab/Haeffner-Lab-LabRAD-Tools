@@ -30,17 +30,16 @@ class config_729_spectrum(object):
     spectrum_amplitude_729 = ['729Experiments','Spectrum','spectrum_amplitude_729']
     spectrum_use_saved = ['729Experiments','Spectrum','spectrum_use_saved_frequency']
     spectrum_saved_freq = ['729Experiments','Spectrum','spectrum_saved_frequency']
-    spectrum_saved_freq_favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP', 'S+1/2D+5/2':'carrier'}
+    spectrum_saved_freq_favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP', 'S+1/2D+5/2':'carrier +1/2+5/2','S+1/2D+1/2':'carrier +1/2+1/2'}
     #rabi flop
     saved_lines_729 = ['729Experiments','saved_lines_729']
     
     rabi_frequency = ['729Experiments','RabiFlopping','frequency']
     rabi_excitation_times = ['729Experiments','RabiFlopping','excitation_times']
     rabi_amplitude_729 = ['729Experiments','RabiFlopping','rabi_amplitude_729']
-    rabi_use_saved = ['729Experiments','RabiFlopping','rabi_flopping_use_saved_frequency']
-    rabi_saved_freq = ['729Experiments','RabiFlopping','rabi_flopping_saved_frequency']
-    rabi_saved_freq_favorites = {'S+1/2D+5/2':'carrier'}
-    rabi_sideband_selector = ['729Experiments','sideband_selection']
+    rabi_use_line_selection = ['729Experiments','RabiFlopping','rabi_flopping_use_line_selection']
+    rabi_line_selection = ['729Experiments','RabiFlopping','rabi_flopping_line_selection']
+    rabi_saved_freq_favorites = {'S+1/2D+5/2':'carrier +1/2+5/2', 'S+1/2D+1/2':'carrier +1/2+1/2'}
     #saved freq
     line_parameter_names = ['Name', 'Center', 'Scan Span','Scan Resolution','Scan Amplitude', 'Scan Excitation Duration']
     line_parameter_units = ['MHz', 'kHz', 'kHz', 'dBm', 'us']

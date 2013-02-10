@@ -121,7 +121,14 @@ class async_semaphore(object):
                 param.setRange(r_min,r_max)
                 param.setValue(val)
         else:
-            raise Exception("Got uknown type")
+            self.set_value_named_param(param, val)
+    
+    def set_value_named_param(self, param, val):
+        value_type = val[0]
+        if value_type == 'line_selection':
+            param.setValue(val[1])
+        else:
+            raise Exception("Got unknown type")
 
     def set_labrad_parameter(self, path, units):
         @inlineCallbacks
@@ -144,14 +151,20 @@ class async_semaphore(object):
                         yield self.cxn.servers['Semaphore'].set_parameter(path, update, context = self.context)
                     elif type(item) == tuple:
                         cur = yield self.cxn.servers['Semaphore'].get_parameter(path, context = self.context)
-                        update = []
-                        update.extend(cur[0:2])
-                        for tup in new_val:
-                            new_l = list(tup)
-                            inunits = []
-                            inunits.append(new_l.pop(0))
-                            inunits.extend( [self.WithUnit(el,units[i]) for i,el in enumerate(new_l)] )
-                            update.append(tuple(inunits))
+                        #new style parameters
+                        parameter_type = cur[0]
+                        if parameter_type == 'line_selection':
+                            new_val = tuple(new_val)
+                            update = (parameter_type,new_val)
+                        else:
+                            update = []
+                            update.extend(cur[0:2])
+                            for tup in new_val:
+                                new_l = list(tup)
+                                inunits = []
+                                inunits.append(new_l.pop(0))
+                                inunits.extend( [self.WithUnit(el,units[i]) for i,el in enumerate(new_l)] )
+                                update.append(tuple(inunits))
                         yield self.cxn.servers['Semaphore'].set_parameter(path, update, context = self.context)
                 elif t == float or t == int:
                     new_val = self.WithUnit(new_val, units)

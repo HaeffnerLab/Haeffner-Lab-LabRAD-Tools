@@ -5,7 +5,8 @@ from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
-from helper_widgets import saved_frequencies_table, saved_frequencies_dropdown
+from helper_widgets.helper_widgets import saved_frequencies_table
+from helper_widgets.compound_widgets import table_dropdowns_with_entry
 import numpy
 from configuration import config_729_tracker as c
 
@@ -82,7 +83,7 @@ class drift_tracker(QtGui.QWidget):
     def create_widget_layout(self):
         layout = QtGui.QGridLayout()
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
-        self.entry_table = saved_frequencies_dropdown(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites)
+        self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites)
         self.entry_button = QtGui.QPushButton("Submit")
         self.remove_button = QtGui.QPushButton("Remove")
         self.remove_count = QtGui.QSpinBox()
