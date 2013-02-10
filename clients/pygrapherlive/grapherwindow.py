@@ -134,9 +134,9 @@ class GrapherWindow(QtGui.QWidget):
         self.datasetAnalysisCheckboxCounter = self.datasetAnalysisCheckboxCounter + 1
 
     def fitFromScript(self, dataset, directory, numberDependentVariables, scriptParameters, fitOverride = None):
-        datasetToFit = scriptParameters[0]
-        curveToFit = scriptParameters[1]
-        curveParameters = eval(scriptParameters[2])
+        index = int(scriptParameters[0]) # index
+        curveName = scriptParameters[1] # curveName
+        parameters = eval(scriptParameters[2]) #parameters
         
 #        # if no selection of datasets, fit all of them
 #        if (len(datasetsToFit) == 0):
@@ -152,8 +152,7 @@ class GrapherWindow(QtGui.QWidget):
 #            self.qmc.fitData()        
         
         # need to open the correct analysis window and call fitcurves
-        self.analysisWidget.fitCurves(curveParameters)
-        
+        self.datasetCheckboxListWidget.fitFromScript(dataset, directory, index, curveName, parameters)       
 
     def datasetCheckboxSignal(self):
         self.qmc.drawLegend()
@@ -308,8 +307,18 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             action = menu.exec_(self.mapToGlobal(pos))
             if action == fitAction:
     #                print self.count()
-    #                item = self.item(self.count() - 1)                
+    #                item = self.item(self.count() - 1)  
+                index = self.parent.datasetCheckboxesItems[item][2]              
                 try:
-                    test = self.analysisWindows[item.text()]
+                    test = self.analysisWindows[index]
                 except: # prevent the same window from reopening!
-                    self.analysisWindows[item.text()] = AnalysisWindow(self, item.text(), self.parent.datasetCheckboxesItems[item])
+                    self.analysisWindows[index] = AnalysisWindow(self, self.parent.datasetCheckboxesItems[item])
+
+    def fitFromScript(self, dataset, directory, index, curveName, parameters):
+        try:
+            test = self.analysisWindows[index]
+        except: # prevent the same window from reopening!
+            self.analysisWindows[index] = AnalysisWindow(self, [dataset, directory, index])
+            self.analysisWindows[index].combo.setCurrentIndex(self.analysisWindows[index].curveComboIndexDict[curveName])
+            self.analysisWindows[index].fitCurves(parameters)
+        

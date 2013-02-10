@@ -14,9 +14,8 @@ from fitparabola import FitParabola
 
 class AnalysisWindow(QtGui.QWidget):
     
-    def __init__(self, parent, text, ident):
+    def __init__(self, parent, ident):
         super(AnalysisWindow, self).__init__()
-        self.text = text
         self.dataset, self.directory, self.index = ident
         self.parent = parent     
         self.cxn = self.parent.parent.parent.cxn
@@ -25,6 +24,7 @@ class AnalysisWindow(QtGui.QWidget):
         self.parameterLabels = {} 
         self.solutionsDictionary = {}
         self.parameterSpinBoxDict = {}
+        self.curveComboIndexDict = {}
 
         self.fitLine = FitLine(self)
         self.fitGaussian = FitGaussian(self)
@@ -41,12 +41,15 @@ class AnalysisWindow(QtGui.QWidget):
         
     def initUI(self):      
 
-        self.setWindowTitle(self.text)
+        self.setWindowTitle(str(self.index))
 
         self.combo = QtGui.QComboBox(self)
+        i = 0
         for curveName in self.fitCurveDictionary.keys():
+            self.curveComboIndexDict[curveName] = i
             self.combo.addItem(curveName)
             self.combo.itemText(1)
+            i += 1
 
 #        self.lbl = QtGui.QLabel(self.combo.itemText(0), self)
 #        self.hello1 = QtGui.QLabel('hi1', self)
@@ -56,7 +59,7 @@ class AnalysisWindow(QtGui.QWidget):
         self.combo.move(50, 50)
 #        self.lbl.move(50, 150)
 
-        self.combo.activated[str].connect(self.onActivated)        
+        self.combo.activated[str].connect(self.onActivated)       
          
 #        self.setGeometry(300, 300, 500, 300)
         
@@ -64,7 +67,6 @@ class AnalysisWindow(QtGui.QWidget):
         self.parameterTable.setColumnCount(3)
 #        self.parameterTable.setHorizontalHeaderLabels(QtCore.QStringList(['Parameters','Manual','Fitted']))
         self.parameterTable.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem('Parameters'))
-        self.parameterTable.horizontalHeader().setStretchLastSection(True)
 #        self.horizontalHeader.setStretchLastSection(True)
         self.parameterTable.verticalHeader().setVisible(False)
 
@@ -153,6 +155,7 @@ class AnalysisWindow(QtGui.QWidget):
         # clear the existing widgets      
         self.parameterTable.clear()
         self.parameterTable.setHorizontalHeaderLabels(QtCore.QStringList(['Parameters','Manual','Fitted']))
+        self.parameterTable.horizontalHeader().setStretchLastSection(True)
 #        self.parameterTable.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem('Parameters'))
 #        self.horizontalHeader = self.parameterTable.horizontalHeader()
         
