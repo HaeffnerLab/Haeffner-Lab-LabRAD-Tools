@@ -95,7 +95,7 @@ class GrapherWindow(QtGui.QWidget):
 
     # adds a checkbox when a new dataset is overlaid on the graph
     def createDatasetCheckbox(self, dataset, directory, label, index):
-        datasetCheckbox = QtGui.QCheckBox(' ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
+        datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
 #        datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + label, self)
         datasetCheckbox.toggle()
         datasetCheckbox.clicked.connect(self.datasetCheckboxSignal)
@@ -111,7 +111,7 @@ class GrapherWindow(QtGui.QWidget):
             # This must be done because a checkbox, even with a lot of text, does not activate the scroll bar horizontally
             item = QtGui.QListWidgetItem()
             self.datasetCheckboxesItems[item] = [dataset, directory, index]
-            item.setText('     ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
+            item.setText('      ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             item.setTextColor(QtGui.QColor(255, 255, 255))
             self.datasetCheckboxListWidget.addItem(item)
             self.datasetCheckboxListWidget.setItemWidget(self.datasetCheckboxListWidget.item(self.datasetCheckboxCounter), datasetCheckbox)
