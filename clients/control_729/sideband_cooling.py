@@ -47,12 +47,12 @@ class sideband_cooling_frame(QtGui.QFrame):
         bg.addButton(self.pulsed)
         label = QtGui.QLabel('Continuous 729', font = font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 6, 0)
-        layout.addWidget(self.continuous, 6, 1)
+        layout.addWidget(label, 7, 0)
+        layout.addWidget(self.continuous, 7, 1)
         label = QtGui.QLabel('Pulsed 729', font = font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 6, 2)
-        layout.addWidget(self.pulsed, 6, 3)
+        layout.addWidget(label, 7, 2)
+        layout.addWidget(self.pulsed, 7, 3)
         bg.setExclusive(True)
         #number of cycles
         self.cycles = QtGui.QSpinBox()
@@ -60,7 +60,7 @@ class sideband_cooling_frame(QtGui.QFrame):
         self.setFont(font)
         #frequencies and amplitudes
         self.freq_selector = frequency_wth_selector(self.reactor, parameter_name = 'Frequency 729', suffix = 'MHz', 
-                                                    sig_figs = 4, font = font, only_show_favorites = True, expandable = True)
+                                                    sig_figs = 4, font = font, only_show_favorites = True, expandable = False)
         self.freq_selector.setContentsMargins(0, 0, 0, 0)
         self.freq_selector.setMinimumHeight(300)
         self.freq_selector.set_favorites(c.sideband_coooling_favorite_lines)
@@ -122,7 +122,8 @@ class sideband_cooling_frame(QtGui.QFrame):
         self.continuous_duration = QtGui.QDoubleSpinBox()
         self.repump_additional = QtGui.QDoubleSpinBox()
         self.between_pulses = QtGui.QDoubleSpinBox()
-        for w in [self.continuous_duration, self.repump_additional, self.between_pulses]:
+        self.optical_pumping_duration = QtGui.QDoubleSpinBox()
+        for w in [self.continuous_duration, self.repump_additional, self.between_pulses, self.optical_pumping_duration]:
             w.setKeyboardTracking(False)
             w.setSuffix('us')
             w.setDecimals(1)
@@ -140,41 +141,46 @@ class sideband_cooling_frame(QtGui.QFrame):
             w.setSingleStep(0.1)
             w.setKeyboardTracking(False)
             w.setFont(font)
+        label =  QtGui.QLabel("Optical Pumping Duration")
+        label.setFont(font)
+        label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
+        layout.addWidget(label, 6, 0, 1, 1)
+        layout.addWidget(self.optical_pumping_duration, 6, 1, 1, 1)
         label =  QtGui.QLabel("Cycle Duration")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 7, 0, 1, 1)
-        layout.addWidget(self.continuous_duration, 7, 1, 1, 1)
+        layout.addWidget(label, 8, 0, 1, 1)
+        layout.addWidget(self.continuous_duration, 8, 1, 1, 1)
         label =  QtGui.QLabel("Additional Repump")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 8, 0, 1, 1)
-        layout.addWidget(self.repump_additional, 8, 1, 1, 1)
+        layout.addWidget(label, 9, 0, 1, 1)
+        layout.addWidget(self.repump_additional, 9, 1, 1, 1)
         label =  QtGui.QLabel("Pulses Per Cycle")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 7, 2, 1, 1)
-        layout.addWidget(self.pulses_per_cycle, 7, 3, 1, 1)
+        layout.addWidget(label, 8, 2, 1, 1)
+        layout.addWidget(self.pulses_per_cycle, 8, 3, 1, 1)
         label =  QtGui.QLabel("Pulse 729")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 8, 2, 1, 1)
-        layout.addWidget(self.pulse_729, 8, 3, 1, 1)
+        layout.addWidget(label, 9, 2, 1, 1)
+        layout.addWidget(self.pulse_729, 9, 3, 1, 1)
         label =  QtGui.QLabel("Pulse Repumps")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 9, 2, 1, 1)
-        layout.addWidget(self.pulse_repumps, 9, 3, 1, 1)
+        layout.addWidget(label, 10, 2, 1, 1)
+        layout.addWidget(self.pulse_repumps, 10, 3, 1, 1)
         label =  QtGui.QLabel("Additional 866")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 10, 2, 1, 1)
-        layout.addWidget(self.pulse_866_additional, 10, 3, 1, 1)
+        layout.addWidget(label, 11, 2, 1, 1)
+        layout.addWidget(self.pulse_866_additional, 11, 3, 1, 1)
         label =  QtGui.QLabel("Between Pulses")
         label.setFont(font)
         label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-        layout.addWidget(label, 11, 2, 1, 1)
-        layout.addWidget(self.between_pulses, 11, 3, 1, 1)
+        layout.addWidget(label, 12, 2, 1, 1)
+        layout.addWidget(self.between_pulses, 12, 3, 1, 1)
         self.setLayout(layout)
     
     def closeEvent(self, x):
@@ -219,7 +225,7 @@ class sideband_cooling_connection(sideband_cooling_widget, async_semaphore):
                 tuple(c.sideband_cooling_continuous):Parameter(c.sideband_cooling_continuous, setValueBlocking_cb(self.cooling.continuous), updateSignal = self.cooling.continuous.toggled),
                 tuple(c.sideband_cooling_pulsed):Parameter(c.sideband_cooling_pulsed, setValueBlocking_cb(self.cooling.pulsed), updateSignal = self.cooling.pulsed.toggled),
                 tuple(c.sideband_cooling_cycles):Parameter(c.sideband_cooling_cycles, setValueBlocking(self.cooling.cycles), self.cooling.cycles.valueChanged, self.cooling.cycles.setRange, None),
-                tuple(c.sideband_cooling_pulsed_pulses_per_cycle):Parameter(c.sideband_cooling_pulsed_pulses_per_cycle, setValueBlocking(self.cooling.pulses_per_cycle), self.cooling.pulses_per_cycle.valueChanged, self.cooling.pulses_per_cycle.setRange, None),
+                tuple(c.sideband_cooling_pulsed_cycles):Parameter(c.sideband_cooling_pulsed_cycles, setValueBlocking(self.cooling.pulses_per_cycle), self.cooling.pulses_per_cycle.valueChanged, self.cooling.pulses_per_cycle.setRange, None),
                 tuple(c.sideband_cooling_frequency_729): Parameter(c.sideband_cooling_frequency_729, self.cooling.freq_selector.set_freq_value_no_signals, self.cooling.freq_selector.manual_entry_value_changed, self.cooling.freq_selector.setRange, 'MHz'),
                 tuple(c.sideband_cooling_amplitude_729): Parameter(c.sideband_cooling_amplitude_729, setValueBlocking(self.cooling.ampl729), self.cooling.ampl729.valueChanged, self.cooling.ampl729.setRange, 'dBm'),
                 tuple(c.sideband_cooling_amplitude_854): Parameter(c.sideband_cooling_amplitude_854, setValueBlocking(self.cooling.ampl854), self.cooling.ampl854.valueChanged, self.cooling.ampl854.setRange, 'dBm'),
@@ -231,6 +237,9 @@ class sideband_cooling_connection(sideband_cooling_widget, async_semaphore):
                 tuple(c.sideband_cooling_pulsed_duration_additional_866):Parameter(c.sideband_cooling_pulsed_duration_additional_866, setValueBlocking(self.cooling.pulse_866_additional), self.cooling.pulse_866_additional.valueChanged, self.cooling.pulse_866_additional.setRange, 'us'), 
                 tuple(c.sideband_cooling_pulsed_duration_between_pulses):Parameter(c.sideband_cooling_pulsed_duration_between_pulses, setValueBlocking(self.cooling.between_pulses), self.cooling.between_pulses.valueChanged, self.cooling.between_pulses.setRange, 'us'),
                 tuple(c.sideband_cooling_pulsed_duration_repumps):Parameter(c.sideband_cooling_pulsed_duration_repumps, setValueBlocking(self.cooling.pulse_repumps), self.cooling.pulse_repumps.valueChanged, self.cooling.pulse_repumps.setRange, 'us'), 
+                #sideband_cooling_optical_pumping_duration            
+                tuple(c.sideband_cooling_optical_pumping_duration):
+                    Parameter(c.sideband_cooling_optical_pumping_duration, setValueBlocking(self.cooling.optical_pumping_duration), self.cooling.optical_pumping_duration.valueChanged, self.cooling.optical_pumping_duration.setRange, 'us'), 
                 #sideband_cooling_duration_729_increment_per_cycle                
                 tuple(c.sideband_cooling_duration_729_increment_per_cycle):
                     Parameter(c.sideband_cooling_duration_729_increment_per_cycle, setValueBlocking(self.cooling.increment_729), self.cooling.increment_729.valueChanged, self.cooling.increment_729.setRange, 'us'), 

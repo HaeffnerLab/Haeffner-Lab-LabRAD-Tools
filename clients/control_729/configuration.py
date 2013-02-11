@@ -110,11 +110,12 @@ class config_729_sideband_cooling(object):
     sideband_cooling_pulsed = ['729Experiments','sideband_cooling_pulsed']
     sideband_cooling_continuous_duration = ['729Experiments','sideband_cooling_continuous_duration']
     sideband_cooling_continuous_pump_additional = ['729Experiments','sideband_cooling_continuous_repump_additional']
-    sideband_cooling_pulsed_pulses_per_cycle = ['729Experiments','sideband_cooling_pulsed_pulses_per_cycle']
+    sideband_cooling_pulsed_cycles = ['729Experiments','sideband_cooling_pulsed_cycles']
     sideband_cooling_pulsed_duration_729 = ['729Experiments','sideband_cooling_pulsed_duration_729']
     sideband_cooling_pulsed_duration_repumps = ['729Experiments','sideband_cooling_pulsed_duration_repumps']
     sideband_cooling_pulsed_duration_additional_866 = ['729Experiments','sideband_cooling_pulsed_duration_additional_866']
     sideband_cooling_pulsed_duration_between_pulses = ['729Experiments','sideband_cooling_pulsed_duration_between_pulses']
+    sideband_cooling_optical_pumping_duration = ['729Experiments','sideband_cooling_optical_pumping_duration']
     sideband_cooling_line_selection = ['729Experiments','sideband_cooling_line_selection']
     sideband_cooling_use_line_selection =  ['729Experiments','sideband_cooling_use_line_selection']
     sideband_coooling_favorite_lines = {'S+1/2D+5/2':'carrier +1/2+5/2', 'S+1/2D+1/2':'carrier +1/2+1/2'}
