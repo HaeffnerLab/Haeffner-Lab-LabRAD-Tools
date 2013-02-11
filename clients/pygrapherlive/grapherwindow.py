@@ -24,7 +24,8 @@ class GrapherWindow(QtGui.QWidget):
         self.datasetCheckboxesItems = {}
         self.datasetAnalysisCheckboxes = {}
         self.datasetCheckboxCounter = 0
-        self.datasetCheckboxPositionDict = {}
+        self.datasetCheckboxPositionDict = {} # [dataset, directory, index], integer
+        self.itemDatasetCheckboxPositionDict = {} # item: integer
         self.datasetAnalysisCheckboxCounter = 0
         self.manuallyLoaded = True
         self.setWindowTitle(self.windowName)
@@ -114,6 +115,7 @@ class GrapherWindow(QtGui.QWidget):
             item.setText('      ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             item.setTextColor(QtGui.QColor(255, 255, 255))
             self.datasetCheckboxListWidget.addItem(item)
+            self.itemDatasetCheckboxPositionDict[item] = self.datasetCheckboxCounter
             self.datasetCheckboxListWidget.setItemWidget(self.datasetCheckboxListWidget.item(self.datasetCheckboxCounter), datasetCheckbox)
             self.datasetCheckboxPositionDict[dataset, directory, index] = self.datasetCheckboxCounter
             self.datasetCheckboxCounter = self.datasetCheckboxCounter + 1
@@ -298,6 +300,7 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
     def popup(self, pos):
         menu = QtGui.QMenu()
         fitAction = menu.addAction("Fit")
+        removeAction = menu.addAction("Remove")
         item = self.itemAt(pos)
         if (item == None):
             pass # no item
@@ -313,7 +316,25 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
                     test = self.analysisWindows[index]
                 except: # prevent the same window from reopening!
                     self.analysisWindows[index] = AnalysisWindow(self, self.parent.datasetCheckboxesItems[item])
+            elif action == removeAction:
+                itemNumberToRemove = self.parent.itemDatasetCheckboxPositionDict[self.itemAt(pos)]
+                # now clean up the mess you made
+                for item in self.parent.itemDatasetCheckboxPositionDict.keys():
+                    if (self.parent.itemDatasetCheckboxPositionDict[item] == itemNumberToRemove):
+                        self.parent.itemDatasetCheckboxPositionDict.pop(item)
+                    elif (self.parent.itemDatasetCheckboxPositionDict[item] > itemNumberToRemove):
+                        self.parent.itemDatasetCheckboxPositionDict[item] -= 1
 
+                for dataset, directory, index in self.parent.datasetCheckboxPositionDict.keys():
+                    if (self.parent.datasetCheckboxPositionDict[dataset, directory, index] == itemNumberToRemove):
+                        self.parent.datasetCheckboxPositionDict.pop((dataset, directory, index))
+                        self.parent.datasetCheckboxes.pop((dataset, directory, index))
+                    elif (self.parent.datasetCheckboxPositionDict[dataset, directory, index] > itemNumberToRemove):
+                        self.parent.datasetCheckboxPositionDict[dataset, directory, index] -= 1
+                        
+                self.takeItem(itemNumberToRemove) 
+                self.parent.datasetCheckboxCounter -= 1
+            
     def fitFromScript(self, dataset, directory, index, curveName, parameters):
         try:
             test = self.analysisWindows[index]
