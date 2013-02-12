@@ -121,7 +121,7 @@ class line_selector_table(QtGui.QTableWidget):
             if row > self.rowCount():
                 self.add_row()
             widget = self.cellWidget(row, 0)
-            widget.dropdown.set_dropdown(info)
+            widget.set_dropdown(info)
         self.dropdown_info = info
     
     def set_selected(self, info):
