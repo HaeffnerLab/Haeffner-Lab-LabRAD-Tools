@@ -49,7 +49,7 @@ class pulse_sequence(object):
 		if type(position) == dict: raise Exception ("Don't forget ** in front of replacement dictionary")
 		if position is None:
 			position = self.end
-		#replacement conists of global replacement and key work arguments
+		#replacement conists of global replacement and keyword arguments
 		replacement = {}
 		replacement.update(self.replace)
 		replacement.update(kwargs)
