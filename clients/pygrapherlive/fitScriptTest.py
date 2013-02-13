@@ -30,3 +30,5 @@ while (i < 40):
     i = i + 1
 
 cxn.data_vault.add_parameter('Fit', ['1', 'Lorentzian', '[-3220.213428227798, -440.65676408926481, -1586.420935896509, 3021.7453388352142]'])
+cxn.data_vault.wait_for_parameter('Accept-1')
+print 'done!'

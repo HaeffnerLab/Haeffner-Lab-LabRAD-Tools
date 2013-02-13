@@ -161,7 +161,7 @@ class AnalysisWindow(QtGui.QWidget):
         
         self.parameterLabels = {}
         self.parameterSpinBoxes = {}
-        self.parameterTable.setRowCount(len(self.fitCurveDictionary[self.curveName].parameterNames))
+        self.parameterTable.setRowCount(len(self.fitCurveDictionary[self.curveName].parameters.keys()))
 #        self.parameterTable.setRowCount(5)
 
         try:
@@ -169,12 +169,16 @@ class AnalysisWindow(QtGui.QWidget):
         except:
             # no previously saved parameters, create them
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName] = [{}, {}]
-            for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
-                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][parameterName] = 1.0
-                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = 1.0
-
+            for parameterName in self.fitCurveDictionary[self.curveName].parameters.keys():
+                # perhaps there are starting parameters already specified
+                try:
+                    self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][parameterName] = self.fitCurveDictionary[self.curveName].parameters[parameterName]
+                    self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = self.fitCurveDictionary[self.curveName].parameters[parameterName]
+                except:
+                    print 'Parameters must have a default fitting value!'
+                    
         i = 0
-        for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
+        for parameterName in self.fitCurveDictionary[self.curveName].parameters.keys():
             # Create things
             self.parameterLabels[parameterName] = QtGui.QLabel(parameterName)
             self.parameterLabels[parameterName].setAlignment(QtCore.Qt.AlignCenter)
@@ -232,7 +236,7 @@ class AnalysisWindow(QtGui.QWidget):
                 self.parameterTable.setItem(i, 2, item)
                 i += 1
             i = 0
-            for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
+            for parameterName in self.fitCurveDictionary[self.curveName].parameters.keys():
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName][i]
                 i += 1
             self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')

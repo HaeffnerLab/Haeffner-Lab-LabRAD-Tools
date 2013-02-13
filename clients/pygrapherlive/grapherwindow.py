@@ -115,7 +115,7 @@ class GrapherWindow(QtGui.QWidget):
             # This must be done because a checkbox, even with a lot of text, does not activate the scroll bar horizontally
             item = QtGui.QListWidgetItem()
             self.datasetCheckboxesItems[item] = [dataset, directory, index]
-            item.setText('      ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
+            item.setText('        ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             item.setTextColor(QtGui.QColor(255, 255, 255))
             self.datasetCheckboxListWidget.addItem(item)
             self.itemDatasetCheckboxPositionDict[item] = self.datasetCheckboxCounter

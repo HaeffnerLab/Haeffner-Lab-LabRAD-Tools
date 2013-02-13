@@ -11,7 +11,12 @@ class FitLorentzian(CurveFit):
     def __init__(self, parent):
         self.parent = parent
         self.curveName = 'Lorentzian'
-        self.parameterNames = ['Gamma', 'Center', 'I', 'Offset']
+        self.parameters = {
+                           'Gamma':        2.0,
+                           'Center':        2.0,
+                           'I':            2.0,
+                           'Offset':       2.0,
+                          }
    
     # idk, something like this?
     def fitFunc(self, x, p):

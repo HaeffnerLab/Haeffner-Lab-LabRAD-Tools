@@ -37,7 +37,7 @@ from labrad import types as T, util
 from labrad.server import LabradServer, Signal, setting
 
 from twisted.internet.reactor import callLater
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, Deferred, returnValue
 
 from ConfigParser import SafeConfigParser
 import os, re, sys
@@ -429,6 +429,7 @@ class Dataset:
         self.listeners = set() # contexts that want to hear about added data
         self.param_listeners = set()
         self.comment_listeners = set()
+        self.deferredParameterDict = {} #####MK
         if dtype:
             dtype = 'float' if dtype in 'f' else 'string'
 
@@ -642,8 +643,11 @@ class Dataset:
             self.parameters.append( d )
         if saveNow:
             self.save()
-    ##### MK
-    
+        if name in self.deferredParameterDict.keys():
+            for d in self.deferredParameterDict[name][:]:
+                d.callback(data)
+                self.deferredParameterDict[name].pop(0)
+        
         # notify all listening contexts
         self.parent.onNewParameter( None, self.param_listeners )
         self.param_listeners = set()
@@ -1184,7 +1188,17 @@ class DataVault( LabradServer ):
         dataset = self.getDataset( c )
         dataset.addParameterOverWrite( name, data )
 
-
+    @setting( 127, 'wait for parameter', name = 's')
+    def wait_for_parameter(self, c, name):
+        """Wait for parameter"""
+        dataset = self.getDataset(c)
+        d = Deferred()
+        try:
+            dataset.deferredParameterDict[name].append(d)
+        except: # parameter has never been waited on before
+            dataset.deferredParameterDict[name] = [d]
+        result = yield d
+        
     @setting( 200, 'add comment', comment = ['s'], user = ['s'], returns = [''] )
     def add_comment( self, c, comment, user = 'anonymous' ):
         """Add a comment to the current dataset."""

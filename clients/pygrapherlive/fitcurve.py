@@ -36,7 +36,7 @@ class CurveFit():
 #            center = self.parent.parameterWindow.gaussianCenterDoubleSpinBox.value()
 #            sigma =  self.parent.parameterWindow.gaussianSigmaDoubleSpinBox.value()
 #            offset = self.parent.parameterWindow.gaussianOffsetDoubleSpinBox.value()
-            for parameterName in self.parent.fitCurveDictionary[self.curveName].parameterNames:
+            for parameterName in self.parent.fitCurveDictionary[self.curveName].parameters.keys():
                 params.append(self.parent.parameterSpinBoxes[parameterName].value())
         else:
             params = parameters
