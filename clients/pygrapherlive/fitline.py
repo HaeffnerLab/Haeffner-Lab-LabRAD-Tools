@@ -11,10 +11,8 @@ class FitLine(CurveFit):
     def __init__(self, parent):
         self.parent = parent
         self.curveName = 'Line'
-        self.parameters = {
-                           'Slope':      2.0,
-                           'Offset':     2.0,
-                          }
+        self.parameterNames = ['Slope', 'Offset']
+        self.parameterValues = [1.0, 2.0]
 
     # idk, something like this?
     def fitFunc(self, x, p):
