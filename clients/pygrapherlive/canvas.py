@@ -186,7 +186,7 @@ class Qt4MplCanvas(FigureCanvas):
                 for i in range(numberOfDependentVariables):
                     label = self.datasetLabelsDict[dataset, directory][i]
                     self.parent.createDatasetCheckbox(dataset, directory, label, i)
-                    self.parent.createDatasetAnalysisCheckbox(dataset, directory, label, i)
+#                    self.parent.createDatasetAnalysisCheckbox(dataset, directory, label, i)
 #            else:
 #                # check if this model already exists!
 #                for i in range(self.parent.datasetCheckboxCounter):
