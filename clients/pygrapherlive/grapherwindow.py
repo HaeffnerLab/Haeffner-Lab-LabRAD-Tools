@@ -372,5 +372,6 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
         except: # prevent the same window from reopening!
             self.analysisWindows[index] = AnalysisWindow(self, [dataset, directory, index])
             self.analysisWindows[index].combo.setCurrentIndex(self.analysisWindows[index].curveComboIndexDict[curveName])
+            self.analysisWindows[index].onActivated('')
             self.analysisWindows[index].fitCurves(parameters)
         

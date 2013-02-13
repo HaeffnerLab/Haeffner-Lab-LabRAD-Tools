@@ -29,6 +29,7 @@ while (i < 40):
     time.sleep(.1)
     i = i + 1
 
-cxn.data_vault.add_parameter('Fit', ['1', 'Lorentzian', '[-3220.213428227798, -440.65676408926481, -1586.420935896509, 3021.7453388352142]'])
+cxn.data_vault.add_parameter('Fit', ['1', 'Line', '[1.0017360633577919, 32.004032496496428]'])
 cxn.data_vault.wait_for_parameter('Accept-1')
+print 'Slope: ', cxn.data_vault.get_parameter('Solutions-1-Line')[0]
 print 'done!'
