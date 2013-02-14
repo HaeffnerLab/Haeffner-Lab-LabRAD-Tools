@@ -30,7 +30,7 @@ class config_729_spectrum(object):
     spectrum_amplitude_729 = ['729Experiments','Spectrum','spectrum_amplitude_729']
     spectrum_use_saved = ['729Experiments','Spectrum','spectrum_use_saved_frequency']
     spectrum_saved_freq = ['729Experiments','Spectrum','spectrum_saved_frequency']
-    spectrum_saved_freq_favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP', 'S+1/2D+5/2':'carrier +1/2+5/2','S+1/2D+1/2':'carrier +1/2+1/2'}
+    spectrum_saved_freq_favorites = {'S+1/2D-3/2':'OP', 'S-1/2D+3/2':'Right OP', 'S-1/2D-5/2':'carrier -1/2-5/2','S-1/2D-1/2':'carrier -1/2-1/2'}
     #rabi flop
     saved_lines_729 = ['729Experiments','saved_lines_729']
     
@@ -39,7 +39,7 @@ class config_729_spectrum(object):
     rabi_amplitude_729 = ['729Experiments','RabiFlopping','rabi_amplitude_729']
     rabi_use_line_selection = ['729Experiments','RabiFlopping','rabi_flopping_use_line_selection']
     rabi_line_selection = ['729Experiments','RabiFlopping','rabi_flopping_line_selection']
-    rabi_saved_freq_favorites = {'S+1/2D+5/2':'carrier +1/2+5/2', 'S+1/2D+1/2':'carrier +1/2+1/2'}
+    rabi_saved_freq_favorites = {'S-1/2D-5/2':'carrier -1/2-5/2', 'S-1/2D-1/2':'carrier -1/2-1/2'}
     #saved freq
     line_parameter_names = ['Name', 'Center', 'Scan Span','Scan Resolution','Scan Amplitude', 'Scan Excitation Duration']
     line_parameter_units = ['MHz', 'kHz', 'kHz', 'dBm', 'us']
@@ -79,7 +79,7 @@ class config_729_state_preparation(object):
     optical_pumping_pulsed_duration_between_pulses = ['729Experiments','optical_pumping_pulsed_duration_between_pulses']
     optical_pumping_use_saved = ['729Experiments','optical_pumping_use_saved']
     optical_pumping_use_saved_line =  ['729Experiments','optical_pumping_use_saved_line']
-    optical_pumping_use_saved_line_favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP'}
+    optical_pumping_use_saved_line_favorites = {'S+1/2D-3/2':'OP', 'S-1/2D+3/2':'Right OP'}
     saved_lines_729 = ['729Experiments','saved_lines_729']
     #heating
     background_heating_duration = ['729Experiments','background_heating_time']
@@ -91,7 +91,7 @@ class config_729_tracker(object):
     
     frequency_limit = (-60, 140) #MHz
     saved_lines_729 = ['729Experiments','saved_lines_729']
-    favorites = {'S-1/2D+3/2':'OP', 'S+1/2D-3/2':'Left OP', 'S+1/2D+5/2':'carrier +1/2+5/2', 'S+1/2D+1/2':'carrier +1/2+1/2'}
+    favorites = {'S+1/2D-3/2':'OP', 'S-1/2D+3/2':'Right OP', 'S-1/2D-5/2':'carrier -1/2-5/2', 'S-1/2D-1/2':'carrier -1/2-1/2'}
 
 class config_729_sideband_cooling(object):
     
@@ -118,7 +118,7 @@ class config_729_sideband_cooling(object):
     sideband_cooling_optical_pumping_duration = ['729Experiments','sideband_cooling_optical_pumping_duration']
     sideband_cooling_line_selection = ['729Experiments','sideband_cooling_line_selection']
     sideband_cooling_use_line_selection =  ['729Experiments','sideband_cooling_use_line_selection']
-    sideband_coooling_favorite_lines = {'S+1/2D+5/2':'carrier +1/2+5/2', 'S+1/2D+1/2':'carrier +1/2+1/2'}
+    sideband_coooling_favorite_lines = {'S-1/2D-5/2':'carrier -1/2-5/2', 'S-1/2D-1/2':'carrier -1/2-1/2'}
     #saved lines
     saved_lines_729 = ['729Experiments','saved_lines_729']
     line_parameter_units = ['MHz', 'kHz', 'kHz', 'dBm', 'us']
