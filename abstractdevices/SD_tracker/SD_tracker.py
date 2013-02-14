@@ -19,7 +19,7 @@ from labrad.units import WithUnit
 from twisted.internet.defer import returnValue, inlineCallbacks
 import time
 from SD_tracker_config import config as conf
-from SD_calculator import double_pass, Transitions_SD, fitter
+from SD_calculator import Transitions_SD, fitter
 import numpy
 
 class SDTracker(LabradServer):
@@ -32,7 +32,6 @@ class SDTracker(LabradServer):
     def initServer(self):
         self.start_time = time.time()
         self.keep_measurements = conf.keep_measurements
-        self.dp = double_pass()
         self.tr = Transitions_SD()
         self.fitter = fitter()
         self.t_measure = numpy.array([])
@@ -101,9 +100,7 @@ class SDTracker(LabradServer):
         if name1 == name2: raise Exception("Provided Measurements must be of different lines")
         self.measurements.append((t_measure, name1, f1))
         self.measurements.append((t_measure, name2, f2))
-        f1,f2 = self.dp.reading_to_offset(f1),self.dp.reading_to_offset(f2)
-        B,offset = self.tr.energies_to_magnetic_field( ( (name1,f1),(name2,f2) ))
-        freq = self.dp.offset_to_reading(offset)
+        B,freq = self.tr.energies_to_magnetic_field( ( (name1,f1),(name2,f2) ))
         self.t_measure = numpy.append(self.t_measure , t_measure)
         self.B_field = numpy.append(self.B_field , B['gauss'])
         self.line_center = numpy.append(self.line_center , freq['MHz'])
@@ -150,10 +147,9 @@ class SDTracker(LabradServer):
             raise Exception ("Fit is not available")
         B = WithUnit(B, 'gauss')
         center = WithUnit(center, 'MHz')
-        offset = self.dp.reading_to_offset(center)
-        result = self.tr.get_transition_energies(B, offset)
+        result = self.tr.get_transition_energies(B, center)
         for name,freq in result:
-            lines.append((name, self.dp.offset_to_reading(freq)))
+            lines.append((name, freq))
         return lines
     
     @setting(6, "Get Current Line", name = 's', returns = 'v[MHz]')
