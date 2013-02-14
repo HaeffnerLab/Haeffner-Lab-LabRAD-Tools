@@ -1,3 +1,4 @@
+from pulse_sequences_config import dds_name_dictionary as dds_config
 from labrad.units import WithUnit
 
 class pulse_sequence(object):
@@ -13,8 +14,8 @@ class pulse_sequence(object):
 	def __init__(self, start = WithUnit(0, 's'), **kwargs):
 		self.start = start
 		self.end = start
-		self.dds_pulses = []
-		self.ttl_pulses = []
+		self._dds_pulses = []
+		self._ttl_pulses = []
 		self.replace = kwargs
 		self.set_params(self.required_parameters , **kwargs)
 		self.sequence()
@@ -42,6 +43,24 @@ class pulse_sequence(object):
 			except KeyError:
 				raise Exception('{0} value not provided for the {1} Pulse Sequence'.format(param, self.__class__.__name__))
 	
+	def addDDS(self, channel, start, duration, frequency, amplitude):
+		"""
+		add a dds pulse to the pulse sequence
+		"""
+		dds_channel = dds_config.get(channel, None)
+		if dds_channel is not None:
+			#additional configuration provided
+			channel = dds_channel.name
+			frequency = dds_channel.freq_conversion(frequency)
+			amplitude = dds_channel.ampl_conversion(amplitude)				
+		self._dds_pulses.append((channel, start, duration, frequency, amplitude))
+	
+	def addTTL(self, channel, start, duration):
+		"""
+		add a ttl pulse to the pulse sequence
+		"""
+		self._ttl_pulses.append((channel, start, duration))
+	
 	def addSequence(self, sequence, position = None, **kwargs):
 		'''insert a subsequence, position is either time or None to insert at the end'''
 		#position where sequence is inserted
@@ -54,12 +73,12 @@ class pulse_sequence(object):
 		replacement.update(self.replace)
 		replacement.update(kwargs)
 		seq = sequence(start = position, **replacement)
-		self.dds_pulses.extend( seq.dds_pulses )
-		self.ttl_pulses.extend( seq.ttl_pulses )
+		self._dds_pulses.extend( seq._dds_pulses )
+		self._ttl_pulses.extend( seq._ttl_pulses )
 		self.end = max(self.end, seq.end)
 	
 	def programSequence(self, pulser):
 		pulser.new_sequence()
-		pulser.add_ttl_pulses(self.ttl_pulses)
-		pulser.add_dds_pulses(self.dds_pulses)
+		pulser.add_ttl_pulses(self._ttl_pulses)
+		pulser.add_dds_pulses(self._dds_pulses)
 		pulser.program_sequence()
