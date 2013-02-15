@@ -252,9 +252,11 @@ class CCTDACServer( LabradServer ):
                 n = 0
                 sp[k] = {}
                 self.spline[k] = {}      
-                for j in hc.multipoles:                
-                    sp[k][j] = UniSpline(range(numCols) , data[int(k) + n - 1], s = 0 )                
-                    self.spline[k][j] = sp[k][j](p)                                
+                for j in hc.multipoles:   
+                    try:             
+                        sp[k][j] = UniSpline(range(numCols) , data[int(k) + n - 1], s = 0 )                
+                        self.spline[k][j] = sp[k][j](p)                                
+                    except: self.spline[k][j] = data[int(k) + n -1]
                     n += numElectrodes                           
 
         y = data[numElectrodes * len(hc.multipoles)]        
