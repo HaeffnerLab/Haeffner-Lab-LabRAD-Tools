@@ -35,38 +35,34 @@ class script_scanner_gui(object):
         except Exception, e:
             print 'script_scanner_gui: servers not available'
             self.disable(True)
-        self.cxn.on_connect['scriptscanner'].append(self.reinitialize_scriptscanner)
-        self.cxn.on_connect['parameter_vault'].append(self.reinitialize_parameter_vault)
-        self.cxn.on_disconnect['scriptscanner'].append(self.disable)
-        self.cxn.on_disconnect['parameter_vault'].append(self.disable)
+        self.cxn.on_connect['ScriptScanner'].append(self.reinitialize_scriptscanner)
+        self.cxn.on_connect['ParameterVault'].append(self.reinitialize_parameter_vault)
+        self.cxn.on_disconnect['ScriptScanner'].append(self.disable)
+        self.cxn.on_disconnect['ParameterVault'].append(self.disable)
     
     @inlineCallbacks
     def reinitialize_scriptscanner(self):
         yield self.setupListenersScriptScanner()
-        print 'reinit scriptscanner'
-        if self.cxn.servers['parameter_vault'] is not None:
-            print 'unddisabling'
+        if self.cxn.servers['ParameterVault'] is not None:
             self.disable(False)
     
     @inlineCallbacks
     def reinitialize_parameter_vault(self):
-        print 'reinit parameter'
         yield self.setupListenersParameterVault()
-        if self.cxn.servers['scriptscanner'] is not None:
-            print 'undisabling'
+        if self.cxn.servers['ScriptScanner'] is not None:
             self.disable(False)
     
-    def disable(self, should_disable):
+    def disable(self, should_disable = True):
         if should_disable:
             self.scripting_widget.setDisabled(should_disable)
             self.ParametersEditor.setDisabled(should_disable)
         else:
-            self.scripting_widget.setEnabled()
-            self.ParametersEditor.setEnabled()
+            self.scripting_widget.setEnabled(True)
+            self.ParametersEditor.setEnabled(True)
     
     @inlineCallbacks
     def populateExperiments(self):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         available = yield sc.get_available_scripts(context = self.context)
         queued = yield sc.get_queue(context = self.context)
         running = yield sc.get_running(context = self.context)
@@ -82,7 +78,7 @@ class script_scanner_gui(object):
         
     @inlineCallbacks
     def populateParameters(self):
-        pv = self.cxn.servers['parameter_vault']
+        pv = self.cxn.servers['ParameterVault']
         collections = yield pv.get_collections(context = self.context)
         for collection in collections:
             self.ParametersEditor.add_collection_node(collection)
@@ -93,7 +89,7 @@ class script_scanner_gui(object):
             
     @inlineCallbacks
     def setupListenersScriptScanner(self):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         #signals
         if not self.subscribedScriptScanner:
             yield sc.signal_on_queued_new_script(self.SIGNALID, context = self.context)
@@ -122,7 +118,7 @@ class script_scanner_gui(object):
     
     @inlineCallbacks
     def setupListenersParameterVault(self):
-        pv = self.cxn.servers['parameter_vault']
+        pv = self.cxn.servers['ParameterVault']
         if not self.subscribedParametersVault:
             yield pv.signal__parameter_change(self.SIGNALID + 10, context = self.context)
             self.subscribedParametersVault = True
@@ -131,7 +127,7 @@ class script_scanner_gui(object):
     @inlineCallbacks
     def on_pv_parameter_change(self, signal, info):
         collection, name = info
-        pv = self.cxn.servers['parameter_vault']
+        pv = self.cxn.servers['ParameterVault']
         full_info = yield pv.get_parameter(collection, name, False, context = self.context)
         self.ParametersEditor.set_parameter(collection, name, full_info)
         
@@ -184,8 +180,22 @@ class script_scanner_gui(object):
         self.scripting_widget.on_schedule_duration.connect(self.scheduled_duration)
         self.scripting_widget.on_running_stop.connect(self.running_stop)
         self.scripting_widget.on_running_pause.connect(self.running_pause)
+        self.scripting_widget.on_experiment_selected.connect(self.on_experiment_selected)
         #parameter widget
         self.ParametersEditor.on_parameter_change.connect(self.on_new_parameter)
+    
+    
+    @inlineCallbacks
+    def on_experiment_selected(self, selected_experiment):
+        sc = self.cxn.servers['ScriptScanner']
+        selected_experiment = str(selected_experiment)
+        try:
+            parameters = yield sc.get_script_parameters(selected_experiment)
+            print 'experiment', selected_experiment
+            print 'parameters', parameters
+        except self.Error as e:
+            self.displayError(e.msg)
+        
     
     def get_widgets(self):
         return self.scripting_widget
@@ -196,7 +206,7 @@ class script_scanner_gui(object):
     
     @inlineCallbacks
     def on_new_parameter(self, path, value):
-        pv = self.cxn.servers['parameter_vault']
+        pv = self.cxn.servers['ParameterVault']
         try:
             yield pv.set_parameter(path[0], path[1], value, True, context = self.context)
         except self.Error as e:
@@ -204,7 +214,7 @@ class script_scanner_gui(object):
     
     @inlineCallbacks
     def running_stop(self, ident):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         ident = int(ident)
         try:
             yield sc.stop_script(ident)
@@ -213,7 +223,7 @@ class script_scanner_gui(object):
     
     @inlineCallbacks
     def running_pause(self, ident, should_pause):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         ident = int(ident)
         try:
             yield sc.pause_script(ident, should_pause)
@@ -222,7 +232,7 @@ class script_scanner_gui(object):
     
     @inlineCallbacks
     def scheduled_duration(self, ident, duration):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         ident = int(ident)
         duration = self.WithUnit(float(duration), 's')
         try:
@@ -233,7 +243,7 @@ class script_scanner_gui(object):
     @inlineCallbacks
     def scheduled_cancel(self, ident):
         ident = int(ident)
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         try:
             yield sc.cancel_scheduled_script(ident)
         except self.Error as e:
@@ -241,7 +251,7 @@ class script_scanner_gui(object):
         
     @inlineCallbacks
     def schedule_script(self, name, duration, priority, start_now):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         name = str(name)
         priority = str(priority)
         duration = self.WithUnit(duration, 's')
@@ -252,7 +262,7 @@ class script_scanner_gui(object):
         
     @inlineCallbacks
     def repeat_script(self, name, repeatitions):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         name = str(name)
         try:
             yield sc.new_script_repeat(name, repeatitions)
@@ -261,7 +271,7 @@ class script_scanner_gui(object):
     
     @inlineCallbacks
     def on_cancel_queued(self, ident):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         ident = int(ident)
         try:
             yield sc.remove_queued_script(ident, context = self.context)
@@ -270,7 +280,7 @@ class script_scanner_gui(object):
         
     @inlineCallbacks
     def run_script(self, script):
-        sc = self.cxn.servers['scriptscanner']
+        sc = self.cxn.servers['ScriptScanner']
         script = str(script)
         try:
             yield sc.new_experiment(script, context = self.context)

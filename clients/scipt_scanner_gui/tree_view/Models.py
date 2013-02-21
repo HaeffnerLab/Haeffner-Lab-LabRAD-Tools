@@ -116,3 +116,10 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         self.endInsertRows()
         index = self.index(0, 0, parent_index)
         return index
+    
+    def set_parameter(self, index, info):
+        node = index.internalPointer()
+        node.set_full_info(info)
+        #refresh all columns
+        max_index= self.createIndex(index.row(), node.columns, index.internalPointer())
+        self.dataChanged.emit(index, max_index)

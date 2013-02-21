@@ -150,7 +150,7 @@ class scheduler(object):
         '''
         non_conflicting = []
         for running, script in self.running.iteritems():
-            cls_name = script.scan.script_cls.name()
+            cls_name = script.scan.script_cls.name
             non_conf = config.allowed_concurrent.get(cls_name, None)
             if non_conf is not None:
                 non_conflicting.append(set(non_conf))
@@ -216,7 +216,7 @@ class scheduler(object):
         else:
             should_launch = False
             non_conflicting = self.get_non_conflicting()
-            if not self.running or scan.script_cls.name() in non_conflicting:
+            if not self.running or scan.script_cls.name in non_conflicting:
                 #no running scripts or current one has no conflicts
                 should_launch = True
                 pause_running = False
@@ -248,7 +248,7 @@ class scheduler(object):
         paused_deferred = []
         for ident, script in self.running.iteritems():
             non_conf = config.allowed_concurrent.get(script.name, [])
-            if not scan.script_cls.name() in non_conf and not script.status.status == 'Paused':
+            if not scan.script_cls.name in non_conf and not script.status.status == 'Paused':
                 #don't pause unless it's a conflicting experiment and it's not already paused
                 if not ident == current_ident:
                     paused_idents.append(ident)

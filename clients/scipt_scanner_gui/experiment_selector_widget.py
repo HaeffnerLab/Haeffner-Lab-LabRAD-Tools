@@ -65,6 +65,7 @@ class experiment_selector_widget(QtGui.QWidget):
     on_run = QtCore.pyqtSignal(str)
     on_repeat = QtCore.pyqtSignal(str, int)
     on_schedule = QtCore.pyqtSignal(str, float, str, bool)
+    on_experiment_selected = QtCore.pyqtSignal(str)
     
     def __init__(self, reactor, font = None):
         self.font = font
@@ -96,6 +97,7 @@ class experiment_selector_widget(QtGui.QWidget):
         self.run_button.pressed.connect(self.run_emit_selected)
         self.repeat_button.pressed.connect(self.on_repeat_button)
         self.schedule_button.pressed.connect(self.on_schedule_button)
+        self.dropdown.currentIndexChanged[QtCore.QString].connect(self.on_experiment_selected)
     
     def on_schedule_button(self):
         dialog = schedule_dialog()

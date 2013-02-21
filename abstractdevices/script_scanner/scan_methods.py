@@ -11,10 +11,14 @@ class experiment_info(object):
     required_subexperiments = []
     name = ''
     
-    def __init__(self, name = None):
+    def __init__(self, name = None, required_parameters = None, required_subexperiments = None):
         self.replacement_parameters = {}
         if name is not None:
             self.name = name
+        if required_parameters is not None:
+            self.required_parameters = required_parameters
+        if self.required_subexperiments is not None:
+            self.required_subexperiments = required_subexperiments
 
 class experiment(experiment_info):
     
@@ -23,22 +27,28 @@ class experiment(experiment_info):
         executes the experiment
         '''
         self.ident = ident
-        cxn = labrad.connect()
-        self.sc = cxn.servers['ScriptScanner']
-        self.pv = cxn.servers['Parameter Vault']
-        context = cxn.context()
+        try:
+            cxn = labrad.connect()
+            self.sc = cxn.servers['ScriptScanner']
+            self.pv = cxn.servers['ParameterVault']
+            context = cxn.context()
+        except Exception as e:
+            print e
+            self.sc.error_finish_confirmed(self.ident, str(e))
+            return
         try:
             self._initialize(cxn, context, ident)
             self._run(cxn, context)
             self._finalize(cxn, context)
         except Exception as e:
-            print e#temp
+            print e
             self.sc.error_finish_confirmed(self.ident, str(e))
         finally:
             cxn.disconnect()
         
     def _initialize(self, cxn, context, ident):
         self._load_parameters()
+        self._load_subexperiments()
         self.check_parameters_filled()
         self.initialize(cxn, context, ident)
         self.sc.launch_confirmed(ident)
@@ -51,11 +61,15 @@ class experiment(experiment_info):
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
             except Exception as e:
+                print e
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
                 already_have = parameter_name in self.__dict__.keys()
                 if (already_have and overwrite) or not already_have:
                     self.__dict__[parameter_name] = value
+                    
+    def _load_subexperiments(self):
+        pass
     
     def set_parameters(self, parameter_dict = {}):
         '''
@@ -109,17 +123,17 @@ class single(experiment):
     '''
     def __init__(self, script_cls):
         self.script_cls = script_cls
-        super(single,self).__init__(script_cls.name())
+        super(single,self).__init__(script_cls.name, required_subexperiments = [script_cls])
     
     def initialize(self, cxn, context, ident):
         self.script = self.script_cls()
-        self.script.initialize(cxn, context, ident)
+        self.script._initialize(cxn, context, ident)
     
     def run(self, cxn, context, replacement_parameters = {}):
-        self.script.run(cxn, context)
+        self.script._run(cxn, context)
     
     def finalize(self, cxn, context):
-        self.script.finalize(cxn, context)
+        self.script._finalize(cxn, context)
 
 class repeat_reload(experiment):
     '''
@@ -131,7 +145,7 @@ class repeat_reload(experiment):
         self.save_data = save_data
         self.min_progress = min_progress
         self.max_progress = max_progress
-        scan_name = self.name_format(script_cls.name())
+        scan_name = self.name_format(script_cls.name)
         super(repeat_reload,self).__init__(scan_name)
 
     def name_format(self, name):
@@ -159,7 +173,7 @@ class repeat_reload(experiment):
         directory = ['','ScriptScanner']
         directory.extend([strftime("%Y%b%d",localtime), strftime("%H%M_%S", localtime)])
         dv.cd(directory, True, context = context)
-        dv.new(dataset_name, [('Iteration', 'Arb')], [self.script.name(), 'Arb', 'Arb'])
+        dv.new(dataset_name, [('Iteration', 'Arb')], [self.script.name, 'Arb', 'Arb'])
             
     def update_progress(self, iteration):
 #        print 'updating progress'
@@ -176,7 +190,7 @@ class scan_experiment_1D(experiment):
     '''
     def __init__(self, script_cls, parameter, minim, maxim, steps, units, min_progress = 0.0, max_progress = 100.0, save_data = False):
         self.script_cls = script_cls
-        scan_name = self.name_format(script_cls.name())
+        scan_name = self.name_format(script_cls.name)
         super(scan_experiment_1D,self).__init__(scan_name)
         self.parameter = parameter
         self.scan_points = linspace(minim, maxim, steps)
@@ -210,7 +224,7 @@ class scan_experiment_1D(experiment):
         directory = ['','ScriptScanner']
         directory.extend([strftime("%Y%b%d",localtime), strftime("%H%M_%S", localtime)])
         dv.cd(directory, True, context = context)
-        dv.new(dataset_name, [('Iteration', 'Arb')], [self.script.name(), 'Arb', 'Arb'])
+        dv.new(dataset_name, [('Iteration', 'Arb')], [self.script.name, 'Arb', 'Arb'])
             
     def update_progress(self, iteration):
         progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / len(self.scan_points)
@@ -294,7 +308,7 @@ class scan_experiment_1D(experiment):
 #        
 #    def check_parameters(self):
 #        if self.lines_to_scan is None:
-#            raise Exception("{0}: lines_to_scan parameter not provided".format(self.name()))
+#            raise Exception("{0}: lines_to_scan parameter not provided".format(self.name)
 #        elif not len(self.lines_to_scan) == 2:
 #            raise Exception("{0}: incorrect number of lines in lines_to_scan parameter".format(self.name()))
 #        transition_names = set(self.sd_tracker.get_transition_names())

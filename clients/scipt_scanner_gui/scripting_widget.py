@@ -14,6 +14,7 @@ class scripting_widget(QtGui.QWidget):
     on_schedule_duration = QtCore.pyqtSignal((int, float))
     on_running_stop = QtCore.pyqtSignal(int)
     on_running_pause = QtCore.pyqtSignal(int, bool)
+    on_experiment_selected = QtCore.pyqtSignal(str)
         
     def __init__(self, reactor):
         super(scripting_widget, self).__init__()
@@ -71,6 +72,7 @@ class scripting_widget(QtGui.QWidget):
         self.selector.on_run.connect(self.on_run.emit)
         self.selector.on_repeat.connect(self.on_repeat)
         self.selector.on_schedule.connect(self.on_schedule)
+        self.selector.on_experiment_selected.connect(self.on_experiment_selected.emit)
         self.queued.ql.on_cancel.connect(self.on_cancel_queued.emit)
         self.scheduled.sl.on_cancel.connect(self.on_cancel_scheduled.emit)
         self.scheduled.sl.on_new_duration.connect(self.on_schedule_duration.emit)

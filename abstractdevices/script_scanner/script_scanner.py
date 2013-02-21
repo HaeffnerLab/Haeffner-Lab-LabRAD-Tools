@@ -55,10 +55,10 @@ class ScriptScanner(LabradServer, Signals):
                 print 'There is no class {0} in module {1}'.format(class_name, module) 
             else:
                 try:
-                    name = cls.name()
-                    parameters = cls.required_parameters()
+                    name = cls.name
+                    parameters = cls.required_parameters
                 except AttributeError:
-                    print 'Name is not provided for class {0} in module {1}'.format(class_name, module) 
+                    print 'Name is not provided for class {0} in module {1}'.format(class_name, module)
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
             

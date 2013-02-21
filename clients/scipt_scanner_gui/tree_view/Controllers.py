@@ -40,15 +40,10 @@ class ParametersEditor(base, form):
     
     def set_parameter(self, collection, name, full_info):
         index =  self._parameter[collection,name]
-        node = self._parameter[collection,name].internalPointer()
-        node.set_full_info(full_info[1])
-        #refresh all columns
-        max_index= self._model.createIndex(index.row(), node.columns, index.internalPointer())
-        self._model.dataChanged.emit(index, max_index)
-        
-        self.uiTree.expandAll()
-        self.uiTree.selectionModel().select(self._proxyModel.mapFromSource(index), self.uiTree.selectionModel().Select)
-
+        self._model.set_parameter(index, full_info[1])
+#        self.uiTree.expandAll()
+#        self.uiTree.selectionModel().select(self._proxyModel.mapFromSource(index), self.uiTree.selectionModel().Select)
+    
     def setup_model(self): 
 #        self.uiTree.setSortingEnabled(True)
         self._rootNode   = Node("Root")
