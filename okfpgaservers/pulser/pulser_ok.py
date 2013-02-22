@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser
-version = 1.0
+version = 1.16
 description =
 instancename = Pulser
 
@@ -26,9 +26,10 @@ from hardwareConfiguration import hardwareConfiguration
 from sequence import Sequence
 from dds import DDS
 from api import api
+from linetrigger import LineTrigger
 import numpy
 
-class Pulser(LabradServer, DDS):
+class Pulser(LabradServer, DDS, LineTrigger):
     
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
@@ -45,12 +46,13 @@ class Pulser(LabradServer, DDS):
         self.ddsDict = hardwareConfiguration.ddsDict
         self.timeResolvedResolution = hardwareConfiguration.timeResolvedResolution
         self.remoteChannels = hardwareConfiguration.remoteChannels
-        self.devicePollingPeriod = hardwareConfiguration.devicePollingPeriod
         self.collectionTimeRange = hardwareConfiguration.collectionTimeRange
         self.sequenceTimeRange = hardwareConfiguration.sequenceTimeRange
         self.haveSecondPMT = hardwareConfiguration.secondPMT
         self.haveDAC = hardwareConfiguration.DAC
         self.inCommunication = DeferredLock()
+        self.clear_next_pmt_counts = 0
+        LineTrigger.initialize(self)
         self.initializeBoard()
         yield self.initializeRemote()
         self.initializeSettings()
@@ -320,7 +322,7 @@ class Pulser(LabradServer, DDS):
             yield deferToThread(self.api.setPMTCountRate, countRate)
         elif mode == 'Differential':
             yield deferToThread(self.api.setModeDifferential)
-        yield deferToThread(self.api.resetFIFONormal)
+        self.clear_next_pmt_counts = 3 #assign to clear next two counts
         self.inCommunication.release()
     
     @setting(22, 'Set Collection Time', new_time = 'v', mode = 's', returns = '')
@@ -332,21 +334,15 @@ class Pulser(LabradServer, DDS):
         if not self.collectionTimeRange[0]<=new_time<=self.collectionTimeRange[1]: raise Exception('incorrect collection time')
         if mode not in self.collectionTime.keys(): raise("Incorrect mode")
         if mode == 'Normal':
-            prev_time = self.collectionTime[mode]
             self.collectionTime[mode] = new_time
             yield self.inCommunication.acquire()
             yield deferToThread(self.api.setPMTCountRate, new_time)
-            yield self.wait(1.5 * numpy.max([prev_time , new_time]))
-            #clear existing counts
-            c =  yield deferToThread(self.api.getNormalTotal);
-            yield deferToThread(self.api.getNormalCounts,c)
-            if self.haveSecondPMT:
-                d = yield deferToThread(self.api.getSecondaryNormalTotal);
-                yield deferToThread(self.api.getSecondaryNormalCounts,d)
+            self.clear_next_pmt_counts = 3 #assign to clear next two counts
             self.inCommunication.release()
         elif mode == 'Differential':
             self.collectionTime[mode] = new_time
-    
+            self.clear_next_pmt_counts = 3 #assign to clear next two counts
+        
     @setting(23, 'Get Collection Time', returns = '(vv)')
     def getCollectTime(self, c):
         return self.collectionTimeRange
@@ -394,7 +390,18 @@ class Pulser(LabradServer, DDS):
         countlist = map(self.infoFromBuf, split)
         countlist = map(self.convertKCperSec, countlist)
         countlist = self.appendTimes(countlist, time.time())
+        countlist = self.clear_pmt_counts(countlist)
         return countlist
+
+    def clear_pmt_counts(self, l):
+        '''removes clear_next_pmt_counts count from the list'''
+        try:
+            while self.clear_next_pmt_counts:
+                cleared = l.pop(0)
+                self.clear_next_pmt_counts -= 1
+            return l
+        except IndexError:
+            return []
     
     def doGetReadoutCounts(self):
         inFIFO = self.api.getReadoutTotal()

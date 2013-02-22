@@ -52,7 +52,8 @@ class spectrum(QtGui.QFrame):
         layout.addWidget(self.limitWidget, 4, 0, 1, 4)
         label = QtGui.QLabel("Use Saved Line Info", font = font)
         self.use_saved_line = QtGui.QCheckBox()
-        self.dropdown = dropdown(font, info_position = 0)
+        self.dropdown = dropdown(self.reactor, font = font, info_position = 0)
+        self.dropdown.set_favorites(c.spectrum_saved_freq_favorites)
         self.setLayout(layout)
         layout.addWidget(label, 0, 5, 1, 1)
         layout.addWidget(self.use_saved_line, 0, 6, 1, 1)
@@ -85,7 +86,8 @@ class rabi(QtGui.QFrame):
         title_label = QtGui.QLabel("Rabi Flopping", font = large_font)
         title_label.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
         layout.addWidget(title_label, 0, 0, 1, 1)
-        self.freq729 = frequency_wth_dropdown(self.reactor, parameter_name = 'Rabi Frequency 729', font = font, suffix = 'MHz', sig_figs = 4)
+        self.freq729 = frequency_wth_dropdown(self.reactor, parameter_name = 'Rabi Frequency 729', font = font, suffix = 'MHz', sig_figs = 4, only_show_favorites = True)
+        self.freq729.set_favorites(c.rabi_saved_freq_favorites)
         self.freq729.layout().setContentsMargins(0,0,0,0)
         self.ampl729 = QtGui.QDoubleSpinBox()
         self.ampl729.setSuffix('dBm')
@@ -161,13 +163,11 @@ class scans_connection(scans, async_semaphore):
                 tuple(c.spectrum_excitation_time): Parameter(c.spectrum_excitation_time, self.spectrum.duration.setNewDuration_blocking, self.spectrum.duration.new_duration, self.spectrum.duration.duration.setRange, 'us'),
                 tuple(c.spectrum_amplitude_729): Parameter(c.spectrum_amplitude_729, setValueBlocking(self.spectrum.ampl_729), self.spectrum.ampl_729.valueChanged, self.spectrum.ampl_729.setRange, 'dBm'),
                 tuple(c.spectrum_use_saved):Parameter(c.spectrum_use_saved, self.spectrum.use_saved_line.setChecked, updateSignal = self.spectrum.use_saved_line.toggled),
-                tuple(c.spectrum_saved_freq):Parameter(c.spectrum_saved_freq, self.spectrum.dropdown.set_selected, self.spectrum.dropdown.currentIndexChanged[QtCore.QString], do_nothing, None), 
+                tuple(c.spectrum_saved_freq):Parameter(c.spectrum_saved_freq, self.spectrum.dropdown.set_selected, self.spectrum.dropdown.new_selection, do_nothing, None), 
                 #list
                 tuple(c.spectrum_frequencies):Parameter(c.spectrum_frequencies, do_nothing, self.spectrum.limitWidget.new_list_signal, self.spectrum.limitWidget.setRange, 'MHz'),
                 tuple(c.rabi_frequency): Parameter(c.rabi_frequency, self.rabi.freq729.set_freq_value_no_signals, self.rabi.freq729.valueChanged, self.rabi.freq729.setRange, 'MHz'),
                 tuple(c.rabi_amplitude_729): Parameter(c.rabi_amplitude_729, setValueBlocking(self.rabi.ampl729), self.rabi.ampl729.valueChanged, self.rabi.ampl729.setRange, 'dBm'),
-
-
                 #list
                 tuple(c.rabi_excitation_times):Parameter(c.rabi_excitation_times, do_nothing, self.rabi.lim.new_list_signal, self.rabi.lim.setRange, 'us'),
                 tuple(c.rabi_saved_freq):Parameter(c.rabi_saved_freq, self.rabi.freq729.set_selected, self.rabi.freq729.useSavedLine, do_nothing, None), 

@@ -4,7 +4,7 @@
 name = HP Server
 version = 1.1
 description = 
-instancename = HP Server
+instancename = %LABRADNODE% HP Server
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -24,7 +24,7 @@ from twisted.internet.defer import returnValue
 class KEITHLY6487( SerialDeviceServer ):
     """Controls KEITHLY6487 Signal Generator"""
 
-    name = 'KEITHLY 6487'
+    name = '%LABRADNODE% KEITHLY 6487'
     regKey = 'KEITHLY6487'
     port = None
     serNode = 'lattice-imaging'

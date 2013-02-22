@@ -43,8 +43,12 @@ class pmtWidget(QtGui.QWidget):
         self.pushButton.setChecked(running)
         self.setText(self.pushButton)
         duration = yield self.server.get_time_length()
-        range = yield self.server.get_time_length_range()
-        self.doubleSpinBox.setRange(*range)
+        ran = yield self.server.get_time_length_range()
+        mode = yield self.server.getcurrentmode()
+        index = self.comboBox.findText(mode)
+        self.comboBox.setCurrentIndex(index)
+        self.lcdNumber.display('OFF')
+        self.doubleSpinBox.setRange(*ran)
         self.doubleSpinBox.setValue(duration)
     
     def followSignal(self,signal,value):
@@ -68,7 +72,7 @@ class pmtWidget(QtGui.QWidget):
                 self.pushButton.setChecked(True)
             else:
                 self.pushButton.setChecked(False)
-                self.lcdNumber.display(0)
+                self.lcdNumber.display('OFF')
             self.pushButton.blockSignals(False)
             self.setText(self.pushButton)
         if setting == 'timelength':
@@ -84,7 +88,7 @@ class pmtWidget(QtGui.QWidget):
             self.lineEdit.setText(newset)
         else:
             yield self.server.stoprecording()
-            self.lcdNumber.display(0)
+            self.lcdNumber.display('OFF')
         self.setText(self.pushButton)
     
     @inlineCallbacks

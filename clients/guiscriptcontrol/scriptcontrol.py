@@ -19,7 +19,7 @@ class ScriptControl(QtGui.QWidget):
         self.reactor = reactor
         self.parent = parent
         #import all experiments
-        reloader.enable(blacklist=['labrad', 'labrad.units']) #reloading these gives errors
+        reloader.enable(blacklist=['labrad', 'labrad.units', 'numpy','matplotlib'])
         self.experiments = {}
         for semaphore_path,value in c.ExperimentInfo.iteritems():
             local_path,name = value

@@ -320,9 +320,9 @@ class NormalPMTFlow( LabradServer):
                 if dataPoint[1] != 0 and req.kind == 'ON':
                     req.data.append(dataPoint[1])
                 if dataPoint[2] != 0 and req.kind == 'OFF':
-                    req.data.append(dataPoint[1])
+                    req.data.append(dataPoint[2])
                 if dataPoint[3] != 0 and req.kind == 'DIFF':
-                    req.data.append(dataPoint[1])
+                    req.data.append(dataPoint[3])
                 if req.is_fulfilled():
                     req.d.callback(req.data)
                     del(self.requestList[item])
