@@ -5,21 +5,19 @@ class fft_spectrum(experiment):
     
     name = 'FFT Spectrum'
     required_parameters = [
-                           ('Trap Frequencies','rf_drive_frequency')
+                           ('TrapFrequencies','rf_drive_frequency')
                            ]
     
     def initialize(self, cxn, context, ident):
-        print 'init'
-        print self.rf_drive_frequency
-        pass
+        freqs = self.parameters.TrapFrequencies
+        print 'init', freqs.rf_drive_frequency
         
     def run(self, cxn, context):
-        print 'run'
-        pass
+        freqs = self.parameters.TrapFrequencies
+        print 'running', freqs.rf_drive_frequency
             
     def finalize(self, cxn, context):
         print 'finalize'
-        pass
 
 class conflicting_experiment(fft_spectrum):
     
@@ -38,8 +36,30 @@ class crashing_example(fft_spectrum):
         raise Exception ("In a case of a crash, real message would follow")
 
 if __name__ == '__main__':
+    #normal way to launch
+#    cxn = labrad.connect()
+#    scanner = cxn.scriptscanner
+#    exprt = fft_spectrum(cxn = cxn)
+#    ident = scanner.register_external_launch(exprt.name)
+#    exprt.execute(ident)
+#    #testing single launch
+#    cxn = labrad.connect()
+#    scanner = cxn.scriptscanner
+#    from scan_methods import single
+#    exprt = single(fft_spectrum)
+#    ident = scanner.register_external_launch(exprt.name)
+#    exprt.execute(ident)
+#    #testing repeat launch
+#    cxn = labrad.connect()
+#    scanner = cxn.scriptscanner
+#    from scan_methods import repeat_reload
+#    exprt = repeat_reload(fft_spectrum, 10)
+#    ident = scanner.register_external_launch(exprt.name)
+#    exprt.execute(ident)
+    #testing scan
     cxn = labrad.connect()
     scanner = cxn.scriptscanner
-    exprt = fft_spectrum()
+    from scan_methods import scan_experiment_1D
+    exprt = scan_experiment_1D(fft_spectrum, ('TrapFrequencies', 'rf_drive_frequency'), 10.0, 20.0, 10, 'MHZ') 
     ident = scanner.register_external_launch(exprt.name)
     exprt.execute(ident)

@@ -1,6 +1,7 @@
 from time import localtime, strftime
 from numpy import linspace
 import labrad
+from treedict import TreeDict
 from labrad.units import WithUnit
 
 class experiment_info(object):
@@ -8,19 +9,39 @@ class experiment_info(object):
     holds informaton about the experiment
     '''
     required_parameters = []
-    required_subexperiments = []
     name = ''
     
-    def __init__(self, name = None, required_parameters = None, required_subexperiments = None):
-        self.replacement_parameters = {}
+    def __init__(self, name = None, required_parameters = None):
         if name is not None:
             self.name = name
         if required_parameters is not None:
             self.required_parameters = required_parameters
-        if self.required_subexperiments is not None:
-            self.required_subexperiments = required_subexperiments
-
+        self.parameters = TreeDict()
+        
 class experiment(experiment_info):
+    
+    def __init__(self, name = None, required_parameters = None, cxn = None):
+        super(experiment, self).__init__(name, required_parameters)
+        self.cxn = cxn
+        self.pv = None
+        self.sc = None
+        self.context = None
+    
+    def _connect(self):
+        if self.cxn is None:
+            try:
+                self.cxn = labrad.connect()
+            except Exception as e:
+                raise Exception ("Not able to connecto LabRAD")
+        try:
+            self._define_servers(self.cxn)
+        except Exception as e:
+            raise Exception ("ScriptScanner or ParameterVault are not running")
+    
+    def _define_servers(self, cxn):
+        self.sc = cxn.servers['ScriptScanner']
+        self.pv = cxn.servers['ParameterVault']
+        self.context = cxn.context()
     
     def execute(self, ident):
         '''
@@ -28,28 +49,20 @@ class experiment(experiment_info):
         '''
         self.ident = ident
         try:
-            cxn = labrad.connect()
-            self.sc = cxn.servers['ScriptScanner']
-            self.pv = cxn.servers['ParameterVault']
-            context = cxn.context()
+            self._connect()
+            self._initialize(self.cxn, self.context, ident)
+            self._run(self.cxn, self.context)
+            self._finalize(self.cxn, self.context)
         except Exception as e:
             print e
-            self.sc.error_finish_confirmed(self.ident, str(e))
-            return
-        try:
-            self._initialize(cxn, context, ident)
-            self._run(cxn, context)
-            self._finalize(cxn, context)
-        except Exception as e:
-            print e
-            self.sc.error_finish_confirmed(self.ident, str(e))
+            if hasattr(self, 'sc'):
+                self.sc.error_finish_confirmed(self.ident, str(e))
         finally:
-            cxn.disconnect()
+            if hasattr(self, 'cxn'):
+                self.cxn.disconnect()
         
     def _initialize(self, cxn, context, ident):
         self._load_parameters()
-        self._load_subexperiments()
-        self.check_parameters_filled()
         self.initialize(cxn, context, ident)
         self.sc.launch_confirmed(ident)
     
@@ -57,19 +70,20 @@ class experiment(experiment_info):
         self.run(cxn, context)
     
     def _load_parameters(self, overwrite = False):
-        for collection,parameter_name in self.required_parameters:
+        d = self._load_parameters_dict(self.required_parameters)
+        self.parameters.update(d)
+
+    def _load_parameters_dict(self, required):
+        '''loads the required parameter into a treedict'''
+        d = TreeDict()
+        for collection,parameter_name in required:
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
             except Exception as e:
-                print e
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
-                already_have = parameter_name in self.__dict__.keys()
-                if (already_have and overwrite) or not already_have:
-                    self.__dict__[parameter_name] = value
-                    
-    def _load_subexperiments(self):
-        pass
+                d['{0}.{1}'.format(collection, parameter_name)] = value
+        return d
     
     def set_parameters(self, parameter_dict = {}):
         '''
@@ -83,16 +97,12 @@ class experiment(experiment_info):
     
     def reload_parameters_vault(self):
         self._load_parameters(overwrite = True)
-                
-    def check_parameters_filled(self):
-        for collection, parameter_name in self.required_parameters:
-            if parameter_name not in self.__dict__:
-                raise Exception("Parameter {0} not provided for experiment {1}".format(parameter, self.name)) 
     
     def _finalize(self, cxn, context):
         self.finalize(cxn, context)
         self.sc.finish_confirmed(self.ident)
-        
+    
+    #useful functions to be used in subclasses
     def pause_or_stop(self):
         '''
         allows to pause and to stop the experiment
@@ -102,12 +112,17 @@ class experiment(experiment_info):
             self.sc.stop_confirmed(self.ident)
             return True
     
+    def make_experiment(self, subexprt_cls):
+        subexprt = subexprt_cls(cxn = self.cxn)
+        subexprt._connect()
+        subexprt._load_parameters()
+        return subexprt
+    
+    #functions to reimplement in the subclass
     def initialize(self, cxn, context, ident):
         '''
         implemented by the subclass
         '''
-        print 'what?'
-        
     def run(self, cxn, context, replacement_parameters = {}):
         '''
         implemented by the subclass
@@ -123,25 +138,25 @@ class single(experiment):
     '''
     def __init__(self, script_cls):
         self.script_cls = script_cls
-        super(single,self).__init__(script_cls.name, required_subexperiments = [script_cls])
+        super(single,self).__init__(self.script_cls.name)
     
     def initialize(self, cxn, context, ident):
-        self.script = self.script_cls()
-        self.script._initialize(cxn, context, ident)
+        self.script = self.make_experiment(self.script_cls)
+        self.script.initialize(cxn, context, ident)
     
     def run(self, cxn, context, replacement_parameters = {}):
-        self.script._run(cxn, context)
+        self.script.run(cxn, context)
     
     def finalize(self, cxn, context):
-        self.script._finalize(cxn, context)
+        self.script.finalize(cxn, context)
 
 class repeat_reload(experiment):
     '''
     Used to repeat an experiment multiple times, while reloading the parameters every repeatition
     '''
-    def __init__(self, script_cls, repeatitions, min_progress = 0.0, max_progress = 100.0, save_data = False):
+    def __init__(self, script_cls, repetitions, min_progress = 0.0, max_progress = 100.0, save_data = False):
         self.script_cls = script_cls
-        self.repeatitions = repeatitions
+        self.repetitions = repetitions
         self.save_data = save_data
         self.min_progress = min_progress
         self.max_progress = max_progress
@@ -149,16 +164,16 @@ class repeat_reload(experiment):
         super(repeat_reload,self).__init__(scan_name)
 
     def name_format(self, name):
-        return 'Repeat {0} {1} times'.format(name, self.repeatitions)
+        return 'Repeat {0} {1} times'.format(name, self.repetitions)
     
     def initialize(self, cxn, context, ident):
-        self.script = self.script_cls()
+        self.script = self.make_experiment(self.script_cls)
         self.script.initialize(cxn, context, ident)
         if self.save_data:
             self.navigate_data_vault(cxn, context)
     
     def run(self, cxn, context):
-        for i in range(self.repeatitions):
+        for i in range(self.repetitions):
             if self.pause_or_stop(): return
             self.script.reload_parameters_vault()
             result = self.script.run(cxn, context)
@@ -176,10 +191,8 @@ class repeat_reload(experiment):
         dv.new(dataset_name, [('Iteration', 'Arb')], [self.script.name, 'Arb', 'Arb'])
             
     def update_progress(self, iteration):
-#        print 'updating progress'
-        progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / self.repeatitions
+        progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / self.repetitions
         self.sc.script_set_progress(self.ident,  progress)
-#        print self.ident, progress
     
     def finalize(self, cxn, context):
         self.script.finalize(cxn, context)
@@ -190,30 +203,30 @@ class scan_experiment_1D(experiment):
     '''
     def __init__(self, script_cls, parameter, minim, maxim, steps, units, min_progress = 0.0, max_progress = 100.0, save_data = False):
         self.script_cls = script_cls
-        scan_name = self.name_format(script_cls.name)
-        super(scan_experiment_1D,self).__init__(scan_name)
         self.parameter = parameter
         self.scan_points = linspace(minim, maxim, steps)
         self.scan_points = [WithUnit(pt, units) for pt in self.scan_points ]
         self.min_progress = min_progress
         self.max_progress = max_progress
         self.save_data = save_data
+        scan_name = self.name_format(script_cls.name)
+        super(scan_experiment_1D,self).__init__(scan_name)
         
     def name_format(self, name):
         return 'Scanning {0} in {1}'.format(self.parameter, name)
     
     def initialize(self, cxn, context, ident):
-        self.script = self.script_cls()
+        self.script = self.make_experiment(self.script_cls)
         self.script.initialize(cxn, context, ident)
         if self.save_data:
             self.navigate_data_vault(cxn, context)
     
     def run(self, cxn, context):
-        for i in range(self.repeatitions):
+        for i, scan_value in enumerate(self.scan_points):
             if self.pause_or_stop(): return
-            self.script.set_parameters({self.parameter: self.scan_points[i]})
-            result = self.script.run()
-            if self.data_save and result is not None:
+            self.script.set_parameters({self.parameter: scan_value})
+            result = self.script.run(cxn, context)
+            if self.save_data and result is not None:
                 cxn.data_vault.add([i, result], context = context)
             self.update_progress(i)
     
@@ -230,13 +243,13 @@ class scan_experiment_1D(experiment):
         progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / len(self.scan_points)
         self.sc.script_set_progress(self.ident,  progress)
     
-    def finalize(self):
-        self.script.finalize()
+    def finalize(self, cxn, context):
+        self.script.finalize(cxn, context)
             
 #class excite_D(experiment):
 #    
 #    name = "Excite D"
-#    required_parameters = ['pulse_sequence_repeatitions']
+#    required_parameters = ['pulse_sequence_repetitions']
 #    #required_parameters.extend(self.sequence.all_variables())
 #
 #    def initialize(self, cxn, context, ident):
@@ -246,10 +259,10 @@ class scan_experiment_1D(experiment):
 #        self.ident = ident
 #    
 #    def set_parameters(self, parameters):
-#        self.pulse_sequence_repeatitions = parameters.get('pulse_sequence_repeatitions', None)
+#        self.pulse_sequence_repetitions = parameters.get('pulse_sequence_repetitions', None)
 #    
 #    def check_parameters(self):
-#        #check self.pulse_sequence_repeatitions
+#        #check self.pulse_sequence_repetitions
 #        pass
 #    
 #    def run(self):
@@ -260,7 +273,6 @@ class scan_experiment_1D(experiment):
 #    
 #    name = "Spectrum 729"
 #    required_parameters = ['line_to_scan', 'should_save_data', 'should_fit']
-#    required_subexperiments = [excite_D]
 #    
 #    def initiailze(self, cxn, context, ident):
 #        self.cxn = cxn
@@ -273,7 +285,7 @@ class scan_experiment_1D(experiment):
 #        self.line_to_scan = parameters.get('line_to_scan', None)
 #        self.should_save_data = parameters.get('should_save_data', True)
 #        self.should_fit = parameters.get('should_fit', False)
-#        self.sequence_repeatitions = parameters.get('sequence_repeatitions', None)
+#        self.sequence_repetitions = parameters.get('sequence_repetitions', None)
 #        
 #    def get_fit(self):
 #        if self.fit is None:
@@ -294,7 +306,6 @@ class scan_experiment_1D(experiment):
 #    
 #    name = 'Drift Tracker 729'
 #    required_parameters = ['lines_to_scan']
-#    required_subexperiments = [spectrum729]
 #    
 #    def initialize(self, cxn, ident):
 #        self.cxn = cxn
