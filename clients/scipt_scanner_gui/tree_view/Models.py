@@ -89,13 +89,13 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
                 return node            
         return self._rootNode
 
-    def insert_collection(self, name, parent=QtCore.QModelIndex()):
-        parentNode = self.getNode(parent)
-        self.beginInsertRows(parent, 0, 0)
-        childNode = CollectionNode(name)
-        parentNode.insertChild(0, childNode)
+    def insert_collection(self, name, parent_index=QtCore.QModelIndex()):
+        parentNode = self.getNode(parent_index)
+        row_count = self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = CollectionNode(name, parentNode)
         self.endInsertRows()
-        index = self.index(0, 0, parent)
+        index = self.index(row_count, 0, parent_index)
         return index
     
     def insert_parameter(self, parameter_name, info, parent_index):

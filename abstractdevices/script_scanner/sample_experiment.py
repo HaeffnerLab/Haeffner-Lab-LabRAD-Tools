@@ -22,6 +22,9 @@ class fft_spectrum(experiment):
 class conflicting_experiment(fft_spectrum):
     
     name = 'conflicting_experiment'
+    required_parameters = [
+                           ('TrapFrequencies','axial_frequency')
+                           ]
         
 class non_conflicting_experiment(fft_spectrum):
     

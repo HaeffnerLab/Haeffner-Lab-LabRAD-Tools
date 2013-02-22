@@ -60,6 +60,10 @@ class CollectionNode(Node):
     def __init__(self, name, parent = None):
         super(CollectionNode, self).__init__(name, parent)
     
+    def filter_text(self):
+        text = self.name()
+        return text.join([child.name() for child in self._children])
+    
 class ParameterNode(Node):
     
     columns = 6

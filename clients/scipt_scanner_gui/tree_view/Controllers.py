@@ -19,6 +19,7 @@ class ParametersEditor(base, form):
         self.connect_layout()
         self._collection = {}
         self._parameter = {}
+        self._hidden = []
     
     def add_collection_node(self, name):
         node = self._model.insert_collection(name)
@@ -39,38 +40,64 @@ class ParametersEditor(base, form):
             print 'unknown value type', value_type
     
     def set_parameter(self, collection, name, full_info):
+        '''set value of a parameter stores in the model'''
         index =  self._parameter[collection,name]
         self._model.set_parameter(index, full_info[1])
-#        self.uiTree.expandAll()
-#        self.uiTree.selectionModel().select(self._proxyModel.mapFromSource(index), self.uiTree.selectionModel().Select)
     
-    def show_only(self, params):
-        for param in params:
-            print 'showing only!'
-            index = self._parameter[param]
-            print index.internalPointer().row()
-#            print index.parent().internalPointer().index
-#            self._proxyModel.ma
-#            parent_index =  self._proxyModel.mapFromSource(index.parent())
-#            print parent_index.internalPointer()._children
-#            self.uiTree.setRowHidden(0 , parent_index , True)
-#            print index.row(), index.column()
-        pass
-    
+    def show_only(self, show):
+        ''' set all parameters hidden except for the ones provided in show'''
+        self.show_all()
+        for collection, collection_index in self._collection.iteritems():
+            keepCollection = False
+            collection_node = collection_index.internalPointer()
+            for row in range(collection_node.childCount()):
+                child = collection_node.child(row)
+                parameter = child.name()
+                if not (collection, parameter) in show:
+                    parameter_index = self._model.index(row, 0, collection_index )
+                    parent_index = self._proxyModel.mapFromSource(collection_index)
+                    parameter_index_proxy = self._proxyModel.mapFromSource(parameter_index)
+                    self.uiTree.setRowHidden(parameter_index_proxy.row() ,parent_index, True)
+                    self._hidden.append((parameter_index_proxy.row(), parent_index))
+                else:
+                    keepCollection = True
+            if not keepCollection:
+                #hiding the collection too
+                parent_index = self._proxyModel.mapFromSource(collection_index.parent())
+                row = collection_index.internalPointer().row()
+                collection_index = self._model.index(row, 0, collection_index.parent())
+                collection_indexx_proxy = self._proxyModel.mapFromSource(collection_index)
+                self.uiTree.setRowHidden(collection_indexx_proxy.row() ,parent_index, True)
+                self._hidden.append((collection_indexx_proxy.row(), parent_index))
+        self.uiTree.expandAll()
+        
     def show_all(self):
-        pass
+        '''show all hidden parameters'''
+        while True:
+            try:
+                row, parent_index = self._hidden.pop()
+            except IndexError:
+                return
+            else:
+                self.uiTree.setRowHidden(row ,parent_index, False)
     
     def setup_model(self): 
-#        self.uiTree.setSortingEnabled(True)
         self._rootNode   = Node("Root")
         self._proxyModel = QtGui.QSortFilterProxyModel(self)
         self._model = ParametersTreeModel(self._rootNode, self)
         self._proxyModel.setSourceModel(self._model)
+        #filtering
         self._proxyModel.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self._proxyModel.setFilterRole(ParametersTreeModel.filterRole)
         self._proxyModel.setFilterKeyColumn(-1) #look at all columns while filtering
+        #sorting
+        self.uiTree.setSortingEnabled(True)
+        self._proxyModel.setDynamicSortFilter(True)
+        self._proxyModel.setSortRole(QtCore.Qt.DisplayRole)
+        self._proxyModel.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.uiTree.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        #making and setting model
         self.uiTree.setModel(self._proxyModel)
-        
         self._propEditor = PropertiesEditor(self)
         self.layout().addWidget(self._propEditor)
         self._propEditor.setModel(self._proxyModel)

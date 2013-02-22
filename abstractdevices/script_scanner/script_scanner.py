@@ -53,6 +53,8 @@ class ScriptScanner(LabradServer, Signals):
                 print 'Script Control Error importing: ', e
             except AttributeError:
                 print 'There is no class {0} in module {1}'.format(class_name, module) 
+            except SyntaxError as e:
+                print 'Incorrect syntax in file {0}'.format(import_path, class_name)
             else:
                 try:
                     name = cls.name
