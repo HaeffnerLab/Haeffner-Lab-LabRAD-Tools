@@ -95,6 +95,9 @@ class Queue(object):
     def advance(self):
         self.currentSet = (self.currentSet % max) + 1
 
+    def reset(self):
+        self.currentSet = 1
+
     def insert(self, v):
         ''' Always insert voltages to the current queue position '''
         v.program(self.currentSet)
@@ -117,7 +120,7 @@ class CCTDACServer( LabradServer ):
     name = SERVERNAME
     serNode = 'cctmain'
     onNewUpdate = Signal(SIGNALID, 'signal: ports updated', 's')
-    positionIndex = 0
+    currentPosition = 0
     registryPath = ['', 'Servers', SERVERNAME]
     
     @inlineCallbacks
@@ -125,11 +128,10 @@ class CCTDACServer( LabradServer ):
         from labrad.wrappers import connectAsync
         cxn = yield connectAsync()
         self.pulser = cxn.pulser
-        self.registry = self.client.registry
-        
+        self.registry = self.client.registry        
         self.DACs = hc.DACDict
         self.queue = Queue()
-        self.current = {}      
+        self.current = {}   
         self.createInfo()
         self.listeners = set()
 
@@ -137,7 +139,7 @@ class CCTDACServer( LabradServer ):
     def createInfo( self ):
         ''' Go through the list of sma outs and electrodes and try to detect calibrations '''
         degreeOfCalibration = 3 # 1st order fit. update this to auto-detect
-        yield self.registry.cd(self.registryPath + ['Calibrations'])
+        yield self.registry.cd(self.registryPath + ['Calibrations'], True)
         subs, keys = yield self.registry.dir()
         sbs = ''
         for s in subs: sbs += s + ', '
@@ -156,13 +158,19 @@ class CCTDACServer( LabradServer ):
                 prec = hc.PREC_BITS
                 chan.calibration = [2**(prec - 1), float(2**(prec))/(vMax - vMin) ]
 
+        yield self.registry.cd(self.registryPath + ['smaVoltages'], True)
+        for k in hc.DACDict.keys():
+            if hc.DACDict[k].smaOutNumber:
+                try: self.current[k] = yield self.registry.get(k)
+                except: self.current[k] = 0.
         yield self.registry.cd(self.registryPath)
-        smaVoltages = yield self.registry.get('smaVoltages')
-        self.current = {k: v for (k, v) in smaVoltages}
-        Cpath = yield self.registry.get('MostRecent')
-        yield self.setMultipoleControlFile(0, Cpath)
-        ms = yield self.registry.get('MultipoleSet')
-        yield self.setMultipoleValues(0, ms)        
+        try:
+            Cpath = yield self.registry.get('MostRecent')
+            yield self.setMultipoleControlFile(0, Cpath)
+        except: self.spline = {k: {j: [0.] for j in hc.multipoles} for k in hc.DACDict.keys()}
+        try: ms = yield self.registry.get('MultipoleSet')                    
+        except: ms = [(k, 0) for k in hc.multipoles]
+        yield self.setMultipoleValues(0, ms)
 
     @inlineCallbacks
     def sendToPulser(self, c):
@@ -220,13 +228,16 @@ class CCTDACServer( LabradServer ):
         yield self.sendToPulser(c)
 
     @setting( 3, "Set Individual Analog Voltages", analogVoltages = '*(sv)', returns = '')
-    def setIndividualAnalogVoltages(self, c, analogVoltages):
+    def setIndividualAnalogVoltages(self, c, analogVoltages, advance = 0, reset = 0):
         """
         Pass a list of tuples of the form:
         (portNum, newVolts)
         """
         for (port, av) in analogVoltages:
             self.queue.insert(Voltage(self.DACs[port], analogVoltage = av))
+            if hc.DACDict[port].smaOutNumber:
+                self.registry.cd(self.registryPath + ['smaVoltages'])
+                self.registry.set(port, av)
         yield self.sendToPulser(c)
 
     @setting( 4, "Get Analog Voltages", returns = '*(sv)' )
@@ -269,12 +280,12 @@ class CCTDACServer( LabradServer ):
     @setting( 7, "Set Multipole Values", ms = '*(sv): dictionary of multipole values')
     def setMultipoleValues(self, c, ms):
         """
-        set should be a dictionary with keys 'Ex', 'Ey', 'U1', etc.
+        set should be a dictionary with keys 'Ex', 'Ey', 'U2', etc.
         """
         self.multipoleSet = {}
         for (k,v) in ms:
             self.multipoleSet[k] = v
-        yield self.setVoltages(c, self.positionIndex)
+        yield self.setVoltages(c, self.currentPosition)
         yield self.registry.cd(self.registryPath)
         yield self.registry.set('MultipoleSet', ms)
 
@@ -286,7 +297,7 @@ class CCTDACServer( LabradServer ):
         return self.multipoleSet.items()
                         
     @setting( 10, "Set Voltages", newPosition = 'i')
-    def setVoltages(self, c, newPosition = positionIndex):
+    def setVoltages(self, c, newPosition = currentPosition, advance = 0, reset = 0):
         n = newPosition
         newVoltageSet = []
         for k in self.DACs.keys():
@@ -298,13 +309,61 @@ class CCTDACServer( LabradServer ):
                 for j in hc.multipoles:
                     val += self.spline[k][j][n] * self.multipoleSet[j]
                 newVoltageSet.append( (k, val) )
-        yield self.setIndividualAnalogVoltages(c, newVoltageSet)
-        self.positionIndex = n
-                
-    @setting(12, "do nothing")
+        yield self.setIndividualAnalogVoltages(c, newVoltageSet, advance = advance, reset = reset)
+        self.currentPosition = n
+
+    @setting( 11, "Set First Voltages")
+    def setFirstVoltages(self, c):
+        yield self.setVoltages(c, reset = 1)
+
+    @setting( 12, "Set Next Voltages", newPosition = 'i')
+    def setFutureVoltages(self, c, newPosition):
+        yield self.setVoltages(c, newPosition = newPosition, advance = 1)        
+    
+    @setting( 13, "Get Position", returns = 'i')
+    def getPosition(self, c):
+        return self.currentPosition
+
+    @setting(14, "do nothing")
     def doNone(self, c):
         pass
                 
 if __name__ == "__main__":
     from labrad import util
     util.runServer( CCTDACServer() )
+
+"""
+Notes for setting up DACSERVER:
+
+example of a Cfile corresponding to a trap w/ 23 electrodes, 4 multipole values, and trap position of 850um:
+
+Ex_1
+Ex_2
+.
+.
+.
+Ex_23
+Ey_1
+.
+.
+.
+U2_23
+850
+
+Be sure to specify multipole names in DacCanfiguration.py, e.g., multipoles = ['Ex', Ey', 'Ez', 'U2'].
+
+
+or, if you intend to do shuttling, place Cfiles next to each other:
+Ex_1.1   Ex_1.2
+Ex_2.1   Ex_2.2
+.        .
+.        .
+.        .
+Ex_23.1  .
+Ey_1.1   .
+.        .
+.        .
+.        .
+U2_23.1  U2_23.2
+850      900
+"""

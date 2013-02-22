@@ -51,5 +51,5 @@ class hardwareConfiguration(object):
         '22': channelConfiguration(7 , trapElectrodeNumber = 22),
         '23': channelConfiguration(6 , trapElectrodeNumber = 23),
         #-----------------------SMA Outs------------------------#
-        'RF bias': channelConfiguration(9, smaOutNumber = 1, name = 'RF bias', allowedVoltageRange = (-2.0, 0))
+        'RF bias': channelConfiguration(9, smaOutNumber = 1, name = 'RF bias', allowedVoltageRange = (-2.0, 0)),
         }
