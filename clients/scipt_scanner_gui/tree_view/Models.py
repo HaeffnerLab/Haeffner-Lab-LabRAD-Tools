@@ -43,9 +43,7 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
                 textIndex = self.createIndex(index.row(), 1, index.internalPointer())
                 self.dataChanged.emit(index, index)
                 self.dataChanged.emit(textIndex, textIndex)
-                print 'in setting data'
                 if not isinstance(node, CollectionNode):
-                    print 'emitting signal out'
                     self.on_new_parameter.emit(node.path(), node.full_parameter())
                 return True
         return False
@@ -97,24 +95,25 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         childNode = CollectionNode(name)
         parentNode.insertChild(0, childNode)
         self.endInsertRows()
-        #get index of the newly inserted collection and return it
         index = self.index(0, 0, parent)
         return index
     
     def insert_parameter(self, parameter_name, info, parent_index):
         collectionNode = self.getNode(parent_index)
-        self.beginInsertRows(parent_index, 0, 0)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
         childNode = ParameterNode(parameter_name, info, collectionNode)
         self.endInsertRows()
-        index = self.index(0, 0, parent_index)
+        index = self.index(row_count, 0, parent_index)
         return index
 
     def insert_scan(self, parameter_name, info, parent_index):
         collectionNode = self.getNode(parent_index)
-        self.beginInsertRows(parent_index, 0, 0)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
         childNode = ScanNode(parameter_name, info, collectionNode)
         self.endInsertRows()
-        index = self.index(0, 0, parent_index)
+        index = self.index(row_count, 0, parent_index)
         return index
     
     def set_parameter(self, index, info):

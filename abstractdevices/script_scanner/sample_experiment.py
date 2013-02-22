@@ -37,25 +37,25 @@ class crashing_example(fft_spectrum):
 
 if __name__ == '__main__':
     #normal way to launch
-#    cxn = labrad.connect()
-#    scanner = cxn.scriptscanner
-#    exprt = fft_spectrum(cxn = cxn)
-#    ident = scanner.register_external_launch(exprt.name)
-#    exprt.execute(ident)
-#    #testing single launch
-#    cxn = labrad.connect()
-#    scanner = cxn.scriptscanner
-#    from scan_methods import single
-#    exprt = single(fft_spectrum)
-#    ident = scanner.register_external_launch(exprt.name)
-#    exprt.execute(ident)
-#    #testing repeat launch
-#    cxn = labrad.connect()
-#    scanner = cxn.scriptscanner
-#    from scan_methods import repeat_reload
-#    exprt = repeat_reload(fft_spectrum, 10)
-#    ident = scanner.register_external_launch(exprt.name)
-#    exprt.execute(ident)
+    cxn = labrad.connect()
+    scanner = cxn.scriptscanner
+    exprt = fft_spectrum(cxn = cxn)
+    ident = scanner.register_external_launch(exprt.name)
+    exprt.execute(ident)
+    #testing single launch
+    cxn = labrad.connect()
+    scanner = cxn.scriptscanner
+    from scan_methods import single
+    exprt = single(fft_spectrum)
+    ident = scanner.register_external_launch(exprt.name)
+    exprt.execute(ident)
+    #testing repeat launch
+    cxn = labrad.connect()
+    scanner = cxn.scriptscanner
+    from scan_methods import repeat_reload
+    exprt = repeat_reload(fft_spectrum, 10)
+    ident = scanner.register_external_launch(exprt.name)
+    exprt.execute(ident)
     #testing scan
     cxn = labrad.connect()
     scanner = cxn.scriptscanner

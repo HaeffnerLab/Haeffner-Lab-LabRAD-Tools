@@ -33,6 +33,7 @@ class script_scanner_gui(object):
             yield self.setupListenersParameterVault()
             self.connect_layouts()
         except Exception, e:
+            print e
             print 'script_scanner_gui: servers not available'
             self.disable(True)
         self.cxn.on_connect['ScriptScanner'].append(self.reinitialize_scriptscanner)
@@ -189,14 +190,17 @@ class script_scanner_gui(object):
     def on_experiment_selected(self, selected_experiment):
         sc = self.cxn.servers['ScriptScanner']
         selected_experiment = str(selected_experiment)
-        try:
-            parameters = yield sc.get_script_parameters(selected_experiment)
-            print 'experiment', selected_experiment
-            print 'parameters', parameters
-        except self.Error as e:
-            self.displayError(e.msg)
+        if selected_experiment:
+            try:
+                parameters = yield sc.get_script_parameters(selected_experiment)
+            except self.Error as e:
+                self.displayError(e.msg)
+            else:
+                self.ParametersEditor.show_only(parameters)
+        else:
+            #empty string corresponds to no selection
+            self.ParametersEditor.show_all()
         
-    
     def get_widgets(self):
         return self.scripting_widget
     

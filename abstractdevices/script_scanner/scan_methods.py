@@ -71,7 +71,7 @@ class experiment(experiment_info):
     
     def _load_parameters(self, overwrite = False):
         d = self._load_parameters_dict(self.required_parameters)
-        self.parameters.update(d)
+        self.parameters.update(d, overwrite = overwrite)
 
     def _load_parameters_dict(self, required):
         '''loads the required parameter into a treedict'''
@@ -85,15 +85,14 @@ class experiment(experiment_info):
                 d['{0}.{1}'.format(collection, parameter_name)] = value
         return d
     
-    def set_parameters(self, parameter_dict = {}):
+    def set_parameters(self, parameter_dict):
         '''
         can reload all parameter values from parameter_vault or replace parameters with values from the provided parameter_dict
         '''
-        required = [(self.name, req) for req in self.required_parameters]
-        for param,value in parameter_dict.keys():
-            if param in required:
-                self.pv.check_parameters(param, value)
-                self.__dict__[param] = value
+        udpate_dict = TreeDict()
+        for (collection,parameter_name), value in parameter_dict.iteritems():
+            udpate_dict['{0}.{1}'.format(collection, parameter_name)] = value
+            self.parameters.update(udpate_dict)
     
     def reload_parameters_vault(self):
         self._load_parameters(overwrite = True)

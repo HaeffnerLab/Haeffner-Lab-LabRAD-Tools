@@ -80,6 +80,13 @@ class experiment_selector_widget(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         label = QtGui.QLabel("Experiment", font = self.font)
         self.dropdown = QtGui.QComboBox()
+        self.dropdown.addItem('')#add empty item for no selection state    
+        #enable sorting
+        sorting_model = QtGui.QSortFilterProxyModel(self.dropdown)
+        sorting_model.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        sorting_model.setSourceModel(self.dropdown.model())
+        self.dropdown.model().setParent(sorting_model)
+        self.dropdown.setModel(sorting_model)
         self.run_button = QtGui.QPushButton("Run")
         self.repeat_button = QtGui.QPushButton("Repeat")
         self.scan_button = QtGui.QPushButton("Scan")
@@ -120,3 +127,4 @@ class experiment_selector_widget(QtGui.QWidget):
     
     def addExperiment(self, experiment):
         self.dropdown.addItem(experiment)
+        self.dropdown.model().sort(0)

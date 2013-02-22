@@ -44,6 +44,22 @@ class ParametersEditor(base, form):
 #        self.uiTree.expandAll()
 #        self.uiTree.selectionModel().select(self._proxyModel.mapFromSource(index), self.uiTree.selectionModel().Select)
     
+    def show_only(self, params):
+        for param in params:
+            print 'showing only!'
+            index = self._parameter[param]
+            print index.internalPointer().row()
+#            print index.parent().internalPointer().index
+#            self._proxyModel.ma
+#            parent_index =  self._proxyModel.mapFromSource(index.parent())
+#            print parent_index.internalPointer()._children
+#            self.uiTree.setRowHidden(0 , parent_index , True)
+#            print index.row(), index.column()
+        pass
+    
+    def show_all(self):
+        pass
+    
     def setup_model(self): 
 #        self.uiTree.setSortingEnabled(True)
         self._rootNode   = Node("Root")

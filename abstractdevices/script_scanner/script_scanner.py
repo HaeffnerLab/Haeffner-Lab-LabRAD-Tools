@@ -66,7 +66,7 @@ class ScriptScanner(LabradServer, Signals):
     def get_available_scripts(self, c):
         return self.script_parameters.keys()
     
-    @setting(1, "Get Script Parameters", script = 's', returns = '*2s')
+    @setting(1, "Get Script Parameters", script = 's', returns = '*(ss)')
     def get_script_parameters(self, c, script):
         if script not in self.script_parameters.keys():
             raise Exception ("Script {} Not Found".format(script))
@@ -126,7 +126,7 @@ class ScriptScanner(LabradServer, Signals):
         if script_name not in self.script_parameters.keys():
             raise Exception ("Script {} Not Found".format(script_name))
         script = self.script_parameters[script_name]
-        repeat_launch = scan_methods.repeat_reload(script.cls, repeatitions = repeat)
+        repeat_launch = scan_methods.repeat_reload(script.cls, repetitions = repeat)
         scan_id = self.scheduler.add_scan_to_queue(repeat_launch)
         return scan_id
     
