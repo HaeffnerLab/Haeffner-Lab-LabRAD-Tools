@@ -3,7 +3,7 @@ class config(object):
     #list in the format (import_path, class_name)
     scripts = [
                ('lattice.scripts.experiments.FFT.fft_spectrum', 'fft_spectrum'), 
-#               ('sample_experiment', 'conflicting_experiment'),
+               ('lattice.scripts.experiments.FFT.fft_peak_area', 'fft_peak_area'), 
 #               ('sample_experiment', 'non_conflicting_experiment'),
 #               ('sample_experiment', 'crashing_example'), 
                ]
