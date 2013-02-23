@@ -20,13 +20,15 @@ class experiment_info(object):
         
 class experiment(experiment_info):
     
-    def __init__(self, name = None, required_parameters = None, cxn = None):
+    def __init__(self, name = None, required_parameters = None, cxn = None, min_progress = 0.0, max_progress = 100.0,):
         super(experiment, self).__init__(name, required_parameters)
         self.cxn = cxn
         self.pv = None
         self.sc = None
         self.context = None
-    
+        self.min_progress = min_progress
+        self.max_progress = max_progress
+
     def _connect(self):
         if self.cxn is None:
             try:
@@ -117,6 +119,9 @@ class experiment(experiment_info):
         subexprt._load_parameters()
         return subexprt
     
+    def set_progress_limits(self, min_progress, max_progress):
+        self.min_progress = min_progress
+        self.max_progress = max_progress
     #functions to reimplement in the subclass
     def initialize(self, cxn, context, ident):
         '''
@@ -153,12 +158,10 @@ class repeat_reload(experiment):
     '''
     Used to repeat an experiment multiple times, while reloading the parameters every repeatition
     '''
-    def __init__(self, script_cls, repetitions, min_progress = 0.0, max_progress = 100.0, save_data = False):
+    def __init__(self, script_cls, repetitions, save_data = False):
         self.script_cls = script_cls
         self.repetitions = repetitions
         self.save_data = save_data
-        self.min_progress = min_progress
-        self.max_progress = max_progress
         scan_name = self.name_format(script_cls.name)
         super(repeat_reload,self).__init__(scan_name)
 
@@ -175,6 +178,7 @@ class repeat_reload(experiment):
         for i in range(self.repetitions):
             if self.pause_or_stop(): return
             self.script.reload_parameters_vault()
+            self.script.set_progress_limits(100.0 * i / self.repetitions, 100.0 * (i + 1) / self.repetitions )
             result = self.script.run(cxn, context)
             if self.save_data and result is not None:
                 cxn.data_vault.add([i, result], context = context)
@@ -200,7 +204,7 @@ class scan_experiment_1D(experiment):
     '''
     Used to repeat an experiment multiple times
     '''
-    def __init__(self, script_cls, parameter, minim, maxim, steps, units, min_progress = 0.0, max_progress = 100.0, save_data = False):
+    def __init__(self, script_cls, parameter, minim, maxim, steps, units, save_data = False):
         self.script_cls = script_cls
         self.parameter = parameter
         self.scan_points = linspace(minim, maxim, steps)

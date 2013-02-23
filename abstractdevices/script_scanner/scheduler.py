@@ -165,6 +165,7 @@ class scheduler(object):
         self.scan_ID_counter += 1
         status = script_semaphore(scan_id, self.signals)
         self.running[scan_id] = running_script(scan, Deferred(), status , externally_launched = True)
+        self.signals.on_running_new_script((scan_id, scan.name))
         return scan_id
         
     def remove_from_running(self, deferred_result, running_id):

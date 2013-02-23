@@ -22,6 +22,7 @@ from signals import Signals
 from configuration import config
 import scan_methods
 from scheduler import scheduler
+import sys
 
 class script_class_parameters(object):
     '''
@@ -47,7 +48,8 @@ class ScriptScanner(LabradServer, Signals):
         '''
         for import_path, class_name in config.scripts:
             try:
-                module = __import__(import_path)
+                __import__(import_path)
+                module = sys.modules[import_path]
                 cls = getattr(module, class_name)
             except ImportError as e:
                 print 'Script Control Error importing: ', e

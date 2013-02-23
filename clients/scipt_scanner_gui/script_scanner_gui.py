@@ -91,40 +91,39 @@ class script_scanner_gui(object):
     @inlineCallbacks
     def setupListenersScriptScanner(self):
         sc = self.cxn.servers['ScriptScanner']
+        #connect server signals
+        yield sc.signal_on_queued_new_script(self.SIGNALID, context = self.context)
+        yield sc.signal_on_queued_removed(self.SIGNALID + 1, context = self.context)
+        yield sc.signal_on_scheduled_new_duration(self.SIGNALID + 2, context = self.context)
+        yield sc.signal_on_scheduled_new_script(self.SIGNALID + 3, context = self.context)    
+        yield sc.signal_on_scheduled_removed(self.SIGNALID + 4, context = self.context)  
+        yield sc.signal_on_running_new_script(self.SIGNALID + 5, context = self.context)
+        yield sc.signal_on_running_new_status(self.SIGNALID + 6, context = self.context)
+        yield sc.signal_on_running_script_finished(self.SIGNALID + 7, context = self.context)
+        yield sc.signal_on_running_script_finished_error(self.SIGNALID + 8, context = self.context)
+        yield sc.signal_on_running_script_paused(self.SIGNALID + 9, context = self.context)
         #signals
         if not self.subscribedScriptScanner:
-            yield sc.signal_on_queued_new_script(self.SIGNALID, context = self.context)
-            yield sc.signal_on_queued_removed(self.SIGNALID + 1, context = self.context)
-            yield sc.signal_on_scheduled_new_duration(self.SIGNALID + 2, context = self.context)
-            yield sc.signal_on_scheduled_new_script(self.SIGNALID + 3, context = self.context)    
-            yield sc.signal_on_scheduled_removed(self.SIGNALID + 4, context = self.context)  
-            yield sc.signal_on_running_new_script(self.SIGNALID + 5, context = self.context)
-            yield sc.signal_on_running_new_status(self.SIGNALID + 6, context = self.context)
-            yield sc.signal_on_running_script_finished(self.SIGNALID + 7, context = self.context)
-            yield sc.signal_on_running_script_finished_error(self.SIGNALID + 8, context = self.context)
-            yield sc.signal_on_running_script_paused(self.SIGNALID + 9, context = self.context)
+            yield sc.addListener(listener = self.on_new_queued_script, source = None, ID = self.SIGNALID, context = self.context) 
+            yield sc.addListener(listener = self.on_removed_queued_sciprt, source = None, ID = self.SIGNALID + 1, context = self.context)   
+            yield sc.addListener(listener = self.on_scheduled_new_duration, source = None, ID = self.SIGNALID + 2, context = self.context)
+            yield sc.addListener(listener = self.on_scheduled_new_script, source = None, ID = self.SIGNALID + 3, context = self.context)
+            yield sc.addListener(listener = self.on_scheduled_removed, source = None, ID = self.SIGNALID + 4, context = self.context)
+            yield sc.addListener(listener = self.on_running_new_script, source = None, ID = self.SIGNALID + 5, context = self.context)
+            yield sc.addListener(listener = self.on_running_new_status, source = None, ID = self.SIGNALID + 6, context = self.context)
+            yield sc.addListener(listener = self.on_running_script_finished, source = None, ID = self.SIGNALID + 7, context = self.context)
+            yield sc.addListener(listener = self.on_running_script_finished_error, source = None, ID = self.SIGNALID + 8, context = self.context)
+            yield sc.addListener(listener = self.on_running_script_paused, source = None, ID = self.SIGNALID + 9, context = self.context)           
             self.subscribedScriptScanner = True
-        #add listeners
-        yield sc.addListener(listener = self.on_new_queued_script, source = None, ID = self.SIGNALID, context = self.context) 
-        yield sc.addListener(listener = self.on_removed_queued_sciprt, source = None, ID = self.SIGNALID + 1, context = self.context)   
-        yield sc.addListener(listener = self.on_scheduled_new_duration, source = None, ID = self.SIGNALID + 2, context = self.context)
-        yield sc.addListener(listener = self.on_scheduled_new_script, source = None, ID = self.SIGNALID + 3, context = self.context)
-        yield sc.addListener(listener = self.on_scheduled_removed, source = None, ID = self.SIGNALID + 4, context = self.context)
-        yield sc.addListener(listener = self.on_running_new_script, source = None, ID = self.SIGNALID + 5, context = self.context)
-        yield sc.addListener(listener = self.on_running_new_status, source = None, ID = self.SIGNALID + 6, context = self.context)
-        yield sc.addListener(listener = self.on_running_script_finished, source = None, ID = self.SIGNALID + 7, context = self.context)
-        yield sc.addListener(listener = self.on_running_script_finished_error, source = None, ID = self.SIGNALID + 8, context = self.context)
-        yield sc.addListener(listener = self.on_running_script_paused, source = None, ID = self.SIGNALID + 9, context = self.context)           
-        
-    
+
     @inlineCallbacks
     def setupListenersParameterVault(self):
         pv = self.cxn.servers['ParameterVault']
+        yield pv.signal__parameter_change(self.SIGNALID + 10, context = self.context)
         if not self.subscribedParametersVault:
-            yield pv.signal__parameter_change(self.SIGNALID + 10, context = self.context)
+            yield pv.addListener(listener = self.on_pv_parameter_change, source = None, ID = self.SIGNALID + 10, context = self.context) 
             self.subscribedParametersVault = True
-        yield pv.addListener(listener = self.on_pv_parameter_change, source = None, ID = self.SIGNALID + 10, context = self.context) 
-    
+        
     @inlineCallbacks
     def on_pv_parameter_change(self, signal, info):
         collection, name = info

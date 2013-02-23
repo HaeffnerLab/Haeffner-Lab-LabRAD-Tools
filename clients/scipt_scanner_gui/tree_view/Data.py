@@ -74,10 +74,17 @@ class ParameterNode(Node):
         self.set_full_info(info)
         
     def set_full_info(self, info):
-        self._units = info[2].units
-        self._min = info[0][self._units]
-        self._max = info[1][self._units]
-        self._value = info[2][self._units]
+        try:
+            self._units = info[2].units
+            self._min = info[0][self._units]
+            self._max = info[1][self._units]
+            self._value = info[2][self._units]
+        except AttributeError:
+            #unitless
+            self._units = ''
+            self._min = info[0]
+            self._max = info[1]
+            self._value = info[2]
     
     def path(self):
         return (self._collection, self.name())
