@@ -21,6 +21,13 @@ class ParametersEditor(base, form):
         self._parameter = {}
         self._hidden = []
     
+    def clear_all(self):
+        'clears all parameters'
+        self._model.clear_model()
+        self._collection = {}
+        self._parameter = {}
+        self._hidden = []
+    
     def add_collection_node(self, name):
         node = self._model.insert_collection(name)
         self._collection[name] = node

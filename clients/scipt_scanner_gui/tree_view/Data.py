@@ -55,6 +55,9 @@ class Node(object):
     
     def setData(self, column, value):
         pass
+    
+    def clear_data(self):
+        del self._children[:]
 
 class CollectionNode(Node):
     def __init__(self, name, parent = None):

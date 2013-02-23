@@ -33,6 +33,13 @@ class scripting_widget(QtGui.QWidget):
         layout.addWidget(self.running)
         self.setLayout(layout)
     
+    def clear_all(self):
+        '''clears all information'''
+        self.selector.clear_all()
+        self.running.clear_all()
+        self.scheduled.clear_all()
+        self.queued.clear_all()
+    
     #selector
     def addExperiment(self, experiment):
         self.selector.addExperiment(experiment)

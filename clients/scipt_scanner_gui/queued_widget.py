@@ -119,6 +119,9 @@ class queued_combined(QtGui.QWidget):
         self.setupLayout()
         self.connect_layout()
     
+    def clear_all(self):
+        self.ql.clear()
+    
     def setupLayout(self):
         layout = QtGui.QGridLayout()
         title = QtGui.QLabel("Queued", font = self.font)

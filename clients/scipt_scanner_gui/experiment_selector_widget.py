@@ -100,6 +100,10 @@ class experiment_selector_widget(QtGui.QWidget):
         self.setLayout(layout)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
     
+    def clear_all(self):
+        self.dropdown.clear()
+        self.dropdown.addItem('')#add empty item for no selection state    
+    
     def connect_layout(self):
         self.run_button.pressed.connect(self.run_emit_selected)
         self.repeat_button.pressed.connect(self.on_repeat_button)

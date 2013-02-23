@@ -122,3 +122,9 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         #refresh all columns
         max_index= self.createIndex(index.row(), node.columns, index.internalPointer())
         self.dataChanged.emit(index, max_index)
+        
+    def clear_model(self):
+        rows = self._rootNode.childCount()
+        self.beginRemoveRows(QtCore.QModelIndex(), 0, rows)
+        self._rootNode.clear_data()
+        self.endRemoveRows()

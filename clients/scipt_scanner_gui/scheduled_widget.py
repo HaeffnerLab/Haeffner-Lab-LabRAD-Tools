@@ -141,6 +141,9 @@ class scheduled_combined(QtGui.QWidget):
         self.setupLayout()
         self.connect_layout()
     
+    def clear_all(self):
+        self.sl.clear()
+    
     def add(self, ident, name, duration):
         self.sl.add(ident, name, duration)
     

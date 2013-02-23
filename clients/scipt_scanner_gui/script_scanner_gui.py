@@ -43,12 +43,16 @@ class script_scanner_gui(object):
     
     @inlineCallbacks
     def reinitialize_scriptscanner(self):
+        self.scripting_widget.clear_all()
+        yield self.populateExperiments()
         yield self.setupListenersScriptScanner()
         if self.cxn.servers['ParameterVault'] is not None:
             self.disable(False)
     
     @inlineCallbacks
     def reinitialize_parameter_vault(self):
+        self.ParametersEditor.clear_all()
+        yield self.populateParameters()
         yield self.setupListenersParameterVault()
         if self.cxn.servers['ScriptScanner'] is not None:
             self.disable(False)

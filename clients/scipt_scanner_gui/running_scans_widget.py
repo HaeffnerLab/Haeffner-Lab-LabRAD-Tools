@@ -206,6 +206,9 @@ class running_combined(QtGui.QWidget):
         self.setupLayout()
         self.connect_layout()
     
+    def clear_all(self):
+        self.scans_list.clear()
+    
     def setupLayout(self):
         layout = QtGui.QGridLayout()
         title = QtGui.QLabel("Running", font = self.font)

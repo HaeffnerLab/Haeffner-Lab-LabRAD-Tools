@@ -28,6 +28,7 @@ class experiment(experiment_info):
         self.context = None
         self.min_progress = min_progress
         self.max_progress = max_progress
+        self.should_stop = False
 
     def _connect(self):
         if self.cxn is None:
@@ -108,10 +109,10 @@ class experiment(experiment_info):
         '''
         allows to pause and to stop the experiment
         '''
-        should_stop = self.sc.pause_or_stop(self.ident)
-        if should_stop:
+        self.should_stop = self.sc.pause_or_stop(self.ident)
+        if self.should_stop:
             self.sc.stop_confirmed(self.ident)
-            return True
+        return self.should_stop
     
     def make_experiment(self, subexprt_cls):
         subexprt = subexprt_cls(cxn = self.cxn)
@@ -180,6 +181,7 @@ class repeat_reload(experiment):
             self.script.reload_parameters_vault()
             self.script.set_progress_limits(100.0 * i / self.repetitions, 100.0 * (i + 1) / self.repetitions )
             result = self.script.run(cxn, context)
+            if self.script.should_stop: return
             if self.save_data and result is not None:
                 cxn.data_vault.add([i, result], context = context)
             self.update_progress(i)
@@ -209,8 +211,6 @@ class scan_experiment_1D(experiment):
         self.parameter = parameter
         self.scan_points = linspace(minim, maxim, steps)
         self.scan_points = [WithUnit(pt, units) for pt in self.scan_points ]
-        self.min_progress = min_progress
-        self.max_progress = max_progress
         self.save_data = save_data
         scan_name = self.name_format(script_cls.name)
         super(scan_experiment_1D,self).__init__(scan_name)
@@ -228,7 +228,9 @@ class scan_experiment_1D(experiment):
         for i, scan_value in enumerate(self.scan_points):
             if self.pause_or_stop(): return
             self.script.set_parameters({self.parameter: scan_value})
+            self.script.set_progress_limits(100.0 * i / len(self.scan_points), 100.0 * (i + 1) / len(self.scan_points) )
             result = self.script.run(cxn, context)
+            if self.script.should_stop: return
             if self.save_data and result is not None:
                 cxn.data_vault.add([i, result], context = context)
             self.update_progress(i)
@@ -248,101 +250,3 @@ class scan_experiment_1D(experiment):
     
     def finalize(self, cxn, context):
         self.script.finalize(cxn, context)
-            
-#class excite_D(experiment):
-#    
-#    name = "Excite D"
-#    required_parameters = ['pulse_sequence_repetitions']
-#    #required_parameters.extend(self.sequence.all_variables())
-#
-#    def initialize(self, cxn, context, ident):
-#        self.cxn = cxn
-#        self.pulser = cxn.pulser
-#        self.context = context
-#        self.ident = ident
-#    
-#    def set_parameters(self, parameters):
-#        self.pulse_sequence_repetitions = parameters.get('pulse_sequence_repetitions', None)
-#    
-#    def check_parameters(self):
-#        #check self.pulse_sequence_repetitions
-#        pass
-#    
-#    def run(self):
-#        #saving and so on
-#        pass
-#
-#class spectrum729(experiment):
-#    
-#    name = "Spectrum 729"
-#    required_parameters = ['line_to_scan', 'should_save_data', 'should_fit']
-#    
-#    def initiailze(self, cxn, context, ident):
-#        self.cxn = cxn
-#        self.pulser = cxn.pulser
-#        self.context = context
-#        self.ident = ident
-#        self.fit = None
-#        
-#    def set_parameters(self , parameters):
-#        self.line_to_scan = parameters.get('line_to_scan', None)
-#        self.should_save_data = parameters.get('should_save_data', True)
-#        self.should_fit = parameters.get('should_fit', False)
-#        self.sequence_repetitions = parameters.get('sequence_repetitions', None)
-#        
-#    def get_fit(self):
-#        if self.fit is None:
-#            raise Exception("No Fit Available")
-#        return self.fit
-#    
-#    def get_fit_center(self):
-#        fit = self.get_fit()
-#        return fit[0]#or something
-#        
-#    def run(self):
-#        pass
-#    
-#    def finalize(self):
-#        pass
-#    
-#class cavity729_drift_track_scans(experiment):
-#    
-#    name = 'Drift Tracker 729'
-#    required_parameters = ['lines_to_scan']
-#    
-#    def initialize(self, cxn, ident):
-#        self.cxn = cxn
-#        self.dv = cxn.data_vault
-#        self.sd_tracker = cxn.sd_tracker
-#        self.spectrum = spectrum729()
-#        self.spectrum.initiailze(cxn, cxn.context(), ident)
-#    
-#    def set_parameters(self, d):
-#        self.lines_to_scan = d.get('lines_to_scan', None)
-#        
-#    def check_parameters(self):
-#        if self.lines_to_scan is None:
-#            raise Exception("{0}: lines_to_scan parameter not provided".format(self.name)
-#        elif not len(self.lines_to_scan) == 2:
-#            raise Exception("{0}: incorrect number of lines in lines_to_scan parameter".format(self.name()))
-#        transition_names = set(self.sd_tracker.get_transition_names())
-#        if not set(self.lines_to_scan).issubset(transition_names):
-#            raise Exception("{0}: some names in lines_to_scan are not recognized")
-#    
-#    def run(self):
-#        self.check_parameters()
-#        line_centers = []
-#        for line in self.lines_to_scan:
-#            self.spectrum.set_parameter({'line_to_scan':line})
-#            self.spectrum.run()
-#            try:
-#                center = self.spectrum.get_fit_center()
-#                line_centers.append(center)
-#            except Exception:
-#                #fit not found
-#                return
-#        submission = zip(self.lines_to_scan, line_centers)
-#        self.sd_tracker.submit_line_centers(submission)
-#        
-#    def finalize(self):
-#        self.spectrum.finalize()
