@@ -62,7 +62,9 @@ class experiment(experiment_info):
                 self.sc.error_finish_confirmed(self.ident, str(e))
         finally:
             if hasattr(self, 'cxn'):
-                self.cxn.disconnect()
+                if self.cxn is not None:
+                    self.cxn.disconnect()
+                    self.cxn = None
         
     def _initialize(self, cxn, context, ident):
         self._load_parameters()
@@ -83,6 +85,7 @@ class experiment(experiment_info):
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
             except Exception as e:
+                print e
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
                 d['{0}.{1}'.format(collection, parameter_name)] = value
