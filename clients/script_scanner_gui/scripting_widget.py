@@ -7,7 +7,7 @@ from experiment_selector_widget import experiment_selector_widget
 class scripting_widget(QtGui.QWidget):
     
     on_run = QtCore.pyqtSignal(str)
-    on_repeat = QtCore.pyqtSignal((str, int))
+    on_repeat = QtCore.pyqtSignal((str, int, bool))
     on_cancel_queued = QtCore.pyqtSignal(int)
     on_cancel_scheduled = QtCore.pyqtSignal(int)
     on_schedule = QtCore.pyqtSignal(str,float, str, bool)

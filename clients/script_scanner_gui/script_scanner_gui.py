@@ -268,11 +268,11 @@ class script_scanner_gui(object):
             self.displayError(e.msg)
         
     @inlineCallbacks
-    def repeat_script(self, name, repeatitions):
+    def repeat_script(self, name, repeatitions, save):
         sc = self.cxn.servers['ScriptScanner']
         name = str(name)
         try:
-            yield sc.new_script_repeat(name, repeatitions)
+            yield sc.new_script_repeat(name, repeatitions, save)
         except self.Error as e:
             self.displayError(e.msg)
     
