@@ -9,6 +9,7 @@ class experiment_info(object):
     holds informaton about the experiment
     '''
     required_parameters = []
+    external_parameters = []
     name = ''
     
     def __init__(self, name = None, required_parameters = None):
@@ -77,7 +78,9 @@ class experiment(experiment_info):
     def _load_parameters(self, overwrite = False):
         d = self._load_parameters_dict(self.required_parameters)
         self.parameters.update(d, overwrite = overwrite)
-
+        d = self._load_external_parameters(self.external_parameters)
+        self.parameters.update(d, overwrite = False)
+        
     def _load_parameters_dict(self, required):
         '''loads the required parameter into a treedict'''
         d = TreeDict()
@@ -89,6 +92,12 @@ class experiment(experiment_info):
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
                 d['{0}.{1}'.format(collection, parameter_name)] = value
+        return d
+    
+    def _load_external_parameters(self, params):
+        d = TreeDict()
+        for collection,parameter_name in params:
+            d['{0}.{1}'.format(collection, parameter_name)] = None
         return d
     
     def set_parameters(self, parameter_dict):
