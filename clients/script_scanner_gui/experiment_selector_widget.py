@@ -63,7 +63,7 @@ class schedule_dialog(QtGui.QDialog):
 class experiment_selector_widget(QtGui.QWidget):
     
     on_run = QtCore.pyqtSignal(str)
-    on_repeat = QtCore.pyqtSignal(str, int)
+    on_repeat = QtCore.pyqtSignal(str, int, bool)
     on_schedule = QtCore.pyqtSignal(str, float, str, bool)
     on_experiment_selected = QtCore.pyqtSignal(str)
     
@@ -124,7 +124,8 @@ class experiment_selector_widget(QtGui.QWidget):
         if dialog.exec_():
             duration = dialog.repeat.value()
             name = self.dropdown.currentText()
-            self.on_repeat.emit(name, duration)
+            should_save = dialog.should_save.isChecked()
+            self.on_repeat.emit(name, duration, should_save)
     
     def run_emit_selected(self):
         self.on_run.emit(self.dropdown.currentText())
