@@ -2,8 +2,11 @@ from PyQt4 import QtCore, QtGui, uic
 from Data import ParameterNode, ScanNode
 from editors.parameter_editor import ParameterEditor
 from editors.scan_editor import ScanEditor
+import os
 
-propBase, propForm = uic.loadUiType("Views/Editors.ui")
+basepath =  os.path.dirname(__file__)
+path = os.path.join(basepath,"..","Views", "Editors.ui")
+propBase, propForm = uic.loadUiType(path)
 
 class PropertiesEditor(propBase, propForm):
     

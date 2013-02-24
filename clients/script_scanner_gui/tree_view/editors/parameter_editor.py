@@ -1,6 +1,9 @@
 from PyQt4 import QtCore, QtGui, uic
+import os
 
-paramBase, paramForm = uic.loadUiType("Views/ParameterEditor.ui")
+basepath =  os.path.dirname(__file__)
+path = os.path.join(basepath,"..","..","Views", "ParameterEditor.ui")
+paramBase, paramForm = uic.loadUiType(path)
 
 class parameter_delegate(QtGui.QAbstractItemDelegate):
     def __init__(self, parent):

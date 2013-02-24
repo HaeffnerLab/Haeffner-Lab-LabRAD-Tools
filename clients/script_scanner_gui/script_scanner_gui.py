@@ -205,7 +205,7 @@ class script_scanner_gui(object):
             self.ParametersEditor.show_all()
         
     def get_widgets(self):
-        return self.scripting_widget
+        return self.scripting_widget, self.ParametersEditor
     
     def show(self):
         self.scripting_widget.show()

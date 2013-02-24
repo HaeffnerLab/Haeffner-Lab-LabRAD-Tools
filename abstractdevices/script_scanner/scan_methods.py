@@ -200,13 +200,14 @@ class repeat_reload(experiment):
     
     def navigate_data_vault(self, cxn, context):
         dv = cxn.data_vault
-        localtime = localtime()
-        dataset_name = self.name + strftime("%Y%b%d_%H%M_%S",localtime)
+        local_time = localtime()
+        dataset_name = self.name + strftime("%Y%b%d_%H%M_%S",local_time)
         directory = ['','ScriptScanner']
-        directory.extend([strftime("%Y%b%d",localtime), strftime("%H%M_%S", localtime)])
+        directory.extend([strftime("%Y%b%d",local_time), strftime("%H%M_%S", local_time)])
         dv.cd(directory, True, context = context)
-        dv.new(dataset_name, [('Iteration', 'Arb')], [self.script.name, 'Arb', 'Arb'])
-            
+        dv.new(dataset_name, [('Iteration', 'Arb')], [(self.script.name, 'Arb', 'Arb')], context = context)
+        dv.add_parameter('plotLive',True, context = context)
+        
     def update_progress(self, iteration):
         progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / self.repetitions
         self.sc.script_set_progress(self.ident,  progress)
@@ -249,12 +250,13 @@ class scan_experiment_1D(experiment):
     
     def navigate_data_vault(self, cxn, context):
         dv = cxn.data_vault
-        localtime = localtime()
-        dataset_name = self.name + strftime("%Y%b%d_%H%M_%S",localtime)
+        local_time = localtime()
+        dataset_name = self.name + strftime("%Y%b%d_%H%M_%S",local_time)
         directory = ['','ScriptScanner']
-        directory.extend([strftime("%Y%b%d",localtime), strftime("%H%M_%S", localtime)])
+        directory.extend([strftime("%Y%b%d",local_time), strftime("%H%M_%S", local_time)])
         dv.cd(directory, True, context = context)
-        dv.new(dataset_name, [('Iteration', 'Arb')], [self.script.name, 'Arb', 'Arb'])
+        dv.new(dataset_name, [('Iteration', 'Arb')], [(self.script.name, 'Arb', 'Arb')], context = context)
+        dv.add_parameter('plotLive',True, context = context)
             
     def update_progress(self, iteration):
         progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / len(self.scan_points)

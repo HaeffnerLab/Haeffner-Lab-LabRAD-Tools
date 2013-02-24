@@ -3,8 +3,11 @@ import sys
 from Data import Node, ParameterNode, CollectionNode, ScanNode
 from Models import ParametersTreeModel
 from PropertiesEditor import PropertiesEditor
-    
-base, form = uic.loadUiType("Views/ParametersEditor.ui")
+import os
+
+basepath =  os.path.dirname(__file__)
+path = os.path.join(basepath,"..","Views", "ParametersEditor.ui")
+base, form = uic.loadUiType(path)
 
 class ParametersEditor(base, form):
     

@@ -1,7 +1,10 @@
 from PyQt4 import QtCore, QtGui, uic
 from numpy import linspace
+import os
 
-scanBase, scanForm = uic.loadUiType("Views/ScanEditor.ui")
+basepath =  os.path.dirname(__file__)
+path = os.path.join(basepath,"..","..","Views", "ScanEditor.ui")
+scanBase, scanForm = uic.loadUiType(path)
 
 class scan_delegate(QtGui.QAbstractItemDelegate):
     def __init__(self, parent):
