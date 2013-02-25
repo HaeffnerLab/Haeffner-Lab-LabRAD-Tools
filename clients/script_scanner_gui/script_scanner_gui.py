@@ -311,6 +311,7 @@ class script_scanner_gui(QtGui.QWidget):
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
         self.setLayout(layout)
+        self.setWindowTitle('Script Scanner Gui')
     
     def displayError(self, text):
         message = QtGui.QMessageBox()

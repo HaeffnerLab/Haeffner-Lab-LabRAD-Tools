@@ -5,11 +5,10 @@ class config(object):
                ('lattice.scripts.experiments.FFT.fft_spectrum', 'fft_spectrum'), 
                ('lattice.scripts.experiments.FFT.fft_peak_area', 'fft_peak_area'), 
                ('lattice.scripts.experiments.FFT.fft_hv_scan', 'fft_hv_scan'), 
-#               ('sample_experiment', 'non_conflicting_experiment'),
-#               ('sample_experiment', 'crashing_example'), 
+               ('lattice.scripts.experiments.Misc.set_high_volt', 'set_high_volt'), 
+               ('lattice.scripts.experiments.Misc.set_linetrigger_offset', 'set_linetrigger_offset'), 
                ]
 
-    #experiments are allowed to run together
     allowed_concurrent = {
 #        'fft_spectrum': ['non_conflicting_experiment'],
 #        'non_conflicting_experiment' : ['fft_spectrum'],

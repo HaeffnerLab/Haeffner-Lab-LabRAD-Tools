@@ -20,6 +20,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         self.setup_layout(selected, experiment_list, parameter_info)
         self.connect_layout()
         self.on_same_checked(self.same.isChecked())
+        self.on_parameter_picked(self.parameter.currentIndex())
         
     def get_parameter(self):
         index = self.parameter.currentIndex()
