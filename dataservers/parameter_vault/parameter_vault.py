@@ -103,9 +103,19 @@ class ParameterVault(LabradServer):
         if t == 'parameter':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
             return item[2]
-        else:
-            #parameter type not known
+        elif t == 'string':
+            return item
+        elif t == 'bool':
+            return item
+        elif t == 'scan':
+            minim,maxim = item[0]
+            start,stop,steps = item[1]
+            assert minim <= start <= maxim, "Parameter {} Out of Bound".format(name)
+            assert minim <= stop <= maxim, "Parameter {} Out of Bound".format(name)
+            return (start, stop, steps)
+        else:#parameter type not known
             return value
+        
 
     @setting(0, "Set Parameter", collection = 's', parameter_name = 's', value = '?', full_info = 'b', returns = '')
     def setParameter(self, c, collection, parameter_name, value, full_info = False):

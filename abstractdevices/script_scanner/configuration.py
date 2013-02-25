@@ -7,6 +7,9 @@ class config(object):
                ('lattice.scripts.experiments.FFT.fft_hv_scan', 'fft_hv_scan'), 
                ('lattice.scripts.experiments.Misc.set_high_volt', 'set_high_volt'), 
                ('lattice.scripts.experiments.Misc.set_linetrigger_offset', 'set_linetrigger_offset'), 
+               ('lattice.scripts.experiments.CavityScan.scan_cavity', 'scan_cavity'), 
+               ('lattice.scripts.experiments.CavityScan.scan_cavity_397', 'scan_cavity_397'), 
+               ('lattice.scripts.experiments.CavityScan.scan_cavity_866', 'scan_cavity_866'), 
                ]
 
     allowed_concurrent = {
