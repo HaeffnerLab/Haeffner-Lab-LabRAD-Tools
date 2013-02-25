@@ -134,13 +134,20 @@ class ScriptScanner(LabradServer, Signals):
         scan_id = self.scheduler.add_scan_to_queue(repeat_launch)
         return scan_id
     
-    @setting(12, "New Script Scan", script_name = 's', parameter = 's', minim = 'v', maxim = 'v', steps = 'w', units = 's')
-    def new_scan(self, c, script_name, parameter, minim, maxim, steps, units):
+    @setting(12, "New Script Scan", scan_script_name = 's', measure_script_name = 's', collection = 's', parameter_name = 's', minim = 'v', maxim = 'v', steps = 'w', units = 's')
+    def new_scan(self, c, scan_script_name, measure_script_name, collection, parameter_name, minim, maxim, steps, units):
         #need error checking that parmaters are valid
-        if script_name not in self.script_parameters.keys():
-            raise Exception ("Script {} Not Found".format(script_name))
-        script = self.script_parameters[script_name]
-        scan_launch = scan_methods.scan_experiment_1D(script.cls, parameter, minim, maxim, steps, units)
+        if scan_script_name not in self.script_parameters.keys():
+            raise Exception ("Script {} Not Found".format(scan_script_name))
+        if measure_script_name not in self.script_parameters.keys():
+            raise Exception ("Script {} Not Found".format(measure_script_name))
+        scan_script = self.script_parameters[scan_script_name]
+        measure_script = self.script_parameters[measure_script_name]
+        parameter = (collection,parameter_name)
+        if scan_script == measure_script:
+            scan_launch = scan_methods.scan_experiment_1D(scan_script.cls, parameter, minim, maxim, steps, units)
+        else:
+            scan_launch = scan_methods.scan_experiment_1D_measure(scan_script.cls, measure_script.cls, parameter, minim, maxim, steps, units)
         scan_id = self.scheduler.add_scan_to_queue(scan_launch)
         return scan_id
     

@@ -134,7 +134,10 @@ class script_scanner_gui(object):
         pv = self.cxn.servers['ParameterVault']
         full_info = yield pv.get_parameter(collection, name, False, context = self.context)
         self.ParametersEditor.set_parameter(collection, name, full_info)
-        
+    
+    def get_scannable_parameters(self):
+        return self.ParametersEditor.get_scannable_parameters()
+    
     def on_running_script_finished_error(self, signal, info):
         ident, message = info
         self.scripting_widget.runningScriptFinished(ident)
@@ -185,9 +188,22 @@ class script_scanner_gui(object):
         self.scripting_widget.on_running_stop.connect(self.running_stop)
         self.scripting_widget.on_running_pause.connect(self.running_pause)
         self.scripting_widget.on_experiment_selected.connect(self.on_experiment_selected)
+        self.scripting_widget.on_scan.connect(self.scan_script)
         #parameter widget
         self.ParametersEditor.on_parameter_change.connect(self.on_new_parameter)
     
+    @inlineCallbacks
+    def scan_script(self, scan_script, measure_script, parameter, minim, maxim, steps, units):
+        scan_script = str(scan_script)
+        measure_script = str(measure_script)
+        collection, parameter_name = parameter
+        steps = int(steps)
+        units = str(units)
+        sc = self.cxn.servers['ScriptScanner']
+        try:
+            yield sc.new_script_scan(scan_script, measure_script, collection, parameter_name, minim, maxim, steps, units)
+        except self.Error as e:
+            self.displayError(e.msg)
     
     @inlineCallbacks
     def on_experiment_selected(self, selected_experiment):
@@ -295,7 +311,7 @@ class script_scanner_gui(object):
             self.displayError(e.msg)
     
     def setupWidgets(self):
-        self.scripting_widget = scripting_widget(self.reactor)
+        self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
     
     def displayError(self, text):

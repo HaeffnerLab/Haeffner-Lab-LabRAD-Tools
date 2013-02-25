@@ -21,15 +21,16 @@ class ParametersEditor(base, form):
         self.setup_model()
         self.connect_layout()
         self._collection = {}
+        self._scannable_parameter = {}
         self._parameter = {}
-        self._hidden = []
+        self._hidden = {}
     
     def clear_all(self):
         'clears all parameters'
         self._model.clear_model()
         self._collection = {}
         self._parameter = {}
-        self._hidden = []
+        self._hidden = {}
     
     def add_collection_node(self, name):
         node = self._model.insert_collection(name)
@@ -42,6 +43,7 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_parameter(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
+            self._scannable_parameter[collection_name, parameter_name] = node
         elif value_type == 'scan':
             collection_node = self._collection[collection_name]
             node = self._model.insert_scan(parameter_name, info, collection_node)
@@ -68,7 +70,7 @@ class ParametersEditor(base, form):
                     parent_index = self._proxyModel.mapFromSource(collection_index)
                     parameter_index_proxy = self._proxyModel.mapFromSource(parameter_index)
                     self.uiTree.setRowHidden(parameter_index_proxy.row() ,parent_index, True)
-                    self._hidden.append((parameter_index_proxy.row(), parent_index))
+                    self._hidden[collection, parameter] = (parameter_index_proxy.row(), parent_index)
                 else:
                     keepCollection = True
             if not keepCollection:
@@ -76,20 +78,27 @@ class ParametersEditor(base, form):
                 parent_index = self._proxyModel.mapFromSource(collection_index.parent())
                 row = collection_index.internalPointer().row()
                 collection_index = self._model.index(row, 0, collection_index.parent())
-                collection_indexx_proxy = self._proxyModel.mapFromSource(collection_index)
-                self.uiTree.setRowHidden(collection_indexx_proxy.row() ,parent_index, True)
-                self._hidden.append((collection_indexx_proxy.row(), parent_index))
+                collection_index_proxy = self._proxyModel.mapFromSource(collection_index)
+                self.uiTree.setRowHidden(collection_index_proxy.row() ,parent_index, True)
+                self._hidden[collection] = (collection_index_proxy.row(), parent_index)
         self.uiTree.expandAll()
-        
+    
     def show_all(self):
         '''show all hidden parameters'''
-        while True:
-            try:
-                row, parent_index = self._hidden.pop()
-            except IndexError:
-                return
-            else:
-                self.uiTree.setRowHidden(row ,parent_index, False)
+        for row, parent_index in self._hidden.itervalues():
+            self.uiTree.setRowHidden(row ,parent_index, False)
+        self._hidden = {}
+    
+    def get_scannable_parameters(self):
+        scannable = []
+        for (collection,param), index in self._scannable_parameter.iteritems():
+            if not (collection,param) in self._hidden:
+                parameter_node = index.internalPointer()
+                minim = parameter_node.data(3)
+                maxim = parameter_node.data(4)
+                units = parameter_node.data(6)
+                scannable.append((collection,param, minim, maxim, units))
+        return scannable
     
     def setup_model(self): 
         self._rootNode   = Node("Root")

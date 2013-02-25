@@ -8,6 +8,7 @@ class scripting_widget(QtGui.QWidget):
     
     on_run = QtCore.pyqtSignal(str)
     on_repeat = QtCore.pyqtSignal((str, int, bool))
+    on_scan = QtCore.pyqtSignal(str, str, tuple, float, float, int, str)
     on_cancel_queued = QtCore.pyqtSignal(int)
     on_cancel_scheduled = QtCore.pyqtSignal(int)
     on_schedule = QtCore.pyqtSignal(str,float, str, bool)
@@ -16,14 +17,15 @@ class scripting_widget(QtGui.QWidget):
     on_running_pause = QtCore.pyqtSignal(int, bool)
     on_experiment_selected = QtCore.pyqtSignal(str)
         
-    def __init__(self, reactor):
+    def __init__(self, reactor, parent):
         super(scripting_widget, self).__init__()
+        self.parent = parent
         self.reactor = reactor
         self.setupLayout()
     
     def setupLayout(self):
         layout = QtGui.QVBoxLayout()
-        self.selector = experiment_selector_widget(self.reactor)
+        self.selector = experiment_selector_widget(self.reactor, parent = self)
         self.running = running_combined(self.reactor)
         self.scheduled = scheduled_combined(self.reactor)
         self.queued = queued_combined(self.reactor)
@@ -32,6 +34,9 @@ class scripting_widget(QtGui.QWidget):
         layout.addWidget(self.queued)
         layout.addWidget(self.running)
         self.setLayout(layout)
+    
+    def get_scannable_parameters(self):
+        return self.parent.get_scannable_parameters()
     
     def clear_all(self):
         '''clears all information'''
@@ -80,6 +85,7 @@ class scripting_widget(QtGui.QWidget):
         self.selector.on_repeat.connect(self.on_repeat)
         self.selector.on_schedule.connect(self.on_schedule)
         self.selector.on_experiment_selected.connect(self.on_experiment_selected.emit)
+        self.selector.on_scan.connect(self.on_scan.emit)
         self.queued.ql.on_cancel.connect(self.on_cancel_queued.emit)
         self.scheduled.sl.on_cancel.connect(self.on_cancel_scheduled.emit)
         self.scheduled.sl.on_new_duration.connect(self.on_schedule_duration.emit)
