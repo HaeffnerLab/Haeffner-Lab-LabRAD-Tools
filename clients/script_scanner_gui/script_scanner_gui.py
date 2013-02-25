@@ -4,11 +4,12 @@ from scripting_widget import scripting_widget
 from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 
-class script_scanner_gui(object):
+class script_scanner_gui(QtGui.QWidget):
     
     SIGNALID = 319245
     
     def __init__(self, reactor, cxn = None):
+        super(script_scanner_gui, self).__init__()
         self.cxn = cxn
         self.reactor = reactor
         self.setupWidgets()
@@ -219,13 +220,6 @@ class script_scanner_gui(object):
         else:
             #empty string corresponds to no selection
             self.ParametersEditor.show_all()
-        
-    def get_widgets(self):
-        return self.scripting_widget, self.ParametersEditor
-    
-    def show(self):
-        self.scripting_widget.show()
-        self.ParametersEditor.show()
     
     @inlineCallbacks
     def on_new_parameter(self, path, value):
@@ -313,11 +307,18 @@ class script_scanner_gui(object):
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.scripting_widget)
+        layout.addWidget(self.ParametersEditor)
+        self.setLayout(layout)
     
     def displayError(self, text):
         message = QtGui.QMessageBox()
         message.setText(text)
         message.exec_()
+    
+    def closeEvent(self, event):
+        self.reactor.stop()
 
 if __name__=="__main__":
     a = QtGui.QApplication( ["Script Scanner"] )
