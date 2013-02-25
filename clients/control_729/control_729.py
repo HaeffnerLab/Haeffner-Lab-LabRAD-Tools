@@ -1,5 +1,5 @@
 from PyQt4 import QtGui, QtCore
-from readout_histogram import readout_histgram
+#from readout_histogram import readout_histgram
 from scans import scans_connection
 from state_preparation import state_preparation_connection
 from drift_tracker import drift_tracker
@@ -17,7 +17,7 @@ class control_729(QtGui.QWidget):
     @inlineCallbacks
     def connect_labrad(self):
         if self.cxn is None:
-            from connection import connection
+            from common.clients.connection import connection
             self.cxn = connection()
             yield self.cxn.connect()
         self.create_layout()
@@ -28,7 +28,7 @@ class control_729(QtGui.QWidget):
         self.tab = tab = QtGui.QTabWidget()
         histogram_tab = QtGui.QWidget()
         histogram_layout = QtGui.QVBoxLayout() 
-        histogram_layout.addWidget(readout_histgram(self.reactor, self.cxn))
+#        histogram_layout.addWidget(readout_histgram(self.reactor, self.cxn))
         histogram_layout.addWidget(general_parameters_connection(self.reactor, self.cxn))
         histogram_tab.setLayout(histogram_layout)
         self.state_preparation_tab = state_preparation_connection(self.reactor, self.cxn)

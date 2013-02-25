@@ -93,9 +93,12 @@ class ParameterNode(Node):
         return (self._collection, self.name())
 
     def full_parameter(self):
-        WithUnit = self.WithUnit
-        return ('parameter', [WithUnit(self._min, self._units), WithUnit(self._max, self._units), WithUnit(self._value, self._units)])
-    
+        if self._units:
+            WithUnit = self.WithUnit
+            return ('parameter', [WithUnit(self._min, self._units), WithUnit(self._max, self._units), WithUnit(self._value, self._units)])
+        else:
+            return ('parameter', [self._min, self._max, self._value])
+        
     def data(self, column):
         if column < 1:
             return super(ParameterNode, self).data(column)

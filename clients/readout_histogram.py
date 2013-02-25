@@ -7,7 +7,7 @@ from twisted.internet.threads import deferToThread
 import numpy
 from configuration import config_729_hist as c
 
-class readout_histgram(QtGui.QWidget):
+class readout_histogram(QtGui.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.reactor = reactor
@@ -173,6 +173,6 @@ if __name__=="__main__":
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = readout_histgram(reactor)
+    widget = readout_histogram(reactor)
     widget.show()
     reactor.run()
