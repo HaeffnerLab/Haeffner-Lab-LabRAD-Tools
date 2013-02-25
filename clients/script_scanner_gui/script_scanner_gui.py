@@ -228,6 +228,8 @@ class script_scanner_gui(QtGui.QWidget):
             yield pv.set_parameter(path[0], path[1], value, True, context = self.context)
         except self.Error as e:
             self.displayError(e.msg)
+        except Exception as e:
+            print e
     
     @inlineCallbacks
     def running_stop(self, ident):
@@ -237,6 +239,8 @@ class script_scanner_gui(QtGui.QWidget):
             yield sc.stop_script(ident)
         except self.Error as e:
             self.displayError(e.msg)
+        except Exception as e:
+            print e
     
     @inlineCallbacks
     def running_pause(self, ident, should_pause):
@@ -246,6 +250,8 @@ class script_scanner_gui(QtGui.QWidget):
             yield sc.pause_script(ident, should_pause)
         except self.Error as e:
             self.displayError(e.msg)
+        except Exception as e:
+            print e
     
     @inlineCallbacks
     def scheduled_duration(self, ident, duration):
@@ -265,6 +271,8 @@ class script_scanner_gui(QtGui.QWidget):
             yield sc.cancel_scheduled_script(ident)
         except self.Error as e:
             self.displayError(e.msg)
+        except Exception as e:
+            print e
         
     @inlineCallbacks
     def schedule_script(self, name, duration, priority, start_now):
@@ -276,6 +284,8 @@ class script_scanner_gui(QtGui.QWidget):
             yield sc.new_script_schedule(name, duration, priority, start_now)
         except self.Error as e:
             self.displayError(e.msg)
+        except Exception as e:
+            print e
         
     @inlineCallbacks
     def repeat_script(self, name, repeatitions, save):
@@ -285,7 +295,9 @@ class script_scanner_gui(QtGui.QWidget):
             yield sc.new_script_repeat(name, repeatitions, save)
         except self.Error as e:
             self.displayError(e.msg)
-    
+        except Exception as e:
+            print e
+            
     @inlineCallbacks
     def on_cancel_queued(self, ident):
         sc = self.cxn.servers['ScriptScanner']
@@ -294,6 +306,8 @@ class script_scanner_gui(QtGui.QWidget):
             yield sc.remove_queued_script(ident, context = self.context)
         except self.Error as e:
             self.displayError(e.msg)
+        except Exception as e:
+            print e
         
     @inlineCallbacks
     def run_script(self, script):
@@ -303,7 +317,9 @@ class script_scanner_gui(QtGui.QWidget):
             yield sc.new_experiment(script, context = self.context)
         except self.Error as e:
             self.displayError(e.msg)
-    
+        except Exception as e:
+            print e
+               
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)

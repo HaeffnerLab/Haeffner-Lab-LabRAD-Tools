@@ -48,6 +48,14 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_scan(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'bool':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_bool(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'string':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_string(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
         else:
             print 'unknown value type', value_type
     

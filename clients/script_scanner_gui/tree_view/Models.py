@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-from Data import ParameterNode, CollectionNode, ScanNode
+from Data import ParameterNode, CollectionNode, ScanNode, BoolNode, StringNode
 
 class ParametersTreeModel(QtCore.QAbstractItemModel):
     
@@ -112,6 +112,24 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         row_count =  self.rowCount(parent_index)
         self.beginInsertRows(parent_index, row_count, row_count)
         childNode = ScanNode(parameter_name, info, collectionNode)
+        self.endInsertRows()
+        index = self.index(row_count, 0, parent_index)
+        return index
+    
+    def insert_bool(self, parameter_name, info, parent_index):
+        collectionNode = self.getNode(parent_index)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = BoolNode(parameter_name, info, collectionNode)
+        self.endInsertRows()
+        index = self.index(row_count, 0, parent_index)
+        return index
+    
+    def insert_string(self, parameter_name, info, parent_index):
+        collectionNode = self.getNode(parent_index)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = StringNode(parameter_name, info, collectionNode)
         self.endInsertRows()
         index = self.index(row_count, 0, parent_index)
         return index

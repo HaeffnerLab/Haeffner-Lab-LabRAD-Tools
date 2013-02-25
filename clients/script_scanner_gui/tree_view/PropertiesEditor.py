@@ -1,7 +1,9 @@
 from PyQt4 import QtCore, QtGui, uic
-from Data import ParameterNode, ScanNode
+from Data import ParameterNode, ScanNode, BoolNode, StringNode
 from editors.parameter_editor import ParameterEditor
 from editors.scan_editor import ScanEditor
+from editors.bool_editor import BoolEditor
+from editors.string_editor import StringEditor
 import os
 
 basepath =  os.path.dirname(__file__)
@@ -13,36 +15,46 @@ class PropertiesEditor(propBase, propForm):
     def __init__(self, parent = None):
         super(propBase, self).__init__(parent)
         self.setupUi(self)
-
         self._proxyModel = None
         #create the edtiors
         self._parametersEditor = ParameterEditor(self)
         self._scanEditor = ScanEditor(self)
+        self._boolEditor = BoolEditor(self)
+        self._stringEditor = StringEditor(self)
+        self._editors = [self._parametersEditor, self._scanEditor, self._stringEditor, self._boolEditor]
         #add editors to layout
         self.layoutSpecs.addWidget(self._parametersEditor)
         #hide the edtiors
-        self._parametersEditor.setVisible(False)
-        self._scanEditor.setVisible(False)
+        for edit in self._editors:
+            edit.setVisible(False)
                
     def setSelection(self, current, old):
         current = self._proxyModel.mapToSource(current)
         node = current.internalPointer()
         if isinstance(node, ParameterNode):
-            self._parametersEditor.setVisible(True)
-            self._scanEditor.setVisible(False)
-            self._parametersEditor.setSelection(current)
+            self.show_only_editor(self._parametersEditor, current)
         elif isinstance(node, ScanNode):
-            self._parametersEditor.setVisible(False)
-            self._scanEditor.setVisible(True)
-            self._scanEditor.setSelection(current)
+            self.show_only_editor(self._scanEditor, current)
+        elif isinstance(node, BoolNode):
+            self.show_only_editor(self._boolEditor, current)
+        elif isinstance(node, StringNode):
+            self.show_only_editor(self._stringEditor, current)    
         else:
-            self._parametersEditor.setVisible(False)
-            self._scanEditor.setVisible(False)
-            
+            for edit in self._editors:
+                edit.setVisible(False)
+    
+    def show_only_editor(self, only_editor, current_selection):
+        for edit in self._editors:
+            if only_editor == edit:
+                only_editor.setVisible(True)
+                only_editor.setSelection(current_selection)
+            else:
+                edit.setVisible(False) 
+        
     def setModel(self, proxyModel):
         '''
         sets the model for all the editors
         '''
         self._proxyModel = proxyModel
-        self._parametersEditor.setModel(proxyModel)
-        self._scanEditor.setModel(proxyModel)
+        for edit in self._editors:
+            edit.setModel(proxyModel)
