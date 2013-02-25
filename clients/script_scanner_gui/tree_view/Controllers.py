@@ -56,8 +56,17 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_string(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'selection_simple':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_selection_simple(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'line_selection':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_line_selection(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
+            
         else:
-            print 'unknown value type', value_type
+            print 'unknown value type', value_type, collection_name, parameter_name
     
     def set_parameter(self, collection, name, full_info):
         '''set value of a parameter stores in the model'''

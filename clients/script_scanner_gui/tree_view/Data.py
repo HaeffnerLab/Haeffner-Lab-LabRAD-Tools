@@ -276,3 +276,92 @@ class ScanNode(Node):
             self._scan_points = value
         elif column == 8:
             self._units = value
+            
+class SelectionSimpleNode(Node):
+    
+    columns = 4
+    
+    def __init__(self, name, info, parent=None):
+        super(SelectionSimpleNode, self).__init__(name, parent)
+        self._collection = parent.name()
+        self.set_full_info(info)
+        
+    def set_full_info(self, info):
+        self._value = info[0]
+        self._options = info[1]
+    
+    def filter_text(self):
+        return self.parent().name() + self.name()
+    
+    def string_format(self):
+        return '{0}'.format(self._value)
+    
+    def full_parameter(self):
+        return ('selection_simple', ('{0}'.format(self._value), self._options))
+    
+    def path(self):
+        return (self._collection, self.name())
+    
+    def data(self, column):
+        if column < 1:
+            return super(SelectionSimpleNode, self).data(column)
+        elif column == 1:
+            return self.string_format()
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._value
+        elif column == 4:
+            return self._options
+    
+    def setData(self, column, value):
+        value = value.toPyObject()
+        if column == 3:
+            self._value = value
+        elif column == 4:
+            self._options = value
+
+class LineSelectionNode(Node):
+    
+    columns = 4
+    
+    def __init__(self, name, info, parent=None):
+        super(LineSelectionNode, self).__init__(name, parent)
+        self._collection = parent.name()
+        self.set_full_info(info)
+        
+    def set_full_info(self, info):
+        self._value = info[0]
+        self._dict = dict(info[1])
+    
+    def filter_text(self):
+        return self.parent().name() + self.name()
+    
+    def string_format(self):
+        show = self._dict[str(self._value)]
+        return '{0} {1}'.format(show, self._value)
+    
+    def full_parameter(self):
+        return ('line_selection', (str(self._value), list(self._dict.iteritems() ) ) )
+    
+    def path(self):
+        return (self._collection, self.name())
+    
+    def data(self, column):
+        if column < 1:
+            return super(LineSelectionNode, self).data(column)
+        elif column == 1:
+            return self.string_format()
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._value
+        elif column == 4:
+            return self._dict
+    
+    def setData(self, column, value):
+        value = value.toPyObject()
+        if column == 3:
+            self._value = str(value)
+        elif column == 4:
+            self._dict = value

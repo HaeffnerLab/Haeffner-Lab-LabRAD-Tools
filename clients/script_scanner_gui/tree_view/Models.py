@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-from Data import ParameterNode, CollectionNode, ScanNode, BoolNode, StringNode
+from Data import ParameterNode, CollectionNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode
 
 class ParametersTreeModel(QtCore.QAbstractItemModel):
     
@@ -130,6 +130,25 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         row_count =  self.rowCount(parent_index)
         self.beginInsertRows(parent_index, row_count, row_count)
         childNode = StringNode(parameter_name, info, collectionNode)
+        self.endInsertRows()
+        index = self.index(row_count, 0, parent_index)
+        return index
+    
+    def insert_selection_simple(self, parameter_name, info, parent_index):
+        collectionNode = self.getNode(parent_index)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = SelectionSimpleNode(parameter_name, info, collectionNode)
+        self.endInsertRows()
+        index = self.index(row_count, 0, parent_index)
+        return index
+        
+    
+    def insert_line_selection(self, parameter_name, info, parent_index):
+        collectionNode = self.getNode(parent_index)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = LineSelectionNode(parameter_name, info, collectionNode)
         self.endInsertRows()
         index = self.index(row_count, 0, parent_index)
         return index
