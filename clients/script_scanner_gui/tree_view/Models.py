@@ -1,7 +1,7 @@
 from PyQt4 import QtCore, QtGui
 from Data import ParameterNode, CollectionNode, ScanNode, BoolNode
 from Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode
-from Data import DurationBandwidthNode
+from Data import DurationBandwidthNode, SpectrumSensitivityNode
 
 class ParametersTreeModel(QtCore.QAbstractItemModel):
     
@@ -168,6 +168,15 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         row_count =  self.rowCount(parent_index)
         self.beginInsertRows(parent_index, row_count, row_count)
         childNode = DurationBandwidthNode(parameter_name, info, collectionNode)
+        self.endInsertRows()
+        index = self.index(row_count, 0, parent_index)
+        return index
+    
+    def insert_spectrum_sensitivity(self, parameter_name, info, parent_index):
+        collectionNode = self.getNode(parent_index)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = SpectrumSensitivityNode(parameter_name, info, collectionNode)
         self.endInsertRows()
         index = self.index(row_count, 0, parent_index)
         return index

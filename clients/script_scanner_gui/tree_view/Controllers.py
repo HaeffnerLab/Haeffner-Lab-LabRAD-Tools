@@ -72,6 +72,10 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_duration_bandwidth(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'spectrum_sensitivity':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_spectrum_sensitivity(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
         else:
             print 'unknown value type', value_type, collection_name, parameter_name
     

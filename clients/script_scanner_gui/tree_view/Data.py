@@ -368,7 +368,7 @@ class LineSelectionNode(Node):
 
 class SidebandElectorNode(Node):
     
-    columns = 3
+    columns = 6
     
     def __init__(self, name, info, parent=None):
         super(SidebandElectorNode, self).__init__(name, parent)
@@ -487,3 +487,62 @@ class DurationBandwidthNode(Node):
             self._value = value
         elif column == 6:
             self._units = value
+
+class SpectrumSensitivityNode(Node):
+    
+    columns = 6
+    
+    def __init__(self, name, info, parent=None):
+        super(SpectrumSensitivityNode, self).__init__(name, parent)
+        from labrad.units import WithUnit
+        self.WithUnit = WithUnit
+        self._collection = parent.name()
+        self.set_full_info(info)
+        
+    def set_full_info(self, info):
+        self._span = info[0]['kHz']
+        self._resolution = info[1]['kHz']
+        self._duration = info[2]['us']
+        self._amplitude = info[3]['dBm']
+    
+    def filter_text(self):
+        return self.parent().name() + self.name()
+    
+    def string_format(self):
+        label = 'Span: {0} kHz, Res.: {1} kHz, Duration: {2} us, Ampl. {3} dBm'.format(
+                        self._span, self._resolution, self._duration, self._amplitude)
+        return label
+    
+    def full_parameter(self):
+        return ('spectrum_sensitivity', (self.WithUnit(self._span, 'kHz'), self.WithUnit(self._resolution, 'kHz'),
+                                         self.WithUnit(self._duration, 'us'),self.WithUnit(self._amplitude, 'dBm')) )
+    
+    def path(self):
+        return (self._collection, self.name())
+    
+    def data(self, column):
+        if column < 1:
+            return super(SpectrumSensitivityNode, self).data(column)
+        elif column == 1:
+            return self.string_format()
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._span
+        elif column == 4:
+            return self._resolution
+        elif column == 5:
+            return self._duration
+        elif column == 6:
+            return self._amplitude
+    
+    def setData(self, column, value):
+        value = value.toPyObject()
+        if column == 3:
+            self._span = value
+        if column == 4:
+            self._resolution = value
+        if column == 5:
+            self._duration = value
+        if column == 6:
+            self._amplitude = value

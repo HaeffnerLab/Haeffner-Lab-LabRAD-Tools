@@ -1,5 +1,6 @@
-from PyQt4 import QtCore, QtGui, uic
-from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode, DurationBandwidthNode
+from PyQt4 import  uic
+from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode
+from Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
 from editors.parameter_editor import ParameterEditor
 from editors.scan_editor import ScanEditor
 from editors.bool_editor import BoolEditor
@@ -8,8 +9,9 @@ from editors.selection_editor import SelectionSimpleEditor
 from editors.line_selection_editor import line_selection_editor
 from editors.sideband_selection_editor import sideband_selection_editor
 from editors.duration_bandwidth_editor import DurationBandwidthEditor
-import os
+from editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
 
+import os
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"..","Views", "Editors.ui")
 propBase, propForm = uic.loadUiType(path)
@@ -29,9 +31,10 @@ class PropertiesEditor(propBase, propForm):
         self._lineSelectionEdtior = line_selection_editor(self)
         self._sideband_selection_editor = sideband_selection_editor(self)
         self._DurationBandwidthEditor = DurationBandwidthEditor(self)
+        self._spectrum_sensitivity_editor = spectrum_sensitivity_editor(self)
         self._editors = [self._parametersEditor, self._scanEditor, self._stringEditor, 
                          self._boolEditor, self._selectionSimpleEditor, self._lineSelectionEdtior,
-                         self._sideband_selection_editor, self._DurationBandwidthEditor
+                         self._sideband_selection_editor, self._DurationBandwidthEditor, self._spectrum_sensitivity_editor
                          ]
         #add editors to layout
         self.layoutSpecs.addWidget(self._parametersEditor)
@@ -58,6 +61,8 @@ class PropertiesEditor(propBase, propForm):
             self.show_only_editor(self._sideband_selection_editor, current)
         elif isinstance(node, DurationBandwidthNode):
             self.show_only_editor(self._DurationBandwidthEditor, current)
+        elif isinstance(node, SpectrumSensitivityNode):
+            self.show_only_editor(self._spectrum_sensitivity_editor, current)
         else:
             for edit in self._editors:
                 edit.setVisible(False)
