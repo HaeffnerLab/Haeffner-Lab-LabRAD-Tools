@@ -104,10 +104,15 @@ class experiment(experiment_info):
         '''
         can reload all parameter values from parameter_vault or replace parameters with values from the provided parameter_dict
         '''
-        udpate_dict = TreeDict()
-        for (collection,parameter_name), value in parameter_dict.iteritems():
-            udpate_dict['{0}.{1}'.format(collection, parameter_name)] = value
-            self.parameters.update(udpate_dict)
+        if isinstance(parameter_dict, dict):
+            udpate_dict = TreeDict()
+            for (collection,parameter_name), value in parameter_dict.iteritems():
+                udpate_dict['{0}.{1}'.format(collection, parameter_name)] = value
+        elif isinstance(parameter_dict, TreeDict):
+            udpate_dict = parameter_dict
+        else:
+            raise Exception ("Incorrect input type for the replacement dictionary")
+        self.parameters.update(udpate_dict)
     
     def reload_parameters_vault(self):
         self._load_parameters(overwrite = True)

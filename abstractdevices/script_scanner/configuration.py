@@ -10,6 +10,8 @@ class config(object):
                ('lattice.scripts.experiments.CavityScan.scan_cavity', 'scan_cavity'), 
                ('lattice.scripts.experiments.CavityScan.scan_cavity_397', 'scan_cavity_397'), 
                ('lattice.scripts.experiments.CavityScan.scan_cavity_866', 'scan_cavity_866'), 
+               ('lattice.scripts.experiments.Experiments729.excitation_729', 'excitation_729'), 
+               ('lattice.scripts.experiments.Experiments729.spectrum', 'spectrum'), 
                ]
 
     allowed_concurrent = {

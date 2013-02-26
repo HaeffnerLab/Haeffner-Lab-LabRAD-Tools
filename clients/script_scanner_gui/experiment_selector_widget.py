@@ -241,6 +241,7 @@ class experiment_selector_widget(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         label = QtGui.QLabel("Experiment", font = self.font)
         self.dropdown = QtGui.QComboBox()
+        self.dropdown.setMaxVisibleItems(30)
         self.dropdown.addItem('')#add empty item for no selection state    
         #enable sorting
         sorting_model = QtGui.QSortFilterProxyModel(self.dropdown)
