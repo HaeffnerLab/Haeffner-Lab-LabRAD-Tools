@@ -4,11 +4,11 @@ import time
 
 cxn = labrad.connect()
 dv = cxn.data_vault
-totalReadouts = numpy.random.randint(50, 150, 200)
+totalReadouts = numpy.random.randint(0, 200, 50)
 hist, bins = numpy.histogram(totalReadouts, 50)
 
 dirappend = time.strftime("%Y%b%d_%H%M_%S",time.localtime())
-directory = ['','Experiments', 'scan729DDS', dirappend]
+directory = ['','Tests', 'Histogram', dirappend]
 dv.cd(directory ,True )
 
 dv.new('Histogram',[('Counts', 'Arb')],[('Occurence','Arb','Arb')] )

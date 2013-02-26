@@ -1,5 +1,6 @@
 from pulse_sequences_config import dds_name_dictionary as dds_config
 from labrad.units import WithUnit
+from treedict import TreeDict
 
 class pulse_sequence(object):
 	
@@ -11,13 +12,14 @@ class pulse_sequence(object):
 	required_parameters = []
 	required_subsequences = []
 	
-	def __init__(self, start = WithUnit(0, 's'), **kwargs):
+	def __init__(self, parameter_dict, start = WithUnit(0, 's')):
+		if not type(parameter_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
 		self.start = start
 		self.end = start
 		self._dds_pulses = []
 		self._ttl_pulses = []
-		self.replace = kwargs
-		self.set_params(self.required_parameters , **kwargs)
+		self.replace = parameter_dict
+		self.parameters = self.fill_parameters(self.required_parameters , self.replace)
 		self.sequence()
 	
 	@classmethod
@@ -35,13 +37,15 @@ class pulse_sequence(object):
 		implemented by subclass
 		'''
 	
-	def set_params(self, params, **replace):
-		for param in params:
-			if param in self.__dict__: raise Exception ("Overwrite parameter {0} in the {1} Pulse Sequence".format(param, self.__class__.__name__))
+	def fill_parameters(self, params, replace):
+		new_dict = TreeDict()
+		for collection,parameter_name in params:
+			treedict_key = '{0}.{1}'.format(collection,parameter_name)
 			try:
-				self.__dict__[param] = replace[param]
+				new_dict[treedict_key] = replace[treedict_key]
 			except KeyError:
-				raise Exception('{0} value not provided for the {1} Pulse Sequence'.format(param, self.__class__.__name__))
+				raise Exception('{0} {1} value not provided for the {2} Pulse Sequence'.format(collection, parameter_name, self.__class__.__name__))
+		return new_dict
 	
 	def addDDS(self, channel, start, duration, frequency, amplitude):
 		"""
@@ -61,18 +65,18 @@ class pulse_sequence(object):
 		"""
 		self._ttl_pulses.append((channel, start, duration))
 	
-	def addSequence(self, sequence, position = None, **kwargs):
+	def addSequence(self, sequence, replacement_dict = TreeDict(), position = None):
 		'''insert a subsequence, position is either time or None to insert at the end'''
 		#position where sequence is inserted
 		if sequence not in self.required_subsequences: raise Exception ("Adding subsequence {0} that is not listed in the required subequences".format(sequence.__class__.__name__))
-		if type(position) == dict: raise Exception ("Don't forget ** in front of replacement dictionary")
+		if not type(replacement_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict")
 		if position is None:
 			position = self.end
 		#replacement conists of global replacement and keyword arguments
-		replacement = {}
+		replacement = TreeDict()
 		replacement.update(self.replace)
-		replacement.update(kwargs)
-		seq = sequence(start = position, **replacement)
+		replacement.update(replacement_dict)
+		seq = sequence(replacement, start = position)
 		self._dds_pulses.extend( seq._dds_pulses )
 		self._ttl_pulses.extend( seq._ttl_pulses )
 		self.end = max(self.end, seq.end)

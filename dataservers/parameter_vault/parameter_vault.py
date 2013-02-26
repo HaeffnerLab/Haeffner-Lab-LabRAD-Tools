@@ -18,7 +18,6 @@ timeout = 20
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
-from parameter_vault_config import configuration as conf
 
 class ParameterVault(LabradServer):
     """
@@ -32,7 +31,6 @@ class ParameterVault(LabradServer):
     def initServer(self):
         self.listeners = set()
         self.parameters = {}  
-        self.matched_parames = conf.matched_parameters
         yield self.load_parameters()
     
     def initContext(self, c):
@@ -100,12 +98,12 @@ class ParameterVault(LabradServer):
 
     def check_parameter(self, name, value):
         t,item = value
-        if t == 'parameter':
+        
+        print name, t, t  == 'bool'
+        if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
             return item[2]
-        elif t == 'string':
-            return item
-        elif t == 'bool':
+        elif t == 'string' or t == 'bool' or t == 'sideband_selection' or t == 'spectrum_sensitivity':
             return item
         elif t == 'scan':
             minim,maxim = item[0]
@@ -113,6 +111,12 @@ class ParameterVault(LabradServer):
             assert minim <= start <= maxim, "Parameter {} Out of Bound".format(name)
             assert minim <= stop <= maxim, "Parameter {} Out of Bound".format(name)
             return (start, stop, steps)
+        elif t == 'selection_simple':
+            assert item[0] in item[1], "Inorrect selection made in {}".format(name)
+            return item[0]
+        elif t == 'line_selection':
+            assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(name)
+            return item[0]
         else:#parameter type not known
             return value
         
@@ -127,11 +131,6 @@ class ParameterVault(LabradServer):
             self.parameters[key] = value
         else:
             self.parameters[key] = self._save_full(key, value)
-        #save all the matches paramters
-        for matched in conf.matched_parameters:
-            if key in matched:
-                for matched_key in matched:
-                    self.parameters[matched_key] = self.parameters[key]
         notified = self.getOtherListeners(c)
         self.onParameterChange((key[0], key[1]), notified)
 
