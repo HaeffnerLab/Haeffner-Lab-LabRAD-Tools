@@ -5,7 +5,7 @@ from matplotlib.figure import Figure
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 import numpy
-from configuration import config_729_hist as c
+from readout_histogram_config import config_729_hist as c
 
 class readout_histogram(QtGui.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):

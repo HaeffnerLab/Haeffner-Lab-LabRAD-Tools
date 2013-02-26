@@ -1,6 +1,6 @@
 from PyQt4 import QtCore, QtGui, uic
 import sys
-from Data import Node, ParameterNode, CollectionNode, ScanNode
+from Data import Node, ParameterNode, CollectionNode, ScanNode, SidebandElectorNode
 from Models import ParametersTreeModel
 from PropertiesEditor import PropertiesEditor
 import os
@@ -64,7 +64,10 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_line_selection(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
-            
+        elif value_type == 'sideband_selection':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_sideband_selection(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
         else:
             print 'unknown value type', value_type, collection_name, parameter_name
     

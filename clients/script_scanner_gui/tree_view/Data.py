@@ -339,7 +339,7 @@ class LineSelectionNode(Node):
     
     def string_format(self):
         show = self._dict[str(self._value)]
-        return '{0} {1}'.format(show, self._value)
+        return '{0}   ( {1} )'.format(show, self._value)
     
     def full_parameter(self):
         return ('line_selection', (str(self._value), list(self._dict.iteritems() ) ) )
@@ -365,3 +365,60 @@ class LineSelectionNode(Node):
             self._value = str(value)
         elif column == 4:
             self._dict = value
+
+class SidebandElectorNode(Node):
+    
+    columns = 3
+    
+    def __init__(self, name, info, parent=None):
+        super(SidebandElectorNode, self).__init__(name, parent)
+        self._collection = parent.name()
+        self.set_full_info(info)
+        
+    def set_full_info(self, info):
+        self._radial1, self._radial2, self._axial, self._micromotion = info
+    
+    def filter_text(self):
+        return self.parent().name() + self.name()
+    
+    def string_format(self):
+        s = ''
+        labels = ['radial 1 : ', 'radial 2 : ', 'axial : ', 'micormotion : ']
+        values = [self._radial1, self._radial2, self._axial, self._micromotion]
+        for name, sideband in zip(labels, values):
+            if sideband:
+                s += '{0} {1:+d}'.format(name, sideband)
+        return s
+    
+    def full_parameter(self):
+        return ('sideband_selection', [self._radial1, self._radial2, self._axial, self._micromotion])
+    
+    def path(self):
+        return (self._collection, self.name())
+    
+    def data(self, column):
+        if column < 1:
+            return super(SidebandElectorNode, self).data(column)
+        elif column == 1:
+            return self.string_format()
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._radial1
+        elif column == 4:
+            return self._radial2
+        elif column == 5:
+            return self._axial
+        elif column == 6:
+            return self._micromotion
+    
+    def setData(self, column, value):
+        value = value.toPyObject()
+        if column == 3:
+            self._radial1 = value
+        if column == 4:
+            self._radial2 = value
+        if column == 5:
+            self._axial = value
+        if column == 6:
+            self._micromotion = value

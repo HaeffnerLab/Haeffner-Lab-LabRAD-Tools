@@ -9,7 +9,7 @@ class line_selection_delegate(QtGui.QAbstractItemDelegate):
     def __init__(self, parent):
         super(line_selection_delegate, self).__init__()
         self.parent = parent
-        self.parent.uiValue.currentIndexChanged[QtCore.QString].connect(self.on_new_index)
+        self.parent.uiValue.activated.connect(self.on_new_index)
         
     def setEditorData(self, editor, index):
         node = index.internalPointer()
@@ -45,6 +45,7 @@ class line_selection_editor(base, form):
         self._dataMapper.addMapping(self.uiValue, 3)
 
     def setSelection(self, current):
+        self.uiValue.clear()
         parent = current.parent()
         self._dataMapper.setRootIndex(parent)
         self._dataMapper.setCurrentModelIndex(current)
