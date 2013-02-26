@@ -422,3 +422,68 @@ class SidebandElectorNode(Node):
             self._axial = value
         if column == 6:
             self._micromotion = value
+
+class DurationBandwidthNode(Node):
+    
+    columns = 6
+    
+    def __init__(self, name, info, parent=None):
+        super(DurationBandwidthNode, self).__init__(name, parent)
+        self._collection = parent.name()
+        self.set_full_info(info)
+        
+    def set_full_info(self, info):
+        try:
+            self._units = info[2].units
+            self._min = info[0][self._units]
+            self._max = info[1][self._units]
+            self._value = info[2][self._units]
+        except AttributeError:
+            #unitless
+            self._units = ''
+            self._min = info[0]
+            self._max = info[1]
+            self._value = info[2]
+    
+    def path(self):
+        return (self._collection, self.name())
+
+    def full_parameter(self):
+        if self._units:
+            WithUnit = self.WithUnit
+            return ('duration_bandwidth', [WithUnit(self._min, self._units), WithUnit(self._max, self._units), WithUnit(self._value, self._units)])
+        else:
+            return ('duration_bandwidth', [self._min, self._max, self._value])
+        
+    def data(self, column):
+        if column < 1:
+            return super(DurationBandwidthNode, self).data(column)
+        elif column == 1:
+            return self.string_format()
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._min
+        elif column == 4:
+            return self._max
+        elif column == 5:
+            return self._value
+        elif column == 6:
+            return self._units
+    
+    def filter_text(self):
+        return self.parent().name() + self.name()
+    
+    def string_format(self):
+        return '{0} {1}'.format(self._value, self._units)
+        
+    def setData(self, column, value):
+        value = value.toPyObject()
+        if column == 3:
+            self._min = value
+        elif column == 4:
+            self._max = value
+        elif column == 5:
+            self._value = value
+        elif column == 6:
+            self._units = value

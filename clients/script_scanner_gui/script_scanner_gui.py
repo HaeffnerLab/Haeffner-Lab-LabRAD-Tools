@@ -35,6 +35,7 @@ class script_scanner_gui(QtGui.QWidget):
             self.connect_layouts()
         except Exception, e:
             print e
+            raise
             print 'script_scanner_gui: servers not available'
             self.disable(True)
         self.cxn.on_connect['ScriptScanner'].append(self.reinitialize_scriptscanner)

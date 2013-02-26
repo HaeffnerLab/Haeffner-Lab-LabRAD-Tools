@@ -476,8 +476,8 @@ if __name__=="__main__":
     qt4reactor.install()
     from twisted.internet import reactor
 #    widget = limitsWidget(reactor, suffix = 'us', abs_range = (0,100))
-#    widget = durationWdiget(reactor)
-    widget = dropdown(reactor)
+    widget = durationWdiget(reactor)
+#    widget = dropdown(reactor)
 #    widget = frequency_wth_dropdown(reactor)
 #    widget = saved_frequencies_table(reactor)
 #    widget = lineinfo_table(reactor)

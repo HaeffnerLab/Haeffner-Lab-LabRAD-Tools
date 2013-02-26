@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui, uic
-from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode
+from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode, DurationBandwidthNode
 from editors.parameter_editor import ParameterEditor
 from editors.scan_editor import ScanEditor
 from editors.bool_editor import BoolEditor
@@ -7,6 +7,7 @@ from editors.string_editor import StringEditor
 from editors.selection_editor import SelectionSimpleEditor
 from editors.line_selection_editor import line_selection_editor
 from editors.sideband_selection_editor import sideband_selection_editor
+from editors.duration_bandwidth_editor import DurationBandwidthEditor
 import os
 
 basepath =  os.path.dirname(__file__)
@@ -27,9 +28,10 @@ class PropertiesEditor(propBase, propForm):
         self._selectionSimpleEditor = SelectionSimpleEditor(self)
         self._lineSelectionEdtior = line_selection_editor(self)
         self._sideband_selection_editor = sideband_selection_editor(self)
+        self._DurationBandwidthEditor = DurationBandwidthEditor(self)
         self._editors = [self._parametersEditor, self._scanEditor, self._stringEditor, 
                          self._boolEditor, self._selectionSimpleEditor, self._lineSelectionEdtior,
-                         self._sideband_selection_editor
+                         self._sideband_selection_editor, self._DurationBandwidthEditor
                          ]
         #add editors to layout
         self.layoutSpecs.addWidget(self._parametersEditor)
@@ -54,6 +56,8 @@ class PropertiesEditor(propBase, propForm):
             self.show_only_editor(self._lineSelectionEdtior, current)    
         elif isinstance(node, SidebandElectorNode):
             self.show_only_editor(self._sideband_selection_editor, current)
+        elif isinstance(node, DurationBandwidthNode):
+            self.show_only_editor(self._DurationBandwidthEditor, current)
         else:
             for edit in self._editors:
                 edit.setVisible(False)
