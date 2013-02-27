@@ -23,8 +23,8 @@ from twisted.internet.defer import returnValue
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline as UniSpline
 from numpy import genfromtxt, arange
-import sys
-from cct.scripts.PulseSequences.advanceDACs import ADV_DACS
+# import sys
+# from cct.scripts.PulseSequences.advanceDACs import advanceDACs
 from DacConfiguration import hardwareConfiguration as hc
 
 SERVERNAME = 'DAC Server'
@@ -63,28 +63,26 @@ class Voltage(object):
         '''
         port = self.__f(self.channel.dacChannelNumber, 5)
 
-        if hc.pulseTriggered: set = self.__f(self.setNum, 10)
-        else: set = self.__f(1, 10)
+        if hc.pulseTriggered: setN = self.__f(self.setNum, 10)
+        else: setN = self.__f(1, 10)
 
         value = self.__f(self.digitalVoltage, 16)
-        big = value + port + set + [False]
+        big = value + port + setN + [False]
         return self.__g(big[8:16]) + self.__g(big[:8]) + self.__g(big[24:32]) + self.__g(big[16:24])
             
     def __f(self, num, bits): # binary representation of values in the form of a list
-        listy = [None for i in range(bits)]
+        listy = [False for i in range(bits)]
         for i in range(len(listy)):
-            if num >= 2**(len(listy)-1)/(2**i):
+            if num >= 2**(len(listy)-i-1):
                 listy[i] = True
-                num -= 2**(len(listy)-1)/(2**i)
-            else:
-                listy[i] = False
+                num -= 2**(len(listy)-i-1)
         return listy
 
-    def __g(self, listy):
+    def __g(self, listy): # byte to hex
         num = 0
         for i in range(8):
             if listy[i]:
-                num += 2**7/2**i
+                num += 2**(7-i)
         return chr(num)
         
 class Queue(object):
@@ -112,13 +110,13 @@ class Queue(object):
             return False
 
 
-class CCTDACServer( LabradServer ):
+class DACServer( LabradServer ):
     """
-    CCTDAC Server
+    DAC Server
     Used for controlling DC trap electrodes
     """
     name = SERVERNAME
-    serNode = 'cctmain'
+    # serNode = 'cctmain'
     onNewUpdate = Signal(SIGNALID, 'signal: ports updated', 's')
     currentPosition = 0
     registryPath = [ '', 'Servers', EXPTNAME + SERVERNAME ]
@@ -322,7 +320,7 @@ class CCTDACServer( LabradServer ):
                 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer( CCTDACServer() )
+    util.runServer( DACServer() )
 
 """
 Notes for setting up DACSERVER:
