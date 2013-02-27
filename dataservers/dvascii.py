@@ -36,8 +36,9 @@ from __future__ import with_statement
 from labrad import types as T, util
 from labrad.server import LabradServer, Signal, setting
 
+from twisted.internet import reactor
 from twisted.internet.reactor import callLater
-from twisted.internet.defer import inlineCallbacks, Deferred, returnValue
+from twisted.internet.defer import inlineCallbacks, Deferred, returnValue, DeferredList
 
 from ConfigParser import SafeConfigParser
 import os, re, sys
@@ -430,6 +431,7 @@ class Dataset:
         self.param_listeners = set()
         self.comment_listeners = set()
         self.deferredParameterDict = {} #####MK
+        self.timeOutCallIDs = {}
         if dtype:
             dtype = 'float' if dtype in 'f' else 'string'
 
@@ -644,14 +646,23 @@ class Dataset:
         if saveNow:
             self.save()
         if name in self.deferredParameterDict.keys():
-            for d in self.deferredParameterDict[name][:]:
-                d.callback(data)
-                self.deferredParameterDict[name].pop(0)
+            for dParam in self.deferredParameterDict[name][:]:
+                self.timeOutCallIDs[dParam].cancel() # cancel the callLater!
+                self.timeOutCallIDs.pop(dParam)
+                dParam.callback(data)
+                self.deferredParameterDict[name].pop(0) # delete the deferredLIST
         
         # notify all listening contexts
         self.parent.onNewParameter( None, self.param_listeners )
         self.param_listeners = set()
         return name    
+
+    def parameterTimeout(self, name, dParam):
+        # call back the associated parameter deferred and remove it from the list!
+        for dParameter in self.deferredParameterDict[name]:
+            if (dParameter == dParam):
+                dParam.callback(False)
+                self.deferredParameterDict[name].remove(dParam)
 
     def getParameter( self, name, case_sensitive = True ):
         for p in self.parameters:
@@ -1188,16 +1199,25 @@ class DataVault( LabradServer ):
         dataset = self.getDataset( c )
         dataset.addParameterOverWrite( name, data )
 
-    @setting( 127, 'wait for parameter', name = 's')
-    def wait_for_parameter(self, c, name):
+    @setting( 127, 'wait for parameter', name = 's', timeout = 'i')
+    def wait_for_parameter(self, c, name, timeout = 60):
         """Wait for parameter"""
         dataset = self.getDataset(c)
-        d = Deferred()
+        dParam = Deferred()
+#        dTimeout = Deferred()  
+#        dlist = DeferredList([dParam, dTimeout])
+#        dTimeout.addCallback(dataset.parameterTimeout(name, dlist))      
+        callID = reactor.callLater(timeout, dataset.parameterTimeout, name, dParam)
+        dataset.timeOutCallIDs[dParam] = callID
         try:
-            dataset.deferredParameterDict[name].append(d)
+#            dataset.deferredParameterDict[name].append(dlist)
+            dataset.deferredParameterDict[name].append(dParam)
+            
         except: # parameter has never been waited on before
-            dataset.deferredParameterDict[name] = [d]
-        result = yield d
+#            dataset.deferredParameterDict[name] = [dlist]
+            dataset.deferredParameterDict[name] = [dParam]
+#        result = yield dlist
+        result = yield dParam
         
     @setting( 200, 'add comment', comment = ['s'], user = ['s'], returns = [''] )
     def add_comment( self, c, comment, user = 'anonymous' ):
