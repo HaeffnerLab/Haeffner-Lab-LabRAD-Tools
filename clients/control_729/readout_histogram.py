@@ -55,8 +55,10 @@ class readout_histgram(QtGui.QWidget):
     
     def updade_histogram(self, data):
         #remove old histogram
-        if self.last_hist is not None: 
-            for obj in self.last_hist: obj.remove()
+        if self.last_hist is not None:
+            self.last_hist.remove()
+            #explicitly delete the refrence although not necessary
+            del self.last_hist
         self.last_hist = self.axes.bar(data[:,0], data[:,1], width = numpy.max(data[:,0])/len(data[:,0]))
         #redo the limits
         x_maximum = data[:,0].max()
@@ -83,6 +85,8 @@ class readout_histgram(QtGui.QWidget):
                
     def update_canvas_line(self, threshold):
         self.thresholdLine.remove()
+        #explicitly delete the refrence although not necessary
+        del self.thresholdLine
         self.thresholdLine = self.axes.axvline(threshold, ymin=0, ymax= 200, linewidth=3.0, color = 'r', label = 'Threshold')
         self.canvas.draw()
     

@@ -123,10 +123,10 @@ class Sequence():
 
     def addToProgram(self, prog, state):
         for name,num in state.iteritems():
-            if not hardwareConfiguration.ddsDict[name].remote:
+            if not hardwareConfiguration.ddsDict[name].phase_coherent_model:
                 buf = self.parent._intToBuf(num)
             else:  
-                buf = self.parent._intToBuf_remote(num)
+                buf = self.parent._intToBuf_coherent(num)
             prog[name] += buf
         
     def parseTTL(self):
