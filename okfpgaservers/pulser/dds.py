@@ -92,7 +92,7 @@ class DDS(LabradServer):
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
-            num = self.settings_to_num(channel, freq, ampl)
+            num = self.settings_to_num(channel, freq, ampl, phase)
             if not channel.phase_coherent_model:
                 num_off = self.settings_to_num(channel, freq_off, ampl_off)
             else:
