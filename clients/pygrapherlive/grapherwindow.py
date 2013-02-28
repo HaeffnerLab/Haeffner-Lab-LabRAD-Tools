@@ -7,7 +7,9 @@ from canvas import Qt4MplCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from datavault import DataVaultWidget
 from analysis import AnalysisWidget
+from analysiswindow import AnalysisWindow
 import time
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 class GrapherWindow(QtGui.QWidget):
     """Creates the window for the new plot"""
@@ -19,13 +21,16 @@ class GrapherWindow(QtGui.QWidget):
         self.windowName = windowName
         self.parameterWindows = {}
         self.datasetCheckboxes = {}
+        self.datasetCheckboxesItems = {}
         self.datasetAnalysisCheckboxes = {}
         self.datasetCheckboxCounter = 0
-        self.datasetCheckboxPositionDict = {}
+        self.datasetCheckboxPositionDict = {} # [dataset, directory, index], integer
+        self.itemDatasetCheckboxPositionDict = {} # item: integer
+        self.toggleDict = {} # dataset, directory, index: 0 off, 1 on
         self.datasetAnalysisCheckboxCounter = 0
         self.manuallyLoaded = True
         self.setWindowTitle(self.windowName)
-   
+         
         # create a vertical box layout widget
         grapherLayout = QtGui.QVBoxLayout()
         # instantiate our Matplotlib canvas widget
@@ -50,8 +55,10 @@ class GrapherWindow(QtGui.QWidget):
         self.datasetCheckboxListWidget.setMaximumWidth(180)
         self.datasetCheckboxListWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         datasetLayout.addWidget(self.datasetCheckboxListWidget)
-        self.analysisWidget = AnalysisWidget(self)
-        datasetLayout.addWidget(self.analysisWidget)
+        
+               
+#        self.analysisWidget = AnalysisWidget(self)
+#        datasetLayout.addWidget(self.analysisWidget)
         
         
 
@@ -107,66 +114,52 @@ class GrapherWindow(QtGui.QWidget):
             # The trick here is to create an item with enough text to activate the scrollbar, and then hide the text.
             # This must be done because a checkbox, even with a lot of text, does not activate the scroll bar horizontally
             item = QtGui.QListWidgetItem()
-            item.setText('     ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
+            self.datasetCheckboxesItems[item] = [dataset, directory, index]
+            item.setText('        ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             item.setTextColor(QtGui.QColor(255, 255, 255))
             self.datasetCheckboxListWidget.addItem(item)
+            self.itemDatasetCheckboxPositionDict[item] = self.datasetCheckboxCounter
             self.datasetCheckboxListWidget.setItemWidget(self.datasetCheckboxListWidget.item(self.datasetCheckboxCounter), datasetCheckbox)
             self.datasetCheckboxPositionDict[dataset, directory, index] = self.datasetCheckboxCounter
             self.datasetCheckboxCounter = self.datasetCheckboxCounter + 1
+            self.toggleDict[dataset, directory, index] = 1
 
-    # adds a checkbox when a new dataset is overlaid on the graph
-    def createDatasetAnalysisCheckbox(self, dataset, directory, label, index):
-#        datasetAnalysisCheckbox = QtGui.QCheckBox(str(dataset) + ' ' + str(directory[-1]) + ' ' + label, self)
-        datasetAnalysisCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
-        self.datasetAnalysisCheckboxes[dataset, directory, index] = datasetAnalysisCheckbox
-        # The trick here is to create an item with enough text to activate the scrollbar, and then hide the text.
-        # This must be done because a checkbox, even with a lot of text, does not activate the scroll bar horizontally
-        item = QtGui.QListWidgetItem()
-        item.setText('     ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
-        item.setTextColor(QtGui.QColor(255, 255, 255))
-        #self.analysisWidget.datasetCheckboxListWidget.addItem(str(dataset) + ' - ' + label)
-        self.analysisWidget.datasetCheckboxListWidget.addItem(item)
-        self.analysisWidget.datasetCheckboxListWidget.setItemWidget(self.analysisWidget.datasetCheckboxListWidget.item(self.datasetAnalysisCheckboxCounter), datasetAnalysisCheckbox)
-        self.datasetAnalysisCheckboxCounter = self.datasetAnalysisCheckboxCounter + 1
+
+#    # adds a checkbox when a new dataset is overlaid on the graph
+#    def createDatasetAnalysisCheckbox(self, dataset, directory, label, index):
+##        datasetAnalysisCheckbox = QtGui.QCheckBox(str(dataset) + ' ' + str(directory[-1]) + ' ' + label, self)
+#        datasetAnalysisCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
+#        self.datasetAnalysisCheckboxes[dataset, directory, index] = datasetAnalysisCheckbox
+#        # The trick here is to create an item with enough text to activate the scrollbar, and then hide the text.
+#        # This must be done because a checkbox, even with a lot of text, does not activate the scroll bar horizontally
+#        item = QtGui.QListWidgetItem()
+#        item.setText('     ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
+#        item.setTextColor(QtGui.QColor(255, 255, 255))
+#        #self.analysisWidget.datasetCheckboxListWidget.addItem(str(dataset) + ' - ' + label)
+#        self.analysisWidget.datasetCheckboxListWidget.addItem(item)
+#        self.analysisWidget.datasetCheckboxListWidget.setItemWidget(self.analysisWidget.datasetCheckboxListWidget.item(self.datasetAnalysisCheckboxCounter), datasetAnalysisCheckbox)
+#        self.datasetAnalysisCheckboxCounter = self.datasetAnalysisCheckboxCounter + 1
 
     def fitFromScript(self, dataset, directory, numberDependentVariables, scriptParameters, fitOverride = None):
-        datasetsToFit = eval(scriptParameters[0])
-        curveToFit = scriptParameters[1]
-        curveParameters = eval(scriptParameters[2])
+        index = int(scriptParameters[0]) # index
+        curveName = scriptParameters[1] # curveName
+        parameters = eval(scriptParameters[2]) #parameters
         
-        # if no selection of datasets, fit all of them
-        if (len(datasetsToFit) == 0):
-            datasetsToFit = range(numberDependentVariables)
-        else:
-            # naming convention. Dataset 1, for purposes is this program, has an index of 0, not 1. Ex: datasetsToFit = [1, 2, 3] -> [0, 1, 2] 
-            for i in range(len(datasetsToFit)):
-                datasetsToFit[i] = datasetsToFit[i] - 1
+#        # if no selection of datasets, fit all of them
+#        if (len(datasetsToFit) == 0):
+#            datasetsToFit = range(numberDependentVariables)
+#        else:
+#            # naming convention. Dataset 1, for purposes is this program, has an index of 0, not 1. Ex: datasetsToFit = [1, 2, 3] -> [0, 1, 2] 
+#            for i in range(len(datasetsToFit)):
+#                datasetsToFit[i] = datasetsToFit[i] - 1
         
-        # cycle through all the dataset checkboxes and uncheck them.
-        for checkBoxDataset, checkBoxDirectory, checkBoxIndex in self.datasetAnalysisCheckboxes.keys():
-            if self.datasetAnalysisCheckboxes[checkBoxDataset, checkBoxDirectory, checkBoxIndex].isChecked():
-                 self.datasetAnalysisCheckboxes[checkBoxDataset, checkBoxDirectory, checkBoxIndex].toggle()
-        
-        # toggle the datasets we care about
-        for datasetToFit in datasetsToFit:
-            for checkBoxDataset, checkBoxDirectory, checkBoxIndex in self.datasetAnalysisCheckboxes.keys():
-                if (dataset == checkBoxDataset and directory == checkBoxDirectory and datasetToFit == checkBoxIndex):
-                    self.datasetAnalysisCheckboxes[dataset, directory, datasetToFit].toggle()
-                    
-        # cycle through the curves checkboxes and uncheck them.
-        for curve in self.analysisWidget.analysisCheckboxes.keys():
-            if self.analysisWidget.analysisCheckboxes[curve].isChecked():
-                self.analysisWidget.analysisCheckboxes[curve].toggle()
-        
-        # toggle the curve we care about
-        for curve in self.analysisWidget.analysisCheckboxes.keys():
-            if (curve == curveToFit):
-                self.analysisWidget.analysisCheckboxes[curveToFit].toggle()
 
         # everything is now set up to fit, so call fitCurves and pass in the parameters
-        if (fitOverride == None): 
-            self.qmc.fitData()        
-        self.analysisWidget.fitCurves(curveParameters)
+#        if (fitOverride == None): 
+#            self.qmc.fitData()        
+        
+        # need to open the correct analysis window and call fitcurves
+        self.datasetCheckboxListWidget.fitFromScript(dataset, directory, index, curveName, parameters)       
 
     def datasetCheckboxSignal(self):
         self.qmc.drawLegend()
@@ -203,9 +196,10 @@ class GrapherWindow(QtGui.QWidget):
         win.show()
         self.parameterWindows[dataset, directory] = win
 
+    @inlineCallbacks
     def getParameters(self, dataset, directory):
-        parameters = self.parent.getParameters(dataset, directory)
-        return parameters                   
+        parameters = yield self.parent.getParameters(dataset, directory)
+        returnValue( parameters )                   
      
     def fileQuit(self):
         self.close()
@@ -221,6 +215,11 @@ class GrapherWindow(QtGui.QWidget):
         self.parent.removeWindowFromWinDict(self.windowName)
 #        self.parent.removeWindowFromWinList(self)
         self.parent.cleanUp()
+        for window in self.datasetCheckboxListWidget.analysisWindows.keys():
+            try:
+                self.datasetCheckboxListWidget.analysisWindows[window].close()
+            except:
+                pass
         self.fileQuit()
 
 
@@ -275,8 +274,9 @@ class ParameterWindow(QtGui.QWidget):
         self.populateList()
         tstartupdate = time.clock()
     
+    @inlineCallbacks
     def populateList(self):
-        self.parameters = self.parent.getParameters(self.dataset, self.directory)
+        self.parameters = yield self.parent.getParameters(self.dataset, self.directory)
         self.parameterListWidget.clear()
         if (self.parameters):
             for i in self.parameters:
@@ -286,14 +286,92 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
     def __init__(self, parent):
         QtGui.QListWidget.__init__(self)
         self.parent = parent
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.popup) 
+        self.savedAnalysisParameters = {}
+
+        
+        self.analysisWindows = {}       
         
     def mousePressEvent(self, event):
         """
         mouse clicks events
         """
-        button = event.button()
+        button = event.button()       
         item = self.itemAt(event.x(), event.y())
         if item:
             item.setSelected(True)
+
+    def popup(self, pos):
+        menu = QtGui.QMenu()
+#        fitAction = menu.addAction("Fit")
+#        removeAction = menu.addAction("Remove")
+        item = self.itemAt(pos)
+        if (item == None):
+            pass # no item
+        elif (item.text()[-5:] == 'Model'):
+            removeAction = menu.addAction("Remove") # we're not going to fit to a model
+            action = menu.exec_(self.mapToGlobal(pos))
+            toggleAction = menu.addAction("Toggle Points")
+            if action == removeAction:
+                self.removeItem(item, pos)
+            elif action == toggleAction:
+                self.togglePoints(pos)
+
+        else:
+            fitAction = menu.addAction("Fit")
+            removeAction = menu.addAction("Remove")
+            toggleAction = menu.addAction("Toggle Points")
+            action = menu.exec_(self.mapToGlobal(pos))
+            if action == fitAction:
+    #                print self.count()
+    #                item = self.item(self.count() - 1)  
+                index = self.parent.datasetCheckboxesItems[item][2]              
+                try:
+                    test = self.analysisWindows[index]
+                except: # prevent the same window from reopening!
+                    self.analysisWindows[index] = AnalysisWindow(self, self.parent.datasetCheckboxesItems[item])
+            elif action == removeAction:
+                self.removeItem(item, pos)
+            elif action == toggleAction:
+                self.togglePoints(pos)
     
-    
+    def removeItem(self, item, pos):
+        itemNumberToRemove = self.parent.itemDatasetCheckboxPositionDict[self.itemAt(pos)]
+        # now clean up the mess you made
+        for item in self.parent.itemDatasetCheckboxPositionDict.keys():
+            if (self.parent.itemDatasetCheckboxPositionDict[item] == itemNumberToRemove):
+                self.parent.itemDatasetCheckboxPositionDict.pop(item)
+            elif (self.parent.itemDatasetCheckboxPositionDict[item] > itemNumberToRemove):
+                self.parent.itemDatasetCheckboxPositionDict[item] -= 1
+
+        for dataset, directory, index in self.parent.datasetCheckboxPositionDict.keys():
+            if (self.parent.datasetCheckboxPositionDict[dataset, directory, index] == itemNumberToRemove):
+                self.parent.datasetCheckboxPositionDict.pop((dataset, directory, index))
+                self.parent.datasetCheckboxes.pop((dataset, directory, index))
+            elif (self.parent.datasetCheckboxPositionDict[dataset, directory, index] > itemNumberToRemove):
+                self.parent.datasetCheckboxPositionDict[dataset, directory, index] -= 1
+                
+        self.takeItem(itemNumberToRemove) 
+        self.parent.datasetCheckboxCounter -= 1
+        self.parent.qmc.drawLegend()
+        self.parent.qmc.draw()
+
+    def togglePoints(self, pos):
+        dataset, directory, index = self.parent.datasetCheckboxesItems[self.itemAt(pos)]
+        if self.parent.toggleDict[dataset, directory, index] == 1:
+            self.parent.qmc.toggleLine(dataset, directory, index)
+            self.parent.toggleDict[dataset, directory, index] = 0
+        elif self.parent.toggleDict[dataset, directory, index] == 0:
+            self.parent.qmc.togglePoints(dataset, directory, index)
+            self.parent.toggleDict[dataset, directory, index] = 1         
+        
+    def fitFromScript(self, dataset, directory, index, curveName, parameters):
+        try:
+            test = self.analysisWindows[index]
+        except: # prevent the same window from reopening!
+            self.analysisWindows[index] = AnalysisWindow(self, [dataset, directory, index])
+            self.analysisWindows[index].combo.setCurrentIndex(self.analysisWindows[index].curveComboIndexDict[curveName])
+            self.analysisWindows[index].onActivated('')
+            self.analysisWindows[index].fitCurves(parameters)
+        

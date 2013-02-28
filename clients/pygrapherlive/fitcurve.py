@@ -17,11 +17,11 @@ class CurveFit():
     def fitCurve(self, dataset, directory, index, label, parameters, drawCurves):
         params = []
         # data retrieval problem solved
-        dataX, dataY = self.parent.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
+        dataX, dataY = self.parent.parent.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         dataX = np.array(dataX)
-        #xmin, xmax = self.parent.parent.qmc.ax.get_xlim()
-        xmin = self.parent.parameterWindow.minRange.value()
-        xmax = self.parent.parameterWindow.maxRange.value()
+#        xmin, xmax = self.parent.parent.parent.qmc.ax.get_xlim()
+        xmin = self.parent.minRange.value()
+        xmax = self.parent.maxRange.value()
         selectedXValues = np.where((dataX >= xmin) & (dataX <= xmax))[0]
         dataX = dataX[(dataX >= xmin) & (dataX <= xmax)]
         newYData = np.zeros(len(dataX))
@@ -36,13 +36,8 @@ class CurveFit():
 #            center = self.parent.parameterWindow.gaussianCenterDoubleSpinBox.value()
 #            sigma =  self.parent.parameterWindow.gaussianSigmaDoubleSpinBox.value()
 #            offset = self.parent.parameterWindow.gaussianOffsetDoubleSpinBox.value()
-            i = 0
-            for parameter in self.parent.parameterWindow.parameterWidgets[self.curveName]:
-                if (i % 2 == 0): #even
-                    pass
-                else:
-                    params.append(self.parent.parameterWindow.parameterWidgets[self.curveName][i].value())
-                i += 1
+            for parameterName in self.parent.fitCurveDictionary[self.curveName].parameterNames:
+                params.append(self.parent.parameterSpinBoxes[parameterName].value())
         else:
             params = parameters
             
@@ -65,16 +60,15 @@ class CurveFit():
 #            height, center, sigma, offset = self.fit(self.fitFuncGaussian, [height, center, sigma, offset], newYData, dataX)
             solutions = self.fit(self.fitFunc, params, newYData, dataX)
             
-            self.parent.solutionsDictionary[dataset, directory, label, self.curveName, str(self.parameterNames), index] = solutions
-    
+   #         self.parent.solutionsDictionary[dataset, directory, label, self.curveName, str(self.parameterNames), index] = solutions
+            self.parent.solutionsDictionary[dataset, directory, index, self.curveName] = solutions
             yield self.parent.cxn.data_vault.cd(directory, context = self.parent.context)
             yield self.parent.cxn.data_vault.open(dataset, context = self.parent.context)
 #            yield self.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+'Gaussian', [height, center, sigma, offset], context = self.context)        
             yield self.parent.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(index)+'-'+self.curveName, solutions, context = self.parent.context)
         else:
             solutions = params
-
-               
+              
         modelX = np.linspace(dataX[0], dataX[-1], len(dataX)*4)
         # this should be changed to use the fitFunc defined by the user, and NOT the parameter names
 #        modelY = self.fitFuncGaussian(modelX, [height, center, sigma, offset])
@@ -90,8 +84,8 @@ class CurveFit():
         directory = tuple(directory)
         
         # same name deal here
-        self.parent.parent.qmc.initializeDataset(dataset, directory, (label + ' ' + self.curveName +' Model',))
-        self.parent.parent.qmc.setPlotData(dataset, directory, plotData)
+        self.parent.parent.parent.qmc.initializeDataset(dataset, directory, (label + ' ' + self.curveName +' Model',))
+        self.parent.parent.parent.qmc.setPlotData(dataset, directory, plotData)
 
 
     def fit(self, function, parameters, y, x = None):  

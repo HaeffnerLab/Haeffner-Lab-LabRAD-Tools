@@ -316,14 +316,18 @@ class CONNECTIONS(QtGui.QGraphicsObject):
                         self.overlaidWindows.append(j)
         return self.overlaidWindows
     
+    @inlineCallbacks
     def getParameters(self, dataset, directory):
         parametersValues = []
-        parameters = self.datasetDict[dataset, directory].parameters
-        values = self.datasetDict[dataset, directory].parameterValues
+        parameters = yield self.cxn.data_vault.parameters(context = self.datasetDict[dataset, directory].context)
+        values = []
+        for parameter in parameters:
+           parameterValue = yield self.cxn.data_vault.get_parameter(parameter, context = self.datasetDict[dataset, directory].context)
+           values.append(parameterValue)
         for parameter, value in zip(parameters, values):
             parametersValues.append((parameter, value))
         
-        return parametersValues
+        returnValue( parametersValues )
     
     def changeWindowName(self, oldWindowName, newWindowName):
         self.winDict[newWindowName] = self.winDict[oldWindowName]

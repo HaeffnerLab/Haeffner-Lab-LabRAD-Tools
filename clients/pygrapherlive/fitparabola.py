@@ -11,8 +11,10 @@ class FitParabola(CurveFit):
     def __init__(self, parent):
         self.parent = parent
         self.curveName = 'Parabola'
+        
         self.parameterNames = ['A', 'B', 'C']
-   
+        self.parameterValues = [1.0, 2.0, 3.0]
+
     # idk, something like this?
     def fitFunc(self, x, p):
         """ 
