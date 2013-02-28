@@ -18,15 +18,15 @@ Created on Dec 22, 2010
 #===============================================================================
 #
 # 2011 - 01 - 26
-#
+# 
 # Changed LabradServer.findSerial() to include serNode parameter.
 # Default behavior is to use self.serNode attribute.
-#
+# 
 # Added LabradServer._matchSerial() to check for serial server match,
 # since we search both on initialization and on new server connecting.
-#
+# 
 # Changed many docstrings to be more useful ( specify exceptions raised, etc. )
-#
+# 
 # Added checkConnection decorator that modifies setting to raise exception
 # if self.ser is empty.
 #
@@ -35,9 +35,9 @@ Created on Dec 22, 2010
 
 #===============================================================================
 # 2011 - 01 - 31
-#
+# 
 # Changed SerialDeviceServer.initSerial and SerialDeviceServer.SerialConnection.__init__ to include timeout parameter.
-#
+# 
 # Got rid of checkConnection decorator, replaced with method SerialDeviceServer.checkConnection.
 #===============================================================================
 
@@ -70,76 +70,66 @@ NAME = 'SerialDevice'
 
 class SerialDeviceServer( LabradServer ):
     """
-Base class for serial device servers.
-Contains a number of methods useful for using labrad's serial server.
-Functionality comes from ser attribute, which represents a connection that performs reading and writing to a serial port.
-subclasses should assign some or all of the following attributes:
-name: Something short but descriptive
-port: Name of serial port (Better to look this up in the registry using regKey and getPortFromReg())
-regKey: Short string used to find port name in registry
-serNode: Name of node running desired serial server. Used to identify correct serial server.
-timeOut: Time to wait for response before giving up.
-"""
+    Base class for serial device servers.
+    
+    Contains a number of methods useful for using labrad's serial server.
+    
+    Functionality comes from ser attribute, which represents a connection that performs reading and writing to a serial port. 
+    
+    subclasses should assign some or all of the following attributes:
+    
+    name: Something short but descriptive
+    port: Name of serial port (Better to look this up in the registry using regKey and getPortFromReg())
+    regKey: Short string used to find port name in registry
+    serNode: Name of node running desired serial server.  Used to identify correct serial server.
+    timeOut: Time to wait for response before giving up.
+    """
     name = NAME
     port = None
-    baudrate = None
     regKey = None
     serNode = None
     timeout = None
-    stopbits = None
-    bytesize = None
     ser = None
-    deviceFound = False
     
     class SerialConnection():
         """
-Wrapper for our server's client connection to the serial server.
-@raise labrad.types.Error: Error in opening serial connection
-"""
+        Wrapper for our server's client connection to the serial server.   
+        
+        @raise labrad.types.Error: Error in opening serial connection   
+        """
         def __init__( self, ser, port, **kwargs ):
             timeout = kwargs.get('timeout')
             baudrate = kwargs.get('baudrate')
-            stopbits = kwargs.get('stopbits')
-            bytesize = kwargs.get('bytesize')
             ser.open( port )
             if timeout is not None: ser.timeout( timeout )
             if baudrate is not None: ser.baudrate( baudrate )
-            if stopbits is not None: ser.stopbits( stopbits )
-            if bytesize is not None: ser.bytesize( bytesize )
             self.write = lambda s: ser.write( s )
-            self.write_line = lambda s: ser.write_line(s)
+            self.writeline = lambda s: ser.write_line(s)
             self.read = lambda x = 0: ser.read( x )
             self.readline = lambda: ser.read_line()
-            self.readlines = lambda: ser.read_lines() #sdfa
             self.close = lambda: ser.close()
             self.flushinput = lambda: ser.flushinput()
             self.flushoutput = lambda: ser.flushoutput()
             self.ID = ser.ID
 
-
     def initSerial( self, serStr, port, **kwargs):
         """
-Initialize serial connection.
-Attempts to initialize a serial connection using
-given key for serial serial and port string.
-Sets server's ser attribute if successful.
-@param serStr: Key for serial server
-@param port: Name of port to connect to
-@raise SerialConnectionError: Error code 1. Raised if we could not create serial connection.
-"""
+        Initialize serial connection.
+        
+        Attempts to initialize a serial connection using
+        given key for serial serial and port string.  
+        Sets server's ser attribute if successful.
+        
+        @param serStr: Key for serial server
+        @param port: Name of port to connect to
+        
+        @raise SerialConnectionError: Error code 1.  Raised if we could not create serial connection.
+        """
         if kwargs.get('timeout') is None and self.timeout: kwargs['timeout'] = self.timeout
-        if kwargs.get('baudrate') is None and self.baudrate: kwargs['baudrate'] = self.baudrate
-        if kwargs.get('stopbits') is None and self.stopbits: kwargs['stopbits'] = self.stopbits
-        if kwargs.get('bytesize') is None and self.bytesize: kwargs['bytesize'] = self.bytesize
-
         print '\nAttempting to connect at:'
         print '\n\tserver:\t%s' % serStr
         print '\n\tport:\t%s' % port
-        print '\n\tbaudrate:\t%s' % (str( self.baudrate) if kwargs.get('baudrate') is not None else 'Default')
-        print '\n\tstopbits:\t%s' % (str( self.stopbits) if kwargs.get('stopbits') is not None else 'Default')
-        print '\n\tbytesize:\t%s' % (str( self.bytesize) if kwargs.get('bytesize') is not None else 'Default')
-        print '\n\ttimeout:\t%s\n\n' % ( str( self.timeout ) if kwargs.get('timeout') is not None else 'No timeout' )
-        
+        print '\n\timeout:\t%s\n\n' % ( str( self.timeout ) if kwargs.get('timeout') is not None else 'No timeout' )
         cli = self.client
         try:
             # get server wrapper for serial server
@@ -150,57 +140,20 @@ Sets server's ser attribute if successful.
         except Error:
             self.ser = None
             raise SerialConnectionError( 1 )
-
-
-    @inlineCallbacks
-    def doSerial( self, serNode, toWrite, response, **kwargs ):
-        "specify prompt and proper response instead of port"
-        from labrad.wrappers import connectAsync
-        cxn = yield connectAsync()
-        self.server = cxn.cctmain_serial_server
-        portList = yield self.server.list_serial_ports()
-        serStr = yield self.findSerial(self.serNode)
-        for port in portList:
-            if not self.deviceFound: 
-                try:
-                    print 'Checking {} for device'.format(str(port))
-                    yield self.initSerial( serStr, port, **kwargs )
-                    yield self.ser.write(toWrite) 
-                    yield self.getAnswer(response)
-                    if self.deviceFound:
-                        print 'Device found!'
-                    else:
-                        print 'Device not found\n'
-                except SerialConnectionError, e:
-                    self.ser = None
-                    if e.code == 0:
-                        print 'Could not find serial server for node: %s' % self.serNode
-                        print 'Please start correct serial server'
-                    elif e.code == 1:
-                        print 'Device not found'
-                    else: raise  
-
-    @inlineCallbacks
-    def getAnswer( self, response ):
-        listy = []
-        ans = 'X'
-        while ans != '':
-            ans = yield self.ser.readline()
-            listy.append(ans)
-        for r in listy:
-            if r[:len(response)] == response:
-                self.deviceFound = True
-
     @inlineCallbacks
     def getPortFromReg( self, regKey = None ):
         """
-Find port string in registry given key.
-If you do not input a parameter, it will look for the first four letters of your name attribute in the registry port keys.
-@param regKey: String used to find key match.
-@return: Name of port
-@raise PortRegError: Error code 0. Registry does not have correct directory structure (['','Ports']).
-@raise PortRegError: Error code 1. Did not find match.
-"""
+        Find port string in registry given key.
+        
+        If you do not input a parameter, it will look for the first four letters of your name attribute in the registry port keys.
+        
+        @param regKey: String used to find key match.
+        
+        @return: Name of port
+        
+        @raise PortRegError: Error code 0.  Registry does not have correct directory structure (['','Ports']).
+        @raise PortRegError: Error code 1.  Did not find match.
+        """
         reg = self.client.registry
         #There must be a 'Ports' directory at the root of the registry folder
         try:
@@ -224,14 +177,15 @@ If you do not input a parameter, it will look for the first four letters of your
     @inlineCallbacks
     def selectPortFromReg( self ):
         """
-Select port string from list of keys in registry
-@return: Name of port
-@raise PortRegError: Error code 0. Registry not properly configured (['','Ports']).
-@raise PortRegError: Error code 1. No port keys in registry.
-"""
+        Select port string from list of keys in registry
+        
+        @return: Name of port
+        
+        @raise PortRegError: Error code 0.  Registry not properly configured (['','Ports']).
+        @raise PortRegError: Error code 1.  No port keys in registry.
+        """
         reg = self.client.registry
         try:
-            #change this back to 'Ports'
             yield reg.cd( ['', 'Ports'] )
             portDir = yield reg.dir()
             portKeys = portDir[1]
@@ -256,11 +210,14 @@ Select port string from list of keys in registry
     @inlineCallbacks
     def findSerial( self, serNode = None ):
         """
-Find appropriate serial server
-@param serNode: Name of labrad node possessing desired serial port
-@return: Key of serial server
-@raise SerialConnectionError: Error code 0. Could not find desired serial server.
-"""
+        Find appropriate serial server
+        
+        @param serNode: Name of labrad node possessing desired serial port
+        
+        @return: Key of serial server
+        
+        @raise SerialConnectionError: Error code 0.  Could not find desired serial server.
+        """
         if not serNode: serNode = self.serNode
         cli = self.client
         # look for servers with 'serial' and serNode in the name, take first result
@@ -272,11 +229,13 @@ Find appropriate serial server
     @staticmethod
     def _matchSerial( serNode, potMatch ):
         """
-Checks if server name is the correct serial server
-@param serNode: Name of node of desired serial server
-@param potMatch: Server name of potential match
-@return: boolean indicating comparison result
-"""
+        Checks if server name is the correct serial server
+        
+        @param serNode: Name of node of desired serial server
+        @param potMatch: Server name of potential match
+        
+        @return: boolean indicating comparison result
+        """
         serMatch = 'serial' in potMatch.lower()
         nodeMatch = serNode.lower() in potMatch.lower()
         return serMatch and nodeMatch
@@ -293,12 +252,12 @@ Checks if server name is the correct serial server
     def serverDisconnected( self, ID, name ):
         """Close connection (if we are connected)"""
         if self.ser and self.ser.ID == ID:
-            print 'Serial server disconnected. Relaunch the serial server'
+            print 'Serial server disconnected.  Relaunch the serial server'
             self.ser = None
 
     def stopServer( self ):
         """
-Close serial connection before exiting.
-"""
+        Close serial connection before exiting.
+        """
         if self.ser:
             self.ser.close()

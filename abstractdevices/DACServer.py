@@ -23,17 +23,11 @@ from twisted.internet.defer import returnValue
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline as UniSpline
 from numpy import genfromtxt, arange
-# import sys
-# from cct.scripts.PulseSequences.advanceDACs import advanceDACs
 from DacConfiguration import hardwareConfiguration as hc
 
 SERVERNAME = 'DAC Server'
 EXPTNAME = 'CCT'
 SIGNALID = 270837
-
-class InvalidChannelError(Exception):
-    def __init__(self, channel):
-        self.channel = channel
 
 class Voltage(object):
     def __init__(self, channel, analogVoltage = None, digitalVoltage = None):
@@ -88,10 +82,11 @@ class Voltage(object):
 class Queue(object):
     def __init__(self):
         self.currentSet = 1
-        self.setDict = {}.fromkeys( range(1, hc.maxCache + 1), [] )
+        # self.setDict = {}.fromkeys( range(1, hc.maxCache + 1), [] )
+        self.setDict = {i: [] for i in range(1, hc.maxCache + 1)}
 
     def advance(self):
-        self.currentSet = (self.currentSet % max) + 1
+        self.currentSet = (self.currentSet % hc.maxCache) + 1
 
     def reset(self):
         self.currentSet = 1
@@ -101,14 +96,9 @@ class Queue(object):
         v.program(self.currentSet)
         self.setDict[self.currentSet].append(v)
 
-    def get(self):
-        try:
-            v = self.setDict[self.currentSet].pop(0)
-            return v
-        except IndexError:
-            self.advance()
-            return False
-
+    def get(self):        
+        v = self.setDict[self.currentSet].pop(0)
+        return v
 
 class DACServer( LabradServer ):
     """
@@ -116,7 +106,6 @@ class DACServer( LabradServer ):
     Used for controlling DC trap electrodes
     """
     name = SERVERNAME
-    # serNode = 'cctmain'
     onNewUpdate = Signal(SIGNALID, 'signal: ports updated', 's')
     currentPosition = 0
     registryPath = [ '', 'Servers', EXPTNAME + SERVERNAME ]
@@ -127,10 +116,10 @@ class DACServer( LabradServer ):
         self.registry = self.client.registry        
         self.dacDict = dict(hc.elecDict.items() + hc.smaDict.items())
         self.queue = Queue()
-        self.current = {}   
+        self.current = {}
+        self.listeners = set() 
         yield self.setCalibrations()
-        self.setPreviousVoltages()
-        self.listeners = set()
+        self.setPreviousVoltages()        
 
     @inlineCallbacks
     def setCalibrations( self ):
@@ -180,8 +169,6 @@ class DACServer( LabradServer ):
         self.pulser.reset_fifo_dac()
         for i in range(len(self.queue.setDict[self.queue.currentSet])):
             v = self.queue.get()            
-            if v == None:
-                break
             yield self.pulser.set_dac_voltage(v.hexRep)
             print v.channel.name, v.analogVoltage
             self.current[v.channel.name] = v.analogVoltage
@@ -250,25 +237,24 @@ class DACServer( LabradServer ):
     @setting( 5, "Set Multipole Control File", CfilePath = 's')
     def setMultipoleControlFile(self, c, CfilePath):                
         data = genfromtxt(CfilePath)
-        numCols = data[1].size
-        if numCols == 1: 
+        self.numCols = data[1].size
+        if self.numCols == 1: 
             self.multipoleMatrix = {elec: {mult: data[int(elec) + index*hc.numElectrodes - 1] for index, mult in enumerate(hc.multipoles)} for elec in hc.elecDict.keys()}
             self.positionList = data[-1]
-        else: self.interpolateMultipoleMatrix(data, numCols)
+        else: self.interpolateMultipoleMatrix(data)
 
         yield self.registry.cd(self.registryPath)
         yield self.registry.set('MostRecent', CfilePath)
 
-    def interpolateMultipoleMatrix( self, data, numCols ):
+    def interpolateMultipoleMatrix( self, data ):
         ''' fit individual components of multiple Cfiles to a spline '''
         numElectrodes = (data[:,1].size - 1) / len(hc.multipoles)
-        numPositions = 10
-        inc = (numCols - 1.) / numPositions
+        numPositions = 10*(self.numCols - 1.)
+        inc = (self.numCols-1)/numPositions
         partition = arange(0, (numPositions + 1) * inc, inc)
-        splineFit = {elec: {mult: UniSpline(range(numCols) , data[int(elec) + index*hc.numElectrodes - 1], s = 0 ) for index, mult in enumerate(hc.multipoles)} for elec in hc.elecDict.keys()}
+        splineFit = {elec: {mult: UniSpline(range(self.numCols) , data[int(elec) + index*hc.numElectrodes - 1], s = 0 ) for index, mult in enumerate(hc.multipoles)} for elec in hc.elecDict.keys()}
         self.multipoleMatrix = {elec: {mult: splineFit[elec][mult](partition) for index, mult in enumerate(hc.multipoles)} for elec in hc.elecDict.keys()}
-     
-        positionFit = interpolate.interp1d(range(numCols) , data[numElectrodes * len(hc.multipoles)], 'linear')
+        positionFit = interpolate.interp1d(range(self.numCols) , data[numElectrodes * len(hc.multipoles)], 'linear')
         self.positionList = positionFit(partition)
 
     @setting( 6, "Set Multipole Values", ms = '*(sv): dictionary of multipole values')
@@ -297,10 +283,13 @@ class DACServer( LabradServer ):
         # apply multipole matrix to multipole vector
         for e in hc.elecDict.keys():        
             av = 0
-            for m in hc.multipoles: 
-                try: av += self.multipoleMatrix[e][m][n] * self.multipoleSet[m] # numpy.array[0] = scalar
-                except: av += self.multipoleMatrix[e][m] * self.multipoleSet[m] # numpy.0-dimnl_array[0] throws error
+            for m in hc.multipoles:                 
+                if self.numCols == 1: av += self.multipoleMatrix[e][m] * self.multipoleSet[m] # numpy.0-dimnl_array[0] throws error
+                else: av += self.multipoleMatrix[e][m][n] * self.multipoleSet[m] # numpy.array[0] = scalar
             newVoltageSet.append( (e, av) )
+        if advance or reset:
+            for s in hc.smaDict.keys():
+                newVoltageSet.append( (s, self.current[s]) )
         yield self.setIndividualAnalogVoltages(c, newVoltageSet, advance = advance, reset = reset)
         self.currentPosition = n
 
