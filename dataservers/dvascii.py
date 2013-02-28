@@ -1203,21 +1203,15 @@ class DataVault( LabradServer ):
     def wait_for_parameter(self, c, name, timeout = 60):
         """Wait for parameter"""
         dataset = self.getDataset(c)
-        dParam = Deferred()
-#        dTimeout = Deferred()  
-#        dlist = DeferredList([dParam, dTimeout])
-#        dTimeout.addCallback(dataset.parameterTimeout(name, dlist))      
-        callID = reactor.callLater(timeout, dataset.parameterTimeout, name, dParam)
-        dataset.timeOutCallIDs[dParam] = callID
+        d = Deferred()
+        callID = reactor.callLater(timeout, dataset.parameterTimeout, name, d)
+        dataset.timeOutCallIDs[d] = callID
         try:
-#            dataset.deferredParameterDict[name].append(dlist)
-            dataset.deferredParameterDict[name].append(dParam)
-            
-        except: # parameter has never been waited on before
-#            dataset.deferredParameterDict[name] = [dlist]
-            dataset.deferredParameterDict[name] = [dParam]
-#        result = yield dlist
-        result = yield dParam
+            dataset.deferredParameterDict[name].append(d)
+        except KeyError:
+            dataset.deferredParameterDict[name] = [d]
+        result = yield d
+        returnValue(result)
         
     @setting( 200, 'add comment', comment = ['s'], user = ['s'], returns = [''] )
     def add_comment( self, c, comment, user = 'anonymous' ):
