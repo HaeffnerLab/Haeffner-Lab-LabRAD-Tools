@@ -39,7 +39,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         self.process_parameter_info(parameter_info)
     
     def process_parameter_info(self, info):
-        for collection, parameter, minim, maxim, units in info:
+        for collection, parameter, minim, maxim, units in sorted(info):
             self.parameter.addItem(collection + ' : ' + parameter, userData = (collection, parameter) )
             self.parameter_info[(collection,parameter)] = (minim, maxim, units)
         

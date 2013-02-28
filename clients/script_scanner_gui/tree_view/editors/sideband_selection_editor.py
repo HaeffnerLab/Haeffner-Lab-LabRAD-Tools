@@ -19,7 +19,7 @@ class sideband_selection_editor(base, form):
         self._dataMapper.addMapping(self.uiRadial1, 3)
         self._dataMapper.addMapping(self.uiRadial2, 4)
         self._dataMapper.addMapping(self.uiAxial, 5)
-        self._dataMapper.addMapping(self.uiMicromotion, 5)
+        self._dataMapper.addMapping(self.uiMicromotion, 6)
 
     def setSelection(self, current):
         parent = current.parent()
