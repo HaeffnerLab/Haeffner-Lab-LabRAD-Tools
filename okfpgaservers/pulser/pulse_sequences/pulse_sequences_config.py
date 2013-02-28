@@ -15,6 +15,12 @@ class dds_channel(object):
         can be overwitten to provide a custom amplitude conversion
         '''
         return ampl
+    
+    def phase_conversion(self, phase):
+        '''
+        can be overwitten to provide a custom phase conversion
+        '''
+        return phase
         
 class double_pass_729(dds_channel):
     def __init__(self, name):
@@ -24,6 +30,11 @@ class double_pass_729(dds_channel):
         #converting real frequency to double pass frequency
         freq =  - 0.5 * freq + WithUnit(220.0, 'MHz')
         return freq
+    
+    def phase_conversion(self, phase):
+        #double pass doubles the phase
+        phase = 2 * phase
+        return phase
         
 #defining available dds channels
 dds729DP = double_pass_729('729DP')
