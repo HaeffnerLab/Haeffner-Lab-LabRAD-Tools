@@ -33,7 +33,7 @@ class double_pass_729(dds_channel):
     
     def phase_conversion(self, phase):
         #double pass doubles the phase
-        phase = 2 * phase
+        phase = phase / 2.0
         return phase
         
 #defining available dds channels

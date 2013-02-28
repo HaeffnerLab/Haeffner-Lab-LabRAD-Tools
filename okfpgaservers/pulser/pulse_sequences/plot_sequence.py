@@ -130,21 +130,3 @@ class SequencePlotter():
     def drawVerticals(self, advances):
         for x in advances:
             pyplot.axvline(x, alpha = '0.3', color = '0.35', linestyle = '--')
-
-if __name__ == '__main__':
-    from lattice.scripts.PulseSequences.spectrum_rabi import sample_parameters, spectrum_rabi as seq
-#    from blue_heat_rabi import sample_parameters, blue_heat_rabi as seq
-#    from melting_heat import sample_parameters, melting_heat as seq
-#    from ramsey_dephase import sample_parameters, ramsey_dephase as seq
-    import labrad
-    with labrad.connect() as cxn:
-        pulser = cxn.pulser
-        params = sample_parameters.parameters
-        cs = seq(**params)
-        cs.programSequence(cxn.pulser)
-        ttl = pulser.human_readable_ttl().asarray
-        dds = pulser.human_readable_dds()
-        pulser.stop_sequence()
-        channels = pulser.get_channels().asarray
-        sp = SequencePlotter(ttl, dds, channels)
-        sp.makePlot()
