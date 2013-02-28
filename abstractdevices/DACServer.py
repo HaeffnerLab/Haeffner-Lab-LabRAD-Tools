@@ -33,8 +33,7 @@ class Voltage(object):
     def __init__(self, channel, analogVoltage = None, digitalVoltage = None):
         self.channel = channel
         self.digitalVoltage = digitalVoltage
-        if analogVoltage is not None:
-            self.analogVoltage = analogVoltage
+        self.analogVoltage = analogVoltage
             
     def program(self, setNum):
         '''
@@ -82,7 +81,6 @@ class Voltage(object):
 class Queue(object):
     def __init__(self):
         self.currentSet = 1
-        # self.setDict = {}.fromkeys( range(1, hc.maxCache + 1), [] )
         self.setDict = {i: [] for i in range(1, hc.maxCache + 1)}
 
     def advance(self):
@@ -152,11 +150,14 @@ class DACServer( LabradServer ):
             try: av = yield self.registry.get(k)
             except: av = 0. # if no previous voltage has been recorded, set to zero. 
             yield self.setIndividualAnalogVoltages(0, [(k, av)])
+        # yield self.setIndividualDigitalVoltages(0, [('RF bias', 32768)], 0)
         yield self.registry.cd(self.registryPath)
         try:
             CfilePath = yield self.registry.get('MostRecent')
             yield self.setMultipoleControlFile(0, CfilePath)
-        except: self.multipoleMatrix = {k: {j: [0.] for j in hc.multipoles} for k in hc.elecDict.keys()} # if no previous Cfile was set, set all entries to zero.
+        except: 
+            self.multipoleMatrix = {k: {j: .1 for j in hc.multipoles} for k in hc.elecDict.keys()} # if no previous Cfile was set, set all entries to zero.
+            self.numCols = 1
         try: ms = yield self.registry.get('MultipoleSet')                    
         except: ms = [(k, 0) for k in hc.multipoles] # if no previous multipole values have been recorded, set them to zero. 
         yield self.setMultipoleValues(0, ms)
@@ -204,8 +205,8 @@ class DACServer( LabradServer ):
         l = zip(range(1, hc.numDacChannels + 1), analogVoltages)
         yield self.setIndivAnaVoltages(c, l, setNum)
 
-    @setting( 2, "Set Individual Digital Voltages", digitalVoltages = '*(iv)', returns = '')
-    def setIndividualDigitalVoltages(self, c, digitalVoltages, setNum):
+    @setting( 2, "Set Individual Digital Voltages", digitalVoltages = '*(si)', returns = '')
+    def setIndividualDigitalVoltages(self, c, digitalVoltages, setNum = 0):
         """
         Pass a list of tuples of the form:
         (portNum, newVolts)
@@ -215,7 +216,7 @@ class DACServer( LabradServer ):
         yield self.sendToPulser(c)
 
     @setting( 3, "Set Individual Analog Voltages", analogVoltages = '*(sv)', returns = '')
-    def setIndividualAnalogVoltages(self, c, analogVoltages, advance = 0, reset = 0):
+    def setIndividualAnalogVoltages(self, c, analogVoltages):
         """
         Pass a list of tuples of the form:
         (portNum, newVolts)
@@ -266,6 +267,7 @@ class DACServer( LabradServer ):
         for (k,v) in ms:
             self.multipoleSet[k] = v
         yield self.setVoltages(c, self.currentPosition)
+
         yield self.registry.cd(self.registryPath)
         yield self.registry.set('MultipoleSet', ms)
 
@@ -287,21 +289,22 @@ class DACServer( LabradServer ):
                 if self.numCols == 1: av += self.multipoleMatrix[e][m] * self.multipoleSet[m] # numpy.0-dimnl_array[0] throws error
                 else: av += self.multipoleMatrix[e][m][n] * self.multipoleSet[m] # numpy.array[0] = scalar
             newVoltageSet.append( (e, av) )
-        if advance or reset:
-            for s in hc.smaDict.keys():
-                newVoltageSet.append( (s, self.current[s]) )
-        yield self.setIndividualAnalogVoltages(c, newVoltageSet, advance = advance, reset = reset)
+        # if changing DAC FPGA voltage set, write sma voltages. 
+        # if advance or reset:
+        #     for s in hc.smaDict.keys():
+        #         newVoltageSet.append( (s, self.current[s]) )
+        yield self.setIndividualAnalogVoltages(c, newVoltageSet)
         self.currentPosition = n
 
     @setting( 9, "Set First Voltages")
     def setFirstVoltages(self, c):
         self.queue.reset()
-        yield self.setVoltages(c, reset = 1)
+        yield self.setVoltages(c)
 
     @setting( 10, "Set Next Voltages", newPosition = 'i')
     def setFutureVoltages(self, c, newPosition):
         self.queue.advance()
-        yield self.setVoltages(c, newPosition = newPosition, advance = 1)        
+        yield self.setVoltages(c, newPosition = newPosition)        
     
     @setting( 11, "Get Position", returns = 'i')
     def getPosition(self, c):
