@@ -289,9 +289,9 @@ class DACServer( LabradServer ):
                 else: av += self.multipoleMatrix[e][m][n] * self.multipoleSet[m] # numpy.array[0] = scalar
             newVoltageSet.append( (e, av) )
         # if changing DAC FPGA voltage set, write sma voltages. 
-        # if advance or reset:
-        #     for s in hc.smaDict.keys():
-        #         newVoltageSet.append( (s, self.current[s]) )
+        if advance or reset:
+            for s in hc.smaDict.keys():
+                newVoltageSet.append( (s, self.current[s]) )
         yield self.setIndividualAnalogVoltages(c, newVoltageSet)
         self.currentPosition = n
 
