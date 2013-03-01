@@ -6,7 +6,6 @@ from fitcurve import CurveFit
 from scipy.special.orthogonal import eval_genlaguerre as laguer
 from labrad import units as U
 
-
 class rabi_flop():
     def __init__(self, trap_frequency, sideband_order,nmax = 1000):
         m = 40 * U.amu
