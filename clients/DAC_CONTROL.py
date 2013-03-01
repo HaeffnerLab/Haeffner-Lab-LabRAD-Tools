@@ -1,10 +1,6 @@
 from PyQt4 import QtGui, QtCore, uic
-from numpy import *
-# from qtui.QCustomSpinBoxION import QCustomSpinBoxION
 from qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks, returnValue
-import sys
-# sys.path.append('/home/cct/LabRAD/common/abstractdevices')
 from common.abstractdevices.DacConfiguration import hardwareConfiguration as hc
 
 UpdateTime = 100 # ms
@@ -15,9 +11,9 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     def __init__(self, reactor, parent=None):
         super(MULTIPOLE_CONTROL, self).__init__(parent)
         self.reactor = reactor
+        self.makeGUI()
         self.connect()        
-        
-    @inlineCallbacks    
+   
     def makeGUI(self):
         self.controls = {k: QCustomSpinBox(k, (-2.,2.)) for k in hc.multipoles}
         self.controls['U1'] = QCustomSpinBox('U1', (-2., 2.))
@@ -39,8 +35,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
             self.controls[k].onNewValues.connect(self.inputHasUpdated)
         self.multipoleFileSelectButton.released.connect(self.selectCFile)
         self.setLayout(self.ctrlLayout)
-        yield self.followSignal(0, 0)	
-        
+
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
@@ -48,7 +43,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
         self.cxn = yield connectAsync()
         self.dacserver = yield self.cxn.dac_server
         yield self.setupListeners()
-        yield self.makeGUI()
+        yield self.followSignal(0, 0)
         
     def inputHasUpdated(self):
         self.inputUpdated = True
@@ -113,7 +108,8 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             elif int(k) > hc.numElectrodes/2:
                 elecLayout.addWidget(self.controls[k], hc.numElectrodes - 1 - int(k), 2)       
         spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
-        smaLayout.addItem(spacer)        
+        smaLayout.addItem(spacer)
+
         self.inputUpdated = False                
         self.timer = QtCore.QTimer(self)        
         self.timer.timeout.connect(self.sendToServer)
@@ -123,8 +119,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             self.controls[k].onNewValues.connect(self.inputHasUpdated(k))
 
         layout.setColumnStretch(1, 1)                   
-        self.setLayout(layout)
-	
+        self.setLayout(layout)	
             
     @inlineCallbacks
     def connect(self):
@@ -199,6 +194,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
             elif int(k) > hc.numElectrodes/2:
                 elecLayout.addWidget(QtGui.QLabel(k), hc.numElectrodes - int(k), 4)
                 elecLayout.addWidget(self.displays[k], hc.numElectrodes - int(k), 5) 
+
         spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
         smaLayout.addItem(spacer, s, 0,10, 2)  
 

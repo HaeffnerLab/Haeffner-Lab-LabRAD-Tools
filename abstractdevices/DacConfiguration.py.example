@@ -24,8 +24,8 @@ class hardwareConfiguration(object):
     multipoles = ['Ex1', 'Ey1', 'Ez1', 'U2']
     pulseTriggered = False # Set to True to have the DAC voltages advance by a pulse trigger, else update as each value is written
     maxCache = 126 # Max number of voltages which can be cached to the DAC
-    
-    elecDict = {        
+
+    elecDict = {
         '1 ': channelConfiguration(28, trapElectrodeNumber = 1),
         '2 ': channelConfiguration(27, trapElectrodeNumber = 2),
         '3 ': channelConfiguration(24, trapElectrodeNumber = 3),
@@ -41,8 +41,8 @@ class hardwareConfiguration(object):
         '13': channelConfiguration(8, trapElectrodeNumber = 13),
         '14': channelConfiguration(26, trapElectrodeNumber = 14),
         '15': channelConfiguration(25, trapElectrodeNumber = 15),
-        '16': channelConfiguration(23, trapElectrodeNumber = 16),        
-        '17': channelConfiguration(4, trapElectrodeNumber = 17),        
+        '16': channelConfiguration(23, trapElectrodeNumber = 16),
+        '17': channelConfiguration(4, trapElectrodeNumber = 17),
         '18': channelConfiguration(19, trapElectrodeNumber = 18),
         '19': channelConfiguration(17, trapElectrodeNumber = 19),
         '20': channelConfiguration(3, trapElectrodeNumber = 20),
