@@ -221,7 +221,7 @@ class Qt4MplCanvas(FigureCanvas):
             self.cidpress = self.mpl_connect('draw_event', self.on_draw)
             self.drawGraph()
             #if (len(self.dataDict.keys()) == 1) or (fit == True):
-            self.fitData()
+            #self.fitData()
         else:
             # New Data      
             

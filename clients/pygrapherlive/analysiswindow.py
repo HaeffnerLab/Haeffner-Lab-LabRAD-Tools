@@ -301,4 +301,4 @@ class AnalysisWindow(QtGui.QWidget):
         self.resize(finalSize)
     
     def closeEvent(self, evt):
-        self.parent.analysisWindows.pop(self.index)
+        self.parent.analysisWindows.pop((self.dataset, self.directory, self.index,))

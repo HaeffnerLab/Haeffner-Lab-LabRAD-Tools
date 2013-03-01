@@ -322,19 +322,24 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             fitAction = menu.addAction("Fit")
             removeAction = menu.addAction("Remove")
             toggleAction = menu.addAction("Toggle Points")
+            parametersAction = menu.addAction("Parameters")
             action = menu.exec_(self.mapToGlobal(pos))
             if action == fitAction:
     #                print self.count()
     #                item = self.item(self.count() - 1)  
-                index = self.parent.datasetCheckboxesItems[item][2]              
+                dataset, directory,index = self.parent.datasetCheckboxesItems[item]              
                 try:
-                    test = self.analysisWindows[index]
+                    test = self.analysisWindows[dataset, directory, index]
                 except: # prevent the same window from reopening!
-                    self.analysisWindows[index] = AnalysisWindow(self, self.parent.datasetCheckboxesItems[item])
+                    self.analysisWindows[dataset, directory,index] = AnalysisWindow(self, self.parent.datasetCheckboxesItems[item])
             elif action == removeAction:
                 self.removeItem(item, pos)
             elif action == toggleAction:
                 self.togglePoints(pos)
+            elif action == parametersAction:
+                dataset, directory,index = self.parent.datasetCheckboxesItems[item]
+                self.parent.newParameterWindow(dataset, directory)
+
     
     def removeItem(self, item, pos):
         itemNumberToRemove = self.parent.itemDatasetCheckboxPositionDict[self.itemAt(pos)]
@@ -368,10 +373,10 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
         
     def fitFromScript(self, dataset, directory, index, curveName, parameters):
         try:
-            test = self.analysisWindows[index]
+            test = self.analysisWindows[dataset, directory, index]
         except: # prevent the same window from reopening!
-            self.analysisWindows[index] = AnalysisWindow(self, [dataset, directory, index])
-            self.analysisWindows[index].combo.setCurrentIndex(self.analysisWindows[index].curveComboIndexDict[curveName])
-            self.analysisWindows[index].onActivated('')
-            self.analysisWindows[index].fitCurves(parameters)
+            self.analysisWindows[dataset, directory, index] = AnalysisWindow(self, [dataset, directory, index])
+            self.analysisWindows[dataset, directory, index].combo.setCurrentIndex(self.analysisWindows[dataset, directory, index].curveComboIndexDict[curveName])
+            self.analysisWindows[dataset, directory, index].onActivated('')
+            self.analysisWindows[dataset, directory, index].fitCurves(parameters)
         
