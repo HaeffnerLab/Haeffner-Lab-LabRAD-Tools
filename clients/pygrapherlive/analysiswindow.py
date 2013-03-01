@@ -11,6 +11,8 @@ from fitgaussian import FitGaussian
 from fitline import FitLine
 from fitlorentzian import FitLorentzian
 from fitparabola import FitParabola
+from fitsine import FitCosine
+from fitramseyfringe import FitRamseyFringe
 
 class AnalysisWindow(QtGui.QWidget):
     
@@ -30,10 +32,14 @@ class AnalysisWindow(QtGui.QWidget):
         self.fitGaussian = FitGaussian(self)
         self.fitLorentzian = FitLorentzian(self)
         self.fitParabola = FitParabola(self)
+        self.fitCosine = FitCosine(self)
+        self.fitRamseyFringe = FitRamseyFringe(self)
         self.fitCurveDictionary = {self.fitLine.curveName: self.fitLine,
                                    self.fitGaussian.curveName: self.fitGaussian,
                                    self.fitLorentzian.curveName: self.fitLorentzian,
-                                   self.fitParabola.curveName: self.fitParabola
+                                   self.fitParabola.curveName: self.fitParabola,
+                                   self.fitCosine.curveName: self.fitCosine,                    
+                                   self.fitRamseyFringe.curveName: self.fitRamseyFringe
                                    }           
  
         
