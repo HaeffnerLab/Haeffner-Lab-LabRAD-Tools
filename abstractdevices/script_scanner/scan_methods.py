@@ -1,3 +1,4 @@
+import traceback
 from time import localtime, strftime
 from numpy import linspace
 import labrad
@@ -58,9 +59,10 @@ class experiment(experiment_info):
             self._run(self.cxn, self.context)
             self._finalize(self.cxn, self.context)
         except Exception as e:
-            print e
+            reason = traceback.format_exc()
+            print reason
             if hasattr(self, 'sc'):
-                self.sc.error_finish_confirmed(self.ident, str(e))
+                self.sc.error_finish_confirmed(self.ident, reason)
         finally:
             if hasattr(self, 'cxn'):
                 if self.cxn is not None:
