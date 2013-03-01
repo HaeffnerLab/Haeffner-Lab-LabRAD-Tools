@@ -326,11 +326,11 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             if action == fitAction:
     #                print self.count()
     #                item = self.item(self.count() - 1)  
-                index = self.parent.datasetCheckboxesItems[item][2]              
+                dataset, directory,index = self.parent.datasetCheckboxesItems[item]              
                 try:
-                    test = self.analysisWindows[index]
+                    test = self.analysisWindows[dataset, directory,index]
                 except: # prevent the same window from reopening!
-                    self.analysisWindows[index] = AnalysisWindow(self, self.parent.datasetCheckboxesItems[item])
+                    self.analysisWindows[dataset, directory,index] = AnalysisWindow(self, self.parent.datasetCheckboxesItems[item])
             elif action == removeAction:
                 self.removeItem(item, pos)
             elif action == toggleAction:

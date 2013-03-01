@@ -16,7 +16,7 @@ def generateData():
 generateData()
 cxn = labrad.connect()
 cxn.server = cxn.data_vault
-cxn.data_vault.cd('Sine Curves')
+cxn.data_vault.cd('Sine Curves', True)
 cxn.data_vault.new('Sine Curves', [('x', 'num')], [('y1','866 ON','num'),('y2','866 OFF','num'),('y3','Differential Signal','num')])
 cxn.data_vault.add_parameter('Window', ['pmt'])
 cxn.data_vault.add_parameter('plotLive', True)
