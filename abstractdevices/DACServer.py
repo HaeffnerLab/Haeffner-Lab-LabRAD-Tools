@@ -26,7 +26,6 @@ from numpy import genfromtxt, arange
 from DacConfiguration import hardwareConfiguration as hc
 
 SERVERNAME = 'DAC Server'
-EXPTNAME = 'CCT'
 SIGNALID = 270837
 
 class Voltage(object):
@@ -106,7 +105,7 @@ class DACServer( LabradServer ):
     name = SERVERNAME
     onNewUpdate = Signal(SIGNALID, 'signal: ports updated', 's')
     currentPosition = 0
-    registryPath = [ '', 'Servers', EXPTNAME + SERVERNAME ]
+    registryPath = [ '', 'Servers', hc.EXPNAME + SERVERNAME ]
     
     @inlineCallbacks
     def initServer( self ):
