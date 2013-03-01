@@ -368,10 +368,10 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
         
     def fitFromScript(self, dataset, directory, index, curveName, parameters):
         try:
-            test = self.analysisWindows[index]
+            test = self.analysisWindows[dataset, directory, index]
         except: # prevent the same window from reopening!
-            self.analysisWindows[index] = AnalysisWindow(self, [dataset, directory, index])
-            self.analysisWindows[index].combo.setCurrentIndex(self.analysisWindows[index].curveComboIndexDict[curveName])
-            self.analysisWindows[index].onActivated('')
-            self.analysisWindows[index].fitCurves(parameters)
+            self.analysisWindows[dataset, directory, index] = AnalysisWindow(self, [dataset, directory, index])
+            self.analysisWindows[dataset, directory, index].combo.setCurrentIndex(self.analysisWindows[dataset, directory, index].curveComboIndexDict[curveName])
+            self.analysisWindows[dataset, directory, index].onActivated('')
+            self.analysisWindows[dataset, directory, index].fitCurves(parameters)
         
