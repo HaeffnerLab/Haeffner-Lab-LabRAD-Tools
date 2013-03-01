@@ -101,21 +101,6 @@ class Transitions_SD(object):
         #takes S-1/2D5+1/2 and converts to Fraction(-1/2), Fraction(1/2)
         return Fraction(inp[1:5]), Fraction(inp[6:10])
 
-class double_pass(object):
-    
-    passes = conf.double_pass_passes
-    direction = conf.double_pass_direction
-    
-    def reading_to_offset(self, dp_freq):
-        #i.e dp_freq set to 220 mhz, -1 direction -> output is -440
-        offset = self.direction * self.passes * dp_freq
-        return offset
-    
-    def offset_to_reading(self, offset):
-        #returns dp frequency corresponding to the offset
-        freq = offset / float( self.direction * self.passes )
-        return freq
-
 class fitter(object):
     
     order = conf.fit_order
@@ -135,22 +120,11 @@ class fitter(object):
     
 if __name__ == '__main__':
     SD = Transitions_SD()
-    dp = double_pass()
     fit = fitter()
  
-#    result = SD.get_transition_energies(WithUnit(1.19, 'gauss'), WithUnit(0 ,'MHz'))
+#    result = SD.get_transition_energies(WithUnit(1.014, 'gauss'), WithUnit(-12.84 ,'MHz'))
 #    for name,freq in result:
 #        print name,freq
-#    print SD.energies_to_magnetic_field([('S+1/2D-3/2', WithUnit(-4.663544847990941, 'MHz')), ('S-1/2D-3/2', WithUnit(-1.33244138514, 'MHz'))])
-#    
-#    dp_offset = dp.reading_to_offset(WithUnit(227.257 ,'MHz'))
-#    print dp_offset
-#    result =  SD.get_transition_energies(WithUnit(1.19, 'gauss'), dp_offset)
-#    for name,freq in result:
-#        print name, dp.offset_to_reading(freq)
-#    
-#    b,freq = SD.energies_to_magnetic_field([('S-1/2D+3/2', WithUnit(dp.reading_to_offset(229.581), 'MHz')), ('S+1/2D+5/2', WithUnit(dp.reading_to_offset(228.917), 'MHz'))])
-#    print b,dp.offset_to_reading(freq)
-#    x = numpy.arange(1)
-#    y = 2 * x + 1
-#    fit.fit(x, y)
+    
+    b,freq = SD.energies_to_magnetic_field([('S-1/2D+3/2', WithUnit(-16.813, 'MHz')), ('S+1/2D+5/2', WithUnit(-15.68, 'MHz'))])
+    print b,freq

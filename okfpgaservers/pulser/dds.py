@@ -64,16 +64,10 @@ class DDS(LabradServer):
         frequency = WithUnit(channel.frequency, 'MHz')
         returnValue(frequency)
     
-    @setting(45, 'Add DDS Pulses',  values = ['*(sv[s]v[s]v[MHz]v[dBm])','*(sv[s]v[s]v[MHz]v[dBm]v)'])
+    @setting(45, 'Add DDS Pulses',  values = ['*(sv[s]v[s]v[MHz]v[dBm]v[deg])'])
     def addDDSPulses(self, c, values):
         '''
-        input in the form of a list [(name, start, duration, frequency, amplitude), ...]
-                                    [(name, start, duration, frequency, amplitude, phase)]
-        frequency is in MHz 
-        amplitude is in dBm
-        start is start time of the pulse in seconds
-        duration is duration of the pulse in seconds
-        the optional phase is unitless
+        input in the form of a list [(name, start, duration, frequency, amplitude, phase)]
         '''
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
@@ -91,13 +85,14 @@ class DDS(LabradServer):
             dur = dur['s']
             freq = freq['MHz']
             ampl = ampl['dBm']
+            phase = phase['deg']
             freq_off, ampl_off = channel.off_parameters
             if freq == 0 or ampl == 0: #off state
                 freq, ampl = freq_off,ampl_off
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
-            num = self.settings_to_num(channel, freq, ampl)
+            num = self.settings_to_num(channel, freq, ampl, phase)
             if not channel.phase_coherent_model:
                 num_off = self.settings_to_num(channel, freq_off, ampl_off)
             else:

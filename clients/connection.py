@@ -36,7 +36,9 @@ class connection(object):
     
     @inlineCallbacks
     def followServerConnect(self, cntx, server_name):
+        print 'server connected'
         server_name = server_name[1]
+        print server_name
         if server_name in self.servers.keys():
             print '{} Connected'.format(server_name)
             self.servers[server_name] = yield self.cxn[server_name]

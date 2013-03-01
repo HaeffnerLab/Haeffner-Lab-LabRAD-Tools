@@ -186,7 +186,7 @@ class Qt4MplCanvas(FigureCanvas):
                 for i in range(numberOfDependentVariables):
                     label = self.datasetLabelsDict[dataset, directory][i]
                     self.parent.createDatasetCheckbox(dataset, directory, label, i)
-                    self.parent.createDatasetAnalysisCheckbox(dataset, directory, label, i)
+#                    self.parent.createDatasetAnalysisCheckbox(dataset, directory, label, i)
 #            else:
 #                # check if this model already exists!
 #                for i in range(self.parent.datasetCheckboxCounter):
@@ -221,7 +221,7 @@ class Qt4MplCanvas(FigureCanvas):
             self.cidpress = self.mpl_connect('draw_event', self.on_draw)
             self.drawGraph()
             #if (len(self.dataDict.keys()) == 1) or (fit == True):
-            self.fitData()
+            #self.fitData()
         else:
             # New Data      
             
