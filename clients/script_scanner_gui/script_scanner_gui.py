@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
 from common.clients.connection import connection
