@@ -255,7 +255,6 @@ class FirstWindow(QtGui.QWidget):
 
 class ParameterWindow(QtGui.QWidget):
     """Creates the dataset-specific parameter window"""
-
     def __init__(self, parent, dataset, directory):
         QtGui.QWidget.__init__(self)
         self.parent = parent
@@ -266,21 +265,13 @@ class ParameterWindow(QtGui.QWidget):
         self.parameterListWidget = QtGui.QListWidget()
         mainLayout.addWidget(self.parameterListWidget)
         self.populateList()
-        self.startTimer(30000)
         self.setLayout(mainLayout)
-
-    
-    def timerEvent(self, evt):
-        self.populateList()
-        tstartupdate = time.clock()
     
     @inlineCallbacks
     def populateList(self):
-        self.parameters = yield self.parent.getParameters(self.dataset, self.directory)
+        parameters = yield self.parent.getParameters(self.dataset, self.directory)
         self.parameterListWidget.clear()
-        if (self.parameters):
-            for i in self.parameters:
-                self.parameterListWidget.addItem(str(i))
+        self.parameterListWidget.addItems([str(x) for x in sorted(parameters)])
 
 class DatasetCheckBoxListWidget(QtGui.QListWidget):
     def __init__(self, parent):
