@@ -24,7 +24,7 @@ from pyvisa import visa, vpp43
 ### BEGIN NODE INFO
 [info]
 name = GPIB Bus
-version = 1.11
+version = 1.12
 description = Gives access to GPIB devices via pyvisa.
 instancename = %LABRADNODE% GPIB Bus
 
@@ -108,7 +108,7 @@ class GPIBBusServer(LabradServer):
         if c['addr'] not in self.devices:
             raise Exception('Could not find device ' + c['addr'])
         instr = self.devices[c['addr']]
-        instr.timeout = c['timeout']
+        instr.timeout = c['timeout']['s']
         return instr
         
     @setting(0, addr='s', returns='s')
