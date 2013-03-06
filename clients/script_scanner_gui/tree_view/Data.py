@@ -64,8 +64,7 @@ class CollectionNode(Node):
         super(CollectionNode, self).__init__(name, parent)
     
     def filter_text(self):
-        text = self.name()
-        return text.join([child.name() for child in self._children])
+        return ''.join([child.filter_text() for child in self._children])
     
 class ParameterNode(Node):
     
