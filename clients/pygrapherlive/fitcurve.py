@@ -17,7 +17,8 @@ class CurveFit():
     def fitCurve(self, dataset, directory, index, label, parameters, drawCurves):
         params = []
         # data retrieval problem solved
-        dataX, dataY = self.parent.parent.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
+        dataX, dataY = self.getData(dataset, directory, index)
+        self.parent.setRanges()
         dataX = np.array(dataX)
 #        xmin, xmax = self.parent.parent.parent.qmc.ax.get_xlim()
         xmin = self.parent.minRange.value()
@@ -99,4 +100,9 @@ class CurveFit():
         if x is None: x = np.arange(y.shape[0])
         optimize.leastsq(f, parameters)
         return solutions    
+   
+    def getData(self, dataset, directory, index):
+        dataX, dataY = self.parent.parent.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
+        return dataX, dataY
+       
    
