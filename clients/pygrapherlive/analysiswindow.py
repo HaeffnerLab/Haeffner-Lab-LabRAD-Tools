@@ -202,7 +202,7 @@ class AnalysisWindow(QtGui.QWidget):
             self.parameterTable.setCellWidget(i, 1, self.parameterSpinBoxes[parameterName])
             item = QtGui.QTableWidgetItem()
             item.setText(str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName]))
-            item.setFlags(QtCore.Qt.ItemIsEditable)
+            item.setFlags(QtCore.Qt.ItemIsEditable|QtCore.Qt.ItemIsEnabled)
             self.parameterTable.setItem(i, 2, item)
 
             i += 1
