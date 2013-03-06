@@ -22,7 +22,7 @@ for i in range(len(x)):
     cxn.data_vault.add([x[i], y1[i]])
     data = [i, y1[i]]
     print data
-    time.sleep(.01)
+    time.sleep(1.5)
 cxn.data_vault.add_parameter('Fit', ['0', 'Lorentzian', '[0.10000000000000001, 25.0, 0.01, 1.4901161193880158e-08]'])
 print 'waiting'
 time.sleep(1)

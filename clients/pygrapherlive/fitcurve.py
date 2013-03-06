@@ -18,6 +18,7 @@ class CurveFit():
         params = []
         # data retrieval problem solved
         dataX, dataY = self.getData(dataset, directory, index)
+        self.parent.setRanges()
         dataX = np.array(dataX)
 #        xmin, xmax = self.parent.parent.parent.qmc.ax.get_xlim()
         xmin = self.parent.minRange.value()
