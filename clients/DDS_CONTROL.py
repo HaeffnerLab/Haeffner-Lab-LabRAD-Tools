@@ -80,9 +80,12 @@ class DDS_CHAN(QCustomFreqPower):
             self.displayError(e.msg)
     
     def displayError(self, text):
-        message = QtGui.QMessageBox()
+        #runs the message box in a non-blocking method
+        message = QtGui.QMessageBox(self)
         message.setText(text)
-        message.exec_()
+        message.open()
+        message.show()
+        message.raise_()
 
     def closeEvent(self, x):
         self.reactor.stop()

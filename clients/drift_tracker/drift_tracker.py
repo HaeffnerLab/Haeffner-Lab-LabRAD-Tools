@@ -143,9 +143,7 @@ class drift_tracker(QtGui.QWidget):
         try:
             yield server.remove_measurement(to_remove)
         except self.Error as e:
-            message = QtGui.QMessageBox()
-            message.setText(e.msg)
-            message.exec_()
+            self.displayError(e.msg)
     
     @inlineCallbacks
     def on_entry(self, clicked):
@@ -155,9 +153,7 @@ class drift_tracker(QtGui.QWidget):
         try:
             yield server.set_measurements(with_units)
         except self.Error as e:
-            message = QtGui.QMessageBox()
-            message.setText(e.msg)
-            message.exec_()
+            self.displayError(e.msg)
     
     @inlineCallbacks
     def on_new_track_duration(self, value):
@@ -308,6 +304,14 @@ class drift_tracker(QtGui.QWidget):
     def disable(self):
         self.setDisabled(True)
         yield None
+        
+    def displayError(self, text):
+        #runs the message box in a non-blocking method
+        message = QtGui.QMessageBox(self)
+        message.setText(text)
+        message.open()
+        message.show()
+        message.raise_()
     
     def closeEvent(self, x):
         self.reactor.stop()  
