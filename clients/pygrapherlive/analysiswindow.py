@@ -30,18 +30,18 @@ class AnalysisWindow(QtGui.QWidget):
 
         self.fitLine = FitLine(self)
         self.fitGaussian = FitGaussian(self)
-        self.fitLorentzian = FitLorentzian(self)
+        self.fitLorentzian = FitLorentzian(self,ident)
         self.fitParabola = FitParabola(self)
         self.fitCosine = FitCosine(self)
         self.fitRamseyFringe = FitRamseyFringe(self)
-        self.fitCurveDictionary = {self.fitLine.curveName: self.fitLine,
-                                   self.fitGaussian.curveName: self.fitGaussian,
+        self.fitCurveDictionary = {
                                    self.fitLorentzian.curveName: self.fitLorentzian,
+                                   self.fitGaussian.curveName: self.fitGaussian,
+                                   self.fitRamseyFringe.curveName: self.fitRamseyFringe,
+                                   self.fitLine.curveName: self.fitLine,
                                    self.fitParabola.curveName: self.fitParabola,
-                                   self.fitCosine.curveName: self.fitCosine,                    
-                                   self.fitRamseyFringe.curveName: self.fitRamseyFringe
-                                   }           
- 
+                                   self.fitCosine.curveName: self.fitCosine                    
+                                  }           
         
         self.initUI()
         
@@ -57,6 +57,7 @@ class AnalysisWindow(QtGui.QWidget):
             self.combo.itemText(1)
             i += 1
 
+
 #        self.lbl = QtGui.QLabel(self.combo.itemText(0), self)
 #        self.hello1 = QtGui.QLabel('hi1', self)
 #        self.hello2 = QtGui.QLabel('hi2', self)
@@ -65,8 +66,9 @@ class AnalysisWindow(QtGui.QWidget):
         self.combo.move(50, 50)
 #        self.lbl.move(50, 150)
 
-        self.combo.activated[str].connect(self.onActivated)       
-         
+        self.combo.activated[str].connect(self.onActivated)
+                
+        self.combo.setCurrentIndex(self.combo.findText('Lorentzian'))  
 #        self.setGeometry(300, 300, 500, 300)
         
         self.parameterTable = QtGui.QTableWidget()
@@ -100,6 +102,10 @@ class AnalysisWindow(QtGui.QWidget):
         self.acceptFittedButton.clicked.connect(self.acceptFittedSignal)   
 
         self.setRanges()
+        fitRangeLabel = QtGui.QLabel('Fit Range: ')
+        self.buttonLayout.addWidget(fitRangeLabel)
+        self.buttonLayout.addWidget(self.minRange)
+        self.buttonLayout.addWidget(self.maxRange)
 
         self.buttonLayout.addWidget(self.fitButton)
         self.buttonLayout.addWidget(self.acceptManualButton)
@@ -120,13 +126,13 @@ class AnalysisWindow(QtGui.QWidget):
         self.mainLayout.addLayout(self.fittedTextLayout)      
         
         self.setupParameterTable(self.combo.itemText(0))
- 
         
+        self.onActivated() #update parameterTable
+        #self.fitCurves() #try to fit immediately
         self.show()
 
     def setRanges(self):
         xmin, xmax = self.parent.parent.qmc.getDataXLimits()
-        fitRangeLabel = QtGui.QLabel('Fit Range: ')
         self.minRange = QtGui.QDoubleSpinBox()
         self.minRange.setDecimals(6)
         self.minRange.setRange(xmin, xmax)
@@ -136,7 +142,6 @@ class AnalysisWindow(QtGui.QWidget):
         self.minRange.setKeyboardTracking(False)
         self.connect(self.minRange, QtCore.SIGNAL('valueChanged(double)'), self.minRangeSignal)
         self.maxRange = QtGui.QDoubleSpinBox()
-        self.maxRange = QtGui.QDoubleSpinBox()
         self.maxRange.setDecimals(6)
         self.maxRange.setRange(xmin, xmax)
         self.maxRange.setValue(xmax)
@@ -144,10 +149,6 @@ class AnalysisWindow(QtGui.QWidget):
         self.maxRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.maxRange.setKeyboardTracking(False)  
         self.connect(self.maxRange, QtCore.SIGNAL('valueChanged(double)'), self.maxRangeSignal)
-        
-        self.buttonLayout.addWidget(fitRangeLabel)
-        self.buttonLayout.addWidget(self.minRange)
-        self.buttonLayout.addWidget(self.maxRange)
         
     def minRangeSignal(self, evt):
         self.minRange.setRange(self.minRange.minimum(), self.maxRange.value())
@@ -215,9 +216,8 @@ class AnalysisWindow(QtGui.QWidget):
         self.resizeWindow()
 #        self.adjustSize()      
         
-    def onActivated(self, text):
+    def onActivated(self):
         # this is where we remake the grid, yea just remake it, let's make a function
-      
         self.setupParameterTable(self.combo.currentText()) 
         
     def fitCurveSignal(self, evt):
@@ -245,8 +245,7 @@ class AnalysisWindow(QtGui.QWidget):
             for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName][i]
                 i += 1
-            self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
-            
+            self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')    
         self.resizeWindow()
         
     @inlineCallbacks

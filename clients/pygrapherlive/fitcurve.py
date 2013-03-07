@@ -32,7 +32,7 @@ class CurveFit():
             j += 1
         # if no specific parameters are specified, then use the parameter window's
         # change this to self.parent.parameterWindow
-        if (parameters == None): 
+        if (parameters == None):
 #            height = self.parent.parameterWindow.gaussianHeightDoubleSpinBox.value()
 #            center = self.parent.parameterWindow.gaussianCenterDoubleSpinBox.value()
 #            sigma =  self.parent.parameterWindow.gaussianSigmaDoubleSpinBox.value()
