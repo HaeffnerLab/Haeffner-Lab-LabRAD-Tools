@@ -12,7 +12,7 @@ class pulse_sequence(object):
 	required_parameters = []
 	required_subsequences = []
 	
-	def __init__(self, parameter_dict, start = WithUnit(0, 's')):
+	def __init__(self, parameter_dict = TreeDict(), start = WithUnit(0, 's')):
 		if not type(parameter_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
 		self.start = start
 		self.end = start

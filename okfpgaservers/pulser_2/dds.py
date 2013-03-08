@@ -13,13 +13,12 @@ class DDS(LabradServer):
     
     @inlineCallbacks
     def initializeDDS(self):
-        self.ddsLock = False
         self.api.initializeDDS()
         for channel in self.ddsDict.itervalues():
-            freq,ampl = (channel.frequency, channel.amplitude)
+            freq,ampl,in_use = (channel.frequency, channel.amplitude, channel.inSequenceUse)
             self._checkRange('amplitude', channel, ampl)
             self._checkRange('frequency', channel, freq)
-            yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
+            yield self.inCommunication.run(self._setParameters, channel, freq, ampl, in_use)
     
     @setting(41, "Get DDS Channels", returns = '*s')
     def getDDSChannels(self, c):
@@ -30,9 +29,9 @@ class DDS(LabradServer):
     def amplitude(self, c, name = None, amplitude = None):
         """Get or set the amplitude of the named channel or the selected channel"""
         #get the hardware channel
-        if self.ddsLock and amplitude is not None: 
-            raise dds_access_locked()
         channel = self._getChannel(c, name)
+        if channel.inSequenceUse:
+            raise dds_access_locked()
         if amplitude is not None:
             #setting the ampplitude
             amplitude = amplitude['dBm']
@@ -49,9 +48,9 @@ class DDS(LabradServer):
     def frequency(self, c, name = None, frequency = None):
         """Get or set the frequency of the named channel or the selected channel"""
         #get the hardware channel
-        if self.ddsLock and frequency is not None: 
-            raise dds_access_locked()
         channel = self._getChannel(c, name)
+        if channel.inSequenceUse:
+            raise dds_access_locked()
         if frequency is not None:
             #setting the frequency
             frequency = frequency['MHz']
@@ -92,12 +91,9 @@ class DDS(LabradServer):
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
-            num = self.settings_to_num(channel, freq, ampl, phase)
-            if not channel.phase_coherent_model:
-                num_off = self.settings_to_num(channel, freq_off, ampl_off)
-            else:
-                #note that keeping the frequency the same when switching off to preserve phase coherence
-                num_off = self.settings_to_num(channel, freq, ampl_off, phase) 
+            num = self.settings_to_num(channel, freq, ampl, in_use = True, phase = phase)
+            #note that keeping the frequency the same when switching off to preserve phase coherence
+            num_off = self.settings_to_num(channel, freq, ampl_off, in_use = True, phase = phase) 
             #note < sign, because start can not be 0. 
             #this would overwrite the 0 position of the ram, and cause the dds to change before pulse sequence is launched
             if not self.sequenceTimeRange[0] < start <= self.sequenceTimeRange[1]: 
@@ -123,19 +119,15 @@ class DDS(LabradServer):
         """To turn off and on the dds. Turning off the DDS sets the frequency and amplitude 
         to the off_parameters provided in the configuration.
         """
-        if self.ddsLock and state is not None: 
-            raise dds_access_locked()
         channel = self._getChannel(c, name)
+        if channel.inSequenceUse:
+            raise dds_access_locked()
         if state is not None:
             yield self._setOutput(channel, state)
             channel.state = state
             self.notifyOtherListeners(c, (name, 'state', channel.state), self.on_dds_param)
         returnValue(channel.state)
-    
-    @setting(49, 'Clear DDS Lock')
-    def clear_dds_lock(self, c):
-        self.ddsLock = False
-    
+
     def _checkRange(self, t, channel, val):
         if t == 'amplitude':
             r = channel.allowedamplrange
@@ -153,20 +145,20 @@ class DDS(LabradServer):
     @inlineCallbacks
     def _setAmplitude(self, channel, ampl):
         freq = channel.frequency
-        yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
+        yield self.inCommunication.run(self._setParameters, channel, freq, ampl, in_use = False)
         
     @inlineCallbacks
     def _setFrequency(self, channel, freq):
         ampl = channel.amplitude
-        yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
+        yield self.inCommunication.run(self._setParameters, channel, freq, ampl, in_use = False)
     
     @inlineCallbacks
     def _setOutput(self, channel, state):
         if state and not channel.state: #if turning on, and is currently off
-            yield self.inCommunication.run(self._setParameters, channel, channel.frequency, channel.amplitude)
+            yield self.inCommunication.run(self._setParameters, channel, channel.frequency, channel.amplitude, in_use = False)
         elif (channel.state and not state): #if turning off and is currenly on
             freq,ampl = channel.off_parameters
-            yield self.inCommunication.run(self._setParameters, channel, freq, ampl)
+            yield self.inCommunication.run(self._setParameters, channel, freq, ampl, in_use = False)
     
     @inlineCallbacks
     def _programDDSSequence(self, dds):
@@ -177,18 +169,18 @@ class DDS(LabradServer):
             yield self.program_dds_chanel(channel, buf)
     
     @inlineCallbacks
-    def _setParameters(self, channel, freq, ampl):
-        buf = self.settings_to_buf(channel, freq, ampl)
+    def _setParameters(self, channel, freq, ampl, in_use):
+        buf = self.settings_to_buf(channel, freq, ampl, in_use)
         yield self.program_dds_chanel(channel, buf)
     
-    def settings_to_buf(self, channel, freq, ampl):
-        num = self.settings_to_num(channel, freq, ampl)
+    def settings_to_buf(self, channel, freq, ampl, in_use):
+        num = self.settings_to_num(channel, freq, ampl, in_use)
         buf = self._intToBuf_coherent(num)
         buf = buf + '\x00\x00' #adding termination
         return buf
     
-    def settings_to_num(self, channel, freq, ampl, phase = 0.0):
-        num = self._valToInt_coherent(channel, freq, ampl, phase)
+    def settings_to_num(self, channel, freq, ampl, in_use, phase = 0.0):
+        num = self._valToInt_coherent(channel, in_use, freq, ampl, phase)
         return num
     
     @inlineCallbacks
@@ -223,7 +215,7 @@ class DDS(LabradServer):
         return d
     
     def _channel_to_num(self, channel):
-        '''returns the current state of the channel in the num represenation'''
+        '''returns the current state of the channel in the num represenation. Ignore the in-use bit'''
         if channel.state:
             #if on, use current values. else, use off values
             freq,ampl = (channel.frequency, channel.amplitude)
@@ -231,10 +223,10 @@ class DDS(LabradServer):
             self._checkRange('frequency', channel, freq)
         else:
             freq,ampl = channel.off_parameters
-        num = self.settings_to_num(channel, freq, ampl)
+        num = self.settings_to_num(channel, freq, ampl, in_use = False)
         return num
  
-    def _valToInt_coherent(self, channel, freq, ampl, phase = 0):
+    def _valToInt_coherent(self, channel, in_use, freq, ampl, phase = 0):
         '''
         takes the frequency and amplitude values for the specific channel and returns integer representation of the dds setting
         freq is in MHz
@@ -246,6 +238,7 @@ class DDS(LabradServer):
             resolution = (maxim - minim) / float(2**precision - 1)
             seq = int((val - minim)/resolution) #sequential representation
             ans += m*seq
+        if not in_use: ans+=2**31 #set the most significant bit to 1 
         return ans
     
     def _intToBuf_coherent(self, num):
@@ -253,7 +246,7 @@ class DDS(LabradServer):
         takes the integer representing the setting and returns the buffer string for dds programming
         '''
         freq_num = num % 2**32
-        a, b = freq_num // 256**2, freq_num % 256**2
+        a, b = freq_num // 2**16, freq_num % 2**16
         freq_arr = array.array('B', [b % 256 ,b // 256, a % 256, a // 256])
         
         phase_ampl_num = num // 2**32

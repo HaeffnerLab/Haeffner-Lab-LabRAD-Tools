@@ -32,10 +32,15 @@ class api(object):
     def programOKBoard(self):
         prog = self.xem.ConfigureFPGA(self.okDeviceFile)
         if prog: raise("Not able to program FPGA")
-        pll = ok.PLL22150()
-        self.xem.GetEepromPLL22150Configuration(pll)
-        pll.SetDiv1(pll.DivSrc_VCO,4)
-        self.xem.SetPLL22150Configuration(pll)
+        pll = ok.PLL22393()
+        self.xem.GetPLL22393Configuration(pll) ### load configuration
+        pll.SetPLLParameters(0,25,3,True) ### PLL VCO setting: f = 48*25/3 = 400 MHz
+        pll.SetOutputDivider(0,4) ### Output1: 400/4 = 100 MHz
+        pll.SetOutputDivider(1,4) ### Output2: 400/4 = 100 MHz
+        pll.SetOutputEnable(0, True) ### Enable output1
+        pll.SetOutputEnable(1, True) ### Enable output2
+        self.xem.SetPLL22393Configuration(pll) ### set PLL configuration
+        self.resetSDRAM()
         
     def programBoard(self, sequence):
         self.xem.WriteToBlockPipeIn(0x80, 2, sequence)
@@ -47,16 +52,12 @@ class api(object):
     def stopLooped(self):
         self.xem.SetWireInValue(0x00,0x02,0x06)
         self.xem.UpdateWireIns()
-        
-    def startSingle(self):
+    
+    def completeLooped(self):
         self.xem.SetWireInValue(0x00,0x04,0x06)
         self.xem.UpdateWireIns()
     
-    def stopSingle(self):
-        self.xem.SetWireInValue(0x00,0x00,0x06)
-        self.xem.UpdateWireIns()
-    
-    def setNumberRepeatitions(self, number):
+    def setNumberRepetitions(self, number):
         self.xem.SetWireInValue(0x05, number)
         self.xem.UpdateWireIns()
     
@@ -68,9 +69,6 @@ class api(object):
     
     def resetFIFONormal(self):
         self.xem.ActivateTriggerIn(0x40,2)
-    
-    def resetFIFOResolved(self):
-        self.xem.ActivateTriggerIn(0x40,3)
         
     def resetFIFOReadout(self):
         self.xem.ActivateTriggerIn(0x40,4)
@@ -92,14 +90,14 @@ class api(object):
         done = self.xem.GetWireOutValue(0x21)
         return done
     
-    def getResolvedTotal(self):
+    def getTimetagTotal(self):
         self.xem.UpdateWireOuts()
-        counted = self.xem.GetWireOutValue(0x22)
-        return counted
+        number_of_photon = ((self.xem.GetWireOutValue(0x23)*65536 + self.xem.GetWireOutValue(0x22))+8)/4
+        return number_of_photon
     
-    def getResolvedCounts(self, number):
-        buf = "\x00"*(number*2)
-        self.xem.ReadFromBlockPipeOut(0xa0,2,buf)
+    def getTimetags(self, number):
+        buf = "\x00"*(number*4)
+        self.xem.ReadFromPipeOut(0xa0, buf)
         return buf
     
     def getNormalTotal(self):
@@ -156,7 +154,7 @@ class api(object):
         
     def resetAllDDS(self):
         '''Reset the ram position of all dds chips to 0'''
-        self.xem.ActivateTriggerIn(0x40,4)
+        self.xem.ActivateTriggerIn(0x40,8)
     
     def advanceAllDDS(self):
         '''Advance the ram position of all dds chips'''
@@ -186,8 +184,34 @@ class api(object):
         
     def disableLineTrigger(self):
         self.xem.SetWireInValue(0x00,0x00,0x08)
-        self.xem.UpdateWireIns()     
+        self.xem.UpdateWireIns()
+        
+    def resetSDRAM(self):
+        '''
+        resets the SDRAM that stores the timetags and enables write
+        ''' 
+        #reset SDRAM FIFO on fpga
+        self.xem.SetWireInValue(0x07,0x0004)
+        self.xem.UpdateWireIns()
+        self.xem.SetWireInValue(0x07,0x0000)
+        self.xem.UpdateWireIns()
+        #enable write to memory
+        self.xem.SetWireInValue(0x07,0x0002)
+        self.xem.UpdateWireIns()
     
+    def enableSDRAMread(self):
+        '''
+        enables the read mode on SDRAM
+        '''
+        self.xem.SetWireInValue(0x07,0x0000)
+        self.xem.UpdateWireIns()
+        self.xem.SetWireInValue(0x07,0x0004)
+        self.xem.UpdateWireIns()
+        self.xem.SetWireInValue(0x07,0x0000)
+        self.xem.UpdateWireIns()
+        self.xem.SetWireInValue(0x07,0x0001)
+        self.xem.UpdateWireIns()
+        
     #Methods relating to using the optional second PMT
     def getSecondaryNormalTotal(self):
         if not self.haveSecondPMT: raise Exception ("No Second PMT")

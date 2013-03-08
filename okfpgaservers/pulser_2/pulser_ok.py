@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser
-version = 1.16
+version = 2.0
 description =
 instancename = Pulser
 
@@ -111,26 +111,10 @@ class Pulser(LabradServer, DDS, LineTrigger):
     def startInfinite(self,c):
         if not self.isProgrammed: raise Exception ("No Programmed Sequence")
         yield self.inCommunication.acquire()
-        yield deferToThread(self.api.setNumberRepeatitions, 0)
+        yield deferToThread(self.api.setNumberRepetitions, 0)
         yield deferToThread(self.api.resetSeqCounter)
         yield deferToThread(self.api.startLooped)
         self.sequenceType = 'Infinite'
-        self.inCommunication.release()
-    
-    @setting(3, "Complete Infinite Iteration", returns = '')
-    def completeInfinite(self,c):
-        if self.sequenceType != 'Infinite': raise Exception( "Not Running Infinite Sequence")
-        yield self.inCommunication.acquire()
-        yield deferToThread(self.api.startSingle)
-        self.inCommunication.release()
-    
-    @setting(4, "Start Single", returns = '')
-    def start(self, c):
-        if not self.isProgrammed: raise Exception ("No Programmed Sequence")
-        yield self.inCommunication.acquire()
-        yield deferToThread(self.api.resetSeqCounter)
-        yield deferToThread(self.api.startSingle)
-        self.sequenceType = 'One'
         self.inCommunication.release()
     
     @setting(5, 'Add TTL Pulse', channel = 's', start = 'v[s]', duration = 'v[s]')
@@ -174,27 +158,26 @@ class Pulser(LabradServer, DDS, LineTrigger):
     def stopSequence(self, c):
         """Stops any currently running sequence"""
         yield self.inCommunication.acquire()
+        yield deferToThread(self.api.completeLooped)
+        self.inCommunication.release()
+        yield self.waitSequenceDone(c)
+        yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetRam)
-        if self.sequenceType =='Infinite':
-            yield deferToThread(self.api.stopLooped)
-        elif self.sequenceType =='One':
-            yield deferToThread(self.api.stopSingle)
-        elif self.sequenceType =='Number':
-            yield deferToThread(self.api.stopLooped)
+        yield deferToThread(self.api.stopLooped)
         self.inCommunication.release()
         self.sequenceType = None
         self.ddsLock = False
     
-    @setting(9, "Start Number", repeatitions = 'w')
-    def startNumber(self, c, repeatitions):
+    @setting(9, "Start Number", repetitions = 'w')
+    def startNumber(self, c, repetitions):
         """
         Starts the repeatitions number of iterations
         """
         if not self.isProgrammed: raise Exception ("No Programmed Sequence")
-        repeatitions = int(repeatitions)
+        repeatitions = int(repetitions)
         if not 1 <= repeatitions <= (2**16 - 1): raise Exception ("Incorrect number of pulses")
         yield self.inCommunication.acquire()
-        yield deferToThread(self.api.setNumberRepeatitions, repeatitions)
+        yield deferToThread(self.api.setNumberRepetitions, repetitions)
         yield deferToThread(self.api.resetSeqCounter)
         yield deferToThread(self.api.startLooped)
         self.sequenceType = 'Number'
@@ -452,22 +435,25 @@ class Pulser(LabradServer, DDS, LineTrigger):
     def getMode(self, c):
         return self.collectionMode
     
-    @setting(31, "Reset Timetags")
-    def resetTimetags(self, c):
-        """Reset the time resolved FIFO to clear any residual timetags"""
-        yield self.inCommunication.acquire()
-        yield deferToThread(self.api.resetFIFOResolved)
-        self.inCommunication.release()
-    
     @setting(32, "Get Timetags", returns = '*v')
     def getTimetags(self, c):
         """Get the time resolved timetags"""
         yield self.inCommunication.acquire()
-        counted = yield deferToThread(self.api.getResolvedTotal)
-        raw = yield deferToThread(self.api.getResolvedCounts, counted)
+        counted = yield deferToThread(self.api.getTimetagTotal)
+        if counted == 570425336:
+            raise Exception ("SDRAM is full of timetags")
+        yield deferToThread(self.api.enableSDRAMread)
+        reading_max = 4194302
+        raw_total = ''
+        while counted:
+            to_read = min(reading_max, counted)
+            raw_total += yield deferToThread(self.api.getTimetags, to_read)
+            counted = max(0, counted - to_read)
+        #Reset the time resolved FIFO to clear any residual timetags
+        yield deferToThread(self.api.resetSDRAM)
         self.inCommunication.release()
-        arr = numpy.fromstring(raw, dtype = numpy.uint16)
-        del(raw)
+        arr = numpy.fromstring(raw_total, dtype = numpy.uint16)
+        del(raw_total)
         arr = arr.reshape(-1,2)
         timetags =( 65536 * arr[:,0] + arr[:,1]) * self.timeResolvedResolution
         returnValue(timetags)
@@ -509,7 +495,6 @@ class Pulser(LabradServer, DDS, LineTrigger):
         countlist = map(self.convertKCperSec, countlist)
         countlist = self.appendTimes(countlist, time.time())
         return countlist        
-
 
     def wait(self, seconds, result=None):
         """Returns a deferred that will be fired later"""
