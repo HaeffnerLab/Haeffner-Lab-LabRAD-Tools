@@ -50,7 +50,6 @@ class hardwareConfiguration(object):
     okDeviceFile = 'photon.bit'
     lineTriggerLimits = (0, 15000)#values in microseconds 
     secondPMT = False
-    DAC = False
     
     #name: (channelNumber, ismanual, manualstate,  manualinversion, autoinversion)
     channelDict = {

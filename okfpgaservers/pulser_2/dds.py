@@ -85,14 +85,13 @@ class DDS(LabradServer):
             freq = freq['MHz']
             ampl = ampl['dBm']
             phase = phase['deg']
-            freq_off, ampl_off = channel.off_parameters
-            if freq == 0 or ampl == 0: #off state
-                freq, ampl = freq_off,ampl_off
+            ampl_off = channel.off_amplitude
+            if freq == 0:
+                freq = channel.off_frequency
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
             num = self.settings_to_num(channel, freq, ampl, in_use = True, phase = phase)
-            #note that keeping the frequency the same when switching off to preserve phase coherence
             num_off = self.settings_to_num(channel, freq, ampl_off, in_use = True, phase = phase) 
             #note < sign, because start can not be 0. 
             #this would overwrite the 0 position of the ram, and cause the dds to change before pulse sequence is launched

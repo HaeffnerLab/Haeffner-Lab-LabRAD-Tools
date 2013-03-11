@@ -49,7 +49,6 @@ class Pulser(LabradServer, DDS, LineTrigger):
         self.collectionTimeRange = hardwareConfiguration.collectionTimeRange
         self.sequenceTimeRange = hardwareConfiguration.sequenceTimeRange
         self.haveSecondPMT = hardwareConfiguration.secondPMT
-        self.haveDAC = hardwareConfiguration.DAC
         self.inCommunication = DeferredLock()
         self.clear_next_pmt_counts = 0
         LineTrigger.initialize(self)
@@ -461,21 +460,6 @@ class Pulser(LabradServer, DDS, LineTrigger):
     @setting(33, "Get TimeTag Resolution", returns = 'v')
     def getTimeTagResolution(self, c):
         return self.timeResolvedResolution
-    
-    #Methods relating to using optional DAC
-    @setting(34, "Set DAC Voltage", stringy = 's', returns = '')
-    def setDACVoltages(self, c, stringy):
-        if not self.haveDAC: raise Exception ("No DAC")
-        yield self.inCommunication.acquire()
-        yield deferToThread(self.api.setDACVoltage, stringy)
-        self.inCommunication.release()
-    
-    @setting(35, "Reset FIFO DAC", returns = '')
-    def resetFIFODAC(self, c):
-        if not self.haveDAC: raise Exception ("No DAC")
-        yield self.inCommunication.acquire()
-        yield deferToThread(self.api.resetFIFODAC)        
-        self.inCommunication.release()
     
     #Methods relating to using the optional second PMT
     @setting(36, 'Get Secondary PMT Counts', returns = '*(vsv)')
