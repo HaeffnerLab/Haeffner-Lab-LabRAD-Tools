@@ -275,8 +275,8 @@ class Pulser(LabradServer, DDS, LineTrigger):
             yield self.wait(0.050)
         returnValue(False)
     
-    @setting(17, 'Repeatitions Completed', returns = 'w')
-    def repeatitionsCompleted(self, c):
+    @setting(17, 'Repetitions Completed', returns = 'w')
+    def repetitionsCompleted(self, c):
         """Check how many repeatitions have been completed in for the infinite or number modes"""
         yield self.inCommunication.acquire()
         completed = yield deferToThread(self.api.howManySequencesDone)

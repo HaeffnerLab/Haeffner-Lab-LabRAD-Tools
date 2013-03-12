@@ -11,6 +11,8 @@ minPulseGapOnFreqChange = 150 #timesteps, which is 6 microseconds
 #ttl parsing
 #max ttl switches
 #new gui for swtiches (no auto), dds
+#add dds advance, dds reset
+#how to handle extend pulse sequence
 
 #defining pulse classes
 class pulse(object):
@@ -41,7 +43,7 @@ class ttl_pulse(pulse):
         super(ttl_pulse, self).__init__(channel, start, end)
         self.pulse_type = 'ttl'
 
-class Sequence():
+class Sequence(object):
     """Sequence for programming pulses"""
     def __init__(self, parent):
         self.parent = parent
