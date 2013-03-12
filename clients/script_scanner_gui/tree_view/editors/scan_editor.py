@@ -11,6 +11,8 @@ class scan_delegate(QtGui.QAbstractItemDelegate):
         super(scan_delegate, self).__init__()
         self.parent = parent
         self.parent.on_new_scan.connect(self.set_scan_data)
+        self.parent.uiMin.editingFinished.connect(self.on_new_min)
+        self.parent.uiMax.editingFinished.connect(self.on_new_max)
    
     def setEditorData(self, editor, index):
         node = index.internalPointer()
@@ -36,6 +38,12 @@ class scan_delegate(QtGui.QAbstractItemDelegate):
         self.commitData.emit(self.parent.uiStop)
         self.commitData.emit(self.parent.uiSteps)
     
+    def on_new_min(self):
+        self.commitData.emit(self.parent.uiMin)
+    
+    def on_new_max(self):
+        self.commitData.emit(self.parent.uiMax)
+        
     def setModelData(self, editor, model, index):
         if index.column() == 8:
             return
