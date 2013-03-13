@@ -21,6 +21,7 @@ class FitLorentzian(CurveFit):
         self.curveName = 'Lorentzian'
         self.parameterNames = ['FWHM', 'Center','Height', 'Offset']
         self.parameterValues = [FWHM,center,height,0.0]
+        self.parameterFit = [True,True,True,True]
 
     # idk, something like this?
     def fitFunc(self, x, p):

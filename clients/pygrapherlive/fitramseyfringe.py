@@ -10,8 +10,10 @@ class FitRamseyFringe(CurveFit):
         self.parent = parent
         self.curveName = 'Ramsey Fringes'
         self.parameterNames = [ 'Frequency','T2','Phase','Contrast','Offset']
-        self.parameterValues = [10000.0,0.0002,0.0,1.0,0.1]
+        self.parameterValues = [50000.0,0.002,0.0,1.0,0.0]
+        self.parameterFit = [True,True,True,True,True]
    
     def fitFunc(self, x, p):      
-        evolution = p[3]*np.exp(-x/p[1])*(np.cos(np.pi*p[0]*x+p[2])**2-.5)+.5+p[4]
+        x=x*10**-6
+        evolution = p[3]*np.exp(-x/p[1])*(np.cos(np.pi*p[0]*x+p[2]*np.pi)**2-.5)+.5+p[4]
         return evolution

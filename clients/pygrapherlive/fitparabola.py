@@ -3,7 +3,6 @@
 This class defines a parabola curve to fit and its parameters
 
 """
-import numpy as np
 from fitcurve import CurveFit
 
 class FitParabola(CurveFit):
@@ -14,6 +13,7 @@ class FitParabola(CurveFit):
         
         self.parameterNames = ['A', 'B', 'C']
         self.parameterValues = [1.0, 2.0, 3.0]
+        self.parameterFit = [True,True,True]
 
     # idk, something like this?
     def fitFunc(self, x, p):

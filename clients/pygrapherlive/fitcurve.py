@@ -37,12 +37,16 @@ class CurveFit():
 #            center = self.parent.parameterWindow.gaussianCenterDoubleSpinBox.value()
 #            sigma =  self.parent.parameterWindow.gaussianSigmaDoubleSpinBox.value()
 #            offset = self.parent.parameterWindow.gaussianOffsetDoubleSpinBox.value()
+            i=0
+            which_to_fit=[]
             for parameterName in self.parent.fitCurveDictionary[self.curveName].parameterNames:
                 params.append(self.parent.parameterSpinBoxes[parameterName].value())
+                if self.parent.FitParameterBox[parameterName].checkState()==2:
+                    which_to_fit.append(i)
+                i+=1
         else:
             params = parameters
-            
-           
+        
         # use specified parameters
 #        else:
 #            height = parameters[0]
@@ -59,9 +63,9 @@ class CurveFit():
         if (drawCurves == False):
               
 #            height, center, sigma, offset = self.fit(self.fitFuncGaussian, [height, center, sigma, offset], newYData, dataX)
-            solutions = self.fit(self.fitFunc, params, newYData, dataX)
+            solutions = self.fit(self.fitFunc, params, which_to_fit,newYData, dataX)
             
-   #         self.parent.solutionsDictionary[dataset, directory, label, self.curveName, str(self.parameterNames), index] = solutions
+#         self.parent.solutionsDictionary[dataset, directory, label, self.curveName, str(self.parameterNames), index] = solutions
             self.parent.solutionsDictionary[dataset, directory, index, self.curveName] = solutions
             yield self.parent.cxn.data_vault.cd(directory, context = self.parent.context)
             yield self.parent.cxn.data_vault.open(dataset, context = self.parent.context)
@@ -89,20 +93,28 @@ class CurveFit():
         self.parent.parent.parent.qmc.setPlotData(dataset, directory, plotData)
 
 
-    def fit(self, function, parameters, y, x = None):  
-        solutions = [None]*len(parameters)
+    def fit(self, function, parameters,fit_these_params, y, x = None):
         def f(params):
-            i = 0
-            for p in params:
+            args = []
+            j=0
+            for i in range(len(parameters)):
+                if i not in fit_these_params:
+                    args.append(parameters[i])
+                else:
+                    args.append(params[j])
+                    j+=1
+            i=0
+            for p in args:
                 solutions[i] = p
-                i += 1
-            return (y - function(x, params))
+                i+=1
+            return (y - function(x, args))
+        solutions = [None]*len(parameters)
         if x is None: x = np.arange(y.shape[0])
-        optimize.leastsq(f, parameters)
+        print 'Fitting ...',
+        optimize.leastsq(f, np.take(parameters,fit_these_params))
+        print ' DONE'
         return solutions    
    
     def getData(self, dataset, directory, index):
         dataX, dataY = self.parent.parent.parent.qmc.plotDict[dataset, directory][index].get_data() # dependent variable
         return dataX, dataY
-       
-   

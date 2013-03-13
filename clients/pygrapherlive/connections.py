@@ -337,7 +337,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
     # Datasets no longer need to be drawn on closed windows
     @inlineCallbacks
     def removeWindowFromDictionary(self, win):
-        print sys.getrefcount(win)
+#        print sys.getrefcount(win)
         #objgraph.show_most_common_types(limit=20)
         for i in self.dwDict.keys():
             values = self.dwDict[i]

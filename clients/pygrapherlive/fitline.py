@@ -13,6 +13,7 @@ class FitLine(CurveFit):
         self.curveName = 'Line'
         self.parameterNames = ['Slope', 'Offset']
         self.parameterValues = [1.0, 0.0]
+        self.parameterFit = [True,True]
 
     # idk, something like this?
     def fitFunc(self, x, p):

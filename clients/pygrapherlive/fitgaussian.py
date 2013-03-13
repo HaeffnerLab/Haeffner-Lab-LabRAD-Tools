@@ -13,7 +13,7 @@ class FitGaussian(CurveFit):
         self.curveName = 'Gaussian'
         self.parameterNames = ['Height', 'Center', 'Sigma', 'Offset']
         self.parameterValues = [1.0, 2.0, 3.0, 4.0]
-   
+        self.parameterFit = [True,True,True,True]
     # idk, something like this?
     def fitFunc(self, x, p):
         """ 
