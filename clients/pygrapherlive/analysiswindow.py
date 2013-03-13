@@ -426,7 +426,7 @@ class AnalysisWindow(QtGui.QWidget):
         # the fitted solutions are already in data vault, this would overwrite them with the manual
         solutions = []
         for c in range(self.parameterTable.rowCount()):
-            solutions.append(self.parameterTable.cellWidget(c, 1).value())
+            solutions.append(self.parameterTable.cellWidget(c, 2).value())
         yield self.parent.parent.parent.cxn.data_vault.add_parameter_over_write('Solutions'+'-'+str(self.index)+'-'+self.curveName, solutions, context = self.context)
         self.close()
 
