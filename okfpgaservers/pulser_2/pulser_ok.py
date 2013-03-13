@@ -23,6 +23,7 @@ from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, D
 from twisted.internet.threads import deferToThread
 import time
 from hardwareConfiguration import hardwareConfiguration
+from userConfiguration import user_configuration
 from sequence import Sequence
 from dds import DDS
 from api import api
@@ -37,17 +38,18 @@ class Pulser(LabradServer, DDS, LineTrigger):
     @inlineCallbacks
     def initServer(self):
         self.api  = api()
-        self.channelDict = hardwareConfiguration.channelDict
+        #user configuration
+        self.ttl_channels = user_configuration.ttl_channels
+        self.dds_channels = user_configuration.dds_channels
+        self.remote_dds_channels = user_configuration.remote_dds_channels
+        #hardware configuration
         self.collectionTime = hardwareConfiguration.collectionTime
         self.collectionMode = hardwareConfiguration.collectionMode
         self.sequenceType = hardwareConfiguration.sequenceType
         self.isProgrammed = hardwareConfiguration.isProgrammed
         self.timeResolution = float(hardwareConfiguration.timeResolution)
-        self.ddsDict = hardwareConfiguration.ddsDict
         self.timeResolvedResolution = hardwareConfiguration.timeResolvedResolution
-        self.remoteChannels = hardwareConfiguration.remoteChannels
         self.collectionTimeRange = hardwareConfiguration.collectionTimeRange
-        self.sequenceTimeRange = hardwareConfiguration.sequenceTimeRange
         self.haveSecondPMT = hardwareConfiguration.secondPMT
         self.inCommunication = DeferredLock()
         self.clear_next_pmt_counts = 0
@@ -64,20 +66,16 @@ class Pulser(LabradServer, DDS, LineTrigger):
             raise Exception ("Pulser Not Found")
             
     def initializeSettings(self):
-        for channel in self.channelDict.itervalues():
-            channelnumber = channel.channelnumber
-            if channel.ismanual:
-                state = self.cnot(channel.manualinv, channel.manualstate)
-                self.api.setManual(channelnumber, state)
-            else:
-                self.api.setAuto(channelnumber, channel.autoinv)
+        for channel in self.ttl_channels.itervalues():
+            channelnumber, state, on_is_high = channel.channelnumber, channel.state, channel.on_is_high
+            self.api.setManual(channelnumber, state)
     
     @inlineCallbacks
     def initializeRemote(self):
         self.remoteConnections = {}
-        if len(self.remoteChannels):
+        if len(self.remote_dds_channels):
             from labrad.wrappers import connectAsync
-            for name,rc in self.remoteChannels.iteritems():
+            for name,rc in self.remote_dds_channels.iteritems():
                 try:
                     self.remoteConnections[name] = yield connectAsync(rc.ip)
                     print 'Connected to {}'.format(name)
@@ -121,8 +119,8 @@ class Pulser(LabradServer, DDS, LineTrigger):
         """
         Add a TTL Pulse to the sequence, times are in seconds
         """
-        if channel not in self.channelDict.keys(): raise Exception("Unknown Channel {}".format(channel))
-        hardwareAddr = self.channelDict.get(channel).channelnumber
+        if channel not in self.ttl_channels.keys(): raise Exception("Unknown Channel {}".format(channel))
+        hardwareAddr = self.ttl_channels.get(channel).channelnumber
         sequence = c.get('sequence')
         start = start['s']
         duration = duration['s']
@@ -165,7 +163,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         yield deferToThread(self.api.stopLooped)
         self.inCommunication.release()
         self.sequenceType = None
-        self.ddsLock = False
+        yield self.unlock_dds_channels()
     
     @setting(9, "Start Number", repetitions = 'w')
     def startNumber(self, c, repetitions):
@@ -207,7 +205,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         """
         Returns all available channels, and the corresponding hardware numbers
         """
-        d = self.channelDict
+        d = self.ttl_channels
         keys = d.keys()
         numbers = [d[key].channelnumber for key in keys]
         return zip(keys,numbers)
@@ -218,8 +216,8 @@ class Pulser(LabradServer, DDS, LineTrigger):
         Switches the given channel into the manual mode, by default will go into the last remembered state but can also
         pass the argument which state it should go into.
         """
-        if channelName not in self.channelDict.keys(): raise Exception("Incorrect Channel")
-        channel = self.channelDict[channelName]
+        if channelName not in self.ttl_channels.keys(): raise Exception("Incorrect Channel")
+        channel = self.ttl_channels[channelName]
         channelNumber = channel.channelnumber
         channel.ismanual = True
         if state is not None:
@@ -239,8 +237,8 @@ class Pulser(LabradServer, DDS, LineTrigger):
         """
         Switches the given channel into the automatic mode, with an optional inversion.
         """
-        if channelName not in self.channelDict.keys(): raise Exception("Incorrect Channel")
-        channel = self.channelDict[channelName]
+        if channelName not in self.ttl_channels.keys(): raise Exception("Incorrect Channel")
+        channel = self.ttl_channels[channelName]
         channelNumber = channel.channelnumber
         channel.ismanual = False
         if invert is not None:
@@ -257,8 +255,8 @@ class Pulser(LabradServer, DDS, LineTrigger):
         """
         Returns the current state of the switch: in the form (Manual/Auto, ManualOn/Off, ManualInversionOn/Off, AutoInversionOn/Off)
         """
-        if channelName not in self.channelDict.keys(): raise Exception("Incorrect Channel")
-        channel = self.channelDict[channelName]
+        if channelName not in self.ttl_channels.keys(): raise Exception("Incorrect Channel")
+        channel = self.ttl_channels[channelName]
         answer = (channel.ismanual,channel.manualstate,channel.manualinv,channel.autoinv)
         return answer
     
@@ -277,8 +275,8 @@ class Pulser(LabradServer, DDS, LineTrigger):
             yield self.wait(0.050)
         returnValue(False)
     
-    @setting(17, 'Repeatitions Completed', returns = 'w')
-    def repeatitionsCompleted(self, c):
+    @setting(17, 'Repetitions Completed', returns = 'w')
+    def repetitionsCompleted(self, c):
         """Check how many repeatitions have been completed in for the infinite or number modes"""
         yield self.inCommunication.acquire()
         completed = yield deferToThread(self.api.howManySequencesDone)
@@ -485,11 +483,6 @@ class Pulser(LabradServer, DDS, LineTrigger):
         d = Deferred()
         reactor.callLater(seconds, d.callback, result)
         return d
-    
-    def cnot(self, control, inp):
-        if control:
-            inp = not inp
-        return inp
     
     def notifyOtherListeners(self, context, message, f):
         """
