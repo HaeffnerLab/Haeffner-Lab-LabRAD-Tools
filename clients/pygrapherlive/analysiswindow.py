@@ -160,7 +160,9 @@ class AnalysisWindow(QtGui.QWidget):
         try:
             yield self.parent.parent.parent.cxn.data_vault.cd(self.directory, context = self.context)
             yield self.parent.parent.parent.cxn.data_vault.open(1, context = self.context)
-            sideband_selection = yield self.parent.parent.parent.cxn.data_vault.get_parameter('RabiFlopping.sideband_selection', context = self.context)
+            sideband_selection = self.parent.parent.parent.cxn.data_vault.get_parameter('RabiFlopping.sideband_selection', context = self.context)
+            sideband_selection = yield sideband_selection
+            print sideband_selection
             # START MOVE THIS PART TO WHERE IT CALLS THE (NOT YET IMPLEMENTED) PARAMETER 'experiment_name' to make it select the right initial fit function
             self.combo.setCurrentIndex(self.combo.findText('Rabi Flop'))
             self.onActivated()
