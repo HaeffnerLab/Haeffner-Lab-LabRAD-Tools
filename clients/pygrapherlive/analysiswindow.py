@@ -158,10 +158,9 @@ class AnalysisWindow(QtGui.QWidget):
     def getDataParameter(self):
 #        from labrad import units as U    
         try:
-            dv=self.cxn.data_vault()
-            dv.cd(self.directory)
-            dv.open(1)
-            sideband_selection = yield dv.get_parameter('RabiFlopping.sideband_selection')
+            yield self.parent.parent.parent.cxn.data_vault.cd(self.directory, context = self.context)
+            yield self.parent.parent.parent.cxn.data_vault.open(1, context = self.context)
+            sideband_selection = yield self.parent.parent.parent.cxn.data_vault.get_parameter('RabiFlopping.sideband_selection', context = self.context)
             # START MOVE THIS PART TO WHERE IT CALLS THE (NOT YET IMPLEMENTED) PARAMETER 'experiment_name' to make it select the right initial fit function
             self.combo.setCurrentIndex(self.combo.findText('Rabi Flop'))
             self.onActivated()
@@ -170,11 +169,11 @@ class AnalysisWindow(QtGui.QWidget):
             if len(sb[sb.nonzero()])==1: #ONLY ONE SINGLE SIDEBAND SELECTED
                 sideband=sb[sb.nonzero()][0]
                 trap_frequencies = ['TrapFrequencies.radial_frequency_1','TrapFrequencies.radial_frequency_2','TrapFrequencies.axial_frequency','TrapFrequencies.rf_drive_frequency']
-                trap_frequency = yield dv.get_parameter(str(np.array(trap_frequencies)[sb.nonzero()][0]))
+                trap_frequency = yield self.parent.parent.parent.cxn.data_vault.get_parameter(str(np.array(trap_frequencies)[sb.nonzero()][0]), context = self.context)
             elif len(sb[sb.nonzero()])==0: #NO SIDEBAND SELECTED -> CARRIER
                 sideband=0
                 print 'Warning: Carrier Rabi Flops will be represented in a 1D model using the first radial trap frequency as initial fit parameter!'
-                trap_frequency = yield dv.get_parameter('TrapFrequencies.radial_frequency_1')
+                trap_frequency = yield self.parent.parent.parent.cxn.data_vault.get_parameter('TrapFrequencies.radial_frequency_1', context = self.context)
             else: print 'Higher order sidebands not supported'
             #Set initial parameters
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['Sideband']=sideband
