@@ -63,7 +63,7 @@ class CurveFit():
         if (drawCurves == False):
               
 #            height, center, sigma, offset = self.fit(self.fitFuncGaussian, [height, center, sigma, offset], newYData, dataX)
-            solutions = self.fit(self.fitFunc, params, which_to_fit,newYData, dataX)
+            solutions = self.fit(self.fitFunc, params, which_to_fit, newYData, dataX)
             
 #         self.parent.solutionsDictionary[dataset, directory, label, self.curveName, str(self.parameterNames), index] = solutions
             self.parent.solutionsDictionary[dataset, directory, index, self.curveName] = solutions

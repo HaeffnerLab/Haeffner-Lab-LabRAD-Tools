@@ -50,7 +50,7 @@ class AnalysisWindow(QtGui.QWidget):
         
     def initUI(self):      
 
-        self.setWindowTitle(str(self.dataset))
+        self.setWindowTitle('Fitting of '+str(self.directory))
 
         self.combo = QtGui.QComboBox(self)
         i = 0
@@ -59,7 +59,6 @@ class AnalysisWindow(QtGui.QWidget):
             self.combo.addItem(curveName)
             self.combo.itemText(1)
             i += 1
-
 
 #        self.lbl = QtGui.QLabel(self.combo.itemText(0), self)
 #        self.hello1 = QtGui.QLabel('hi1', self)
@@ -272,7 +271,7 @@ class AnalysisWindow(QtGui.QWidget):
             self.parameterTable.setCellWidget(i, 2, self.parameterSpinBoxes[parameterName])
             item = QtGui.QTableWidgetItem()
             item.setText(str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName]))
-            item.setFlags(QtCore.Qt.ItemIsEditable|QtCore.Qt.ItemIsEnabled)
+            item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.parameterTable.setItem(i, 3, item)
             
             self.FitParameterBox[parameterName] = QtGui.QTableWidgetItem()
