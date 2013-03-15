@@ -76,11 +76,7 @@ class DDS(LabradServer):
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
         for value in values:
-            try:
-                name,start,dur,freq,ampl = value
-                phase  = WithUnit(0, 'deg')
-            except ValueError:
-                name,start,dur,freq,ampl,phase = value
+            name,start,dur,freq,ampl,phase = value
             try:
                 channel = self.dds_channels[name]
             except KeyError:
@@ -93,9 +89,11 @@ class DDS(LabradServer):
             if freq == 0 or ampl == 0:
                 freq = channel.allowedfreqrange[0]
                 ampl = channel.off_amplitude
+                phase = 0.0
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
+                self._checkRange('phase', channel, phase)
             sequence.add_dds_pulse(name, start, start + dur, freq, ampl, phase)
         
     @setting(46, 'Get DDS Amplitude Range', name = 's', returns = '(vv)')
@@ -127,6 +125,8 @@ class DDS(LabradServer):
             r = channel.allowedamplrange
         elif t == 'frequency':
             r = channel.allowedfreqrange
+        elif t == 'phase':
+            r = channel.allowedphaserange
         if not r[0]<= val <= r[1]: raise Exception ("Value {} is outside allowed range".format(val))
     
     def _getChannel(self,c, name):

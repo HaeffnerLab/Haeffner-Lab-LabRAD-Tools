@@ -33,7 +33,9 @@ class double_pass_729(dds_channel):
     
     def phase_conversion(self, phase):
         #double pass doubles the phase
-        phase = phase / 2.0
+        phase = phase['deg'] % 360.0 #translates the specifies phase to be between 0 and 360
+        phase = phase / 2.0 #action of the double pass
+        phase  = WithUnit(phase, 'deg') #return in units
         return phase
         
 #defining available dds channels
