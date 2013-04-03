@@ -10,7 +10,6 @@ class experiment_info(object):
     holds informaton about the experiment
     '''
     required_parameters = []
-    external_parameters = []
     name = ''
     
     def __init__(self, name = None, required_parameters = None):
@@ -70,23 +69,21 @@ class experiment(experiment_info):
                     self.cxn = None
         
     def _initialize(self, cxn, context, ident):
-        self._load_parameters()
+        self._load_required_parameters()
         self.initialize(cxn, context, ident)
         self.sc.launch_confirmed(ident)
     
     def _run(self, cxn, context):
         self.run(cxn, context)
     
-    def _load_parameters(self, overwrite = False):
+    def _load_required_parameters(self, overwrite = False):
         d = self._load_parameters_dict(self.required_parameters)
         self.parameters.update(d, overwrite = overwrite)
-        d = self._load_external_parameters(self.external_parameters)
-        self.parameters.update(d, overwrite = False)
         
-    def _load_parameters_dict(self, required):
+    def _load_parameters_dict(self, params):
         '''loads the required parameter into a treedict'''
         d = TreeDict()
-        for collection,parameter_name in required:
+        for collection,parameter_name in params:
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
             except Exception as e:
@@ -94,12 +91,6 @@ class experiment(experiment_info):
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
                 d['{0}.{1}'.format(collection, parameter_name)] = value
-        return d
-    
-    def _load_external_parameters(self, params):
-        d = TreeDict()
-        for collection,parameter_name in params:
-            d['{0}.{1}'.format(collection, parameter_name)] = None
         return d
     
     def set_parameters(self, parameter_dict):
@@ -116,8 +107,12 @@ class experiment(experiment_info):
             raise Exception ("Incorrect input type for the replacement dictionary")
         self.parameters.update(udpate_dict)
     
-    def reload_parameters_vault(self):
-        self._load_parameters(overwrite = True)
+    def reload_some_parameters(self, params):
+        d = self._load_parameters_dict(params)
+        self.parameters.update(d)
+    
+    def reload_all_parameters(self):
+        self._load_required_parameters(overwrite = True)
     
     def _finalize(self, cxn, context):
         self.finalize(cxn, context)
@@ -136,7 +131,7 @@ class experiment(experiment_info):
     def make_experiment(self, subexprt_cls):
         subexprt = subexprt_cls(cxn = self.cxn)
         subexprt._connect()
-        subexprt._load_parameters()
+        subexprt._load_required_parameters()
         return subexprt
     
     def set_progress_limits(self, min_progress, max_progress):
@@ -197,7 +192,7 @@ class repeat_reload(experiment):
     def run(self, cxn, context):
         for i in range(self.repetitions):
             if self.pause_or_stop(): return
-            self.script.reload_parameters_vault()
+            self.script.reload_all_parameters()
             self.script.set_progress_limits(100.0 * i / self.repetitions, 100.0 * (i + 1) / self.repetitions )
             result = self.script.run(cxn, context)
             if self.script.should_stop: return
