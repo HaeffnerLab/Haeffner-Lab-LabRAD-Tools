@@ -10,6 +10,10 @@ from helper_widgets.compound_widgets import table_dropdowns_with_entry
 import numpy
 from drift_tracker_config import config_729_tracker as c
 
+'''
+Drift Tracker GUI. 
+Version 1.1
+'''
 
 class drift_tracker(QtGui.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):
@@ -54,6 +58,9 @@ class drift_tracker(QtGui.QWidget):
         b_drift.set_xlabel('Time (min)')
         b_drift.set_ylabel('mgauss')
         b_drift.set_title("B Field Drift")
+        self.b_drift_twin = b_drift.twinx()
+        self.b_drift_twin.set_ylabel('Effective Frequency (kHz)')
+        self.b_drift_twin_lines = []
         self.b_drift_lines = []
         self.b_drift_fit_line = []
         self.b_drift = b_drift
@@ -223,13 +230,21 @@ class drift_tracker(QtGui.QWidget):
         for i in range(len(self.b_drift_fit_line)):
             l = self.b_drift_fit_line.pop()
             l.remove()
+        for i in range(len(self.b_drift_twin_lines)):
+            l = self.b_drift_twin_lines.pop()
+            l.remove()
         xmin,xmax = self.b_drift.get_xlim()
         xmin-= 10
         xmax+= 10
         points = 1000
         x = numpy.linspace(xmin, xmax, points) 
         y = 1000 * numpy.polyval(p, 60*x)
+        frequency_scale = 1.4 #KHz / mgauss
         l = self.b_drift.plot(x, y, '-r')[0]
+        twin = self.b_drift_twin.plot(x, frequency_scale * y, alpha = 0)[0]
+        self.b_drift_twin_lines.append(twin)
+        label = self.b_drift.annotate('Slope {0:.1f} microgauss/sec'.format(10**6 * p[-2]), xy = (0.5, 0.8), xycoords = 'axes fraction', fontsize = 13.0)
+        self.b_drift_fit_line.append(label)
         self.b_drift_fit_line.append(l)
         self.drift_canvas.draw()
     
@@ -244,7 +259,9 @@ class drift_tracker(QtGui.QWidget):
         x = numpy.linspace(xmin, xmax, points) 
         y = 1000 * numpy.polyval(p, 60*x)
         l = self.line_drift.plot(x, y, '-r')[0]
+        label = self.line_drift.annotate('Slope {0:.1f} Hz/sec'.format(10**6 * p[-2]), xy = (0.5, 0.8), xycoords = 'axes fraction', fontsize = 13.0)
         self.line_drift_fit_line.append(l)
+        self.line_drift_fit_line.append(label)
         self.drift_canvas.draw()
     
     @inlineCallbacks
@@ -273,7 +290,7 @@ class drift_tracker(QtGui.QWidget):
         except IndexError:
             pass
         else:
-            label = axes.annotate('Last Point: ' + str(last), xy = (0.5, 0.9), xycoords = 'axes fraction', fontsize = 13.0)
+            label = axes.annotate('Last Point: {0:.2f} {1}'.format(last, axes.get_ylabel()), xy = (0.5, 0.9), xycoords = 'axes fraction', fontsize = 13.0)
             lines.append(label)
         line = axes.plot(x,y, 'b*')[0]
         lines.append(line)
