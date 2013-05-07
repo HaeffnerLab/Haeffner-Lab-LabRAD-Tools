@@ -30,3 +30,4 @@ else:
                     except Exception as e:
                         print 'ERROR with ' + server
                         errors = True
+print 'DONE'
