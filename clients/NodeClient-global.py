@@ -31,7 +31,5 @@ for node in ['node_lab_49']: #sets the order of opening
 					cxn.servers[node].start(server)
 				except:
 					print 'ERROR with ' + server
-
-
-					
+print 'DONE'
 time.sleep(10)

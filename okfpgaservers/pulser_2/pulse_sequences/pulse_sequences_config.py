@@ -32,12 +32,16 @@ class double_pass_729(dds_channel):
         return freq
     
     def phase_conversion(self, phase):
-        #double pass doubles the phase
-        phase = phase / 2.0
+        phase = phase['deg'] #in degrees
+        phase = phase / 2.0 #double pass doubles the phase.
+        phase = -phase #flip the phase such that DDS follows sin(w t - phi), see writeup on single qubit operations
+        phase = phase % 360.0 #translates the specifies phase to be between 0 and 360
+        phase  = WithUnit(phase, 'deg') #return in units
         return phase
         
 #defining available dds channels
 dds729DP = double_pass_729('729DP')
+dds729DP_1 = double_pass_729('729DP_1')
 dds110DP = dds_channel('110DP')
 dds866DP = dds_channel('866DP')
 dds854DP = dds_channel('854DP')
@@ -51,6 +55,8 @@ There can be multiple keys for the same value.
 dds_name_dictionary = {
                         '729':dds729DP,
                         '729DP':dds729DP,
+                        '729_1':dds729DP_1,
+                        '729DP_1':dds729DP_1,
                         '397':dds110DP,
                         '110DP':dds110DP,
                         '866':dds866DP,
