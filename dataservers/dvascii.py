@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Data Vault
-version = 2.31
+version = 2.4
 description = 
 instancename = Data Vault
 
@@ -52,7 +52,6 @@ except ImportError, e:
     print e
     print "Numpy not imported.  The DataVault will operate, but will be slower."
     useNumpy = False
-
 
 # TODO: tagging
 # - search globally (or in some subtree of sessions) for matching tags
@@ -98,7 +97,7 @@ class EmptyNameError( T.Error ):
         self.msg = "Directory %s does not exist!" % ( path, )
 
 class ReadOnlyError( T.Error ):
-    """Points can only be added to datasets created with 'new'."""
+    """Points can only be added to datasets created with 'new' or opened with 'open_appendable'."""
     code = 7
 
 class BadDataError( T.Error ):
@@ -1047,6 +1046,23 @@ class DataVault( LabradServer ):
         c['filepos'] = 0
         c['commentpos'] = 0
         c['writing'] = False
+        dataset.keepStreaming( c.ID, 0 )
+        dataset.keepStreamingComments( c.ID, 0 )
+        return c['path'], c['dataset']
+    
+    @setting(11, name = ['s', 'w'], returns = '(*s{path}, s{name})' )
+    def open_appendable(self, c, name):
+        """Open a Dataset for reading and appending.
+        
+        You can specify the dataset by name or number.
+        Returns the path and name for this dataset.
+        """
+        session = self.getSession( c )
+        dataset = session.openDataset( name )
+        c['dataset'] = dataset.name # not the same as name; has number prefixed
+        c['filepos'] = 0
+        c['commentpos'] = 0
+        c['writing'] = True
         dataset.keepStreaming( c.ID, 0 )
         dataset.keepStreamingComments( c.ID, 0 )
         return c['path'], c['dataset']
