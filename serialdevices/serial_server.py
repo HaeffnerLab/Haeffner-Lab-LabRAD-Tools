@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Serial Server
-version = 1.2
+version = 1.3
 description = 
 instancename = %LABRADNODE% Serial Server
 
@@ -35,15 +35,14 @@ from labrad import types as T, util
 from labrad.errors import Error
 from labrad.server import LabradServer, setting
 
-from twisted.python import log
-from twisted.internet import defer, reactor, threads
+from twisted.internet import threads
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+from serial.tools import list_ports
 from serial import Serial
 from serial.serialutil import SerialException
 
 from time import sleep
-import sys
 
 class NoPortSelectedError(Error):
     """Please open a port first."""
@@ -58,39 +57,21 @@ class SerialServer(LabradServer):
     name = '%LABRADNODE% Serial Server'
 
     def initServer(self):
-        self.portrange,self.prefix,self.portstring,self.message = self.getPlatformInfo()
-        self.SerialPorts = []
         print 'Searching for COM ports:'
-        for a in self.portrange:
-            COMexists = True
+        self.SerialPorts = []
+        ports = list_ports.comports()
+        for name,description,hardware in ports:
+            #make sure the discovered ports can be opened
             try:
-                ser = Serial(self.prefix + self.portstring.format(a))
+                ser = Serial(name)
                 ser.close()
             except SerialException, e:
-                if e.message.find(self.message) >= 0:
-                    COMexists = False
-            if COMexists:
-                self.SerialPorts += [self.portstring.format(a)]
-                print self.portstring.format(a)
+                pass
+            else:
+                self.SerialPorts += [name]
+                print name
         if not len(self.SerialPorts):
             print '  none'
-    
-    def getPlatformInfo(self):
-        """Figures out if running on Windows or Linux and returns platform
-        dependent information"""
-        if sys.platform.startswith('win'):
-            portrange = range(1,20)
-            prefix = '\\\\.\\'
-            portstring = 'COM{}'
-            message = 'cannot find'
-        elif sys.platform.startswith('linux'):
-            portrange = range(0,20)
-            prefix = '/dev/'
-            portstring = 'ttyUSB{}'
-            message = 'could not open'
-        elif sys.platform.startswith('darwin'):
-            raise Exception("Not Implemented on Mac")
-        return portrange,prefix,portstring,message
 
     def expireContext(self, c):
         if 'PortObject' in c:
@@ -127,7 +108,7 @@ class SerialServer(LabradServer):
         if port == 0:
             for i in range(len(self.SerialPorts)):
                 try:
-                    c['PortObject'] = Serial(self.prefix+self.SerialPorts[i], timeout=0)
+                    c['PortObject'] = Serial(self.SerialPorts[i], timeout=0)
                     break
                 except SerialException:
                     pass
@@ -135,13 +116,13 @@ class SerialServer(LabradServer):
                 raise NoPortsAvailableError()
         else:
             try:
-                c['PortObject'] = Serial(self.prefix + port, timeout=0)
+                c['PortObject'] = Serial(port, timeout=0)
             except SerialException, e:
                 if e.message.find('cannot find') >= 0:
                     raise Error(code=1, msg=e.message)
                 else:
                     raise Error(code=2, msg=e.message)
-        return c['PortObject'].portstr.replace(self.prefix,'')
+        return c['PortObject'].portstr
 
 
     @setting(11, 'Close', returns=[''])
