@@ -12,8 +12,6 @@ from labrad.server import LabradServer, setting
 from AndorCamera import AndorCamera
 from labrad.units import WithUnit
 
-#MR better arrange setting numbers
-
 class AndorServer(LabradServer):
     """ Contains methods that interact with the Andor CCD Cameras"""
     
@@ -73,7 +71,7 @@ class AndorServer(LabradServer):
         finally:
             self.lock.release()
         
-    @setting(23, "Set Cooler On", returns = '')
+    @setting(4, "Set Cooler On", returns = '')
     def set_cooler_on(self, c):
         """Turns Cooler On"""
         yield self.lock.acquire()
@@ -82,7 +80,7 @@ class AndorServer(LabradServer):
         finally:
             self.lock.release()
     
-    @setting(24, "Set Cooler Off", returns = '')
+    @setting(5, "Set Cooler Off", returns = '')
     def set_cooler_off(self, c):
         """Turns Cooler On"""
         yield self.lock.acquire()
@@ -170,13 +168,13 @@ class AndorServer(LabradServer):
     '''
     Exposure Time
     '''
-    @setting(4, "Get Exposure Time", returns = 'v[s]')
+    @setting(14, "Get Exposure Time", returns = 'v[s]')
     def getExposureTime(self, c):
         """Gets Current Exposure Time"""
         time = self.camera.get_exposure_time()
         return WithUnit(time, 's')
         
-    @setting(5, "Set Exposure Time", expTime = 'v[s]', returns = 'v[s]')
+    @setting(15, "Set Exposure Time", expTime = 'v[s]', returns = 'v[s]')
     def setExposureTime(self, c, expTime):
         """Sets Current Exposure Time"""       
         yield self.lock.acquire()
@@ -192,12 +190,12 @@ class AndorServer(LabradServer):
     '''
     Image Region
     '''
-    @setting(14, "Get Image Region", returns = '*i')
+    @setting(16, "Get Image Region", returns = '*i')
     def getImageRegion(self, c):
         """Gets Current Image Region"""
         return self.camera.get_image()
         
-    @setting(15, "Set Image Region", horizontalBinning = 'i', verticalBinning = 'i', horizontalStart = 'i', horizontalEnd = 'i', verticalStart = 'i', verticalEnd = 'i', returns = '')
+    @setting(17, "Set Image Region", horizontalBinning = 'i', verticalBinning = 'i', horizontalStart = 'i', horizontalEnd = 'i', verticalStart = 'i', verticalEnd = 'i', returns = '')
     def setImageRegion(self, c, horizontalBinning, verticalBinning, horizontalStart, horizontalEnd, verticalStart, verticalEnd):
         """Sets Current Image Region"""
         yield self.lock.acquire()
@@ -208,7 +206,7 @@ class AndorServer(LabradServer):
     '''
     Acquisition
     '''
-    @setting(29, "Start Acquisition", returns = '')
+    @setting(18, "Start Acquisition", returns = '')
     def startAcquisition(self, c):
         yield self.lock.acquire()
         try:
@@ -216,7 +214,7 @@ class AndorServer(LabradServer):
         finally:
             self.lock.release()
 
-    @setting(26, "Wait For Acquisition", returns = '')
+    @setting(19, "Wait For Acquisition", returns = '')
     def waitForAcquisition(self, c):
         yield self.lock.acquire()
         try:
@@ -224,7 +222,7 @@ class AndorServer(LabradServer):
         finally:
             self.lock.release()
         
-    @setting(98, "Abort Acquisition", returns = '')
+    @setting(20, "Abort Acquisition", returns = '')
     def abortAcquisition(self, c):
         if c is not None and self.gui.live_update_running:
             yield self.gui.stop_live_display()
@@ -234,7 +232,7 @@ class AndorServer(LabradServer):
         finally:
             self.lock.release()
     
-    @setting(27, "Get Acquired Data", num_images = 'i',returns = '*i')
+    @setting(21, "Get Acquired Data", num_images = 'i',returns = '*i')
     def getAcquiredData(self, c, num_images = 1):
         """Get the acquired images"""
         yield self.lock.acquire()
@@ -247,12 +245,12 @@ class AndorServer(LabradServer):
     '''
     General
     '''
-    @setting(16, "Get Camera Serial Number", returns = 'i')
+    @setting(22, "Get Camera Serial Number", returns = 'i')
     def getCameraSerialNumber(self, c):
         """Gets Camera Serial Number"""
         return self.camera.get_camera_serial_number()
     
-    @setting(28, "Get Most Recent Image", returns = '*i')
+    @setting(23, "Get Most Recent Image", returns = '*i')
     def getMostRecentImage(self, c):
         """Get all Data"""
         yield self.lock.acquire()
@@ -262,18 +260,18 @@ class AndorServer(LabradServer):
             self.lock.release()
         returnValue(image)
     
-    @setting(109, "Start Live Display", returns = '')
+    @setting(24, "Start Live Display", returns = '')
     def startLiveDisplay(self, c):
         """Get all Data"""
         yield self.gui.start_live_display()
     
     
-    @setting(17, "Get Number Kinetics", returns = 'i')
+    @setting(25, "Get Number Kinetics", returns = 'i')
     def getNumberKinetics(self, c):
         """Gets Number Of Scans In A Kinetic Cycle"""
         return self.camera.get_number_kinetics()
      
-    @setting(18, "Set Number Kinetics", numKin = 'i', returns = '')
+    @setting(26, "Set Number Kinetics", numKin = 'i', returns = '')
     def setNumberKinetics(self, c, numKin):
         """Sets Number Of Scans In A Kinetic Cycle"""
         yield self.lock.acquire()
@@ -282,7 +280,7 @@ class AndorServer(LabradServer):
         finally:
             self.lock.release()
     
-    @setting(110, "Wait For Kinetic", timeout = 'v[s]',returns = 'b')
+    @setting(27, "Wait For Kinetic", timeout = 'v[s]',returns = 'b')
     def waitForKinetic(self, c, timeout = WithUnit(10,'s')):
         '''Waits until the given number of kinetic images are completed'''
         requestCalls = int(timeout['s'] / 0.050 ) #number of request calls

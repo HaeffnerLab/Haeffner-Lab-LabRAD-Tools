@@ -6,8 +6,8 @@ import time
 from PyQt4 import QtGui
 
 identify_exposure = WithUnit(0.5, 's')
-stop_x = 300
-stop_y = 100
+stop_x = 658
+stop_y = 496
 image_region = (1,1,1,stop_x,1,stop_y)
 
 
@@ -26,6 +26,9 @@ cam.set_acquisition_mode('Single Scan')
 cam.start_acquisition()
 cam.wait_for_acquisition()
 image = cam.get_acquired_data().asarray
+np.save('sample', image)
+
+
 image = np.reshape(image, (stop_x, stop_y))
 
 pyqtgraph.image(image)

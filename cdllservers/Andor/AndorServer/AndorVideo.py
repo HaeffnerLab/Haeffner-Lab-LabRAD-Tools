@@ -110,8 +110,8 @@ class AndorVideo(QtGui.QWidget):
     @inlineCallbacks
     def live_update(self):
         data = yield self.server.getMostRecentImage(None)
-        image_data = np.reshape(data, (self.pixels_x, self.pixels_y))
-        self.img_view.setImage(image_data, autoRange = False, autoLevels = False)
+        image_data = np.reshape(data, (self.pixels_y, self.pixels_x))
+        self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False)
     
     @inlineCallbacks
     def start_live_display(self):
