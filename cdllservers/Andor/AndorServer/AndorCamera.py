@@ -371,7 +371,6 @@ class AndorCamera(object):
 
     def shut_down(self):
         error = self.dll.ShutDown()
-        print error
         return ERROR_CODE[error]
     
 ERROR_CODE = {

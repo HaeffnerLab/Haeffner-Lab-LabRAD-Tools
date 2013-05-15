@@ -5,12 +5,29 @@ a = QtGui.QApplication( [])
 import qt4reactor
 qt4reactor.install()
 #import server libraries
-from twisted.internet.defer import returnValue, DeferredLock, Deferred
+from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 from labrad.server import LabradServer, setting
 from AndorCamera import AndorCamera
 from labrad.units import WithUnit
+
+"""
+### BEGIN NODE INFO
+[info]
+name =  Andor Server
+version = 0.9
+description = 
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 5
+### END NODE INFO
+"""
 
 class AndorServer(LabradServer):
     """ Contains methods that interact with the Andor CCD Cameras"""
@@ -265,7 +282,6 @@ class AndorServer(LabradServer):
         """Get all Data"""
         yield self.gui.start_live_display()
     
-    
     @setting(25, "Get Number Kinetics", returns = 'i')
     def getNumberKinetics(self, c):
         """Gets Number Of Scans In A Kinetic Cycle"""
@@ -300,12 +316,20 @@ class AndorServer(LabradServer):
         d = Deferred()
         reactor.callLater(seconds, d.callback, result)
         return d
-        
+
+    def stop(self):
+        self._stopServer()
+    
+    @inlineCallbacks
     def stopServer(self):  
         """Shuts down camera before closing"""
         try:
+            if self.gui.live_update_running:
+                yield self.gui.stop_live_display()
+            yield self.lock.acquire()
             self.camera.shut_down()
-        except AttributeError:
+            self.lock.release()
+        except Exception:
             #not yet created
             pass
 

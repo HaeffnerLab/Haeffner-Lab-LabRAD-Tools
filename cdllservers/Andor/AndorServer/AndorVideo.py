@@ -143,6 +143,6 @@ class AndorVideo(QtGui.QWidget):
     @property
     def live_update_running(self):
         return self.live_update_loop.running
-    
+
     def closeEvent(self, event):
-        print 'close event'
+        self.server.stop()
