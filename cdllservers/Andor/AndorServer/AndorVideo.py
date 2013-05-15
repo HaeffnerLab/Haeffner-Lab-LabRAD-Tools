@@ -56,12 +56,29 @@ class AndorVideo(QtGui.QWidget):
         self.live_button = QtGui.QPushButton("Live Video")
         self.live_button.setCheckable(True)
         layout.addWidget(self.live_button, 2, 0)
+        #add lines for the cross
+        self.vLine = pg.InfiniteLine(angle=90, movable=False)
+        self.hLine = pg.InfiniteLine(angle=0, movable=False)
+        plt.addItem(self.vLine, ignoreBounds=True)
+        plt.addItem(self.hLine, ignoreBounds=True)
         #set the layout and show
         self.setLayout(layout)
         self.show()
     
+    def mouse_clicked(self, event):
+        '''
+        draws the cross at the position of a double click
+        '''
+        pos = event.pos()
+        if self.plt.sceneBoundingRect().contains(pos) and event.double():
+            #only on double clicks within bounds
+            mousePoint = self.plt.vb.mapToView(pos)
+            self.vLine.setPos(mousePoint.x())
+            self.hLine.setPos(mousePoint.y())
+    
     @inlineCallbacks
     def connect_layout(self):
+        self.plt.scene().sigMouseClicked.connect(self.mouse_clicked)
         exposure = yield self.server.getExposureTime(None)
         self.exposureSpinBox.setValue(exposure['s'])     
         self.exposureSpinBox.valueChanged.connect(self.on_new_exposure)
@@ -126,3 +143,6 @@ class AndorVideo(QtGui.QWidget):
     @property
     def live_update_running(self):
         return self.live_update_loop.running
+    
+    def closeEvent(self, event):
+        print 'close event'
