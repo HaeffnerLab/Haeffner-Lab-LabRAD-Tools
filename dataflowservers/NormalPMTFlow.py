@@ -285,7 +285,10 @@ class NormalPMTFlow( LabradServer):
 
     @setting(11, 'Get Time Length Range', returns = '(vv)')
     def get_time_length_range(self, c):
-        return self.collectTimeRange
+        if self.collectTimeRange is not None:
+            return self.collectTimeRange
+        else:
+            raise Exception("Not available because Pulser Server is not available")
     
     @inlineCallbacks
     def _programPulserDiff(self):

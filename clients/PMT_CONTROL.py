@@ -43,12 +43,18 @@ class pmtWidget(QtGui.QWidget):
         self.pushButton.setChecked(running)
         self.setText(self.pushButton)
         duration = yield self.server.get_time_length()
-        ran = yield self.server.get_time_length_range()
+        try:
+            ran = yield self.server.get_time_length_range()
+        except Exception:
+            #not able to obtain
+            pass
+        else:
+            self.doubleSpinBox.setRange(*ran)
         mode = yield self.server.getcurrentmode()
         index = self.comboBox.findText(mode)
         self.comboBox.setCurrentIndex(index)
         self.lcdNumber.display('OFF')
-        self.doubleSpinBox.setRange(*ran)
+        
         self.doubleSpinBox.setValue(duration)
     
     def followSignal(self,signal,value):
