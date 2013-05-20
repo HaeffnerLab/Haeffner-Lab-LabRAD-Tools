@@ -10,5 +10,5 @@ class multiplexer_control_config(object):
             '729': ('411.04243', (2,1)),
             '397 diode': ('755.22262', (2,0)),
             '854': ('350.86275', (1,1)),
-            '397 lattice room': ('', (3,0))
+#             '397 lattice room': ('', (3,0))
             }
