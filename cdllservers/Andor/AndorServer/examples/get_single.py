@@ -1,15 +1,15 @@
 import labrad
 from labrad.units import WithUnit
 import numpy as np
-import pyqtgraph
-import time
-from PyQt4 import QtGui
+from matplotlib import pyplot
 
 identify_exposure = WithUnit(0.5, 's')
-stop_x = 658
-stop_y = 496
-image_region = (1,1,1,stop_x,1,stop_y)
+start_x = 300; stop_x = 400
+start_y = 235; stop_y = 250
+image_region = (1,1,start_x,stop_x,start_y,stop_y)
 
+pixels_x = (stop_x - start_x + 1) 
+pixels_y = (stop_y - start_y + 1)
 
 cxn = labrad.connect()
 cam = cxn.andor_server
@@ -29,17 +29,14 @@ image = cam.get_acquired_data().asarray
 np.save('sample', image)
 
 
-image = np.reshape(image, (stop_x, stop_y))
+image = np.reshape(image, (pixels_y, pixels_x))
 
-pyqtgraph.image(image)
+pyplot.contour(image)
 
 
 cam.set_exposure_time(initial_exposure)
 cam.set_image_region(initial_region)
 cam.start_live_display()
 
-## Start Qt event loop unless running in interactive mode.
-if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+
+pyplot.show()

@@ -1,15 +1,16 @@
 import labrad
 from labrad.units import WithUnit
 import numpy as np
-import pyqtgraph
-import time
-from PyQt4 import QtGui
+from matplotlib import pyplot
 
-kinetic_number = 100
-identify_exposure = WithUnit(0.005, 's')
-stop_x = 50
-stop_y = 100
-image_region = (1,1,1,stop_x,1,stop_y)
+kinetic_number = 4
+identify_exposure = WithUnit(1.0, 's')
+start_x = 300; stop_x = 400
+start_y = 235; stop_y = 250
+image_region = (1,1,start_x,stop_x,start_y,stop_y)
+
+pixels_x = (stop_x - start_x + 1) 
+pixels_y = (stop_y - start_y + 1)
 
 
 cxn = labrad.connect()
@@ -24,20 +25,17 @@ cam.set_acquisition_mode('Kinetics')
 cam.set_number_kinetics(kinetic_number)
 
 cam.start_acquisition()
-cam.wait_for_kinetic(kinetic_number)
+cam.wait_for_kinetic()
 
 image = cam.get_acquired_data(kinetic_number).asarray
-image = np.reshape(image, (kinetic_number, stop_x, stop_y))
+image = np.reshape(image, (kinetic_number, pixels_y, pixels_x))
 
-pyqtgraph.image(image)
-
+for num,current in enumerate(image):
+    pyplot.figure(num)
+    pyplot.contour(current)
 
 cam.set_exposure_time(initial_exposure)
 cam.set_image_region(initial_region)
 cam.start_live_display()
 
-## Start Qt event loop unless running in interactive mode.
-if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+pyplot.show()
