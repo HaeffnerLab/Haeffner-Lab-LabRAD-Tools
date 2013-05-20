@@ -113,6 +113,7 @@ class AndorVideo(QtGui.QWidget):
     @inlineCallbacks
     def on_live_button(self, checked):
         if checked:
+            yield self.server.setTriggerMode(None, 'Internal')
             yield self.server.setAcquisitionMode(None, 'Run till abort')
             yield self.server.startAcquisition(None)
             binx,biny, startx, stopx, starty, stopy = yield self.server.getImageRegion(None)
