@@ -16,7 +16,7 @@ from labrad.units import WithUnit
 ### BEGIN NODE INFO
 [info]
 name =  Andor Server
-version = 0.91
+version = 0.92
 description = 
 
 [startup]
@@ -227,7 +227,11 @@ class AndorServer(LabradServer):
     def startAcquisition(self, c):
         yield self.lock.acquire()
         try:
+            #speeds up the call to start_acquisition
+            yield deferToThread(self.camera.prepare_acqusition)
             yield deferToThread(self.camera.start_acquisition)
+            #necessary so that start_acquisition call completes even for long kinetic series
+            yield self.wait(0.050)
         finally:
             self.lock.release()
 
@@ -304,6 +308,9 @@ class AndorServer(LabradServer):
             yield self.lock.acquire()
             try:
                 status = yield deferToThread(self.camera.get_status)
+                #useful for debugging of how many iterations have been completed in case of missed trigger pulses
+#                 a,b = yield deferToThread(self.camera.get_series_progress)
+#                 print a,b
             finally:
                 self.lock.release()
             if status == 'DRV_IDLE':

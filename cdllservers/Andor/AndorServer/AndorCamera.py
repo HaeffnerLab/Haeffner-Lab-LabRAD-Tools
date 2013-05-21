@@ -368,6 +368,13 @@ class AndorCamera(object):
             return acc.value, series.value
         else:
             raise Exception(ERROR_CODE[error])
+    
+    def prepare_acqusition(self):
+        error = self.dll.PrepareAcquisition()
+        if ERROR_CODE[error] == "DRV_SUCCESS":
+            return
+        else:
+            raise Exception(ERROR_CODE[error])
 
     def shut_down(self):
         error = self.dll.ShutDown()
