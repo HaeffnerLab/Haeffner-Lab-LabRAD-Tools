@@ -5,7 +5,7 @@ from qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks, returnValue
 import sys
 # sys.path.append('/home/cct/LabRAD/common/abstractdevices')
-from common.abstractdevices.DacConfiguration import hardwareConfiguration as hc
+from common.okfpgaservers.dacserver.DacConfiguration import hardwareConfiguration as hc
 
 UpdateTime = 100 # ms
 SIGNALID = 270836
