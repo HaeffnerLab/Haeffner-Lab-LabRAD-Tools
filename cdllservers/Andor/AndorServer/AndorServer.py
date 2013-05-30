@@ -16,7 +16,7 @@ from labrad.units import WithUnit
 ### BEGIN NODE INFO
 [info]
 name =  Andor Server
-version = 0.92
+version = 0.99
 description = 
 
 [startup]
@@ -165,7 +165,7 @@ class AndorServer(LabradServer):
             yield deferToThread(self.camera.set_acquisition_mode, mode)
         finally:
             self.lock.release()
-    
+        self.gui.set_acquisition_mode(mode)
     '''
     Trigger Mode
     '''    
@@ -182,6 +182,8 @@ class AndorServer(LabradServer):
             yield deferToThread(self.camera.set_trigger_mode, mode)
         finally:
             self.lock.release()
+        self.gui.set_trigger_mode(mode)
+        
     '''
     Exposure Time
     '''
@@ -317,6 +319,15 @@ class AndorServer(LabradServer):
                 returnValue(True)
             yield self.wait(0.050)
         returnValue(False)
+    
+    @setting(31, "Get Detector Dimensions", returns = 'ww')
+    def get_detector_dimensions(self, c):
+        yield self.lock.acquire()
+        try:
+            dimensions = yield deferToThread(self.camera.get_detector_dimensions)
+        finally:
+            self.lock.release()
+        returnValue(dimensions)
         
     def wait(self, seconds, result=None):
         """Returns a deferred that will be fired later"""
