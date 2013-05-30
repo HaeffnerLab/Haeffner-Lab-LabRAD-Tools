@@ -16,7 +16,7 @@ from labrad.units import WithUnit
 ### BEGIN NODE INFO
 [info]
 name =  Andor Server
-version = 0.99
+version = 1.0
 description = 
 
 [startup]

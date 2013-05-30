@@ -18,28 +18,13 @@ class AndorVideo(QtGui.QWidget):
         self.setWindowTitle("Andor")
         #layout
         layout = QtGui.QGridLayout()
-        #make a plot item with axes insdide graphicsview
-        graphics_view = pg.GraphicsView()
         self.plt = plt = pg.PlotItem()
-        #replace the view in the plotitem with an ImageView
-#         self.img_view = pg.ImageView()
         self.img_view = pg.ImageView(view = self.plt)
-#         self.plt = plt = pg.PlotItem(view = self.img_view.getView())
-        
-#         self.plt.addItem(self.img_view.getImageItem())
-        
-#         self.img_view.ui.histogram.setImageItem(self.plt)
-#         self.plt.addItem(self.img_view.getHistogramWidget())
-        graphics_view.setCentralItem(plt)
-        #customize plotitem
-#         plt = self.img_view.getImageItem()
         plt.showAxis('top')
         plt.hideAxis('bottom')
         plt.setAspectLocked(True)
-        layout.addWidget(graphics_view, 0, 0, 1, 5)
-#         layout.addWidget(self.img_view, 0, 0, 1, 5)
+        layout.addWidget(self.img_view, 0, 0, 1, 6)
         self.img_view.getHistogramWidget().setHistogramRange(0, 1000)
-        layout.addWidget(self.img_view.getHistogramWidget(), 0, 5)
         exposure_label = QtGui.QLabel("Exposure")
         exposure_label.setAlignment(QtCore.Qt.AlignRight| QtCore.Qt.AlignVCenter)
         self.exposureSpinBox = QtGui.QDoubleSpinBox()
@@ -64,7 +49,6 @@ class AndorVideo(QtGui.QWidget):
         #Live Video Button
         self.live_button = QtGui.QPushButton("Live Video")
         self.live_button.setCheckable(True)
-#         self.live_button.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         layout.addWidget(self.live_button, 1, 0)
         #set image region button
         self.set_image_region_button = QtGui.QPushButton("Set Image Region")
@@ -188,7 +172,7 @@ class AndorVideo(QtGui.QWidget):
     def live_update(self):
         data = yield self.server.getMostRecentImage(None)
         image_data = np.reshape(data, (self.pixels_y, self.pixels_x))
-        self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny])
+        self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
      
     @inlineCallbacks
     def start_live_display(self):
