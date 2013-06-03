@@ -156,14 +156,14 @@ class Sequence():
             arr = array.array('B', buf)
             arr = arr[:-2] #remove termination
             channel = hardwareConfiguration.ddsDict[name]
-            remote = channel.remote
+            coherent = channel.phase_coherent_model
             freq_min,freq_max = channel.boardfreqrange
             ampl_min,ampl_max = channel.boardamplrange
             def chunks(l, n):
                 """ Yield successive n-sized chunks from l."""
                 for i in xrange(0, len(l), n):
                     yield l[i:i+n]
-            if not remote:
+            if not coherent:
                 for a,b,c,d in chunks(arr, 4):
                     freq_num = (256*b + a)
                     ampl_num = (256*d + c)
