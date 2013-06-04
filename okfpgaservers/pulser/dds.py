@@ -15,7 +15,8 @@ class DDS(LabradServer):
     def initializeDDS(self):
         self.ddsLock = False
         self.api.initializeDDS()
-        for channel in self.ddsDict.itervalues():
+        for name,channel in self.ddsDict.iteritems():
+            channel.name = name
             freq,ampl = (channel.frequency, channel.amplitude)
             self._checkRange('amplitude', channel, ampl)
             self._checkRange('frequency', channel, freq)
@@ -141,7 +142,7 @@ class DDS(LabradServer):
             r = channel.allowedamplrange
         elif t == 'frequency':
             r = channel.allowedfreqrange
-        if not r[0]<= val <= r[1]: raise Exception ("Value {} is outside allowed range".format(val))
+        if not r[0]<= val <= r[1]: raise Exception ("channel {0} : {1} of {2} is outside the allowed range".format(channel.name, t, val))
     
     def _getChannel(self,c, name):
         try:
