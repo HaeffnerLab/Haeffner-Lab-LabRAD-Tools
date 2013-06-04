@@ -58,10 +58,13 @@ class AndorServer(LabradServer):
     def get_temperature(self, c):
         """Gets Current Device Temperature"""
         temperature = None
+        print 'acquiring: {}'.format(self.get_temperature.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.get_temperature.__name__)
             temperature  = yield deferToThread(self.camera.get_temperature)
         finally:
+            print 'releasing: {}'.format(self.get_temperature.__name__)
             self.lock.release()
         if temperature is not None:
             temperature = WithUnit(temperature, 'degC')
@@ -71,10 +74,13 @@ class AndorServer(LabradServer):
     def get_cooler_state(self, c):
         """Returns Current Cooler State"""
         cooler_state = None
+        print 'acquiring: {}'.format(self.get_cooler_state.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.get_cooler_state.__name__)
             cooler_state = yield deferToThread(self.camera.get_cooler_state)
         finally:
+            print 'releasing: {}'.format(self.get_cooler_state.__name__)
             self.lock.release()
         if cooler_state is not None:
             returnValue(cooler_state)
@@ -82,28 +88,37 @@ class AndorServer(LabradServer):
     @setting(3, "Set Temperature", setTemp = 'v[degC]', returns = '')
     def set_temperature(self, c, setTemp):
         """Sets The Target Temperature"""
+        print 'acquiring: {}'.format(self.set_temperature.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.set_temperature.__name__)
             yield deferToThread(self.camera.set_temperature, setTemp['degC'])
         finally:
+            print 'releasing: {}'.format(self.set_temperature.__name__)
             self.lock.release()
         
     @setting(4, "Set Cooler On", returns = '')
     def set_cooler_on(self, c):
         """Turns Cooler On"""
+        print 'acquiring: {}'.format(self.set_cooler_on.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.set_cooler_on.__name__)
             yield deferToThread(self.camera.set_cooler_on)
         finally:
+            print 'releasing: {}'.format(self.set_cooler_on.__name__)
             self.lock.release()
     
     @setting(5, "Set Cooler Off", returns = '')
     def set_cooler_off(self, c):
         """Turns Cooler On"""
+        print 'acquiring: {}'.format(self.set_cooler_off.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.set_cooler_off.__name__)
             yield deferToThread(self.camera.set_cooler_off)
         finally:
+            print 'releasing: {}'.format(self.set_cooler_off.__name__)
             self.lock.release()
     
     '''
@@ -113,10 +128,13 @@ class AndorServer(LabradServer):
     def getEMCCDGain(self, c):
         """Gets Current EMCCD Gain"""
         gain = None
+        print 'acquiring: {}'.format(self.getEMCCDGain.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.getEMCCDGain.__name__)
             gain = yield deferToThread(self.camera.get_emccd_gain)
         finally:
+            print 'releasing: {}'.format(self.getEMCCDGain.__name__)
             self.lock.release()
         if gain is not None:
             returnValue(gain)
@@ -124,10 +142,13 @@ class AndorServer(LabradServer):
     @setting(7, "Set EMCCD Gain", gain = 'i', returns = '')
     def setEMCCDGain(self, c, gain):
         """Sets Current EMCCD Gain"""
+        print 'acquiring: {}'.format(self.setEMCCDGain.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.setEMCCDGain.__name__)
             yield deferToThread(self.camera.set_emccd_gain, gain)
         finally:
+            print 'releasing: {}'.format(self.setEMCCDGain.__name__)
             self.lock.release()
         if c is not None:
             self.gui.set_gain(gain)
@@ -142,10 +163,13 @@ class AndorServer(LabradServer):
     def setReadMode(self, c, readMode):
         """Sets Current Read Mode"""
         mode = None
+        print 'acquiring: {}'.format(self.setReadMode.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.setReadMode.__name__)
             yield deferToThread(self.camera.set_read_mode, readMode)
         finally:
+            print 'releasing: {}'.format(self.setReadMode.__name__)
             self.lock.release()
         if mode is not None:
             returnValue(mode)
@@ -160,10 +184,13 @@ class AndorServer(LabradServer):
     @setting(11, "Set Acquisition Mode", mode = 's', returns = '')
     def setAcquisitionMode(self, c, mode):
         """Sets Current Acquisition Mode"""
+        print 'acquiring: {}'.format(self.setAcquisitionMode.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.setAcquisitionMode.__name__)
             yield deferToThread(self.camera.set_acquisition_mode, mode)
         finally:
+            print 'releasing: {}'.format(self.setAcquisitionMode.__name__)
             self.lock.release()
         self.gui.set_acquisition_mode(mode)
     '''
@@ -177,10 +204,13 @@ class AndorServer(LabradServer):
     @setting(13, "Set Trigger Mode", mode = 's', returns = '')
     def setTriggerMode(self, c, mode):
         """Sets Current Trigger Mode"""
+        print 'acquiring: {}'.format(self.setTriggerMode.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.setTriggerMode.__name__)
             yield deferToThread(self.camera.set_trigger_mode, mode)
         finally:
+            print 'releasing: {}'.format(self.setTriggerMode.__name__)
             self.lock.release()
         self.gui.set_trigger_mode(mode)
         
@@ -196,10 +226,13 @@ class AndorServer(LabradServer):
     @setting(15, "Set Exposure Time", expTime = 'v[s]', returns = 'v[s]')
     def setExposureTime(self, c, expTime):
         """Sets Current Exposure Time"""       
+        print 'acquiring: {}'.format(self.setExposureTime.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.setExposureTime.__name__)
             yield deferToThread(self.camera.set_exposure_time, expTime['s'])
         finally:
+            print 'releasing: {}'.format(self.setExposureTime.__name__)
             self.lock.release()
         #need to request the actual set value because it may differ from the request when the request is not possible
         time = self.camera.get_exposure_time()
@@ -217,51 +250,66 @@ class AndorServer(LabradServer):
     @setting(17, "Set Image Region", horizontalBinning = 'i', verticalBinning = 'i', horizontalStart = 'i', horizontalEnd = 'i', verticalStart = 'i', verticalEnd = 'i', returns = '')
     def setImageRegion(self, c, horizontalBinning, verticalBinning, horizontalStart, horizontalEnd, verticalStart, verticalEnd):
         """Sets Current Image Region"""
+        print 'acquiring: {}'.format(self.setImageRegion.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.setImageRegion.__name__)
             yield deferToThread(self.camera.set_image, horizontalBinning, verticalBinning, horizontalStart, horizontalEnd, verticalStart, verticalEnd)
         finally:
+            print 'releasing: {}'.format(self.setImageRegion.__name__)
             self.lock.release()
     '''
     Acquisition
     '''
     @setting(18, "Start Acquisition", returns = '')
     def startAcquisition(self, c):
+        print 'acquiring: {}'.format(self.startAcquisition.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.startAcquisition.__name__)
             #speeds up the call to start_acquisition
             yield deferToThread(self.camera.prepare_acqusition)
             yield deferToThread(self.camera.start_acquisition)
             #necessary so that start_acquisition call completes even for long kinetic series
             yield self.wait(0.050)
         finally:
+            print 'releasing: {}'.format(self.startAcquisition.__name__)
             self.lock.release()
 
     @setting(19, "Wait For Acquisition", returns = '')
     def waitForAcquisition(self, c):
+        print 'acquiring: {}'.format(self.waitForAcquisition.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.waitForAcquisition.__name__)
             yield deferToThread(self.camera.wait_for_acquisition)
         finally:
+            print 'releasing: {}'.format(self.waitForAcquisition.__name__)
             self.lock.release()
         
     @setting(20, "Abort Acquisition", returns = '')
     def abortAcquisition(self, c):
         if c is not None and self.gui.live_update_running:
             yield self.gui.stop_live_display()
+        print 'acquiring: {}'.format(self.abortAcquisition.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.abortAcquisition.__name__)
             yield deferToThread(self.camera.abort_acquisition)
         finally:
+            print 'releasing: {}'.format(self.abortAcquisition.__name__)
             self.lock.release()
     
     @setting(21, "Get Acquired Data", num_images = 'i',returns = '*i')
     def getAcquiredData(self, c, num_images = 1):
         """Get the acquired images"""
+        print 'acquiring: {}'.format(self.getAcquiredData.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.getAcquiredData.__name__)
             image = yield deferToThread(self.camera.get_acquired_data, num_images)
         finally:
+            print 'releasing: {}'.format(self.getAcquiredData.__name__)
             self.lock.release()
         returnValue(image)
 
@@ -276,10 +324,13 @@ class AndorServer(LabradServer):
     @setting(23, "Get Most Recent Image", returns = '*i')
     def getMostRecentImage(self, c):
         """Get all Data"""
+        print 'acquiring: {}'.format(self.getMostRecentImage.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.getMostRecentImage.__name__)
             image = yield deferToThread(self.camera.get_most_recent_image)
         finally:
+            print 'releasing: {}'.format(self.getMostRecentImage.__name__)
             self.lock.release()
         returnValue(image)
     
@@ -296,10 +347,13 @@ class AndorServer(LabradServer):
     @setting(26, "Set Number Kinetics", numKin = 'i', returns = '')
     def setNumberKinetics(self, c, numKin):
         """Sets Number Of Scans In A Kinetic Cycle"""
+        print 'acquiring: {}'.format(self.setNumberKinetics.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.setNumberKinetics.__name__)
             yield deferToThread(self.camera.set_number_kinetics, numKin)
         finally:
+            print 'releasing: {}'.format(self.setNumberKinetics.__name__)
             self.lock.release()
     
     @setting(27, "Wait For Kinetic", timeout = 'v[s]',returns = 'b')
@@ -307,13 +361,16 @@ class AndorServer(LabradServer):
         '''Waits until the given number of kinetic images are completed'''
         requestCalls = int(timeout['s'] / 0.050 ) #number of request calls
         for i in range(requestCalls):
+            print 'acquiring: {}'.format(self.waitForKinetic.__name__)
             yield self.lock.acquire()
             try:
+                print 'acquired : {}'.format(self.waitForKinetic.__name__)
                 status = yield deferToThread(self.camera.get_status)
                 #useful for debugging of how many iterations have been completed in case of missed trigger pulses
 #                 a,b = yield deferToThread(self.camera.get_series_progress)
 #                 print a,b
             finally:
+                print 'releasing: {}'.format(self.waitForKinetic.__name__)
                 self.lock.release()
             if status == 'DRV_IDLE':
                 returnValue(True)
@@ -322,10 +379,13 @@ class AndorServer(LabradServer):
     
     @setting(31, "Get Detector Dimensions", returns = 'ww')
     def get_detector_dimensions(self, c):
+        print 'acquiring: {}'.format(self.get_detector_dimensions.__name__)
         yield self.lock.acquire()
         try:
+            print 'acquired : {}'.format(self.get_detector_dimensions.__name__)
             dimensions = yield deferToThread(self.camera.get_detector_dimensions)
         finally:
+            print 'releasing: {}'.format(self.get_detector_dimensions.__name__)
             self.lock.release()
         returnValue(dimensions)
         
@@ -344,8 +404,11 @@ class AndorServer(LabradServer):
         try:
             if self.gui.live_update_running:
                 yield self.gui.stop_live_display()
+            print 'acquiring: {}'.format(self.stopServer.__name__)
             yield self.lock.acquire()
+            print 'acquired : {}'.format(self.stopServer.__name__)
             self.camera.shut_down()
+            print 'releasing: {}'.format(self.stopServer.__name__)
             self.lock.release()
         except Exception:
             #not yet created
