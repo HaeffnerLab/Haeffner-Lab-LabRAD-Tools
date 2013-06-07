@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser
-version = 1.17
+version = 1.2
 description =
 instancename = Pulser
 
@@ -382,7 +382,29 @@ class Pulser(LabradServer, DDS, LineTrigger):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetFIFOReadout)
         self.inCommunication.release()
+
+    #debugging settings
+    @setting(90, 'Internal Reset DDS', returns = '')
+    def internal_reset_dds(self, c):
+        yield self.inCommunication.acquire()
+        yield deferToThread(self.api.resetAllDDS)
+        self.inCommunication.release()
+        
+    @setting(91, 'Internal Advance DDS', returns = '')
+    def internal_advance_dds(self, c):
+        yield self.inCommunication.acquire()
+        yield deferToThread(self.api.advanceAllDDS)
+        self.inCommunication.release()
     
+    @setting(92, "Reinitialize DDS", returns = '')
+    def reinitializeDDS(self, c):
+        """
+        Reprograms the DDS chip to its initial state
+        """
+        yield self.inCommunication.acquire()
+        yield deferToThread(self.api.initializeDDS)
+        self.inCommunication.release()
+        
     def doGetAllCounts(self):
         inFIFO = self.api.getNormalTotal()
         reading = self.api.getNormalCounts(inFIFO)
@@ -475,21 +497,6 @@ class Pulser(LabradServer, DDS, LineTrigger):
     @setting(33, "Get TimeTag Resolution", returns = 'v')
     def getTimeTagResolution(self, c):
         return self.timeResolvedResolution
-    
-    #Methods relating to using optional DAC
-    @setting(34, "Set DAC Voltage", stringy = 's', returns = '')
-    def setDACVoltages(self, c, stringy):
-        if not self.haveDAC: raise Exception ("No DAC")
-        yield self.inCommunication.acquire()
-        yield deferToThread(self.api.setDACVoltage, stringy)
-        self.inCommunication.release()
-    
-    @setting(35, "Reset FIFO DAC", returns = '')
-    def resetFIFODAC(self, c):
-        if not self.haveDAC: raise Exception ("No DAC")
-        yield self.inCommunication.acquire()
-        yield deferToThread(self.api.resetFIFODAC)        
-        self.inCommunication.release()
     
     #Methods relating to using the optional second PMT
     @setting(36, 'Get Secondary PMT Counts', returns = '*(vsv)')

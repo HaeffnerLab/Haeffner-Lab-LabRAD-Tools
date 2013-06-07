@@ -202,12 +202,3 @@ class api(object):
         buf = "\x00"* ( number * 2 )
         self.xem.ReadFromBlockPipeOut(0xa3,2,buf)
         return buf
-    
-    #Methods relating to using optional DAC
-    def resetFIFODAC(self):
-        if not self.haveDAC: raise Exception ("No DAC")
-        self.xem.ActivateTriggerIn(0x40,8)  
-        
-    def setDACVoltage(self, volstr):
-        if not self.haveDAC: raise Exception ("No DAC")
-        self.xem.WriteToBlockPipeIn(0x82, 2, volstr)   
