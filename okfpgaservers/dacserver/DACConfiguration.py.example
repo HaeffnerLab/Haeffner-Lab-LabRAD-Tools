@@ -20,14 +20,15 @@ class channelConfiguration(object):
 
 class hardwareConfiguration(object):
     EXPNAME = 'CCT'
-    defaultMultipoles = ['Ex', 'Ey', 'Ez', 'U1', 'U2', 'U3']
+    default_multipoles = ['Ex', 'Ey', 'Ez', 'U1', 'U2', 'U3']
     okDeviceID = 'DAC Controller'
     okDeviceFile = 'control_nonnoninverted.bit'
     centerElectrode = 23
     PREC_BITS = 16
     pulseTriggered = True
     maxCache = 126
-    elecDict = {
+    filter_RC = 5e4 * 4e-7
+    elec_dict = {
         '01': channelConfiguration(28, trapElectrodeNumber=1),
         '02': channelConfiguration(27, trapElectrodeNumber=2),
         '03': channelConfiguration(24, trapElectrodeNumber=3),
@@ -53,6 +54,6 @@ class hardwareConfiguration(object):
         '23': channelConfiguration(6, trapElectrodeNumber=23) #6
         }
 
-    smaDict = {
+    sma_dict = {
         'RF bias': channelConfiguration(1, smaOutNumber=1, name='RF bias', boardVoltageRange=(-40., 40.), allowedVoltageRange=(-2.0, 0))
         }
