@@ -93,7 +93,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         self.connect()
      
     def makeGUI(self):
-        self.dacDict = dict(hc.elecDict.items() + hc.smaDict.items())
+        self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
         self.controls = {k: QCustomSpinBox(k, self.dacDict[k].allowedVoltageRange) for k in self.dacDict.keys()}
         layout = QtGui.QGridLayout()
         smaBox = QtGui.QGroupBox('SMA Out')
@@ -105,9 +105,9 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         layout.addWidget(smaBox, 0, 0)
         layout.addWidget(elecBox, 0, 1)
 
-        for s in hc.smaDict:
+        for s in hc.sma_dict:
             smaLayout.addWidget(self.controls[s], alignment = QtCore.Qt.AlignRight)
-        elecList = hc.elecDict.keys()
+        elecList = hc.elec_dict.keys()
         elecList.sort()
         elecList.pop(hc.centerElectrode-1)
         for i,e in enumerate(elecList):
@@ -173,7 +173,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         self.connect()
         
     def makeGUI(self):      
-        self.dacDict = dict(hc.elecDict.items() + hc.smaDict.items())
+        self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
         self.displays = {k: QtGui.QLCDNumber() for k in self.dacDict.keys()}               
         layout = QtGui.QGridLayout()
         smaBox = QtGui.QGroupBox('SMA Out')
@@ -188,13 +188,13 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         layout.addWidget(smaBox, 0, 0)
         layout.addWidget(elecBox, 0, 1)
 
-        for k in hc.smaDict:
+        for k in hc.sma_dict:
             self.displays[k].setAutoFillBackground(True)
             smaLayout.addWidget(QtGui.QLabel(k), self.dacDict[k].smaOutNumber, 0)
             smaLayout.addWidget(self.displays[k], self.dacDict[k].smaOutNumber, 1)
-            s = hc.smaDict[k].smaOutNumber+1
+            s = hc.sma_dict[k].smaOutNumber+1
 
-        elecList = hc.elecDict.keys()
+        elecList = hc.elec_dict.keys()
         elecList.sort()
         elecList.pop(hc.centerElectrode-1)
         for i,e in enumerate(elecList):

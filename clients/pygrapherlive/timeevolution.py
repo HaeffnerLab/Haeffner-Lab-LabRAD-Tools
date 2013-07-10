@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special.orthogonal import eval_genlaguerre as laguer
 
 class time_evolution():#contains all relevant functions for thermal states, rabi flops and dephasing
-    def __init__(self, trap_frequency, sideband_order,nmax = 1000):
+    def __init__(self, trap_frequency, projection, sideband_order,nmax = 1000):
         from labrad import units as U
         m = 40 * U.amu
         hbar = U.hbar
@@ -10,7 +10,7 @@ class time_evolution():#contains all relevant functions for thermal states, rabi
         
         self.sideband_order = sideband_order
         self.n = np.linspace(0, nmax,nmax +1)
-        self.eta = 2.*np.cos(np.pi/4)*np.pi/wavelength['m']*np.sqrt(hbar['J*s']/(2.*m['kg']*2.*np.pi*trap_frequency['Hz']))
+        self.eta = 2.*np.cos(projection)*np.pi/wavelength['m']*np.sqrt(hbar['J*s']/(2.*m['kg']*2.*np.pi*trap_frequency['Hz']))
         self.rabi_coupling=self.rabi_coupling()
         
     def rabi_coupling(self):
