@@ -97,13 +97,15 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
         self.controls = {k: QCustomSpinBox(k, self.dacDict[k].allowedVoltageRange) for k in self.dacDict.keys()}
         layout = QtGui.QGridLayout()
-        smaBox = QtGui.QGroupBox('SMA Out')
-        smaLayout = QtGui.QVBoxLayout()
-        smaBox.setLayout(smaLayout)
+        if bool(hc.sma_dict):
+            smaBox = QtGui.QGroupBox('SMA Out')
+            smaLayout = QtGui.QVBoxLayout()
+            smaBox.setLayout(smaLayout)
         elecBox = QtGui.QGroupBox('Electrodes')
         elecLayout = QtGui.QGridLayout()
         elecBox.setLayout(elecLayout)
-        layout.addWidget(smaBox, 0, 0)
+        if bool(hc.sma_dict):
+            layout.addWidget(smaBox, 0, 0)
         layout.addWidget(elecBox, 0, 1)
 
         for s in hc.sma_dict:
@@ -122,7 +124,8 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             elecLayout.addWidget(self.controls[str(hc.centerElectrode).zfill(2)], len(elecList)/2, 1) 
 
         spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
-        smaLayout.addItem(spacer)        
+        if bool(hc.sma_dict):
+            smaLayout.addItem(spacer)        
         self.inputUpdated = False                
         self.timer = QtCore.QTimer(self)        
         self.timer.timeout.connect(self.sendToServer)
