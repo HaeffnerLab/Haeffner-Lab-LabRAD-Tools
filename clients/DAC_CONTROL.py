@@ -7,6 +7,7 @@ import sys
 # sys.path.append('/home/cct/LabRAD/common/abstractdevices')
 from common.okfpgaservers.dacserver.DacConfiguration import hardwareConfiguration as hc
 
+
 UpdateTime = 100 # ms
 SIGNALID = 270836
 SIGNALID2 = 270835
@@ -64,7 +65,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     def selectCFile(self):
         fn = QtGui.QFileDialog().getOpenFileName()
         self.updating = True
-        yield self.dacserver.set_multipole_control_file(str(fn))
+        yield self.dacserver.set_control_file(str(fn))
         for i in range(self.ctrlLayout.count()): self.ctrlLayout.itemAt(i).widget().close()
         self.updating = False
         yield self.makeGUI()
@@ -96,30 +97,35 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
         self.controls = {k: QCustomSpinBox(k, self.dacDict[k].allowedVoltageRange) for k in self.dacDict.keys()}
         layout = QtGui.QGridLayout()
-        smaBox = QtGui.QGroupBox('SMA Out')
-        smaLayout = QtGui.QVBoxLayout()
-        smaBox.setLayout(smaLayout)
+        if bool(hc.sma_dict):
+            smaBox = QtGui.QGroupBox('SMA Out')
+            smaLayout = QtGui.QVBoxLayout()
+            smaBox.setLayout(smaLayout)
         elecBox = QtGui.QGroupBox('Electrodes')
         elecLayout = QtGui.QGridLayout()
         elecBox.setLayout(elecLayout)
-        layout.addWidget(smaBox, 0, 0)
+        if bool(hc.sma_dict):
+            layout.addWidget(smaBox, 0, 0)
         layout.addWidget(elecBox, 0, 1)
 
         for s in hc.sma_dict:
             smaLayout.addWidget(self.controls[s], alignment = QtCore.Qt.AlignRight)
         elecList = hc.elec_dict.keys()
         elecList.sort()
-        elecList.pop(hc.centerElectrode-1)
+        if bool(hc.centerElectrode):
+            elecList.pop(hc.centerElectrode-1)
         for i,e in enumerate(elecList):
             if int(e) <= len(elecList)/2:
                 elecLayout.addWidget(self.controls[e], len(elecList)/2 - int(i), 0)
             elif int(e) > len(elecList)/2:
                 elecLayout.addWidget(self.controls[e], len(elecList) - int(i), 2)
-        self.controls[str(hc.centerElectrode).zfill(2)].title.setText('CNT')
-        elecLayout.addWidget(self.controls[str(hc.centerElectrode).zfill(2)], len(elecList)/2, 1) 
+        if bool(hc.centerElectrode):
+            self.controls[str(hc.centerElectrode).zfill(2)].title.setText('CNT')
+            elecLayout.addWidget(self.controls[str(hc.centerElectrode).zfill(2)], len(elecList)/2, 1) 
 
         spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
-        smaLayout.addItem(spacer)        
+        if bool(hc.sma_dict):
+            smaLayout.addItem(spacer)        
         self.inputUpdated = False                
         self.timer = QtCore.QTimer(self)        
         self.timer.timeout.connect(self.sendToServer)
@@ -176,40 +182,47 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
         self.displays = {k: QtGui.QLCDNumber() for k in self.dacDict.keys()}               
         layout = QtGui.QGridLayout()
-        smaBox = QtGui.QGroupBox('SMA Out')
-        smaLayout = QtGui.QGridLayout()
-        smaBox.setLayout(smaLayout)
+        if bool(hc.sma_dict):        
+            smaBox = QtGui.QGroupBox('SMA Out')
+            smaLayout = QtGui.QGridLayout()
+            smaBox.setLayout(smaLayout)       
         elecBox = QtGui.QGroupBox('Electrodes')
         elecLayout = QtGui.QGridLayout()
         elecLayout.setColumnStretch(1, 2)
         elecLayout.setColumnStretch(3, 2)
         elecLayout.setColumnStretch(5, 2)
         elecBox.setLayout(elecLayout)
-        layout.addWidget(smaBox, 0, 0)
+        if bool(hc.sma_dict):
+            layout.addWidget(smaBox, 0, 0)
         layout.addWidget(elecBox, 0, 1)
-
-        for k in hc.sma_dict:
-            self.displays[k].setAutoFillBackground(True)
-            smaLayout.addWidget(QtGui.QLabel(k), self.dacDict[k].smaOutNumber, 0)
-            smaLayout.addWidget(self.displays[k], self.dacDict[k].smaOutNumber, 1)
-            s = hc.sma_dict[k].smaOutNumber+1
+        
+        if bool(hc.sma_dict):
+            for k in hc.sma_dict:
+                self.displays[k].setAutoFillBackground(True)
+                smaLayout.addWidget(QtGui.QLabel(k), self.dacDict[k].smaOutNumber, 0)
+                smaLayout.addWidget(self.displays[k], self.dacDict[k].smaOutNumber, 1)
+                s = hc.sma_dict[k].smaOutNumber+1
 
         elecList = hc.elec_dict.keys()
         elecList.sort()
-        elecList.pop(hc.centerElectrode-1)
+        if bool(hc.centerElectrode):
+            elecList.pop(hc.centerElectrode-1)
         for i,e in enumerate(elecList):
-            self.displays[k].setAutoFillBackground(True)
+            if bool(hc.sma_dict):            
+                self.displays[k].setAutoFillBackground(True)
             if int(i) < len(elecList)/2:
                 elecLayout.addWidget(QtGui.QLabel(e), len(elecList)/2 - int(i), 0)
                 elecLayout.addWidget(self.displays[e], len(elecList)/2 - int(i), 1)
             else:
                 elecLayout.addWidget(QtGui.QLabel(e), len(elecList) - int(i), 4)
                 elecLayout.addWidget(self.displays[e], len(elecList) - int(i), 5)
-        elecLayout.addWidget(QtGui.QLabel('CNT'), len(elecList)/2 + 1, 2)
-        elecLayout.addWidget(self.displays[str(hc.centerElectrode).zfill(2)], len(elecList)/2 + 1, 3)        
-
-        spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
-        smaLayout.addItem(spacer, s, 0,10, 2)  
+        if bool(hc.centerElectrode):
+            elecLayout.addWidget(QtGui.QLabel('CNT'), len(elecList)/2 + 1, 2)
+            elecLayout.addWidget(self.displays[str(hc.centerElectrode).zfill(2)], len(elecList)/2 + 1, 3)      
+          
+        if bool(hc.sma_dict):
+            spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
+            smaLayout.addItem(spacer, s, 0,10, 2)  
 
         self.setLayout(layout)  
                 
@@ -234,6 +247,8 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
+            print k
+            print v
             self.displays[k].display(float(v)) 
             if abs(v) > 30:
                 self.displays[k].setStyleSheet("QWidget {background-color: orange }")

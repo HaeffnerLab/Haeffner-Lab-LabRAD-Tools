@@ -23,7 +23,7 @@ class hardwareConfiguration(object):
     default_multipoles = ['Ex', 'Ey', 'Ez', 'U1', 'U2', 'U3']
     okDeviceID = 'DAC Controller'
     okDeviceFile = 'control_nonnoninverted.bit'
-    centerElectrode = 23
+    centerElectrode = 23 #write False if no Centerelectrode
     PREC_BITS = 16
     pulseTriggered = True
     maxCache = 126
