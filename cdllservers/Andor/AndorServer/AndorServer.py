@@ -324,13 +324,13 @@ class AndorServer(LabradServer):
     @setting(23, "Get Most Recent Image", returns = '*i')
     def getMostRecentImage(self, c):
         """Get all Data"""
-        print 'acquiring: {}'.format(self.getMostRecentImage.__name__)
+#         print 'acquiring: {}'.format(self.getMostRecentImage.__name__)
         yield self.lock.acquire()
         try:
-            print 'acquired : {}'.format(self.getMostRecentImage.__name__)
+#             print 'acquired : {}'.format(self.getMostRecentImage.__name__)
             image = yield deferToThread(self.camera.get_most_recent_image)
         finally:
-            print 'releasing: {}'.format(self.getMostRecentImage.__name__)
+#             print 'releasing: {}'.format(self.getMostRecentImage.__name__)
             self.lock.release()
         returnValue(image)
     
