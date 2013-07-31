@@ -141,8 +141,10 @@ class DDS_CONTROL(QtGui.QFrame):
         else:
             #update any changes in the parameters
             yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
-            for w in self.widgets.values():
-                yield w.setupWidget(connect = False)
+            #iterating over all setup channels
+            for widget in self.widgets.values():
+                if widget is not None:
+                    yield widget.setupWidget(connect = False)
     
     @inlineCallbacks
     def do_layout(self, server):
