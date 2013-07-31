@@ -285,15 +285,19 @@ class AndorServer(LabradServer):
     
     @setting(24, "Start Live Display", returns = '')
     def startLiveDisplay(self, c):
-        """Get all Data"""
+        """Starts live display of the images on the GUI"""
         yield self.gui.start_live_display()
     
-    @setting(25, "Get Number Kinetics", returns = 'i')
+    @setting(25, "Is Live Display Running", returns = 'b')
+    def isLiveDisplayRunning(self, c):
+        return self.gui.live_update_running
+    
+    @setting(26, "Get Number Kinetics", returns = 'i')
     def getNumberKinetics(self, c):
         """Gets Number Of Scans In A Kinetic Cycle"""
         return self.camera.get_number_kinetics()
      
-    @setting(26, "Set Number Kinetics", numKin = 'i', returns = '')
+    @setting(27, "Set Number Kinetics", numKin = 'i', returns = '')
     def setNumberKinetics(self, c, numKin):
         """Sets Number Of Scans In A Kinetic Cycle"""
         yield self.lock.acquire()
@@ -302,7 +306,7 @@ class AndorServer(LabradServer):
         finally:
             self.lock.release()
     
-    @setting(27, "Wait For Kinetic", timeout = 'v[s]',returns = 'b')
+    @setting(28, "Wait For Kinetic", timeout = 'v[s]',returns = 'b')
     def waitForKinetic(self, c, timeout = WithUnit(10,'s')):
         '''Waits until the given number of kinetic images are completed'''
         requestCalls = int(timeout['s'] / 0.050 ) #number of request calls
