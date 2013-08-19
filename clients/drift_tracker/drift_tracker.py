@@ -17,7 +17,7 @@ Version 1.15
 '''
 
 class drift_tracker(QtGui.QWidget):
-    def __init__(self, reactor, clipboard, cxn = None, parent=None):
+    def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.reactor = reactor
         self.clipboard = clipboard
@@ -180,7 +180,8 @@ class drift_tracker(QtGui.QWidget):
             date = time.strftime('%m/%d/%Y')
             d = dict(lines)
             text = '| {0} || {1:.4f} MHz || {2:.4f} MHz || {3:.4f} MHz || || {4:.4f} MHz || {5:.4f} G || comment'.format(date, d['S+1/2D-3/2']['MHz'], d['S-1/2D-5/2']['MHz'], d['S-1/2D-1/2']['MHz'], center_value['MHz'], b_value['gauss'])
-            self.clipboard.setText(text)
+            if self.clipboard is not None:
+                self.clipboard.setText(text)
     
     def on_update_enable(self, enable):
         rate = self.update_rate.value()
