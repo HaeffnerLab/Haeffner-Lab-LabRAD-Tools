@@ -38,16 +38,15 @@ class motional_distribution(object):
         '''
         compares the result of the computed distribution with the same result obtained through qutip
         '''
-        alpha = np.sqrt(3) * np.random.ranf()
-        nbar = 3 * np.random.ranf()
-        test_entries = 10
+        alpha = np.sqrt(5) * np.random.ranf()
+        nbar = 5 * np.random.ranf()
+        test_entries = 100
         computed = cls.displaced_thermal(alpha, nbar, test_entries)
         from qutip import thermal_dm, displace
-        #using a much higher dimension of 100 than the end result
-        thermal_dm = thermal_dm(100, nbar)
-        displace_operator = displace(100, alpha)
+        thermal_dm = thermal_dm(test_entries, nbar, method = 'analytic')
+        displace_operator = displace(test_entries, alpha)
         displaced_dm = displace_operator * thermal_dm * displace_operator.dag()
-        qutip_result = displaced_dm.diag()[0:test_entries]
+        qutip_result = displaced_dm.diag()
         return np.allclose(qutip_result, computed)
     
     @classmethod
@@ -59,24 +58,29 @@ class motional_distribution(object):
         test_entries = 10
         computed = cls.thermal(nbar, test_entries)
         from qutip import thermal_dm
-        #using a much higher dimension of 100 than the end result
-        thermal_qutip = thermal_dm(100, nbar).diag()[0:test_entries]
+        thermal_qutip = thermal_dm(test_entries, nbar, method = 'analytic').diag()
         return np.allclose(thermal_qutip, computed)
     
 if __name__ == '__main__':
-    from matplotlib import pyplot
     
-    hilbert_space_dimension = 50
-    nbar = 3.0
     md = motional_distribution
     
-    for displ,color in [(0, 'k'), (5, 'b'), (10, 'g'), (20, 'r')]:
-        displacement_nbar = displ
-        displacement_alpha = np.sqrt(displacement_nbar)
-        distribution = md.displaced_thermal(displacement_alpha, nbar, hilbert_space_dimension)
-        pyplot.plot(distribution, 'x', color = color, label = 'displacement = {} nbar'.format(displ))
+    def plot_displaced():
+        from matplotlib import pyplot
+        
+        hilbert_space_dimension = 50
+        nbar = 3.0
+        for displ,color in [(0, 'k'), (5, 'b'), (10, 'g'), (20, 'r')]:
+            displacement_nbar = displ
+            displacement_alpha = np.sqrt(displacement_nbar)
+            distribution = md.displaced_thermal(displacement_alpha, nbar, hilbert_space_dimension)
+            pyplot.plot(distribution, 'x', color = color, label = 'displacement = {} nbar'.format(displ))
+        
+        pyplot.title('Init temperature 3nbar', fontsize = 16)
+        pyplot.suptitle('Displaced Thermal States', fontsize = 20)
+        pyplot.legend()
+        pyplot.show()
     
-    pyplot.title('Init temperature 3nbar', fontsize = 16)
-    pyplot.suptitle('Displaced Thermal States', fontsize = 20)
-    pyplot.legend()
-    pyplot.show()
+#     print md.test_thermal_distribution()
+#     print md.test_displaced_thermal()
+    plot_displaced()
