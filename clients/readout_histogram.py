@@ -36,6 +36,8 @@ class readout_histogram(QtGui.QWidget):
         self.thresholdLine = self.axes.axvline(self.thresholdVal, linewidth=3.0, color = 'r', label = 'Threshold')
         self.axes.legend(loc = 'best')
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
+        self.axes.set_title('PMT Readout', fontsize = 22)
+        self.fig.tight_layout()
         layout.addWidget(self.mpl_toolbar)
         layout.addWidget(self.canvas)
         return layout
