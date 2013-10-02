@@ -164,6 +164,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
     
     @inlineCallbacks
     def followSignal(self, x, s):
+        print 'notified here'
         av = yield self.dacserver.get_analog_voltages()
         for (c, v) in av:
             self.controls[c].setValueNoSignal(v)
@@ -177,6 +178,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         self.reactor = reactor        
         self.makeGUI()
         self.connect()
+       
         
     def makeGUI(self):      
         self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
@@ -234,15 +236,18 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         self.dacserver = yield self.cxn.dac_server
         self.ionInfo = {}
         yield self.setupListeners()
-        yield self.followSignal(0, 0)       
-        
+        yield self.followSignal(0, 0)    
+        for i in hc.notused_dict:        #Sets unused channels to about 0V
+            yield self.dacserver.set_individual_digital_voltages_u([(i, 32768)])     
+
+                  
     @inlineCallbacks    
     def setupListeners(self):
         yield self.dacserver.signal__ports_updated(SIGNALID2)
         yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
     
     @inlineCallbacks
-    def followSignal(self, x, s):
+    def followSignal(self, x, s):        
         av = yield self.dacserver.get_analog_voltages()
         brightness = 210
         darkness = 255 - brightness           
@@ -265,7 +270,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
 class DAC_Control(QtGui.QMainWindow):
     def __init__(self, reactor, parent=None):
         super(DAC_Control, self).__init__(parent)
-        self.reactor = reactor
+        self.reactor = reactor   
 
         channelControlTab = self.buildChannelControlTab()        
         multipoleControlTab = self.buildMultipoleControlTab()

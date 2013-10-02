@@ -54,6 +54,15 @@ class hardwareConfiguration(object):
         '23': channelConfiguration(6, trapElectrodeNumber=23) #6
         }
 
+    notused_dict = {
+        '23': channelConfiguration(1, trapElectrodeNumber=23),
+        '24': channelConfiguration(2, trapElectrodeNumber=24),
+        '25': channelConfiguration(3, trapElectrodeNumber=25),
+        '26': channelConfiguration(4, trapElectrodeNumber=26),
+        '27': channelConfiguration(16, trapElectrodeNumber=27),
+        '28': channelConfiguration(22, trapElectrodeNumber=28)
+               }
+
     sma_dict = {
         'RF bias': channelConfiguration(1, smaOutNumber=1, name='RF bias', boardVoltageRange=(-40., 40.), allowedVoltageRange=(-2.0, 0))
         }

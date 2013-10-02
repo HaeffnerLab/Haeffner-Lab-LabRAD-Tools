@@ -190,6 +190,7 @@ class DACServer(LabradServer):
 
     registry_path = ['', 'Servers', hc.EXPNAME + SERVERNAME]
     dac_dict = dict(hc.elec_dict.items() + hc.sma_dict.items())
+    dacun_dict =  dict(hc.notused_dict.items())
     CfileName = None
     current_voltages = {}    
     listeners = set()
@@ -198,8 +199,15 @@ class DACServer(LabradServer):
     def initServer(self):
         self.registry = self.client.registry
         self.initializeBoard()
+#        for i in hc.notused_dict:
+#            print i
+#            self.queue.insert(Voltage(i, 0))
+#            yield self.writeToFPGA(0)
+#            yield self.setIndividualAnalogVoltages(0, [(i, 0)])     
         yield self.setCalibrations()
-        try: yield self.setPreviousControlFile()
+        try: 
+            yield self.setPreviousControlFile()
+#            yield self.setIndividualDigitalVoltages(0, [(s, 0) for s in self.dacun_dict.keys()])
         except: yield self.setVoltagesZero()
 
     def initializeBoard(self):
@@ -320,8 +328,10 @@ class DACServer(LabradServer):
             v = self.queue.get() 
             self.api.setDACVoltage(v.hex_rep)
             print v.channel.name, v.analog_voltage
-            self.current_voltages[v.channel.name] = v.analog_voltage
-        self.notifyOtherListeners(c)
+            if v.channel.name in dict(hc.elec_dict.items() + hc.sma_dict.items()).keys():
+                self.current_voltages[v.channel.name] = v.analog_voltage
+        if c is not None:
+            self.notifyOtherListeners(c)
     
     @setting( 6, "Set First Voltages")
     def setFirstVoltages(self, c):
@@ -353,6 +363,8 @@ class DACServer(LabradServer):
         """
         Return the current voltage
         """
+        print 'in get analog voltages',
+        print self.current_voltages.items()
         return self.current_voltages.items()        
 
     @setting( 10, "Get Multipole Values",returns='*(s, v)')
@@ -372,6 +384,17 @@ class DACServer(LabradServer):
     @setting( 12, "Get Position", returns='i')
     def getPosition(self, c):
         return self.control.position
+    
+    @setting( 13, "Set Individual Digital Voltages U", digital_voltages='*(si)')
+    def setIndividualDigitalVoltagesU(self, c, digital_voltages):
+        """
+        Pass a list of tuples of the form:
+        (portNum, newVolts)
+        """
+        for (port, dv) in digital_voltages:
+            self.queue.insert(Voltage(self.dacun_dict[port], digital_voltage=dv))
+        yield self.writeToFPGA(None)
+
 
     def initContext(self, c):
         self.listeners.add(c.ID)
