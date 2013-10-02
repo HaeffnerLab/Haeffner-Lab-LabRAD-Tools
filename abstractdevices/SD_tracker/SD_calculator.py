@@ -52,10 +52,25 @@ class EnergyLevel(object):
         together = self.spectoscopic_notation_rev[self.L] + sublevel
         return together
 
+class EnergyLevel_CA_ion(EnergyLevel):
+    '''
+    Class for describing the energy levels of Calcium Ions. This is specific to Ca+ because it uses
+    precisely measured g factors of the S and D states in the calculations.
+    '''
+    
+    def lande_factor(self, S, L, J):
+        g_factor_S = 2.00225664 #Eur Phys JD 25 113-125
+        g_factor_D = 1.2003340  #PRL 102, 023002 (2009)
+        if S == Fraction('1/2') and L == Fraction('0') and J == Fraction('1/2'):
+            g = g_factor_S
+        elif S == Fraction('1/2') and L == Fraction('2') and J == Fraction('5/2'):
+            g = g_factor_D
+        return g
+
 class Transitions_SD(object):
     
-    S = EnergyLevel('S', '1/2')
-    D = EnergyLevel('D', '5/2')
+    S = EnergyLevel_CA_ion('S', '1/2')
+    D = EnergyLevel_CA_ion('D', '5/2')
     allowed_transitions = [0,1,2]
     
     def transitions(self):
@@ -122,9 +137,9 @@ if __name__ == '__main__':
     SD = Transitions_SD()
     fit = fitter()
  
-#    result = SD.get_transition_energies(WithUnit(1.014, 'gauss'), WithUnit(-12.84 ,'MHz'))
-#    for name,freq in result:
-#        print name,freq
+    result = SD.get_transition_energies(WithUnit(1.014, 'gauss'), WithUnit(-12.84 ,'MHz'))
+    for name,freq in result:
+        print name,freq
     
-    b,freq = SD.energies_to_magnetic_field([('S-1/2D+3/2', WithUnit(-16.813, 'MHz')), ('S+1/2D+5/2', WithUnit(-15.68, 'MHz'))])
-    print b,freq
+#     b,freq = SD.energies_to_magnetic_field([('S-1/2D+3/2', WithUnit(-16.813, 'MHz')), ('S+1/2D+5/2', WithUnit(-15.68, 'MHz'))])
+#     print b,freq
