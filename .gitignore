@@ -12,3 +12,4 @@ APT_config.py
 connection_config.py
 *~
 DacConfiguration.py
+.settings

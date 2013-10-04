@@ -137,7 +137,7 @@ if __name__ == '__main__':
     SD = Transitions_SD()
     fit = fitter()
  
-    result = SD.get_transition_energies(WithUnit(1.014, 'gauss'), WithUnit(-12.84 ,'MHz'))
+    result = SD.get_transition_energies(WithUnit(1.014, 'gauss'), WithUnit(0 ,'MHz'))
     for name,freq in result:
         print name,freq
     
