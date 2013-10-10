@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.special.orthogonal import eval_genlaguerre as laguerre
+from scipy.misc import factorial
 
 #see Michael Ramm writeup on 'Displaced Coherent States' and references therein.
 
@@ -31,7 +32,19 @@ class motional_distribution(object):
     
     @classmethod
     def _displaced_thermal(cls, alpha, nbar, n):
-        return 1./ (nbar + 1.0) * (nbar / (nbar + 1.0))**n * laguerre(n, 0 , -alpha**2 / ( nbar * (nbar + 1.0))) * np.exp( -alpha**2 / (nbar + 1.0))
+        '''
+        returns the motional state distribution with the displacement alpha, motional temperature nbar for the state n
+        '''
+        #this is needed because for some inputs (larrge n or small nbar, this term is 0 while the laguerre term is infinite. their product is zero but beyond the floating point precision
+        try:
+            old_settings = np.seterr(invalid='raise')
+            populations = 1./ (nbar + 1.0) * (nbar / (nbar + 1.0))**n * laguerre(n, 0 , -alpha**2 / ( nbar * (nbar + 1.0))) * np.exp( -alpha**2 / (nbar + 1.0))
+        except FloatingPointError:
+            print 'using coherent state'
+#             np.seterr(**old_settings)
+#             populations = np.exp(-alpha**2) * alpha**(2*n) / factorial(n)
+            populations = (2 * np.pi * alpha**2)**(-.5) * np.exp(-(n - alpha**2)**2/(2*alpha**2))
+        return populations
     
     @classmethod
     def test_displaced_thermal(cls):
@@ -67,13 +80,13 @@ if __name__ == '__main__':
     
     def plot_displaced():
         from matplotlib import pyplot
-        
-        hilbert_space_dimension = 50
+        hilbert_space_dimension = 200
         nbar = 3.0
-        for displ,color in [(0, 'k'), (5, 'b'), (10, 'g'), (20, 'r')]:
+        for displ,color in [(0, 'k'), (5, 'b'), (10, 'g'), (50, 'r')]:
             displacement_nbar = displ
             displacement_alpha = np.sqrt(displacement_nbar)
             distribution = md.displaced_thermal(displacement_alpha, nbar, hilbert_space_dimension)
+            print distribution.sum()
             pyplot.plot(distribution, 'x', color = color, label = 'displacement = {} nbar'.format(displ))
         
         pyplot.title('Init temperature 3nbar', fontsize = 16)

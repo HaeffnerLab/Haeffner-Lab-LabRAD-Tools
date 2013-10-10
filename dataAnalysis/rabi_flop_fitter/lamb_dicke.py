@@ -16,7 +16,7 @@ class lamb_dicke(object):
         mass =  amumass * U.amu
         k = 2.*np.pi/laser_wavelength
         eta = k*(U.hbar/(2*mass*2*np.pi*frequency))**.5 * np.abs(np.cos(theta*2.*np.pi / 360.0))
-        eta = eta.inBaseUnits()
+        eta = eta.inBaseUnits().value
         return eta
 
 if __name__ == '__main__':
