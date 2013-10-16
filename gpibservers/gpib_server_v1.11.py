@@ -17,14 +17,14 @@ from labrad.server import LabradServer, setting
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
-
+from labrad.units import WithUnit
 from pyvisa import visa, vpp43
 
 """
 ### BEGIN NODE INFO
 [info]
 name = GPIB Bus
-version = 1.12
+version = 1.13
 description = Gives access to GPIB devices via pyvisa.
 instancename = %LABRADNODE% GPIB Bus
 
@@ -43,7 +43,7 @@ class GPIBBusServer(LabradServer):
     name = '%LABRADNODE% GPIB Bus'
 
     refreshInterval = 10
-    defaultTimeout = 1.0
+    defaultTimeout = WithUnit(1.0, 's')
 
     def initServer(self):
         self.devices = {}
@@ -86,7 +86,7 @@ class GPIBBusServer(LabradServer):
                         instName = addr + '::INSTR'
                     else:
                         continue
-                    instr = visa.instrument(instName, timeout=1.0)
+                    instr = visa.instrument(instName, timeout=self.defaultTimeout['s'])
                     self.devices[addr] = instr
                     self.sendDeviceMessage('GPIB Device Connect', addr)
                 except Exception, e:
