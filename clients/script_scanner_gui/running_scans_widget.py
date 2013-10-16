@@ -77,14 +77,6 @@ class script_status_widget(QtGui.QWidget):
     def on_user_stop(self):
         self.on_stop.emit()
     
-    def setFinished(self):
-        self.stop_button.setDisabled(True)
-        self.id_label.setDisabled(True)
-        self.name_label.setDisabled(True)
-        self.pause_button.setDisabled(True)
-        self.progress_bar.setDisabled(True)
-        self.finished = True
-    
     def set_paused(self, is_paused):
         if is_paused:
             self.pause_button.setText('Continue')
@@ -184,13 +176,9 @@ class running_scans_list(QtGui.QTableWidget):
 
     def finish(self, ident):
         try:
-            widget = self.d[ident]
-            widget.setFinished()
+            self.remove(ident)
         except KeyError:
-            print "trying disable experiment {0} that's not there".format(ident)
-    
-    def clear_finished(self):
-        [self.remove(ident) for (ident, widget) in self.d.items() if widget.finished]
+            print "trying remove experiment {0} that's not there".format(ident)
                   
     def closeEvent(self, x):
         self.reactor.stop()
@@ -204,19 +192,17 @@ class running_combined(QtGui.QWidget):
         if self.font is None:
             self.font = QtGui.QFont('MS Shell Dlg 2',pointSize=12)
         self.setupLayout()
-        self.connect_layout()
-    
+
     def clear_all(self):
         self.scans_list.clear()
     
     def setupLayout(self):
         layout = QtGui.QGridLayout()
         title = QtGui.QLabel("Running", font = self.font)
+        title.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         title.setAlignment(QtCore.Qt.AlignLeft)
         self.scans_list = running_scans_list(self.reactor, self.parent)
-        self.clear_finished = QtGui.QPushButton("Clear Finished")
-        layout.addWidget(title, 0, 0, 1, 2 )
-        layout.addWidget(self.clear_finished, 0, 2, 1, 1 )
+        layout.addWidget(title, 0, 0, 1, 3 )
         layout.addWidget(self.scans_list, 1, 0, 3, 3 )
         self.setLayout(layout)
     
@@ -231,9 +217,6 @@ class running_combined(QtGui.QWidget):
     
     def finish(self, ident):
         self.scans_list.finish(ident)
-    
-    def connect_layout(self):
-        self.clear_finished.pressed.connect(self.scans_list.clear_finished)
     
     def closeEvent(self, x):
         self.reactor.stop()

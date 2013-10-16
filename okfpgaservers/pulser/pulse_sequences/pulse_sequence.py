@@ -40,7 +40,6 @@ class pulse_sequence(object):
 	def fill_parameters(self, params, replace):
 		if not len(params) == len(set(params)):
 			raise Exception ("Duplicate required parameters found in {0}".format(self.__class__.__name__))
-		
 		new_dict = TreeDict()
 		for collection,parameter_name in params:
 			treedict_key = '{0}.{1}'.format(collection,parameter_name)
@@ -89,4 +88,5 @@ class pulse_sequence(object):
 		pulser.new_sequence()
 		pulser.add_ttl_pulses(self._ttl_pulses)
 		pulser.add_dds_pulses(self._dds_pulses)
+		print self.end
 		pulser.program_sequence()

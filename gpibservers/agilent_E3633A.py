@@ -42,7 +42,7 @@ class AgilentE3633AAWrapper(GPIBDeviceWrapper):
         self.voltage = yield self.getVoltage()
         self.current = yield self.getCurrent()
         self.output = yield self.getOutput()
-
+        
     @inlineCallbacks
     def getVoltage(self):
         voltage = yield self.query('VOLT?').addCallback(float)
@@ -67,7 +67,7 @@ class AgilentE3633AAWrapper(GPIBDeviceWrapper):
     
     @inlineCallbacks
     def getOutput(self):
-        state = yield self.query('OUTPut?').addCallback(bool)
+        state = yield self.query('OUTPut?').addCallback(int).addCallback(bool)
         returnValue(state)
     
     @inlineCallbacks
