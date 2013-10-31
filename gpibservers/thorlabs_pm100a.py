@@ -33,7 +33,7 @@ timeout = 5
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
-from larbad.units import WithUnit
+from labrad.units import WithUnit
 
 class ThorlabsPM100AWrapper(GPIBDeviceWrapper):
     
