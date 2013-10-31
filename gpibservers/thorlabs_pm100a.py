@@ -33,6 +33,7 @@ timeout = 5
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
+from larbad.units import WithUnit
 
 class ThorlabsPM100AWrapper(GPIBDeviceWrapper):
     
@@ -71,6 +72,7 @@ class PowerMeterServer(GPIBManagedServer):
         """Get or set the CW frequency."""
         dev = self.selectedDevice(c)
         power = yield dev.measure()
+        power = WithUnit(power, 'W')
         returnValue(power)
     
     @setting(12, 'Auto Range')
