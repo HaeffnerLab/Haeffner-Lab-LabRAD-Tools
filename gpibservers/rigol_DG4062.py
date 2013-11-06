@@ -40,7 +40,27 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def initialize(self):
         self.frequency = yield self.getFrequency()
-
+        self.modulation_state = yield self.getModulationState()
+    
+    @inlineCallbacks
+    def getModulationState(self):
+        state_string = yield self.query('SOURce1:MOD:STATe?\n')
+        if state_string == 'OFF':
+            state = False
+        elif state_string == 'ON':
+            state = True
+        else:
+            raise Exception("Incorrect State")
+        returnValue(state)
+    
+    @inlineCallbacks
+    def setModulationState(self, state):
+        if state:
+            yield self.write('SOURce1:MOD:STATe ON\n')
+        else:
+            yield self.write('SOURce1:MOD:STATe OFF\n')
+        self.modulation_state = state
+        
     @inlineCallbacks
     def getFrequency(self):
         frequency = yield self.query('SOURce1:FREQuency?\n').addCallback(float)
@@ -67,6 +87,18 @@ class RigolDG4062Server(GPIBManagedServer):
         if f is not None:
             yield dev.setFrequency(f)
         returnValue(dev.frequency)
+    
+    @setting(11, 'Modulation State', state = 'b', returns = 'b')
+    def modulation_state(self, c, state = None):
+        '''Get or set the state of the modulation'''
+        dev = self.selectedDevice(c)
+        if state is not None:
+            yield dev.setModulationState(state)
+        returnValue(dev.modulation_state)
+    
+    @setting(12, "Modulation Type", mod_type = 's', returns = 's')
+    def modulation_type(self, c):
+
 
 __server__ = RigolDG4062Server()
 
