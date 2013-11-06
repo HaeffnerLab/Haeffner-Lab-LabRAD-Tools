@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Rigol DG4062 Server
-version = 1.0
+version = 1.1
 description = 
 
 [startup]
@@ -41,7 +41,38 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
     def initialize(self):
         self.frequency = yield self.getFrequency()
         self.modulation_state = yield self.getModulationState()
+        self.modulation_type = yield self.getModulationType()
+        self.psk_modulation_source = yield self.getPSKModSource()
+        self.phase = yield self.getPhase()
+        self.psk_phase = yield self.getPSKPhase()
     
+    @inlineCallbacks
+    def getPSKPhase(self):
+        psk_phase = yield self.query('SOURce1:MOD:PSKey:PHASe?\n').addCallback(float)
+        psk_phase = WithUnit(psk_phase, 'deg')
+        returnValue(psk_phase)
+    
+    @inlineCallbacks
+    def setPSKPhase(self, psk_phase):
+        if not 0<=psk_phase['deg']<=360:
+            raise Exception("Incorrect PSK Phase")
+        yield self.write('SOURce1:MOD:PSKey:PHASe {0:.1f}\n'.format(psk_phase['deg']))
+        self.psk_phase = psk_phase
+        
+    
+    @inlineCallbacks
+    def getPhase(self):
+        phase = yield self.query('SOURce1:PHASe?\n').addCallback(float)
+        phase = WithUnit(phase, 'deg') 
+        returnValue(phase)
+    
+    @inlineCallbacks
+    def setPhase(self, phase):
+        if not 0<=phase['deg']<=360:
+            raise Exception("Incorrect Phase")
+        yield self.write('SOURce1:PHASe {0:.1f}\n'.format(phase['deg']))
+        self.phase = phase
+        
     @inlineCallbacks
     def getModulationState(self):
         state_string = yield self.query('SOURce1:MOD:STATe?\n')
@@ -60,7 +91,32 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
         else:
             yield self.write('SOURce1:MOD:STATe OFF\n')
         self.modulation_state = state
-        
+    
+    @inlineCallbacks
+    def getModulationType(self):
+        mod_type = yield self.query('SOURce1:MOD:TYPe?\n')
+        returnValue(mod_type)
+    
+    @inlineCallbacks
+    def setModulationType(self, mod_type):
+        if mod_type not in ['AM','FM','PM','ASK','FSK','PSK','PWM','BPSK','QPSK','3FSK','4FSK','OSK']:
+            raise Exception("Incorrect modulation type")
+        yield self.write('SOURce1:MOD:TYPe {}\n'.format(mod_type))
+        self.modulation_type = mod_type
+    
+    @inlineCallbacks
+    def setPSKModSource(self, source):
+        if source not in ['internal', 'external']:
+            raise Exception("Incorrect source")
+        yield self.write('SOURce1:MOD:PSKey:SOURce {}\n'.format(source[:3].upper()))
+        self.psk_modulation_source = source 
+    
+    @inlineCallbacks
+    def getPSKModSource(self):
+        source = yield self.query('SOURce1:MOD:PSKey:SOURce?\n')
+        source = '{}ernal'.format(source.lower())
+        returnValue(source)
+    
     @inlineCallbacks
     def getFrequency(self):
         frequency = yield self.query('SOURce1:FREQuency?\n').addCallback(float)
@@ -72,7 +128,6 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
         if self.frequency != f:
             yield self.write('SOURce1:FREQuency:FIXed {0}\n'.format(f['Hz']))
             self.frequency = f
-
  
 class RigolDG4062Server(GPIBManagedServer):
     """Provides basic CW control for Agilent Signal Generators"""
@@ -97,8 +152,33 @@ class RigolDG4062Server(GPIBManagedServer):
         returnValue(dev.modulation_state)
     
     @setting(12, "Modulation Type", mod_type = 's', returns = 's')
-    def modulation_type(self, c):
-
+    def modulation_type(self, c, mod_type = None):
+        '''Get or set the modulation type'''
+        dev = self.selectedDevice(c)
+        if mod_type is not None:
+            yield dev.setModulationType(mod_type)
+        returnValue(dev.modulation_type)
+    
+    @setting(13, "PSK Modulation Source", psk_mod_source = 's', returns = 's')
+    def modulation_psk_source(self, c, psk_mod_source = None):
+        dev = self.selectedDevice(c)
+        if psk_mod_source is not None:
+            yield dev.setPSKModSource(psk_mod_source)
+        returnValue(dev.psk_modulation_source)
+    
+    @setting(14, "Phase", phase = 'v[deg]', returns = 'v[deg]')
+    def phase(self, c, phase = None):
+        dev = self.selectedDevice(c)
+        if phase is not None:
+            yield dev.setPhase(phase)
+        returnValue(dev.phase)
+    
+    @setting(15, 'PSK Phase', psk_phase = 'v[deg]', returns = 'v[deg]')
+    def psk_phase(self, c, psk_phase = None):
+        dev = self.selectedDevice(c)
+        if psk_phase is not None:
+            yield dev.setPSKPhase(psk_phase)
+        returnValue(dev.psk_phase)
 
 __server__ = RigolDG4062Server()
 
