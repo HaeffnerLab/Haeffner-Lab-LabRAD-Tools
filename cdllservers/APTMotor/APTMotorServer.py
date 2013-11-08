@@ -26,6 +26,7 @@ class APTMotor():
         self.aptdll = windll.LoadLibrary("APT.dll")
         #self.aptdll.EnableEventDlg(False)
         self.aptdll.APTInit()
+        self.config=stageConfiguration()
         print 'APT initialized'
         self.HWType = c_long(31) # 31 means TDC001 controller
     
@@ -70,7 +71,8 @@ class APTMotor():
         minimumPosition = c_float(minimumPosition)
         maximumPosition = c_float(maximumPosition)
         units = c_long(1) #units of mm
-        pitch = c_float(.5) #standard pitch
+        # Get different pitches of lead screw for moving stages for different lasers. 
+        pitch = c_float(self.config.get_pitch(serialNumber)) 
         self.aptdll.MOT_SetStageAxisInfo(HWSerialNum, minimumPosition, maximumPosition, units, pitch)
         return True
 
