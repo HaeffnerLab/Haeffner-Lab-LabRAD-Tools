@@ -1,7 +1,12 @@
 from PyQt4 import QtGui
-from twisted.internet.defer import inlineCallbacks
-from SWITCH_CONTROL_config import switch_control_config
+from twisted.internet.defer import inlineCallbacks, returnValue
 from connection import connection
+
+'''
+The Switch Control GUI lets the user control the TTL channels of the Pulser
+
+Version 1.0
+'''
 
 SIGNALID = 378902
 
@@ -9,7 +14,6 @@ class switchWidget(QtGui.QFrame):
     def __init__(self, reactor, cxn = None, parent=None):
         super(switchWidget, self).__init__(parent)
         self.initialized = False
-        self.channels = switch_control_config.channels
         self.reactor = reactor
         self.cxn = cxn
         self.connect()
@@ -19,15 +23,48 @@ class switchWidget(QtGui.QFrame):
         if self.cxn is  None:
             self.cxn = connection()
             yield self.cxn.connect()
+            from labrad.types import Error
+            self.Error = Error
         self.context = yield self.cxn.context()
         try:
-            yield self.initializeGUI()
+            displayed_channels = yield self.get_displayed_channels()
+            yield self.initializeGUI(displayed_channels)
             yield self.setupListeners()
         except Exception, e:
             print 'SWTICH CONTROL: Pulser not available'
             self.setDisabled(True)
         self.cxn.on_connect['Pulser'].append( self.reinitialize)
         self.cxn.on_disconnect['Pulser'].append( self.disable)
+    
+    @inlineCallbacks
+    def get_displayed_channels(self):
+        '''
+        get a list of all available channels from the pulser. only show the ones
+        listed in the registry. If there is no listing, will display all channels.
+        '''
+        server = self.cxn.servers['Pulser']
+        all_channels = yield server.get_channels(context = self.context)
+        all_names = [el[0] for el in all_channels]
+        channels_to_display = yield self.registry_load_displayed(all_names)
+        if channels_to_display is None:
+            channels_to_display = all_names
+        channels = [name for name in channels_to_display if name in all_names]
+        returnValue(channels)
+    
+    @inlineCallbacks
+    def registry_load_displayed(self, all_names):
+        reg = self.cxn.servers['Registry']
+        yield reg.cd(['Clients','Switch Control'], True, context = self.context)
+        try:
+            displayed = yield reg.get('display_channels', context = self.context)
+        except self.Error as e:
+            if e.code == 21:
+                #key error
+                yield reg.set('display_channels', all_names, context = self.context)
+                displayed = None
+            else:
+                raise
+        returnValue(displayed)
     
     @inlineCallbacks
     def reinitialize(self):
@@ -42,7 +79,12 @@ class switchWidget(QtGui.QFrame):
             yield self.setupListeners()
     
     @inlineCallbacks
-    def initializeGUI(self):
+    def initializeGUI(self, channels):
+        '''
+        Lays out the GUI
+        
+        @var channels: a list of channels to be displayed.
+        '''
         server = self.cxn.servers['Pulser']
         self.d = {}
         #set layout
@@ -51,9 +93,6 @@ class switchWidget(QtGui.QFrame):
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         #get switch names and add them to the layout, and connect their function
         layout.addWidget(QtGui.QLabel('Switches'),0,0)
-        switchNames = yield server.get_channels(context = self.context)
-        switchNames = [el[0] for el in switchNames] #picking first of the tuple
-        channels = [name for name in self.channels if name in switchNames]
         for order,name in enumerate(channels):
             #setting up physical container
             groupBox = QtGui.QGroupBox(name) 

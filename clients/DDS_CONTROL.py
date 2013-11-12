@@ -1,8 +1,11 @@
 from qtui.QCustomFreqPower import QCustomFreqPower
-from twisted.internet.defer import inlineCallbacks
-from DDS_CONTROL_config import dds_control_config
+from twisted.internet.defer import inlineCallbacks, returnValue
 from connection import connection
 from PyQt4 import QtGui
+
+'''
+The DDS Control GUI lets the user control the DDS channels of the Pulser
+'''
 
 class DDS_CHAN(QCustomFreqPower):
     def __init__(self, chan, reactor, cxn, context, parent=None):
@@ -100,13 +103,9 @@ class DDS_CONTROL(QtGui.QFrame):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.cxn = cxn
-        self.channels = dds_control_config.channels
-        self.widgets_per_row = dds_control_config.widgets_per_row
-        self.widgets = {}.fromkeys(self.channels)
         self.initialized = False
         self.setupDDS()
        
-        
     @inlineCallbacks
     def setupDDS(self):
         if self.cxn is None:
@@ -114,8 +113,11 @@ class DDS_CONTROL(QtGui.QFrame):
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:
+            from labrad.types import Error
+            self.Error = Error
             yield self.initialize()
         except Exception, e:
+            print e
             print 'DDS CONTROL: Pulser not available'
             self.setDisabled(True)
         self.cxn.on_connect['Pulser'].append( self.reinitialize)
@@ -126,9 +128,51 @@ class DDS_CONTROL(QtGui.QFrame):
         server = self.cxn.servers['Pulser']
         yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
-        yield self.do_layout(server)
+        self.display_channels, self.widgets_per_row = yield self.get_displayed_channels()
+        self.widgets = {}.fromkeys(self.display_channels)
+        self.do_layout()
         self.initialized = True
     
+    @inlineCallbacks
+    def get_displayed_channels(self):
+        '''
+        get a list of all available channels from the pulser. only show the ones
+        listed in the registry. If there is no listing, will display all channels.
+        '''
+        server = self.cxn.servers['Pulser']
+        all_channels = yield server.get_dds_channels(context = self.context)
+        channels_to_display, widgets_per_row = yield self.registry_load_displayed(all_channels, 1)
+        if channels_to_display is None:
+            channels_to_display = all_channels
+        if widgets_per_row is None:
+            widgets_per_row = 1
+        channels = [name for name in channels_to_display if name in all_channels]
+        returnValue((channels, widgets_per_row))
+     
+    @inlineCallbacks
+    def registry_load_displayed(self, all_names, default_widgets_per_row):
+        reg = self.cxn.servers['Registry']
+        yield reg.cd(['Clients','DDS Control'], True, context = self.context)
+        try:
+            displayed = yield reg.get('display_channels', context = self.context)
+        except self.Error as e:
+            if e.code == 21:
+                #key error
+                yield reg.set('display_channels', all_names, context = self.context)
+                displayed = None
+            else:
+                raise
+        try:
+            widgets_per_row = yield reg.get('widgets_per_row', context = self.context)
+        except self.Error as e:
+            if e.code == 21:
+                #key error
+                yield reg.set('widgets_per_row', 1, context = self.context)
+                widgets_per_row = None
+            else:
+                raise
+        returnValue((displayed, widgets_per_row))
+     
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
@@ -136,7 +180,7 @@ class DDS_CONTROL(QtGui.QFrame):
         if not self.initialized:
             yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
             yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
-            yield self.do_layout(server)
+            self.do_layout()
             self.initialized = True
         else:
             #update any changes in the parameters
@@ -146,20 +190,16 @@ class DDS_CONTROL(QtGui.QFrame):
                 if widget is not None:
                     yield widget.setupWidget(connect = False)
     
-    @inlineCallbacks
-    def do_layout(self, server):
-        allChannels = yield server.get_dds_channels(context = self.context)
+    def do_layout(self):
         layout = QtGui.QGridLayout()
         item = 0
-        for chan in self.channels:
-            if chan in allChannels:
-                widget = DDS_CHAN(chan, self.reactor, self.cxn, self.context)
-                self.widgets[chan] = widget
-                layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)
-                item += 1
+        for chan in self.display_channels:
+            widget = DDS_CHAN(chan, self.reactor, self.cxn, self.context)
+            self.widgets[chan] = widget
+            layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)
+            item += 1
         self.setLayout(layout)
         
-    
     @inlineCallbacks
     def disable(self):
         self.setDisabled(True)

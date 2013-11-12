@@ -5,7 +5,7 @@ class multiplexer_control_config(object):
     {channel_name: (hint, display_location)), }
     '''
     info = {'866': ('346.00002', (0,1)),
-            '422': ('354.53919', (0,0)),
+            '422': ('354.53917', (0,0)),
             '397 Single Pass': ('377.61131', (1,0)),
             '729': ('411.04243', (2,1)),
             '397 diode': ('755.22262', (2,0)),
