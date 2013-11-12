@@ -181,7 +181,6 @@ class TektronixTDSServer(GPIBManagedServer):
         returnValue(answer)
 
 
-
     @inlineCallbacks
     def _readX0(self, c):
         dev = self.selectedDevice(c)
