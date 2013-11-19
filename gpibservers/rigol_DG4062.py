@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Rigol DG4062 Server
-version = 1.1
+version = 1.15
 description = 
 
 [startup]
@@ -45,6 +45,27 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
         self.psk_modulation_source = yield self.getPSKModSource()
         self.phase = yield self.getPhase()
         self.psk_phase = yield self.getPSKPhase()
+        self.state = yield self.getState()
+    
+    @inlineCallbacks
+    def getState(self):
+        state_string = yield self.query('OUTPut1:STATe?\n')
+        if state_string == 'OFF':
+            state = False
+        elif state_string == 'ON':
+            state = True
+        else:
+            raise Exception("Incorrect State")
+        returnValue(state)
+    
+    @inlineCallbacks
+    def setState(self, state):
+        print 'setting state to', state
+        if state:
+            yield self.write('OUTPut1:STATe ON\n')
+        else:
+            yield self.write('OUTPut1:STATe OFF\n')
+        self.state = state
     
     @inlineCallbacks
     def getPSKPhase(self):
@@ -143,7 +164,15 @@ class RigolDG4062Server(GPIBManagedServer):
             yield dev.setFrequency(f)
         returnValue(dev.frequency)
     
-    @setting(11, 'Modulation State', state = 'b', returns = 'b')
+    @setting(11, 'Output', state = 'b', returns='b')
+    def output(self, c, state=None):
+        """Get or set the CW frequency."""
+        dev = self.selectedDevice(c)
+        if state is not None:
+            yield dev.setState(state)
+        returnValue(dev.state)
+    
+    @setting(21, 'Modulation State', state = 'b', returns = 'b')
     def modulation_state(self, c, state = None):
         '''Get or set the state of the modulation'''
         dev = self.selectedDevice(c)
@@ -151,7 +180,7 @@ class RigolDG4062Server(GPIBManagedServer):
             yield dev.setModulationState(state)
         returnValue(dev.modulation_state)
     
-    @setting(12, "Modulation Type", mod_type = 's', returns = 's')
+    @setting(22, "Modulation Type", mod_type = 's', returns = 's')
     def modulation_type(self, c, mod_type = None):
         '''Get or set the modulation type'''
         dev = self.selectedDevice(c)
@@ -159,21 +188,21 @@ class RigolDG4062Server(GPIBManagedServer):
             yield dev.setModulationType(mod_type)
         returnValue(dev.modulation_type)
     
-    @setting(13, "PSK Modulation Source", psk_mod_source = 's', returns = 's')
+    @setting(23, "PSK Modulation Source", psk_mod_source = 's', returns = 's')
     def modulation_psk_source(self, c, psk_mod_source = None):
         dev = self.selectedDevice(c)
         if psk_mod_source is not None:
             yield dev.setPSKModSource(psk_mod_source)
         returnValue(dev.psk_modulation_source)
     
-    @setting(14, "Phase", phase = 'v[deg]', returns = 'v[deg]')
+    @setting(24, "Phase", phase = 'v[deg]', returns = 'v[deg]')
     def phase(self, c, phase = None):
         dev = self.selectedDevice(c)
         if phase is not None:
             yield dev.setPhase(phase)
         returnValue(dev.phase)
     
-    @setting(15, 'PSK Phase', psk_phase = 'v[deg]', returns = 'v[deg]')
+    @setting(25, 'PSK Phase', psk_phase = 'v[deg]', returns = 'v[deg]')
     def psk_phase(self, c, psk_phase = None):
         dev = self.selectedDevice(c)
         if psk_phase is not None:
