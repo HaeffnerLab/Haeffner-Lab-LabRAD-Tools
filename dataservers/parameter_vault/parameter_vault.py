@@ -93,6 +93,8 @@ class ParameterVault(LabradServer):
             assert item[0] <= value <= item[1], "Parameter {} Out of Bound".format(key[1])
             item[2] = value
             return (t, item)
+        if t == 'string':
+            return (t, item)
         else:
             raise Exception("Can't save, not one of checkable types")
 

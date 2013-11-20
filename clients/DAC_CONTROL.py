@@ -64,7 +64,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     def selectCFile(self):
         fn = QtGui.QFileDialog().getOpenFileName()
         self.updating = True
-        yield self.dacserver.set_multipole_control_file(str(fn))
+        yield self.dacserver.set_control_file(str(fn))
         for i in range(self.ctrlLayout.count()): self.ctrlLayout.itemAt(i).widget().close()
         self.updating = False
         yield self.makeGUI()

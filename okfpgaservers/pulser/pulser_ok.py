@@ -499,6 +499,11 @@ class Pulser(LabradServer, DDS, LineTrigger):
         return self.timeResolvedResolution
     
     #Methods relating to using the optional second PMT
+    @setting(35, "Get PMT ID List", returns='*i')
+    def getPMTIDList(self, c):
+        if self.haveSecondPMT: return [1,2]
+        else: return [1]
+
     @setting(36, 'Get Secondary PMT Counts', returns = '*(vsv)')
     def getAllSecondaryCounts(self, c):
         if not self.haveSecondPMT: raise Exception ("No Second PMT")
