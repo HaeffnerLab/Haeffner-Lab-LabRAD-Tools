@@ -23,7 +23,7 @@ class hardwareConfiguration(object):
     default_multipoles = ['Ex', 'Ey', 'Ez', 'U1', 'U2', 'U3']
     okDeviceID = 'DAC Controller'
     okDeviceFile = 'control_nonnoninverted.bit'
-    centerElectrode = 23
+    centerElectrode = 23 #write False if no Centerelectrode
     PREC_BITS = 16
     pulseTriggered = True
     maxCache = 126
@@ -53,6 +53,15 @@ class hardwareConfiguration(object):
         '22': channelConfiguration(12, trapElectrodeNumber=22),
         '23': channelConfiguration(6, trapElectrodeNumber=23) #6
         }
+
+    notused_dict = {
+        '23': channelConfiguration(1, trapElectrodeNumber=23),
+        '24': channelConfiguration(2, trapElectrodeNumber=24),
+        '25': channelConfiguration(3, trapElectrodeNumber=25),
+        '26': channelConfiguration(4, trapElectrodeNumber=26),
+        '27': channelConfiguration(16, trapElectrodeNumber=27),
+        '28': channelConfiguration(22, trapElectrodeNumber=28)
+               }
 
     sma_dict = {
         'RF bias': channelConfiguration(1, smaOutNumber=1, name='RF bias', boardVoltageRange=(-40., 40.), allowedVoltageRange=(-2.0, 0))

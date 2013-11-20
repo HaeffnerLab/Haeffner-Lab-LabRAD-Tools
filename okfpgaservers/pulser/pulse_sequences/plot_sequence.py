@@ -19,7 +19,7 @@ class SequencePlotter():
         d = dict(chan)
         return d
     
-    def extractInfo(self):        
+    def extractInfo(self):
         times = np.array(self.seq.transpose()[0], dtype = np.float)
         l =  self.seq.transpose()[1]
         flatten = lambda x: [int(i) for i in x]

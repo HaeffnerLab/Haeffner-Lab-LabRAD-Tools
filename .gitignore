@@ -11,3 +11,5 @@ DDS_CONTROL_config.py
 APT_config.py
 connection_config.py
 *~
+DacConfiguration.py
+.settings

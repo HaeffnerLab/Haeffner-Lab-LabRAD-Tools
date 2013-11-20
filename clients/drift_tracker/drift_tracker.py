@@ -8,17 +8,19 @@ from twisted.internet.task import LoopingCall
 from helper_widgets.helper_widgets import saved_frequencies_table
 from helper_widgets.compound_widgets import table_dropdowns_with_entry
 import numpy
+import time
 from drift_tracker_config import config_729_tracker as c
 
 '''
 Drift Tracker GUI. 
-Version 1.1
+Version 1.15
 '''
 
 class drift_tracker(QtGui.QWidget):
-    def __init__(self, reactor, cxn = None, parent=None):
+    def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.reactor = reactor
+        self.clipboard = clipboard
         self.cxn = cxn
         self.subscribed = False
         #see if favoirtes are provided in the configuration. if not, use an empty dictionary
@@ -93,6 +95,7 @@ class drift_tracker(QtGui.QWidget):
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
         self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites)
         self.entry_button = QtGui.QPushButton("Submit")
+        self.copy_clipboard_button = QtGui.QPushButton("Copy Info to Clipboard")
         self.remove_B_button = QtGui.QPushButton("Remove B")
         self.remove_line_center_button = QtGui.QPushButton("Remove Line Center")
         self.remove_B_count = QtGui.QSpinBox()
@@ -113,11 +116,11 @@ class drift_tracker(QtGui.QWidget):
         layout.addWidget(self.frequency_table, 0, 0, 1, 1)
         layout.addWidget(self.entry_table, 0, 1 , 1 , 1)
         layout.addWidget(self.entry_button, 1, 1, 1, 1)
+        layout.addWidget(self.copy_clipboard_button, 1, 0, 1, 1)
         
         remove_B_layout = QtGui.QHBoxLayout() 
         remove_B_layout.addWidget(self.remove_B_count)
         remove_B_layout.addWidget(self.remove_B_button)    
-  
 
         remove_line_center_layout = QtGui.QHBoxLayout() 
         remove_line_center_layout.addWidget(self.remove_line_center_count)
@@ -132,7 +135,7 @@ class drift_tracker(QtGui.QWidget):
         keep_line_center_layout = QtGui.QHBoxLayout()
         keep_line_center_layout.addWidget(QtGui.QLabel("Tracking Duration (Line Center)"))
         keep_line_center_layout.addWidget(self.track_line_center_duration)
-
+        
         layout.addLayout(update_layout, 2, 1, 1, 1)
         layout.addLayout(remove_B_layout, 2, 0, 1, 1)
         layout.addLayout(remove_line_center_layout, 3, 0, 1, 1)
@@ -146,6 +149,7 @@ class drift_tracker(QtGui.QWidget):
         self.entry_button.clicked.connect(self.on_entry)
         self.track_B_duration.valueChanged.connect(self.on_new_B_track_duration)
         self.track_line_center_duration.valueChanged.connect(self.on_new_line_center_track_duration)
+        self.copy_clipboard_button.pressed.connect(self.do_copy_info_to_clipboard)
     
     @inlineCallbacks
     def initialize_layout(self):
@@ -160,6 +164,24 @@ class drift_tracker(QtGui.QWidget):
         self.track_B_duration.blockSignals(False)
         self.track_line_center_duration.blockSignals(False)
         yield self.on_new_fit(None, None)
+    
+    @inlineCallbacks
+    def do_copy_info_to_clipboard(self):
+        try:
+            server = self.cxn.servers['SD Tracker']
+            lines = yield server.get_current_lines()
+            b_history, center_history =  yield server.get_fit_history()
+            b_value =  b_history[-1][1]
+            center_value = center_history[-1][1]
+        except Exception as e:
+            #no lines available
+            pass
+        else:
+            date = time.strftime('%m/%d/%Y')
+            d = dict(lines)
+            text = '| {0} || {1:.4f} MHz || {2:.4f} MHz || {3:.4f} MHz || {4:.4f} MHz || {5:.4f} G || comment'.format(date, d['S+1/2D-3/2']['MHz'], d['S-1/2D-5/2']['MHz'], d['S-1/2D-1/2']['MHz'], center_value['MHz'], b_value['gauss'])
+            if self.clipboard is not None:
+                self.clipboard.setText(text)
     
     def on_update_enable(self, enable):
         rate = self.update_rate.value()
@@ -380,9 +402,10 @@ class drift_tracker(QtGui.QWidget):
     
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
+    clipboard = a.clipboard()
     from common.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = drift_tracker(reactor)
+    widget = drift_tracker(reactor, clipboard)
     widget.show()
     reactor.run()
