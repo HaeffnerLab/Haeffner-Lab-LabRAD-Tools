@@ -31,10 +31,11 @@ class switchWidget(QtGui.QFrame):
             yield self.initializeGUI(displayed_channels)
             yield self.setupListeners()
         except Exception, e:
+            print e
             print 'SWTICH CONTROL: Pulser not available'
             self.setDisabled(True)
-        self.cxn.on_connect['Pulser'].append( self.reinitialize)
-        self.cxn.on_disconnect['Pulser'].append( self.disable)
+        self.cxn.add_on_connect('Pulser', self.reinitialize)
+        self.cxn.add_on_disconnect('Pulser', self.disable)
     
     @inlineCallbacks
     def get_displayed_channels(self):
@@ -42,7 +43,7 @@ class switchWidget(QtGui.QFrame):
         get a list of all available channels from the pulser. only show the ones
         listed in the registry. If there is no listing, will display all channels.
         '''
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         all_channels = yield server.get_channels(context = self.context)
         all_names = [el[0] for el in all_channels]
         channels_to_display = yield self.registry_load_displayed(all_names)
@@ -53,7 +54,7 @@ class switchWidget(QtGui.QFrame):
     
     @inlineCallbacks
     def registry_load_displayed(self, all_names):
-        reg = self.cxn.servers['Registry']
+        reg = yield self.cxn.get_server('Registry')
         yield reg.cd(['Clients','Switch Control'], True, context = self.context)
         try:
             displayed = yield reg.get('display_channels', context = self.context)
@@ -69,7 +70,7 @@ class switchWidget(QtGui.QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         if self.initialized:
             yield server.signal__switch_toggled(SIGNALID, context = self.context)
             for name in self.d.keys():
@@ -85,7 +86,7 @@ class switchWidget(QtGui.QFrame):
         
         @var channels: a list of channels to be displayed.
         '''
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         self.d = {}
         #set layout
         layout = QtGui.QGridLayout()
@@ -163,7 +164,7 @@ class switchWidget(QtGui.QFrame):
     
     @inlineCallbacks
     def setupListeners(self):
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         yield server.signal__switch_toggled(SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = SIGNALID, context = self.context)
     

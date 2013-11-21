@@ -153,7 +153,7 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def initialize_layout(self):
-        server = self.cxn.servers['SD Tracker']
+        server = yield self.cxn.get_server('SD Tracker')
         transitions = yield server.get_transition_names()
         self.entry_table.fill_out(transitions)
         duration_B, duration_line_center = yield server.history_duration()
@@ -168,7 +168,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def do_copy_info_to_clipboard(self):
         try:
-            server = self.cxn.servers['SD Tracker']
+            server = yield self.cxn.get_server('SD Tracker')
             lines = yield server.get_current_lines()
             b_history, center_history =  yield server.get_fit_history()
             b_value =  b_history[-1][1]
@@ -198,7 +198,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def on_remove_B(self, clicked):
         to_remove = self.remove_B_count.value()
-        server = self.cxn.servers['SD Tracker']
+        server = yield self.cxn.get_server('SD Tracker')
         try:
             yield server.remove_b_measurement(to_remove)
         except self.Error as e:
@@ -206,14 +206,14 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def on_remove_line_center(self, clicked):
         to_remove = self.remove_line_center_count.value()
-        server = self.cxn.servers['SD Tracker']
+        server = yield self.cxn.get_server('SD Tracker')
         try:
             yield server.remove_line_center_measurement(to_remove)
         except self.Error as e:
             self.displayError(e.msg)    
     @inlineCallbacks
     def on_entry(self, clicked):
-        server = self.cxn.servers['SD Tracker']
+        server = yield self.cxn.get_server('SD Tracker')
         info = self.entry_table.get_info()
         with_units = [(name, self.WithUnit(val, 'MHz')) for name,val in info]
         try:
@@ -223,14 +223,14 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def on_new_B_track_duration(self, value):
-        server = self.cxn.servers['SD Tracker']
+        server = yield self.cxn.get_server('SD Tracker')
         rate_B = self.WithUnit(value, 'min')
         rate_line_center = self.WithUnit(self.track_line_center_duration.value(), 'min')
         yield server.history_duration((rate_B, rate_line_center))
     
     @inlineCallbacks
     def on_new_line_center_track_duration(self, value):
-        server = self.cxn.servers['SD Tracker']
+        server = yield self.cxn.get_server('SD Tracker')
         rate_line_center = self.WithUnit(value, 'min')
         rate_B = self.WithUnit(self.track_B_duration.value(), 'min')
         yield server.history_duration((rate_B, rate_line_center))
@@ -250,23 +250,25 @@ class drift_tracker(QtGui.QWidget):
             yield self.subscribe_tracker()
         except Exception as e:
             self.setDisabled(True)
-        self.cxn.on_connect['SD Tracker'].append( self.reinitialize_tracker)
-        self.cxn.on_disconnect['SD Tracker'].append( self.disable)
+        self.cxn.add_on_connect('SD Tracker', self.reinitialize_tracker)
+        self.cxn.add_on_disconnect('SD Tracker', self.disable)
         self.connect_layout()
         
     @inlineCallbacks
     def subscribe_tracker(self):
-        yield self.cxn.servers['SD Tracker'].signal__new_fit(c.ID, context = self.context)
-        yield self.cxn.servers['SD Tracker'].addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
+        server = yield self.cxn.get_server('SD Tracker')
+        yield server.signal__new_fit(c.ID, context = self.context)
+        yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
         yield self.initialize_layout()
         self.subscribed = True
     
     @inlineCallbacks
     def reinitialize_tracker(self):
         self.setDisabled(False)
-        yield self.cxn.servers['SD Tracker'].signal__new_fit(c.ID, context = self.context)
+        server = yield self.cxn.get_server('SD Tracker')
+        yield server.signal__new_fit(c.ID, context = self.context)
         if not self.subscribed:
-            yield self.cxn.servers['SD Tracker'].addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
+            yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
             yield self.initialize_layout()
             self.subscribed = True
     
@@ -278,7 +280,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def update_fit(self):
         try:
-            server = self.cxn.servers['SD Tracker']
+            server = yield self.cxn.get_server('SD Tracker')
             history_B, history_line_center = yield server.get_fit_history()
             fit_b = yield server.get_fit_parameters('bfield')
             fit_f = yield server.get_fit_parameters('linecenter')
@@ -334,7 +336,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def update_lines(self):
         try:
-            server = self.cxn.servers['SD Tracker']
+            server = yield self.cxn.get_server('SD Tracker')
             lines = yield server.get_current_lines()
         except Exception as e:
             #no lines available

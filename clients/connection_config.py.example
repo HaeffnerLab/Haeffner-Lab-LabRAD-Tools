@@ -1,3 +1,0 @@
-class configuration(object):
-    
-    servers = ['Data Vault', 'Semaphore', 'Pulser', 'SD Tracker', 'DAC']

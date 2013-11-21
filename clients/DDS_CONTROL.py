@@ -6,7 +6,6 @@ from PyQt4 import QtGui
 '''
 The DDS Control GUI lets the user control the DDS channels of the Pulser
 '''
-
 class DDS_CHAN(QCustomFreqPower):
     def __init__(self, chan, reactor, cxn, context, parent=None):
         super(DDS_CHAN, self).__init__('DDS: {}'.format(chan), True, parent)
@@ -14,7 +13,7 @@ class DDS_CHAN(QCustomFreqPower):
         self.reactor = reactor
         self.context = context
         self.chan = chan
-        self.server = cxn.servers['Pulser']
+        self.cxn = cxn
         self.import_labrad()
         
     def import_labrad(self):
@@ -27,6 +26,7 @@ class DDS_CHAN(QCustomFreqPower):
     @inlineCallbacks
     def setupWidget(self, connect = True):
         #get ranges
+        self.server = yield self.cxn.get_server('Pulser')
         MinPower,MaxPower = yield self.server.get_dds_amplitude_range(self.chan, context = self.context)
         MinFreq,MaxFreq = yield self.server.get_dds_frequency_range(self.chan, context = self.context)
         self.setPowerRange((MinPower,MaxPower))
@@ -120,12 +120,12 @@ class DDS_CONTROL(QtGui.QFrame):
             print e
             print 'DDS CONTROL: Pulser not available'
             self.setDisabled(True)
-        self.cxn.on_connect['Pulser'].append( self.reinitialize)
-        self.cxn.on_disconnect['Pulser'].append( self.disable)
+        self.cxn.add_on_connect('Pulser', self.reinitialize)
+        self.cxn.add_on_disconnect('Pulser', self.disable)
      
     @inlineCallbacks
     def initialize(self):
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
         self.display_channels, self.widgets_per_row = yield self.get_displayed_channels()
@@ -139,7 +139,7 @@ class DDS_CONTROL(QtGui.QFrame):
         get a list of all available channels from the pulser. only show the ones
         listed in the registry. If there is no listing, will display all channels.
         '''
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         all_channels = yield server.get_dds_channels(context = self.context)
         channels_to_display, widgets_per_row = yield self.registry_load_displayed(all_channels, 1)
         if channels_to_display is None:
@@ -151,7 +151,7 @@ class DDS_CONTROL(QtGui.QFrame):
      
     @inlineCallbacks
     def registry_load_displayed(self, all_names, default_widgets_per_row):
-        reg = self.cxn.servers['Registry']
+        reg = yield self.cxn.get_server('Registry')
         yield reg.cd(['Clients','DDS Control'], True, context = self.context)
         try:
             displayed = yield reg.get('display_channels', context = self.context)
@@ -176,7 +176,7 @@ class DDS_CONTROL(QtGui.QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         if not self.initialized:
             yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
             yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)

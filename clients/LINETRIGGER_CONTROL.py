@@ -52,15 +52,16 @@ class linetriggerWidget(QtGui.QFrame):
             yield self.initializeGUI()
             yield self.setupListeners()
         except Exception, e:
+            print e
             print 'linetriggerWidget: Pulser not available'
             self.setDisabled(True)
-        self.cxn.on_connect['Pulser'].append( self.reinitialize)
-        self.cxn.on_disconnect['Pulser'].append( self.disable)
+        yield self.cxn.add_on_connect('Pulser',self.reinitialize)
+        yield self.cxn.add_on_disconnect('Pulser',self.reinitialize)
     
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = self.cxn.servers['Pulser']
+        server = self.cxn.get_server('Pulser')
         if self.initialized:
             yield server.signal__new_line_trigger_parameter(SIGNALID, context = self.context)
             state = yield server.line_trigger_state(context = self.context)
@@ -72,7 +73,7 @@ class linetriggerWidget(QtGui.QFrame):
     
     @inlineCallbacks
     def initializeGUI(self):
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         #set layout
         layout = QtGui.QGridLayout()
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
@@ -111,23 +112,23 @@ class linetriggerWidget(QtGui.QFrame):
     
     @inlineCallbacks
     def resetDDS(self):
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         yield server.clear_dds_lock(context = self.context)
         
     @inlineCallbacks
     def setDuration(self, duration):
         duration = self.WithUnit(duration, 'us')
-        server = self.cxn.servers['Pulser']
+        server = self.cxn.get_server('Pulser')
         yield server.line_trigger_duration(duration, context = self.context)
     
     @inlineCallbacks
     def setState(self, state):
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         yield server.line_trigger_state(state, context = self.context)
     
     @inlineCallbacks
     def setupListeners(self):
-        server = self.cxn.servers['Pulser']
+        server = yield self.cxn.get_server('Pulser')
         yield server.signal__new_line_trigger_parameter(SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = SIGNALID, context = self.context)
     

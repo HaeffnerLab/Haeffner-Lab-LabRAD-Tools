@@ -88,5 +88,4 @@ class pulse_sequence(object):
 		pulser.new_sequence()
 		pulser.add_ttl_pulses(self._ttl_pulses)
 		pulser.add_dds_pulses(self._dds_pulses)
-		print self.end
 		pulser.program_sequence()
