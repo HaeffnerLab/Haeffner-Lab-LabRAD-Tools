@@ -1,5 +1,10 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+'''
+The shared connection object allows multiple asynchronous clients to share a single connection to the manager
+Version 1.0
+'''
+
 class connection(object):
 
     def __init__(self):
