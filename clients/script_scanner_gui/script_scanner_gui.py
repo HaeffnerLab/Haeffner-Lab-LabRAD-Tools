@@ -48,16 +48,23 @@ class script_scanner_gui(QtGui.QWidget):
         self.scripting_widget.clear_all()
         yield self.populateExperiments()
         yield self.setupListenersScriptScanner()
-        if self.cxn.servers['ParameterVault'] is not None:
+        try:
+            yield self.cxn.get_server('ScriptScanner')
             self.disable(False)
-    
+        except Exception as e:
+            print e
+            
     @inlineCallbacks
     def reinitialize_parameter_vault(self):
         self.ParametersEditor.clear_all()
         yield self.populateParameters()
         yield self.setupListenersParameterVault()
-        if self.cxn.servers['ScriptScanner'] is not None:
+        try:
+            yield self.cxn.get_server('ParameterVault')
             self.disable(False)
+        except Exception as e:
+            print e
+            
     
     def disable(self, should_disable = True):
         if should_disable:
