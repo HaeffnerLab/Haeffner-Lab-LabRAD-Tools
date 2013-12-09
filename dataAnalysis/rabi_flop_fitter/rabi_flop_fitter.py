@@ -7,7 +7,7 @@ from scipy.special.orthogonal import eval_genlaguerre as laguerre
 
 class rabi_flop_time_evolution(object):
     
-    def __init__(self, sideband_order, eta, nmax = 10000):
+    def __init__(self, sideband_order, eta, nmax = 1000):
         self.sideband_order = sideband_order #0 for carrier, 1 for 1st sideband etc
         self.eta = eta
         self.nmax = nmax
@@ -26,12 +26,20 @@ class rabi_flop_time_evolution(object):
             coupling_func = lambda n: np.exp(-1./2*eta**2) * eta**(2)*(1./((n+1.)*(n+2)))**0.5 * laguerre(n, 2, eta**2)
         elif self.sideband_order == 3:
             coupling_func = lambda n: np.exp(-1./2*eta**2) * eta**(3)*(1./((n+1)*(n+2)*(n+3)))**0.5 * laguerre(n, 3 , eta**2) 
+        elif self.sideband_order == 4:
+            coupling_func = lambda n: np.exp(-1./2*eta**2) * eta**(4)*(1./((n+1)*(n+2)*(n+3)*(n+4)))**0.5 * laguerre(n, 4 , eta**2)
+        elif self.sideband_order == 5:
+            coupling_func = lambda n: np.exp(-1./2*eta**2) * eta**(5)*(1./((n+1)*(n+2)*(n+3)*(n+4)*(n+5)))**0.5 * laguerre(n, 5 , eta**2)      
         elif self.sideband_order == -1:
             coupling_func = lambda n: 0 if n == 0 else np.exp(-1./2*eta**2) * eta**(1)*(1./(n))**0.5 * laguerre(n - 1, 1, eta**2)
         elif self.sideband_order == -2:
             coupling_func = lambda n: 0 if n <= 1 else np.exp(-1./2*eta**2) * eta**(2)*(1./((n)*(n-1.)))**0.5 * laguerre(n - 2, 2, eta**2)
         elif self.sideband_order == -3:
             coupling_func = lambda n: 0 if n <= 2 else np.exp(-1./2*eta**2) * eta**(3)*(1./((n)*(n-1.)*(n-2)))**0.5 * laguerre(n -3, 3, eta**2)
+        elif self.sideband_order == -4:
+            coupling_func = lambda n: 0 if n <= 3 else np.exp(-1./2*eta**2) * eta**(4)*(1./((n)*(n-1.)*(n-2)*(n-3)))**0.5 * laguerre(n -4, 4, eta**2)
+        elif self.sideband_order == -5:
+            coupling_func = lambda n: 0 if n <= 4 else np.exp(-1./2*eta**2) * eta**(5)*(1./((n)*(n-1.)*(n-2)*(n-3)*(n-4)))**0.5 * laguerre(n -5, 5, eta**2)
         else:
             raise NotImplementedError("Can't calculate rabi couplings sideband order {}".format(self.sideband_order))
         return np.array([coupling_func(n) for n in range(self.nmax)])
@@ -58,6 +66,7 @@ class rabi_flop_time_evolution(object):
         omega = self.rabi_coupling
         ones = np.ones_like(t)
         p_n = md.displaced_thermal(alpha, nbar, self.nmax)
+        print 'got array'
         if 1 - p_n.sum() > 1e-6:
             raise Exception ('Hilbert space too small, missing population')
         if delta == 0:
@@ -65,9 +74,13 @@ class rabi_flop_time_evolution(object):
             effective_omega = 1
         else:
             effective_omega = np.abs(omega)/np.sqrt(omega**2+delta**2)
+        print 'looking for result'
         result = np.outer(p_n * effective_omega, ones) * (np.sin( np.outer( np.sqrt(omega**2+delta**2)*np.pi/time_2pi, t ))**2)
+        print 'summing'
         result = np.sum(result, axis = 0)
+        print 'scaling'
         result = excitation_scaling * result
+        print 'done'
         return result
     
 if __name__ == '__main__':
@@ -76,7 +89,7 @@ if __name__ == '__main__':
     def thermal_example():
         eta = 0.05
         nbar = 3
-        times = np.linspace(0, 300, 1000)
+        times = np.linspace(0, 300, 100)
         te = rabi_flop_time_evolution(-1 ,eta)
         prob_red = te.compute_evolution_thermal(nbar = nbar, delta = 0, time_2pi = 15, t = times)
         te = rabi_flop_time_evolution(1 ,eta)
@@ -94,29 +107,31 @@ if __name__ == '__main__':
     
     def displaced_thermal_example():
         eta = 0.05
-        for disp_n in np.linspace(0, 1500, 5):
-            alpha = np.sqrt(disp_n)
-            times = np.linspace(0, 300, 1000)
-            te = rabi_flop_time_evolution(1 ,eta)
+        
+        for alpha in np.linspace(0, 25, 6):
+            times = np.linspace(0, 50, 300)
+            pyplot.subplot(211)
+            te = rabi_flop_time_evolution(-1 ,eta)
             prob_blue = te.compute_evolution_coherent(nbar = 3, alpha = alpha, delta = 0, time_2pi = 15, t = times)
-#             te = rabi_flop_time_evolution(0 ,eta)
-#             prob_car = te.compute_evolution_coherent(nbar = 3, alpha = alpha, delta = 0, time_2pi = 15, t = times)
-#             pyplot.plot(times, prob_blue, label = 'displacement n = {}'.format(disp_n))
-            pyplot.plot(times, prob_blue, label = 'displacement n = {}'.format(disp_n))
-        pyplot.suptitle('Displaced Thermal State', fontsize = 32)
-        pyplot.title('Carrier Flops, thermal nbar = 3', fontsize = 24)
-        pyplot.xlim([0,50])
-        pyplot.ylim([0,1.0])
+            pyplot.plot(times, prob_blue, label = 'alpha a = {}'.format(alpha))
+            pyplot.subplot(212)
+            te = rabi_flop_time_evolution(-2 ,eta)
+            prob_blue = te.compute_evolution_coherent(nbar = 3, alpha = alpha, delta = 0, time_2pi = 15, t = times)
+            pyplot.plot(times, prob_blue, label = 'alpha a = {}'.format(alpha))
+        pyplot.subplot(211)
+        pyplot.title('First order red sideband', fontsize = 24)
+        pyplot.subplot(212)
+        pyplot.title('Second order red sideband', fontsize = 24)
         pyplot.tight_layout()
-        pyplot.legend(prop={'size':22})
-        pyplot.xlabel('Excitation Time (arb)', fontsize = 32)
-        pyplot.ylabel('Excitation', fontsize = 32)
-        pyplot.tick_params(axis='both', which='major', labelsize=20)
+        pyplot.legend(prop={'size':16})
+        pyplot.xlabel('Excitation Time (arb)', fontsize = 20)
+        pyplot.ylabel('Excitation', fontsize = 20)
+        pyplot.tick_params(axis='both', which='major', labelsize=14)
         pyplot.show()
     
     def display_rabi_coupling():
         eta = 0.05
-        for sideband in [-1,-2,-3]:
+        for sideband in [-1,-2,-3,-4,-5]:
             te = rabi_flop_time_evolution(sideband ,eta)
             couplings = te.compute_rabi_coupling()
             couplings = np.abs(couplings)
