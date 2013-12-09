@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Agilent E3633A
+name = Agilent Server
 version = 1.0
 description = 
 
@@ -35,8 +35,7 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad.units import WithUnit
 
-class AgilentE3633AAWrapper(GPIBDeviceWrapper):
-    
+class AgilentN5747AWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def initialize(self):
         self.voltage = yield self.getVoltage()
@@ -75,11 +74,11 @@ class AgilentE3633AAWrapper(GPIBDeviceWrapper):
         yield self.write('OUTPut {}'.format(int(output)))
         self.output = output
 
-class AgilentE3633AServer(GPIBManagedServer):
+class AgilentServer(GPIBManagedServer):
     """Provides basic CW control for Agilent Signal Generators"""
-    name = 'Agilent E3633A'
-    deviceName = 'HEWLETT-PACKARD E3633A'
-    deviceWrapper = AgilentE3633AAWrapper
+    name = 'Agilent N5747A'
+    deviceName = 'Agilent Technologies N5747A'
+    deviceWrapper = AgilentN5747AWrapper
 
     @setting(10, 'Voltage', voltage=['v[V]'], returns=['v[V]'])
     def voltage(self, c, voltage=None):
@@ -105,7 +104,7 @@ class AgilentE3633AServer(GPIBManagedServer):
             yield dev.setOutput(output)
         returnValue(dev.output)
 
-__server__ = AgilentE3633AServer()
+__server__ = AgilentServer()
 
 if __name__ == '__main__':
     from labrad import util

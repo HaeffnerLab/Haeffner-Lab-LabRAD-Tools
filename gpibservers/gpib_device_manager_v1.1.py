@@ -41,7 +41,7 @@ UNKNOWN = '<unknown>'
 
 def parseIDNResponse(s):
     """Parse the response from *IDN? to get mfr and model info."""
-    mfr, model, ver, rev = s.split(',')
+    mfr, model= s.split(',')[0:2]
     return mfr.strip() + ' ' + model.strip()
 
 class GPIBDeviceManager(LabradServer):
@@ -130,11 +130,13 @@ class GPIBDeviceManager(LabradServer):
         """
         p = self.client.servers[server].packet()
         p.address(channel).timeout(T.Value(1,'s')).write('*IDN?').read()
-        print 'Sending *IDN? to', server, channel
+#         print 'Sending *IDN? to', server, channel
         resp = None
         try:
             resp = (yield p.send()).read
+#             print 'got response', resp
             name = parseIDNResponse(resp)
+#             print 'got name', name
         except Exception, e:
             print 'Error sending *IDN? to', server, channel + ':', e
             name = UNKNOWN
