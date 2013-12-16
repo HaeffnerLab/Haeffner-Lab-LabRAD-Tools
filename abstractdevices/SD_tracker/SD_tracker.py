@@ -91,7 +91,7 @@ class SDTracker(LabradServer):
         
     @setting(2, 'Set Measurements', lines = '*(sv[MHz])', returns = '')
     def set_measurements(self, c, lines):
-        '''takes the naames and frequencies of two lines and performs tracking'''
+        '''takes the names and frequencies of two lines and performs tracking'''
         t_measure = time.time() - self.start_time
         if not len(lines) == 2: raise Exception ("Please provide measurement for two lines")
         name1,f1 = lines[0]
@@ -107,7 +107,17 @@ class SDTracker(LabradServer):
         #try to save to data vault
         yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
         self.do_fit()
-    
+
+    @setting(12, 'Set Measurement One Line', line = 'sv[MHz]', returns = '')
+    def set_measurement_one_line(self, c, line):
+        ''' takes name and frequency of one line, and assumes the cavity position from previous data '''
+        t_measure = time.time() - self.start_time
+        name,f = line
+        if name not in self.tr.transitions():
+            raise Exception("Line does not match a known transition")
+
+        
+
     @inlineCallbacks
     def save_result_datavault(self, t_measure, freq, b_field):
         try:
