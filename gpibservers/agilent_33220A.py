@@ -81,9 +81,9 @@ class Agilent33220AWrapper(GPIBDeviceWrapper):
             self.output = out
 
     @inlineCallbacks
-    def setArbitraryWaveform(self, str):
+    def setArbitraryWaveform(self, s):
         comstr = 'DATA VOLATILE, '
-        comstr += str
+        comstr += s
         yield self.write(comstr)
         # now select the waveform in volatile memory
         yield self.write('FUNCtion:USER VOLATILE')
@@ -149,14 +149,14 @@ class AgilentServer(GPIBManagedServer):
             yield dev.setOutput(os)
         returnValue(dev.output)
 
-    @setting(13, 'Arbitrary waveform', str = '*s', returns = '')
-    def arbitrary_waveform(self, c, str):
+    @setting(13, 'Arbitrary waveform', s = 's', returns = '')
+    def arbitrary_waveform(self, c, s):
         """
         Pass a string of amplitudes. Load waveform into volatile memory
         and select the waveform in volatile memory.
         """
         dev = self.selectedDevice(c)
-        yield dev.setArbitraryWaveform(str)
+        yield dev.setArbitraryWaveform(s)
 
 __server__ = AgilentServer()
 
