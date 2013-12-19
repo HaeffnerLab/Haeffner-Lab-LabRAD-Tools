@@ -83,8 +83,7 @@ class Agilent33220AWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def setArbitraryWaveform(self, s):
         comstr = 'DATA VOLATILE, '
-        comstr += s
-        yield self.write(comstr)
+        yield self.write(comstr + s)
         # now select the waveform in volatile memory
         yield self.write('FUNCtion:USER VOLATILE')
 
