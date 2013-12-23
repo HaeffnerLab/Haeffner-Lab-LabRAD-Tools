@@ -27,7 +27,7 @@ class Basic_Matplotlib_Plotter(QtGui.QWidget):
         self.fig = Figure()
         self.axes = self.fig.add_subplot(111)
         self.fig.set_facecolor('w')
-        self.fig.set_tight_layout(True)
+        #self.fig.set_tight_layout(True)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
@@ -36,7 +36,7 @@ class Basic_Matplotlib_Plotter(QtGui.QWidget):
         vbox.addWidget(self.canvas)
         self.axes.set_xlim([-10,1000])
         self.axes.set_ylim([-10,1000])
-        self.ani = animation.FuncAnimation(self.fig, self.update_figure, self.should_continue, interval=50, blit=False)
+        self.ani = animation.FuncAnimation(self.fig, self.update_figure, self.should_continue, interval=50, blit=True)
         self.setLayout(vbox)
     
     def update_figure(self, _input = None):
