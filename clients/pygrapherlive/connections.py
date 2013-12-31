@@ -19,8 +19,7 @@ class COMMUNICATE(QtCore.QObject):
 
 class CONNECTIONS(QtGui.QGraphicsObject):
     '''
-    The CONNECTIONS serves as a mediator between the Dataset class and the GrapherWindow
-http://open.spotify.com/track/3HwIwtDqD039BZrWfjkJBw    class. 
+    The CONNECTIONS serves as a mediator between the Dataset class and the GrapherWindow  class. 
     
     A grapher works by keeping track of datasets and determining which windows
     to plot them on. The main dictionary, dwDict, relates Dataset objects with GrapherWindow
