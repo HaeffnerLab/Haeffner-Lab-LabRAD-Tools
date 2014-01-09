@@ -8,7 +8,6 @@ class pulse_sequence(object):
 	Base class for all Pulse Sequences
 	Version 1.1
 	'''
-	
 	required_parameters = []
 	required_subsequences = []
 	replaced_parameters = {}
