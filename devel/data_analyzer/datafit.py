@@ -28,7 +28,7 @@ class DataFit():
         self.fitAccepted = False
         self.autoAccept = False
 
-    def residual(params, x, data):
+    def residual(self, params, x, data):
         model = self.model(params, x)
         return model - data
     
