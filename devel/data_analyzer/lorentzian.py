@@ -5,7 +5,7 @@ Container class for a Lorentzian fit
 Classes which inherit from DataFit should implement 
 
 1. a guess() function which takes the parameter name as an argument 
-and returns an automized initial guess
+and returns an automated initial guess
 
 2. a model() function containing the analytic form you would like to fit
 
@@ -16,16 +16,16 @@ and returns an automized initial guess
 from datafit import DataFit
 import numpy as np
 
-class Fittable(DataFit):
+class Lorentzian(DataFit):
 
     def __init__(self, raw):
-        super(DataFit, self).__init__(raw)
+        DataFit.__init__(self, raw)
 
-        self.guess_dict = {'FWHM':self.guess_hwhm, 'center':self.guess_center,
+        self.guess_dict = {'FWHM':self.guess_fwhm, 'center':self.guess_center,
                            'height':self.guess_height, 'bgrnd':self.guess_bgrnd}
 
     def guess(self, param):
-        return self.guess_dict[param](self.raw)
+        return self.guess_dict[param]()
 
     def guess_fwhm(self):
         xmax = self.dataX.max()
@@ -40,7 +40,7 @@ class Fittable(DataFit):
     def guess_bgrnd(self):
         return 0
 
-    def model(params, x):
+    def model(self, params, x):
 
         bgrnd = params['bgrnd'].value
         fwhm = abs(params['FWHM'].value)

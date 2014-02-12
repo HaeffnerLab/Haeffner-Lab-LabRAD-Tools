@@ -39,57 +39,58 @@ class dataAnalyzer(LabradServer):
 
     name = 'Data Analyzer'
 
-    @inlineCallbacks
-    def initserver(self):
-
-        self.dv = yield self.client.data_vault
-
+    #@inlineCallbacks
+    def initServer(self):
+        print "init"
         self.loaded_datasets = {}
 
-    @setting(1, 'Load Data', data='*s', returns = '*s')
-    def load_data(self, c, data):
+    @setting(1, 'Load Data', path = '*s', dataset = ['i', 's'],  returns = 's')
+    def load_data(self, c, path, dataset):
         ''' takes a dataset from datavault, and returns a key identifying the dataset '''
-        dir, dataset = data
-
-        yield self.dv.cd(dir, context = context)
-        yield self.dv.open(data, context = context)
+        dir = path
+        context = yield self.client.context()
+        yield self.client.data_vault.cd(dir, context = context)
+        yield self.client.data_vault.open(dataset, context = context)
 
         # first see if there's a fit type specified in the datavault
         
-        raw = yield self.dv.get(context=context)
-        fit_type = yield self.dv.get_parameter('fit_type', context=context)
-
-        data_type = importlib.import_module(fit_type)
-
-        workspace = data_type.Fittable(raw)
-
+        raw = yield self.client.data_vault.get(context=context)
+        print raw
+        fitTypePath = yield self.client.data_vault.get_parameter('fitTypePath', context=context)
+        fitClass = yield self.client.data_vault.get_parameter('fitClass', context = context)
+        print fitTypePath
+        print fitClass
+        module = importlib.import_module(fitTypePath)
+        fitClass = getattr(module, fitClass)
+        workspace = fitClass(raw)
+  
         key = md5.new()
-        key.update(dir+dataset)
+        key.update(str(dir)+str(dataset))
 
         self.loaded_datasets[key.digest()] = workspace
         
-        return key.digest()
+        returnValue(key.digest())
 
-    @setting(2, 'Set Parmeter', key = '*s', param = '*s', initial_guess = '*s', to_fit = 'b', returns = '')
-    def set_parameter(self, c, key, param, initial_guess, to_fit):
-        ''' set a parameter with an initial guess.
-        pass the initial_guess as a string so that you can also pass 'auto' to autofit.
+    @setting(2, 'Set Parameter', key = 's', param = 's', initial_guess = 'v', to_fit = 'b', is_auto = 'b', returns = '')
+    def set_parameter(self, c, key, param, initial_guess, to_fit, is_auto = False):
+        '''
+        set a parameter with an initial guess.
         '''
         workspace = self.loaded_datasets[key]
 
-        if initial_guess == 'auto':
+        if is_auto:
             workspace.parameterDict[param] = ('auto', to_fit)
         else:
-            workspace.parameterDict[param] = (float(intial_guess), to_fit)
+            workspace.parameterDict[param] = (initial_guess, to_fit)
 
-    @setting(3, 'Fit', key='*s', returns = '')
+    @setting(3, 'Fit', key='s', returns = '')
     def fit(self, c, key):
         ''' fit a loaded dataset '''
 
         workspace = self.loaded_datasets[key]
         workspace.fit()
 
-    @setting(4, 'Get Parameter', key = '*s', param = '*s', returns = 'v')
+    @setting(4, 'Get Parameter', key = 's', param = 's', returns = 'v')
     def get_parameter(self, c, key, param):
 
         ''' get a parameter that's already fitted.
@@ -97,12 +98,14 @@ class dataAnalyzer(LabradServer):
         actually occurred
         '''
         workspace = self.loaded_datasets[key]
-        result = workspace.result
-        
-        return result.params[param].value
+        try:
+            result = workspace.result
+            return result.params[param].value
+        except AttributeError:
+            print "Data not fitted"
     
-    @setting(5, 'Get ChiSq', key = '*s', returns = 'v')
-    def get_chisq(self, c, key):
+    @setting(5, 'Get ChiSqr', key = 's', returns = 'v')
+    def get_chisqr(self, c, key):
         '''
         Get the chi-squared value for the fit returned by lmfit
         '''
@@ -110,9 +113,9 @@ class dataAnalyzer(LabradServer):
         workspace = self.loaded_datasets[key]
         result = workspace.result
         
-        return result.chisq
+        return result.chisqr
 
-    @setting(6, 'Get Error', key = '*s', param = '*s', returns = 'v')
+    @setting(6, 'Get Error', key = 's', param = 's', returns = 'v')
     def get_error(self, c, key, param):
         '''
         Get the error on a fit parameter
@@ -123,7 +126,7 @@ class dataAnalyzer(LabradServer):
         
         return result.params[param].stderr
 
-    @setting(7, 'Accept Fit', key = '*s', returns = '')
+    @setting(7, 'Accept Fit', key = 's', returns = '')
     def accept_fit(self, c, key):
         '''
         Accept the results of a fit. Add to datavault
@@ -131,3 +134,15 @@ class dataAnalyzer(LabradServer):
         '''
         workspace = self.loaded_datasets[key]
         workspace.fitAccepted = True
+
+    @setting(8, 'Delete Workspace', key = 's', returns = '')
+    def delete_workspace(self, c, key):
+        '''
+        Delete a workspace that is no longer needed
+        '''
+        
+        del self.loaded_datasets[key]
+
+if __name__=="__main__":
+    from labrad import util
+    util.runServer( dataAnalyzer() )
