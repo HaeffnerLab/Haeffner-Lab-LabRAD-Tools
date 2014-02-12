@@ -62,7 +62,7 @@ class ScriptScanner(LabradServer, Signals):
             else:
                 try:
                     name = cls.name
-                    parameters = cls.required_parameters
+                    parameters = cls.all_required_parameters()
                 except AttributeError:
                     print 'Name is not provided for class {0} in module {1}'.format(class_name, module)
                 else:

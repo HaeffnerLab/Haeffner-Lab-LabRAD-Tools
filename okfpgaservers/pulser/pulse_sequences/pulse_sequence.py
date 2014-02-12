@@ -33,7 +33,8 @@ class pulse_sequence(object):
 			additional = set(subsequence.all_required_parameters())
 			additional.difference_update(replaced)
 			required = required.union(additional)
-		return list(required)
+		required = list(required)
+		return required
 	
 	def sequence(self):
 		'''
