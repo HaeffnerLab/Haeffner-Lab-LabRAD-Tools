@@ -11,6 +11,15 @@ class AnalyzerWindow(QtGui.QWidget):
         self.create_layout(fitting_parameters)
         self.connect_layout()
         self.interface = interface
+        self.plotted_guess = None
+        self.plotted_fit = None
+        self.perform_customization()
+        
+    def perform_customization(self):
+        '''
+        can be subclassed to perform additional plot customization
+        '''
+        pass
     
     def create_layout(self, fitting_parameters):
         self.fig = Figure()
@@ -37,21 +46,50 @@ class AnalyzerWindow(QtGui.QWidget):
         self.show()
     
     def connect_layout(self):
-#         self.accept_button.pressed.connect(self.test)
         self.grid.onNewGuess.connect(self.onNewGuess)
-#         self.grid.onNewGuess.connect(self.test, True)
+        self.fit_button.clicked.connect(self.on_fit)
+        self.accept_button.clicked.connect(self.on_accept)
+        self.reject_button.clicked.connect(self.on_reject)
+    
+    def on_accept(self):
+        self.interface.setAccepted(True)
+        self.close()
+    
+    def on_reject(self):
+        self.interface.setAccepted(False)
+        self.close()
+    
+    def on_fit(self):
+        manual_values = self.grid.get_all_values()
+        self.interface.refit(manual_values)
+        if self.plotted_guess is not None:
+            self.plotted_guess[0].set_alpha(0.5)
+            self.fig.canvas.draw()
     
     def onNewGuess(self):
+        if self.plotted_guess is not None:
+            #remove the previous plotted guess
+            self.plotted_guess.pop(0).remove()
         params = self.grid.get_manual_values()
         evalX, evalY = self.interface.evaluate_params(params)
-        self.plot(evalX, evalY, 'g--')
+        self.plotted_guess = self.plot(evalX, evalY, 'g--')
     
     def plot(self, x, y, *args):
-        self.axes.plot(x,y, *args)
+        line = self.axes.plot(x,y, *args)
         self.fig.canvas.draw()
+        return line
     
-    def get_manual_values(self):
-        return self.grid.get_manual_values()
+    def plotfit(self, x, y):
+        if self.plotted_fit is not None:
+            self.plotted_fit.pop(0).remove()
+        self.plotted_fit = self.plot(x, y, 'r')
+    
+    def update_steps(self, values):
+        for label, step in values:
+            self.grid.updateStepSize(label, step)
+    
+    def set_last_fit(self, fitting_parameters):
+        self.grid.set_last_fit(fitting_parameters)
         
 class parameterTable(QtGui.QTableWidget):
     
@@ -61,7 +99,7 @@ class parameterTable(QtGui.QTableWidget):
         super(parameterTable, self).__init__()
         #set columns
         self.setColumnCount(4)
-        self.setHorizontalHeaderLabels(['Fit','Auto','Guess','Last Fit'])
+        self.setHorizontalHeaderLabels(['Vary','Auto Guess','Guess Value','Last Fit'])
         #set rows
         self.setRowCount(len(fitting_parameters))
         labels = sorted(fitting_parameters.keys())
@@ -72,20 +110,23 @@ class parameterTable(QtGui.QTableWidget):
         self.setFont(font)
         #populate information
         for row, parameter in enumerate(labels):
-            to_fit, auto_fit, manual_value, last_fit = fitting_parameters[parameter]
+            to_fit, auto_guess, manual_value, last_fit = fitting_parameters[parameter]
             cb_to_fit = QtGui.QCheckBox()
             cb_to_fit.setCheckable(True)
             cb_to_fit.setChecked(to_fit)
             self.setCellWidget(row,0, cb_to_fit)
-            cb_auto_fit = QtGui.QCheckBox()
-            cb_auto_fit.setCheckable(True)
-            cb_auto_fit.setChecked(auto_fit)
-            self.setCellWidget(row,1, cb_auto_fit)
+            cb_auto_guess = QtGui.QCheckBox()
+            cb_auto_guess.setCheckable(True)
+            cb_auto_guess.setChecked(auto_guess)
             spin_manual = QtGui.QDoubleSpinBox()
+            spin_manual.setKeyboardTracking(False)
             spin_manual.setRange(-10000000, 10000000)
             spin_manual.setDecimals(5)
+            self.connect_disabling(cb_auto_guess, spin_manual)
             if manual_value is None: manual_value = last_fit
             spin_manual.setValue(manual_value)
+            spin_manual.setSingleStep(1e-2)
+            self.setCellWidget(row,1, cb_auto_guess)
             self.setCellWidget(row,2, spin_manual)
             spin_manual.valueChanged.connect(self.onNewGuess.emit, True)
             spin_result = QtGui.QDoubleSpinBox()
@@ -101,6 +142,23 @@ class parameterTable(QtGui.QTableWidget):
         self.horizontalHeader().setResizeMode(3, QtGui.QHeaderView.Stretch)
         self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
     
+    def connect_disabling(self, cb, spin):
+        if cb.isChecked():
+            spin.setDisabled(True)
+        def on_state_change(x):
+            spin.setDisabled(bool(x))
+        cb.stateChanged.connect(on_state_change)
+    
+    def updateStepSize(self, label, step):
+        '''
+        uses the value to set the step size of the given spin widget
+        '''
+        for row in range(self.rowCount()):
+            row_label = str(self.verticalHeaderItem(row).text())
+            if label == row_label:
+                spin = self.cellWidget(row, 2)
+                spin.setSingleStep(step)
+        
     def sizeHint(self):
         oldSize = super(parameterTable, self).sizeHint()
         newheight = self.rowHeight(0) * self.rowCount() + self.horizontalHeader().height() + self.contentsMargins().top() +  self.contentsMargins().bottom()
@@ -113,3 +171,21 @@ class parameterTable(QtGui.QTableWidget):
             value = self.cellWidget(row, 2).value()
             d[label] = value
         return d
+    
+    def get_all_values(self):
+        d = {}
+        for row in range(self.rowCount()):
+            label = str(self.verticalHeaderItem(row).text())
+            to_fit = self.cellWidget(row, 0).isChecked()
+            auto_guess = self.cellWidget(row, 1).isChecked()
+            value = self.cellWidget(row, 2).value()
+            if not auto_guess:
+                d[label] = (value,to_fit)
+        return d
+    
+    def set_last_fit(self, fitting_parameters):
+        for row in range(self.rowCount()):
+            label = str(self.verticalHeaderItem(row).text())
+            last_fit = self.cellWidget(row, 3)
+            val = fitting_parameters[label][3]
+            last_fit.setValue(val)

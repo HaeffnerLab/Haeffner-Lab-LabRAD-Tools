@@ -1,6 +1,7 @@
 from lorentzian import Lorentzian
 
 from analyzerWindow import AnalyzerWindow
+from analyzerWindowSpectrum729 import analyzerWindow729
 
 fitting_models = [Lorentzian]
 
@@ -12,6 +13,11 @@ class FittingInterface(object):
         self.manual_parameters = {}
         for model in fitting_models:
             self.all_fitting_models[model.name] = model
+        self.accepted = None
+        
+    def setAccepted(self, accepted):
+        self.accepted = accepted
+        print 'accepted', self.accepted
     
     def setModel(self, model):
         try:
@@ -23,7 +29,7 @@ class FittingInterface(object):
         self.data = data
     
     def addParameter(self, parameter, initial_guess, to_fit):
-        self.params[parameter, initial_guess, to_fit]
+        self.manual_parameters[parameter]  = (to_fit, initial_guess)
 
     def start_fit(self):
         if not self.active_model:
@@ -32,12 +38,19 @@ class FittingInterface(object):
         self.active_model.setUserParameters(self.manual_parameters)
         fitX, fitY = self.active_model.fit()
         fitting_parameters = self.active_model.get_parameter_info()
-        print fitting_parameters
-        self.gui = AnalyzerWindow(fitting_parameters, self)
+        self.gui = analyzerWindow729(fitting_parameters, self)
         self.gui.plot(dataX, dataY, '*k')
-        self.gui.plot(fitX, fitY, 'r')
+        self.gui.plotfit(fitX, fitY)
         return self.gui
     
+    def refit(self, gui_parameters):
+        self.manual_parameters = gui_parameters 
+        self.active_model.setUserParameters(self.manual_parameters)
+        fitX, fitY = self.active_model.fit()
+        fitting_parameters = self.active_model.get_parameter_info()
+        self.gui.plotfit(fitX, fitY)
+        self.gui.set_last_fit(fitting_parameters)
+        
     def evaluate_params(self,params):
         evalX, evalY = self.active_model.evaluate_parameters(params)
         return evalX, evalY
