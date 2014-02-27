@@ -14,10 +14,13 @@ class FittingInterface(object):
         for model in fitting_models:
             self.all_fitting_models[model.name] = model
         self.accepted = None
+        self.auto_accept = None
         
     def setAccepted(self, accepted):
         self.accepted = accepted
-        print 'accepted', self.accepted
+    
+    def setAutoAccept(self, auto_accept):
+        self.auto_accept = auto_accept
     
     def setModel(self, model):
         try:
@@ -38,9 +41,11 @@ class FittingInterface(object):
         self.active_model.setUserParameters(self.manual_parameters)
         fitX, fitY = self.active_model.fit()
         fitting_parameters = self.active_model.get_parameter_info()
-        self.gui = analyzerWindow729(fitting_parameters, self)
+        self.gui = analyzerWindow729(fitting_parameters, self.auto_accept, self)
         self.gui.plot(dataX, dataY, '*k')
         self.gui.plotfit(fitX, fitY)
+        if self.auto_accept:
+            self.accepted = True
         return self.gui
     
     def refit(self, gui_parameters):

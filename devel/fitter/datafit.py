@@ -5,7 +5,7 @@ class DataFit(object):
     def __init__(self):
         self.params = None
         self.data = None
-        self.manual_initial_values = {}
+        self.initial_values = {}
         self.all_parameters = []
         self.fitAccepted = False
         self.autoAccept = False
@@ -16,10 +16,12 @@ class DataFit(object):
             for param in self.all_parameters:
                 self.params.add(param)
         for parameter_name in self.all_parameters:
-            if parameter_name in self.manual_initial_values:
-                initial_guess, to_fit = self.manual_initial_values[parameter_name]
+            if parameter_name in self.initial_values:
+                to_fit, auto_guess, initial_guess = self.initial_values[parameter_name]
             else:
                 to_fit = True
+                auto_guess = True
+            if auto_guess:
                 initial_guess = self.guess(parameter_name)
             self.params[parameter_name].vary = to_fit
             self.params[parameter_name].value = initial_guess
@@ -31,7 +33,7 @@ class DataFit(object):
         return self.dataX, self.dataY
             
     def setUserParameters(self, params):
-        self.manual_initial_values = params
+        self.initial_values = params
 
     def residual(self, params, x, data):
         model = self.model(params, x)
@@ -55,9 +57,9 @@ class DataFit(object):
         info = {}
         for p in self.all_parameters:
             #(name, to_fit, auto_fit, user_guess, value)
-            auto_fit = p not in self.manual_initial_values
-            man_value = self.manual_initial_values.get(p)
-            info[p] = (self.params[p].vary, auto_fit, man_value, self.params[p].value)
+            auto_fit = p not in self.initial_values
+            man_value = self.initial_values.get(p)
+            info[p] = (self.params[p].vary, auto_fit, man_value, self.params[p].value, self.params[p].stderr)
         return info
     
     def get_parameter_value(self, parameter):

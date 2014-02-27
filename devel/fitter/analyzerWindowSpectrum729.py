@@ -3,8 +3,8 @@ from analyzerWindow import AnalyzerWindow
 
 class analyzerWindow729(AnalyzerWindow):
        
-    def __init__(self, fitting_parameters, interface):
-        super(analyzerWindow729, self).__init__(fitting_parameters, interface)
+    def __init__(self, fitting_parameters, auto_accept, interface):
+        super(analyzerWindow729, self).__init__(fitting_parameters, auto_accept, interface)
         
     def perform_customization(self):
         self.axes.set_ylim([0,1])

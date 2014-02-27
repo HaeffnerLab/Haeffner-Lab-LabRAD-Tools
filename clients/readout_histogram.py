@@ -96,9 +96,13 @@ class readout_histogram(QtGui.QWidget):
         self.thresholdLine.remove()
         #explicitly delete the refrence although not necessary
         del self.thresholdLine
-        self.thresholdLine = self.axes.axvline(threshold, ymin=0, ymax= 200, linewidth=3.0, color = 'r', label = 'Threshold')
+        try:
+            self.thresholdLine = self.axes.axvline(threshold, ymin=0.0, ymax=100.0, linewidth=3.0, color = 'r', label = 'Threshold')
+        except Exception as e:
+            #drawing axvline throws an error when the plot is never shown (i.e in different tab)
+            print 'Weird singular matrix bug deep inside matplotlib'
         self.canvas.draw()
-    
+     
     @inlineCallbacks
     def connect_labrad(self):
         if self.cxn is None:
@@ -158,7 +162,7 @@ class readout_histogram(QtGui.QWidget):
             self.subscribed[1] = True
         init_val = yield server.get_parameter(config_729_hist.readout_threshold_dir[0],config_729_hist.readout_threshold_dir[1], context = self.context)
         self.update_canvas_line(init_val)
-
+        
     @inlineCallbacks
     def disable(self):
         self.setDisabled(True)

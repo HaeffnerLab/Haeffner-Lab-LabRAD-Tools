@@ -42,14 +42,15 @@ class fitter(LabradServer):
         set a parameter with an initial guess.
         '''
         fitting_interface = c['fitting_interface']
-        fitting_interface.addParameter(param, initial_guess, to_fit)
+        fitting_interface.addParameter(param, to_fit = to_fit, auto_guess = False, initial_guess = initial_guess)
 
-    @setting(3, 'Fit', model='s', returns = '')
-    def fit(self, c, model = None):
+    @setting(3, 'Fit', model='s', auto_accept = 'b', returns = '')
+    def fit(self, c, model = None, auto_accept = False):
         ''' fit a loaded dataset '''
         fitting_interface = c['fitting_interface']
         if model is not None:
             fitting_interface.setModel(model)
+        fitting_interface.setAutoAccept(auto_accept)
         window = fitting_interface.start_fit()
 
     @setting(4, 'Get Parameter', param = 's', returns = 'v')

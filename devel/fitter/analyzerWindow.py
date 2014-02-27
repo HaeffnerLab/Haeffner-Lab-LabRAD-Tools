@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -
+
 from PyQt4 import QtGui, QtCore
 # from twisted.internet.defer import inlineCallbacks
 # from twisted.internet.task import LoopingCall
@@ -6,10 +9,12 @@ from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as FigureCanva
 
 class AnalyzerWindow(QtGui.QWidget):
        
-    def __init__(self, fitting_parameters, interface):
+    def __init__(self, fitting_parameters, auto_accept, interface):
         super(AnalyzerWindow, self).__init__()
-        self.create_layout(fitting_parameters)
-        self.connect_layout()
+        self.create_layout(fitting_parameters, auto_accept)
+        self.auto_accept = auto_accept
+        if not auto_accept:
+            self.connect_layout()
         self.interface = interface
         self.plotted_guess = None
         self.plotted_fit = None
@@ -21,7 +26,7 @@ class AnalyzerWindow(QtGui.QWidget):
         '''
         pass
     
-    def create_layout(self, fitting_parameters):
+    def create_layout(self, fitting_parameters, auto_accept):
         self.fig = Figure()
         self.axes = self.fig.add_subplot(111)
         self.fig.set_facecolor('w')
@@ -29,19 +34,20 @@ class AnalyzerWindow(QtGui.QWidget):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         mpl_toolbar = NavigationToolbar(self.canvas, self)
-        self.accept_button = QtGui.QPushButton('Accept')
-        self.reject_button = QtGui.QPushButton('Reject')
-        self.fit_button = QtGui.QPushButton("Fit")
-        button_row = QtGui.QHBoxLayout()
-        button_row.addWidget(self.accept_button)
-        button_row.addWidget(self.reject_button)
-        button_row.addWidget(self.fit_button)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(mpl_toolbar)
         vbox.addWidget(self.canvas)
-        vbox.addLayout(button_row)
-        self.grid = parameterTable(fitting_parameters)
-        vbox.addWidget(self.grid)
+        if not auto_accept:
+            self.accept_button = QtGui.QPushButton('Accept')
+            self.reject_button = QtGui.QPushButton('Reject')
+            self.fit_button = QtGui.QPushButton("Fit")
+            button_row = QtGui.QHBoxLayout()
+            button_row.addWidget(self.accept_button)
+            button_row.addWidget(self.reject_button)
+            button_row.addWidget(self.fit_button)
+            vbox.addLayout(button_row)
+            self.grid = parameterTable(fitting_parameters)
+            vbox.addWidget(self.grid)
         self.setLayout(vbox)
         self.show()
     
@@ -60,8 +66,8 @@ class AnalyzerWindow(QtGui.QWidget):
         self.close()
     
     def on_fit(self):
-        manual_values = self.grid.get_all_values()
-        self.interface.refit(manual_values)
+        gui_values = self.grid.get_all_values()
+        self.interface.refit(gui_values)
         if self.plotted_guess is not None:
             self.plotted_guess[0].set_alpha(0.5)
             self.fig.canvas.draw()
@@ -85,8 +91,9 @@ class AnalyzerWindow(QtGui.QWidget):
         self.plotted_fit = self.plot(x, y, 'r')
     
     def update_steps(self, values):
-        for label, step in values:
-            self.grid.updateStepSize(label, step)
+        if not self.auto_accept:
+            for label, step in values:
+                self.grid.updateStepSize(label, step)
     
     def set_last_fit(self, fitting_parameters):
         self.grid.set_last_fit(fitting_parameters)
@@ -110,7 +117,7 @@ class parameterTable(QtGui.QTableWidget):
         self.setFont(font)
         #populate information
         for row, parameter in enumerate(labels):
-            to_fit, auto_guess, manual_value, last_fit = fitting_parameters[parameter]
+            to_fit, auto_guess, manual_value, last_fit_value, stderror = fitting_parameters[parameter]
             cb_to_fit = QtGui.QCheckBox()
             cb_to_fit.setCheckable(True)
             cb_to_fit.setChecked(to_fit)
@@ -123,19 +130,16 @@ class parameterTable(QtGui.QTableWidget):
             spin_manual.setRange(-10000000, 10000000)
             spin_manual.setDecimals(5)
             self.connect_disabling(cb_auto_guess, spin_manual)
-            if manual_value is None: manual_value = last_fit
+            if manual_value is None: manual_value = last_fit_value
             spin_manual.setValue(manual_value)
             spin_manual.setSingleStep(1e-2)
             self.setCellWidget(row,1, cb_auto_guess)
             self.setCellWidget(row,2, spin_manual)
             spin_manual.valueChanged.connect(self.onNewGuess.emit, True)
-            spin_result = QtGui.QDoubleSpinBox()
-            spin_result.setRange(-10000000, 10000000)
-            spin_result.setDecimals(5)
-            spin_result.setReadOnly(True)
-            spin_result.setValue(last_fit)
-            spin_result.setAlignment(QtCore.Qt.AlignCenter)
-            self.setCellWidget(row,3, spin_result)
+            last_fit = QtGui.QLineEdit()
+            last_fit.setReadOnly(True)
+            last_fit.setText(u'{0:<10.5f} ± {1:.5f}'.format(last_fit_value, stderror))
+            self.setCellWidget(row,3, last_fit)
         #set size policy and selection policy
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         self.horizontalHeader().setResizeMode(2, QtGui.QHeaderView.Stretch)
@@ -179,13 +183,13 @@ class parameterTable(QtGui.QTableWidget):
             to_fit = self.cellWidget(row, 0).isChecked()
             auto_guess = self.cellWidget(row, 1).isChecked()
             value = self.cellWidget(row, 2).value()
-            if not auto_guess:
-                d[label] = (value,to_fit)
+            d[label] = (to_fit, auto_guess, value)
         return d
     
     def set_last_fit(self, fitting_parameters):
         for row in range(self.rowCount()):
             label = str(self.verticalHeaderItem(row).text())
             last_fit = self.cellWidget(row, 3)
-            val = fitting_parameters[label][3]
-            last_fit.setValue(val)
+            last_fit_value = fitting_parameters[label][3]
+            stderror = fitting_parameters[label][4]
+            last_fit.setText(u'{0:<10.5f} ± {1:.5f}'.format(last_fit_value, stderror))
