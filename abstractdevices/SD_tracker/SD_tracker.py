@@ -166,14 +166,21 @@ class SDTracker(LabradServer):
         except KeyError:
             raise Exception ("Requested line not found")
     
-    @setting(7, "Get Current B and Center", returns = '(v[MHz]v[gauss])')
+    @setting(7, "Get Current B", returns = 'v[gauss]')
     def get_current_b(self, c):
         current_time = time.time() - self.start_time
         B = self.fitter.evaluate(current_time, self.B_fit)
-        center = self.fitter.evaluate(current_time, self.line_center_fit)
         B = WithUnit(B, 'gauss')
+        return B
+        #returnValue(B)
+        
+    @setting(13, "Get Current Center", returns = 'v[MHz]')
+    def get_current_center(self, c):
+        current_time = time.time() - self.start_time
+        center = self.fitter.evaluate(current_time, self.line_center_fit)
         center = WithUnit(center, 'MHz')
-        returnValue((center,B))
+        return center
+        #returnValue(center)
     
     @setting(10, 'Remove B Measurement', point = 'i')
     def remove_B_measurement(self, c, point):
