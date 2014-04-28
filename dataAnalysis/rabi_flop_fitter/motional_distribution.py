@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special.orthogonal import eval_genlaguerre as laguerre
 from scipy.misc import factorial
+import mpmath as mp
 
 #see Michael Ramm writeup on 'Displaced Coherent States' and references therein.
 
@@ -40,10 +41,12 @@ class motional_distribution(object):
             old_settings = np.seterr(invalid='raise')
             populations = 1./ (nbar + 1.0) * (nbar / (nbar + 1.0))**n * laguerre(n, 0 , -alpha**2 / ( nbar * (nbar + 1.0))) * np.exp( -alpha**2 / (nbar + 1.0))
         except FloatingPointError:
-            print 'using coherent state'
-#             np.seterr(**old_settings)
-#             populations = np.exp(-alpha**2) * alpha**(2*n) / factorial(n)
-            populations = (2 * np.pi * alpha**2)**(-.5) * np.exp(-(n - alpha**2)**2/(2*alpha**2))
+            np.seterr(**old_settings)
+            print 'precise calculation required', alpha, nbar
+            populations = [mp.fprod(( 1./ (nbar + 1.0),   mp.power(nbar / (nbar + 1.0), k), mp.laguerre(k, 0, -alpha**2 / ( nbar * (nbar + 1.0))), mp.exp(-alpha**2 / (nbar + 1.0)))) for k in n]
+            print 'done computing populations'
+            populations = np.array(populations) 
+            print 'returned array'
         return populations
     
     @classmethod
@@ -80,9 +83,9 @@ if __name__ == '__main__':
     
     def plot_displaced():
         from matplotlib import pyplot
-        hilbert_space_dimension = 200
+        hilbert_space_dimension = 5000
         nbar = 3.0
-        for displ,color in [(0, 'k'), (5, 'b'), (10, 'g'), (50, 'r')]:
+        for displ,color in [(0, 'k'), (5, 'b'), (10, 'g'), (2500, 'r')]:
             displacement_nbar = displ
             displacement_alpha = np.sqrt(displacement_nbar)
             distribution = md.displaced_thermal(displacement_alpha, nbar, hilbert_space_dimension)

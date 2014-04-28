@@ -6,11 +6,11 @@ class pulse_sequence(object):
 	
 	'''
 	Base class for all Pulse Sequences
-	Version 1.0
+	Version 1.1
 	'''
-	
 	required_parameters = []
 	required_subsequences = []
+	replaced_parameters = {}
 	
 	def __init__(self, parameter_dict, start = WithUnit(0, 's')):
 		if not type(parameter_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
@@ -23,14 +23,18 @@ class pulse_sequence(object):
 		self.sequence()
 	
 	@classmethod
-	def all_variables(cls):
+	def all_required_parameters(cls):
 		'''
 		returns a list of all required variables for the current sequence and all used subsequences
 		'''
-		all_vars = set(cls.required_parameters)
+		required = set(cls.required_parameters)
 		for subsequence in cls.required_subsequences:
-			all_vars = all_vars.union(set(subsequence.required_parameters))
-		return list(all_vars)
+			replaced = set(cls.replaced_parameters.get(subsequence, []))
+			additional = set(subsequence.all_required_parameters())
+			additional.difference_update(replaced)
+			required = required.union(additional)
+		required = list(required)
+		return required
 	
 	def sequence(self):
 		'''
@@ -70,9 +74,13 @@ class pulse_sequence(object):
 	
 	def addSequence(self, sequence, replacement_dict = TreeDict(), position = None):
 		'''insert a subsequence, position is either time or None to insert at the end'''
-		#position where sequence is inserted
 		if sequence not in self.required_subsequences: raise Exception ("Adding subsequence {0} that is not listed in the required subequences".format(sequence.__class__.__name__))
 		if not type(replacement_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict")
+		for replacement_key in replacement_dict.keys():
+			parsed = tuple(replacement_key.split('.'))
+			key_list = self.replaced_parameters.get(sequence, [])
+			if not parsed in key_list:
+				raise Exception("Error in {0}: replacing the key {1} in the sequence {2} that is not listed among the replacement parameters".format(self, replacement_key, sequence))
 		if position is None:
 			position = self.end
 		#replacement conists of global replacement and keyword arguments
@@ -88,5 +96,4 @@ class pulse_sequence(object):
 		pulser.new_sequence()
 		pulser.add_ttl_pulses(self._ttl_pulses)
 		pulser.add_dds_pulses(self._dds_pulses)
-		print self.end
 		pulser.program_sequence()

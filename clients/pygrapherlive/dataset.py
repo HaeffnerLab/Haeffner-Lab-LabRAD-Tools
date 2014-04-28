@@ -155,7 +155,6 @@ class Dataset(QtCore.QObject):
         for i in range(len(variables[1])):
             labels.append(variables[1][i][1] + ' - ' + self.datasetName)
         returnValue(labels)
-
             
     def wait(self, seconds, result=None):
         d = Deferred()

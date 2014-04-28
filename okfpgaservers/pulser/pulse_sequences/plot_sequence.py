@@ -127,4 +127,4 @@ class SequencePlotter():
     
     def drawVerticals(self, advances):
         for x in advances:
-            pyplot.axvline(x, alpha = '0.3', color = '0.35', linestyle = '--')
+            pyplot.axvline(x, alpha = 0.3, color = '0.35', linestyle = '--')

@@ -57,15 +57,17 @@ class ScriptScanner(LabradServer, Signals):
                 print 'There is no class {0} in module {1}'.format(class_name, module) 
             except SyntaxError as e:
                 print 'Incorrect syntax in file {0}'.format(import_path, class_name)
+            except Exception as e:
+                print 'There was an error in {0} : {1}'.format(class_name, e)
             else:
                 try:
                     name = cls.name
-                    parameters = cls.required_parameters
+                    parameters = cls.all_required_parameters()
                 except AttributeError:
                     print 'Name is not provided for class {0} in module {1}'.format(class_name, module)
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
-            
+                    
     @setting(0, "Get Available Scripts", returns = '*s')
     def get_available_scripts(self, c):
         return self.script_parameters.keys()
@@ -258,21 +260,18 @@ class ScriptScanner(LabradServer, Signals):
         stop all the running scripts and exit
         '''
         yield None
-        print 'Exiting'
         try:
             #cancel all scheduled scripts
             for scheduled,name,loop in self.scheduler.get_scheduled():
                 self.scheduler.cancel_scheduled_script(scheduled)
-            self.scheduler.clear_queue()
+            for ident, scan, priority in self.scheduler.get_queue():
+                self.scheduler.remove_queued_script(ident)
             #stop all running scipts
             for ident, name in self.scheduler.get_running():
-                print 'stopping', ident
                 self.scheduler.stop_running(ident)
             #wait for all deferred to finish
             running = DeferredList(self.scheduler.running_deferred_list())
-            print 'Waiting for Experiments to Stop'
             yield running
-            print 'All stopped, exiting'
         except AttributeError:
             #if dictionary doesn't exist yet (i.e bad identification error), do nothing
             pass

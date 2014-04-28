@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Rigol DG4062 Server
-version = 1.15
+version = 1.20
 description = 
 
 [startup]
@@ -46,7 +46,11 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
         self.phase = yield self.getPhase()
         self.psk_phase = yield self.getPSKPhase()
         self.state = yield self.getState()
-    
+        self.burst_state = yield self.getBurstState()
+        self.burst_gate_polarity = yield self.getBurstGatePolarity()
+        self.burst_phase = yield self.getBurstPhase()
+        self.burst_mode = yield self.getBurstMode()
+        
     @inlineCallbacks
     def getState(self):
         state_string = yield self.query('OUTPut1:STATe?\n')
@@ -60,7 +64,6 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
     
     @inlineCallbacks
     def setState(self, state):
-        print 'setting state to', state
         if state:
             yield self.write('OUTPut1:STATe ON\n')
         else:
@@ -145,23 +148,113 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
         returnValue(self.frequency)
     
     @inlineCallbacks
-    def setFrequency(self, f):
+    def setFrequency(self, f,source):
         if self.frequency != f:
-            yield self.write('SOURce1:FREQuency:FIXed {0}\n'.format(f['Hz']))
+            yield self.write('SOURce'+str(source)+':FREQuency:FIXed {0}\n'.format(f['Hz']))
             self.frequency = f
+    
+    @inlineCallbacks
+    def getBurstState(self):
+        state_string = yield self.query('SOURce1:BURSt:STATe?\n')
+        if state_string == 'OFF':
+            state = False
+        elif state_string == 'ON':
+            state = True
+        else:
+            raise Exception("Incorrect State")
+        returnValue(state)
+    
+    @inlineCallbacks
+    def setBurstState(self, burst_state, source):
+        if burst_state:
+            yield self.write('SOURce'+str(source)+':BURSt:STATe ON\n')
+        else:
+            yield self.write('SOURce'+str(source)+':BURSt:STATe OFF\n')
+        self.burst_state = burst_state
+    
+    @inlineCallbacks
+    def getBurstGatePolarity(self):
+        polarity_string = yield self.query('SOURce1:BURST:GATE:POLarity?\n')
+        if polarity_string == 'NORM':
+            polarity = 'normal'
+        elif polarity_string == 'INV':
+            polarity = 'inverted'
+        else:
+            raise Exception("Incorrect poalrity {}".format(polarity_string))
+        returnValue(polarity)
+    
+    @inlineCallbacks
+    def setBurstGatePolarity(self, burst_gate_polarity):
+        if burst_gate_polarity == 'normal':
+            polarity_string = 'NORM'
+        elif burst_gate_polarity == 'inverted':
+            polarity_string = 'INV'
+        else:
+            raise Exception("Wrong Gated Polarity {}".format(burst_gate_polarity))
+        yield self.write('SOURce1:BURST:GATE:POLarity {}\n'.format(polarity_string)) 
+        self.burst_gate_polarity = burst_gate_polarity
+    
+    @inlineCallbacks
+    def getBurstPhase(self):
+        phase = yield self.query('SOURce1:BURSt:PhASe?\n').addCallback(float)
+        phase = WithUnit(phase, 'deg') 
+        returnValue(phase)
+    
+    @inlineCallbacks
+    def setBurstPhase(self, phase):
+        if not 0<=phase['deg']<=360:
+            raise Exception("Incorrect Phase")
+        yield self.write('SOURce1:BURSt:PHASe {0:.1f}\n'.format(phase['deg']))
+        self.burst_phase = phase
+    
+    @inlineCallbacks
+    def getBurstMode(self):
+        mode_str = yield self.query('SOURCe1:BURSt:MODE?\n')
+        if mode_str == 'GAT':
+            burst_mode = 'gated'
+        elif mode_str == 'TRIG':
+            burst_mode = 'triggered'
+        elif mode_str == 'INF':
+            burst_mode = 'infinity'
+        else:
+            raise Exception("Incorrect mode")
+        returnValue(burst_mode)
+        
+    @inlineCallbacks
+    def setBurstMode(self, burst_mode, source):
+        if burst_mode == 'gated':
+            burst_str = 'GAT'
+        elif burst_mode == 'triggered':
+            burst_str = 'TRIG'
+        elif burst_mode == 'infinity':
+            burst_str = 'INF'
+        yield self.write('SOURc'+str(source)+':BURSt:MODE {}'.format(burst_str))
+        self.burst_mode = burst_mode
+
+    @inlineCallbacks
+    def setArbitraryWaveform(self, s, source):
+        comstr = 'DATA VOLATILE, '
+        yield self.write(comstr + s)
+        # now select the waveform in volatile memory
+        yield self.write('SOURce'+str(source)+':FUNction USER')
+
+    @inlineCallbacks
+    def setVoltage(self, voltage, source):
+        """Writes out the voltage in Vpp"""
+        yield self.write('SOURce'+str(source)+'VOLTage')
  
 class RigolDG4062Server(GPIBManagedServer):
-    """Provides basic CW control for Agilent Signal Generators"""
+    """Provides basic CW control for Rigol Signal Generators"""
     name = 'Rigol DG4062 Server'
     deviceName = 'Rigol Technologies DG4062'
     deviceWrapper = RigolDG4062Wrapper
 
-    @setting(10, 'Frequency', f=['v[MHz]'], returns=['v[MHz]'])
-    def frequency(self, c, f=None):
+    @setting(10, 'Frequency', f=['v[MHz]'], source='i', returns=['v[MHz]'])
+    def frequency(self, c, f=None, source=1):
         """Get or set the CW frequency."""
         dev = self.selectedDevice(c)
         if f is not None:
-            yield dev.setFrequency(f)
+            yield dev.setFrequency(f,source)
         returnValue(dev.frequency)
     
     @setting(11, 'Output', state = 'b', returns='b')
@@ -208,6 +301,63 @@ class RigolDG4062Server(GPIBManagedServer):
         if psk_phase is not None:
             yield dev.setPSKPhase(psk_phase)
         returnValue(dev.psk_phase)
+        
+    '''
+    Settings 30 to 40 are related to the BURST mode
+    '''
+    @setting(30, 'Burst State', burst_state ='b', source='i', returns = 'b')
+    def burst_state(self, c, burst_state = None, source=1):
+        '''Set of get the state of the burst mode'''
+        dev = self.selectedDevice(c)
+        if burst_state is not None:
+            yield dev.setBurstState(burst_state, source)
+        returnValue(dev.burst_state)
+    
+    @setting(31, 'Burst Gate Polarity', burst_gate_polarity ='s', returns = 's')
+    def burst_gate_polarity(self, c, burst_gate_polarity = None):
+        '''Set of get the state of the burst mode. Can be 'normal' or 'inverted' '''
+        dev = self.selectedDevice(c)
+        if burst_gate_polarity is not None:
+            yield dev.setBurstGatePolarity(burst_gate_polarity)
+        returnValue(dev.burst_gate_polarity)
+    
+    @setting(32, 'Burst Phase', burst_phase = 'v[deg]', returns = 'v[deg]')
+    def burst_phase(self, c, burst_phase = None):
+        '''Set or get the phase of the burst'''
+        dev = self.selectedDevice(c)
+        if burst_phase is not None:
+            yield dev.setBurstPhase(burst_phase)
+        returnValue(dev.burst_phase)
+    
+    @setting(33, 'Burst Mode', burst_mode = 's', source='i', returns = 's')
+    def burst_mode(self, c, burst_mode = None, source='i'):
+        '''Set or get the burst mode of the device. Can be 'triggered', 'gated' or 'infinity' '''
+        dev = self.selectedDevice(c)
+        if burst_mode is not None:
+            yield dev.setBurstMode(burst_mode, source)
+        returnValue(dev.burst_mode)
+    '''
+    Settings 40 to 50 are related to ARB mode
+    '''
+
+    @setting(40, 'Arbitrary waveform', s = 's', source='i', returns = '')
+    def arbitrary_waveform(self, c, s, source=1):
+        """
+        Pass a string of amplitudes. Load waveform into volatile memory
+        and select the waveform in volatile memory.
+        """
+        dev = self.selectedDevice(c)
+        yield dev.setArbitraryWaveform(s,source)
+
+    @setting(41, 'Voltage', voltage = 'v[V]', source='i', returns = '')
+    def arbitrary_waveform(self, c, voltage, source=1):
+        """
+        Pass a string of amplitudes. Load waveform into volatile memory
+        and select the waveform in volatile memory.
+        """
+        dev = self.selectedDevice(c)
+        yield dev.setVoltage(voltage,source)
+    
 
 __server__ = RigolDG4062Server()
 
