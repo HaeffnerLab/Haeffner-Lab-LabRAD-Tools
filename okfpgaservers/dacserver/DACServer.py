@@ -397,6 +397,14 @@ class DACServer(LabradServer):
             self.queue.insert(Voltage(self.dacun_dict[port], digital_voltage=dv))
         yield self.writeToFPGA(None)
 
+    @setting(14, "Get DAC  Channel Name", port_number='i', returns='s' )
+    def getDACChannelName(self, c, port_number):
+        '''
+        Return the channal name for a given port port number.
+        '''
+        for key in self.dac_dict.keys():
+            if self.dac_dict[key].dacChannelNumber == port_number:
+                return key
 
     def initContext(self, c):
         self.listeners.add(c.ID)
