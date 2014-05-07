@@ -70,6 +70,7 @@ class Control(object):
     def getInfo(self):
         head = []
         body = []
+        print "getting info"
         Cfile_text = open(self.Cfile_path).read().split('\n')[:-1]
         for i in range(len(Cfile_text)):
             if Cfile_text[i].find(':') >= 0: head.append(Cfile_text[i])
@@ -79,16 +80,18 @@ class Control(object):
         try: self.position = int(head[1].split('osition:')[1])
         except: self.position = 0
         self.num_columns = len(body[0])
-        self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}        
+        print self.num_columns
+        self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
 
     def populateVoltageMatrix(self, multipole_vector):
         self.multipole_vector = {m: v for (m,v) in multipole_vector}
+        print self.multipole_vector
         for e in hc.elec_dict.keys():
             self.voltage_matrix[e] = [0. for n in range(self.num_columns)]
             for n in range(self.num_columns):
-                for m in self.multipoles: 
+                for m in self.multipoles:
                     self.voltage_matrix[e][n] += self.multipole_matrix[e][m][n] * self.multipole_vector[m]
         if self.num_columns > 1: self.interpolateVoltageMatrix()
      
@@ -140,19 +143,17 @@ class Control(object):
             
         # print len(position_indicies), position_indicies, '\n', len(self.times), self.times[0], self.times  
         if not loop: old_position = new_position
-        print len(self.voltage_sets), len(self.times)
+        # print len(self.voltage_sets), len(self.times)
 
-        volts2 = [self.voltage_sets[i][0][1] for i in range(len(self.voltage_sets))]
-        plt.plot(self.times, volts2, '-')
-        plt.show()
+        # volts2 = [self.voltage_sets[i][0][1] for i in range(len(self.voltage_sets))]
+        # plt.plot(self.times, volts2, '-')
+        # plt.show()
 
     def setDefault(self):
         self.multipoles = hc.default_multipoles
         self.position = 0
-        # self.multipole_matrix = {k: {j: [.1] for j in self.multipoles} for k in hc.elec_dict.keys()}
         self.multipole_matrix = {k: {j: [i/10. for i in range(1,11)] for j in self.multipoles} for k in hc.elec_dict.keys()}
         self.multipole_vector = {m: 0. for m in self.multipoles}
-        # self.num_columns = 1 
         self.num_columns = 10
         self.Cfile_name = None
 
@@ -209,6 +210,7 @@ class DACServer(LabradServer):
             yield self.setPreviousControlFile()
 #            yield self.setIndividualDigitalVoltages(0, [(s, 0) for s in self.dacun_dict.keys()])
         except: yield self.setVoltagesZero()
+        print self.registry_path
 
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
@@ -395,6 +397,14 @@ class DACServer(LabradServer):
             self.queue.insert(Voltage(self.dacun_dict[port], digital_voltage=dv))
         yield self.writeToFPGA(None)
 
+    @setting(14, "Get DAC  Channel Name", port_number='i', returns='s' )
+    def getDACChannelName(self, c, port_number):
+        '''
+        Return the channal name for a given port port number.
+        '''
+        for key in self.dac_dict.keys():
+            if self.dac_dict[key].dacChannelNumber == port_number:
+                return key
 
     def initContext(self, c):
         self.listeners.add(c.ID)
