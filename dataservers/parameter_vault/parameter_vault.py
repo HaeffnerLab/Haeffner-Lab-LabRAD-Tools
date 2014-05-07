@@ -16,7 +16,6 @@ timeout = 20
 ### END NODE INFO
 """
 from labrad.server import LabradServer, setting, Signal
-from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 
 class ParameterVault(LabradServer):
@@ -29,6 +28,7 @@ class ParameterVault(LabradServer):
 
     @inlineCallbacks
     def initServer(self):
+        """Load all of the paramters from the registry."""
         self.listeners = set()
         self.parameters = {}  
         yield self.load_parameters()
@@ -38,20 +38,26 @@ class ParameterVault(LabradServer):
         self.listeners.add(c.ID)
     
     def expireContext(self, c):
+        """Expires the context object on disconnect."""
         self.listeners.remove(c.ID)   
         
     def getOtherListeners(self,c):
+        """Returns the set of all listeners excluding he provided context c."""
         notified = self.listeners.copy()
         notified.remove(c.ID)
         return notified
     
     @inlineCallbacks
     def load_parameters(self):
-        #recursively add all parameters to the dictionary
+        """Recursively add all parameters to the dictionary."""
         yield self._addParametersInDirectory(self.registryDirectory, [])
 
     @inlineCallbacks
     def _addParametersInDirectory(self, topPath, subPath):
+        """
+        Navigate to the registry directory folder structure and load
+        all of the parameters in the self.parameters dictionary
+        """
         yield self.client.registry.cd(topPath + subPath)
         directories,parameters = yield self.client.registry.dir()
         if subPath: #ignore parameters in the top level
@@ -64,6 +70,7 @@ class ParameterVault(LabradServer):
             yield self._addParametersInDirectory(topPath, newpath)
 
     def _get_parameter_names(self, collection):
+        """Get names of all parameters in the given collection."""
         names = []
         for key in self.parameters.keys():
             if key[0] == collection:
@@ -71,6 +78,7 @@ class ParameterVault(LabradServer):
         return names
 
     def _get_collections(self):
+        """Get a list of all available collections."""
         names = set()
         for key in self.parameters.keys():
             names.add(key[0])
@@ -78,7 +86,7 @@ class ParameterVault(LabradServer):
    
     @inlineCallbacks
     def save_parameters(self):
-        '''save the latest parameters into registry'''
+        """save the latest parameters into registry."""
         regDir = self.registryDirectory
         for key, value in self.parameters.iteritems():
             key = list(key)
@@ -88,6 +96,10 @@ class ParameterVault(LabradServer):
             yield self.client.registry.set(parameter_name, value)
     
     def _save_full(self, key, value):
+        """
+        Checks the type parameter if the value falls within range
+        If passes, returns the updated parameter
+        """
         t,item = self.parameters[key]
         if t == 'parameter':
             assert item[0] <= value <= item[1], "Parameter {} Out of Bound".format(key[1])
@@ -97,8 +109,10 @@ class ParameterVault(LabradServer):
             raise Exception("Can't save, not one of checkable types")
 
     def check_parameter(self, name, value):
+        """
+        Perform bound checking on the parameter
+        """
         t,item = value
-        
         print name, t, t  == 'bool'
         if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
@@ -120,10 +134,9 @@ class ParameterVault(LabradServer):
         else:#parameter type not known
             return value
         
-
     @setting(0, "Set Parameter", collection = 's', parameter_name = 's', value = '?', full_info = 'b', returns = '')
     def setParameter(self, c, collection, parameter_name, value, full_info = False):
-        """Set Parameter"""
+        """Set a parameter value"""
         key = (collection, parameter_name)
         if key not in self.parameters.keys():
             raise Exception ("Parameter Not Found")
