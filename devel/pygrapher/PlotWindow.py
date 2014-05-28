@@ -52,8 +52,7 @@ class PlotWindow(QtGui.QWidget):
     #@inlineCallbacks
     def new_data(self, dataset):
         '''
-        Get new data from the Dataset
-        and then empty the data buffer.
+        Check the dataset for new data
         '''
         xdata = dataset.xdata
         ydata = dataset.ydata

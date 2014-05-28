@@ -22,6 +22,7 @@ class experiment_info(object):
 class experiment(experiment_info):
     
     def __init__(self, name = None, required_parameters = None, cxn = None, min_progress = 0.0, max_progress = 100.0,):
+        required_parameters = self.all_required_parameters()
         super(experiment, self).__init__(name, required_parameters)
         self.cxn = cxn
         self.pv = None
@@ -119,6 +120,10 @@ class experiment(experiment_info):
         self.sc.finish_confirmed(self.ident)
     
     #useful functions to be used in subclasses
+    @classmethod
+    def all_required_parameters(cls):
+        return []
+    
     def pause_or_stop(self):
         '''
         allows to pause and to stop the experiment

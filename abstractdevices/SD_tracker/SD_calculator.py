@@ -135,11 +135,11 @@ class fitter(object):
     
 if __name__ == '__main__':
     SD = Transitions_SD()
-    fit = fitter()
- 
-    result = SD.get_transition_energies(WithUnit(1.014, 'gauss'), WithUnit(0 ,'MHz'))
-    for name,freq in result:
-        print name,freq
+#     fit = fitter()
+#  
+#     result = SD.get_transition_energies(WithUnit(1.014, 'gauss'), WithUnit(0 ,'MHz'))
+#     for name,freq in result:
+#         print name,freq
     
-#     b,freq = SD.energies_to_magnetic_field([('S-1/2D+3/2', WithUnit(-16.813, 'MHz')), ('S+1/2D+5/2', WithUnit(-15.68, 'MHz'))])
-#     print b,freq
+    b,freq = SD.energies_to_magnetic_field([('S-1/2D+3/2', WithUnit(-16.813, 'MHz')), ('S+1/2D+5/2', WithUnit(-15.68, 'MHz'))])
+    print b,freq
