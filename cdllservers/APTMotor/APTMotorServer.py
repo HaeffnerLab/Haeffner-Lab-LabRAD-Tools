@@ -157,6 +157,7 @@ class APTMotorServer(LabradServer):
     
     def initServer(self):
         user_config = stageConfiguration.devicenames
+        print user_config
         self.deviceDict = {}
         for name,stage_serial in user_config:
             self.deviceDict[name] = stage(name,stage_serial) 

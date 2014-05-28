@@ -101,6 +101,21 @@ class TektronixTDS2014CWrapper(GPIBDeviceWrapper):
         result = yield self.query('CURVe?')
         returnValue(result)
 
+    @inlineCallbacks
+    def getvaluestr(self): #gets pk2pk value
+        result = yield self.query('MEASUrement:IMMed:VALue?')
+        returnValue(result)
+
+    @inlineCallbacks
+    def checkunitstr(self): #Checks units of value
+        result = yield self.query('MEASUrement:IMMed:UNIts?')
+        returnValue(result)
+
+    @inlineCallbacks
+    def setpk2pkstr(self): #sets reading to pk2pk
+        result = yield self.write('MEASUrement:IMMed:TYPe PK2pk')
+        returnValue(result)
+
 
 class TektronixTDSServer(GPIBManagedServer):
     #Provides basic control for Tektronix 2014C Oscilloscope
@@ -180,6 +195,25 @@ class TektronixTDSServer(GPIBManagedServer):
         answer = intarr.transpose()
         returnValue(answer)
 
+    @setting(105, 'getvalue', returns='v')
+    def getvalue(self, c):
+        dev = self.selectedDevice(c)
+        answer = yield dev.getvaluestr()
+        returnValue(answer)
+
+    @setting(106, 'checkunits', returns='s')
+    def checkunits(self,c):
+        dev = self.selectedDevice(c)
+        answer = yield dev.checkunitstr()
+        returnValue(answer)
+        
+    @setting(107, 'setpk2pk', returns='')
+    def setpk2pk(self, c):
+        dev = self.selectedDevice(c)
+        answer = yield dev.setpk2pkstr()
+        print 'success'
+        returnValue(answer)
+        
 
     @inlineCallbacks
     def _readX0(self, c):
