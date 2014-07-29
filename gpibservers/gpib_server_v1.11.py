@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from labrad.server import LabradServer, setting
+from twisted.internet import defer
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
@@ -105,11 +106,29 @@ class GPIBBusServer(LabradServer):
         c['timeout'] = self.defaultTimeout
 
     def getDevice(self, c):
-        if c['addr'] not in self.devices:
+        if c['addr'] not in self.devices:
             raise Exception('Could not find device ' + c['addr'])
         instr = self.devices[c['addr']]
         instr.timeout = c['timeout']['s']
         return instr
+
+    def Asyncwait(self, seconds, result=None):
+        """
+        Make the reactor pause for seconds in order to wait for
+        certain GPIB devices that require time between read and
+        write calls.
+
+        Parameters
+        ----------
+        seconds: float, sleep time in seconds
+
+        Returns
+        -------
+        Deferred
+        """
+        d = defer.Deferred()
+        callLater(seconds, d.callback, result)
+        return d
         
     @setting(0, addr='s', returns='s')
     def address(self, c, addr=None):
@@ -141,12 +160,24 @@ class GPIBBusServer(LabradServer):
         If specified, reads only the given number of bytes.
         Otherwise, reads until the device stops sending.
         """
+        def _doRead(bytes):
+            
+            if bytes is None:
+                ans = instr.read()
+            else:
+                ans = vpp43.read(instr.vi, bytes)        
+            return ans
+
         instr = self.getDevice(c)
-        if bytes is None:
-            ans = instr.read()
-        else:
-            ans = vpp43.read(instr.vi, bytes)
-        return ans
+        
+        try:
+            ans = _doRead(bytes)
+        except:
+            self.Asyncwait(0.1)
+            ans = _doRead(bytes)        
+        return ans        
+
+
 
     @setting(5, data='s', returns='s')
     def query(self, c, data):
@@ -158,7 +189,7 @@ class GPIBBusServer(LabradServer):
         instr = self.getDevice(c)
         instr.write(data)
         ans = instr.read()
-        return ans
+        returnValue(ans)
     
     @setting(6, termchars = 's', returns ='')
     def termchars(self, c, termchars):
