@@ -1,1 +1,40 @@
-This project is meant for easy sharing of LabRAD tools that are useful to the entire lab.
+This project is meant for easy sharing of our version ofvLabRAD tools that are useful to the entire lab.
+
+### What this Is ###
+"LabRAD" refers to a variety of software packages based on this: http://en.wikipedia.org/wiki/LabRAD
+The most detailed documentation on its motivation and design is section 7 of this thesis: http://web.physics.ucsb.edu/~martinisgroup/theses/Ansmann2009ds.pdf
+The original software no longer has a tutorial but can be downloaded here: http://sourceforge.net/projects/labrad/
+In most cases however, you will want to git pull the software from our page: https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools
+
+### How to Use ###
+Instructions for using LabRAD with AMO labs are being written here: https://github.com/AMOLabRAD/AMOLabRAD/wiki
+Follow those installation steps and basic tutorial, being aware that pylabrad is a python library that is stored separately from LabRAD.
+Also note that this guide is still under construction, so it will not have everything you need.
+Run labrad.exe and click on the button in the top left corner, which should list "manager" and "registry" in the center.
+Open this in the command line to display "data vault": https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/blob/master/dataservers/dvascii.py
+
+### Graphing ###
+The most complicated section of this code is the pygrapherlive module: https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/tree/master/clients/pygrapherlive
+For testing, you can use it directly with grapher, which uses the other scripts, described below:
+canvas         - displays the plots on a Qt canvas
+connections    - connects the displayed windows to the data_vault
+dataset        - prepares incoming data for plotting
+datavault      - refers to the data stored in the data_vault 
+grapherwindow  - defines the objects (windows) that surround the canvas; right click options were added later
+qt4reactor     - uses twisted to interface with the Qt GUI software, which LabRAD is based on
+Other files are less important but some are notable, specifically ones that were added later and make the software more complex:
+analysis       - added for processing data 
+analysiswindow - allows for curve fitting
+fitcurve       - what the other fit scripts are based on; in order to acquire the data, it must nonmodularly refer back 3 parent levels to the data_vault through grapher and connection
+
+### Editing Grapher ###
+The data from the data_vault is referenced separately for plotting (canvas) and curve fitting (analysiswindow). 
+Note that the buttons directly over the plot (e.g. save) are matplotlib widgets and not part of the grapher software here.
+Most interaction occurs through the checkboxes, which are controlled by methods of the class GreapherWindow in grapherwindow.
+ParameterWindow and AnalysisWindow are classes that are opened by the "parameters" and "fit" options on right click, and both reference the data_vault.
+
+### Publishing ###
+The "publish" option (which allows the user to publish data directly to the webblog) has yet to be added to github. 
+It opens a parameter window much like the "parameters" and accesses the data in the same way that "fit" does, but without referencing analysiswindow or fitcurve.
+It then saves a plot of the data without displaying it here and copies the parameters to the clipboard inside the ParameterWindow methods.
+Finally, a passive check on each mouseclick opens blogdesk.exe (the default webblog client), which was configured when initially installed.
