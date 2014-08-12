@@ -12,6 +12,10 @@ Follow those installation steps and basic tutorial, being aware that pylabrad is
 Also note that this guide is still under construction, so it will not have everything you need.
 Run labrad.exe and click on the button in the top left corner, which should list "manager" and "registry" in the center.
 Open this in the command line to display "data vault": https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/blob/master/dataservers/dvascii.py
+You will also need to put data in the data_vault, so put teh relevant csv files here: https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/tree/master/dataservers
+Note that you will need to create a folder named "__data__" and store your data in their own folders inside it.
+You may need to rename the folder to "data" (or similar) and then edit the path defined in the registry (which will be created after starting LabRAD).
+Finally, you need to allow your computer access by enabling it from another computer running LabRAD, as its IP may be blocked.
 
 ### Graphing ###
 The most complicated section of this code is the pygrapherlive module: https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/tree/master/clients/pygrapherlive
