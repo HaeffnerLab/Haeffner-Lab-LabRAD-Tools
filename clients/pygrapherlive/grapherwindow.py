@@ -13,9 +13,11 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 # added 8/13/14 by William for publish option
 import pylab
-import os
 import pyperclip
-
+import xmlrpclib 
+import publish_parameters as pp
+import os
+import paramiko
 
 class GrapherWindow(QtGui.QWidget):
     """Creates the window for the new plot"""
@@ -293,12 +295,20 @@ class PublishWindow(QtGui.QWidget):
         self.dataset = dataset
         self.directory = directory
         self.setWindowTitle('Select parameters to copy')
+        self.title = str(self.dataset)+str(self.directory)
+        self.content = '' # will become the final string sent to the blog body
+        self.imagePath = r'<img alt="title" src="http://research.physics.berkeley.edu/haeffner/wp-blog/wp-content/uploads/2014/07/'+ self.title +'.png"/>'
         self.paramStrList = []
         self.all = '' # will become a string of all parameters in selectAll
-        self.resize(200, 250) # arbitrary
-        self.scrollbar()
-        #self.populate()
+        self.resize(210, 250) # arbitrary
+        self.buildLayout()
         
+    def addDialog(self):
+        text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog','Enter your comment:')
+        # note that text is not a true string yet
+        if ok:
+            self.content = str(text)+' ~ '
+     
     def addParam(self, state):
         sender =  self.sender()
         if state == QtCore.Qt.Checked:
@@ -313,50 +323,67 @@ class PublishWindow(QtGui.QWidget):
     def clipboard(self):
         string = ''
         for elem in self.paramStrList:
-            string += elem+', '
+            string += str(elem)+', '
+        string += self.imagePath
+        self.content += string
         pyperclip.copy(string)
         self.close()
         self.webblog()
     
     def selectAll(self):
+        self.all += self.imagePath
+        self.content = self.content+self.all
         pyperclip.copy(self.all)
         self.close()
         self.webblog()
     
     def webblog(self):
-        #os.system(r"C:\Users\Admin\Documents\GitHub\Haeffner-Lab-LabRAD-Tools\Zoundry Raven\Zoundry Raven.exe")
-        if os.name == 'nt':
-            os.system(r'"C:\Program Files\BlogDesk\BlogDesk.exe"')
-        elif os.name == 'something else':
-            os.system(r'"path to the appropriate webblog client"')
-        else: 
-            print 'The webblog client options are currently unavailable for your operating system.'
+        # this section must be set to fit the computer during installation? needs path and default tags
+        wp_url = pp.wp_url
+        wp_username = pp.wp_username
+        wp_password = pp.wp_password
+        wp_blogid = "1"
+        status_draft = 0
+        status_published = 1 
+        server = xmlrpclib.ServerProxy(wp_url) 
+        title = self.title
+        content = self.content
+        # later add in an option for the user to add comments and tags
+        categories = pp.categories
+        tags = pp.tags
+        data = {'title': title, 'description': content,'categories': categories, 'mt_keywords': tags} 
+        post_id = server.metaWeblog.newPost(wp_blogid, wp_username, wp_password, data, status_published)
+        print 'Content published successfully.'
 
     @inlineCallbacks
-    def scrollbar(self):
+    def buildLayout(self):
+        # create general layout
         l=QtGui.QVBoxLayout(self)
         parameters = yield self.parent.getParameters(self.dataset, self.directory) # this must be done here
         s=QtGui.QScrollArea()
         l.addWidget(s)
  
+        # add secondary layout for scrolling capabilities
         w=QtGui.QWidget(self)        
         vbox=QtGui.QVBoxLayout(w)
         
+        # button to add a comment, repetition replaces
+        dialog = QtGui.QPushButton('Add Comment', self)
+        dialog.clicked.connect(self.addDialog)  
+        vbox.addWidget(dialog)
+        
+        # button to select all parameters
         allb = QtGui.QPushButton('Submit All') 
         allb.clicked.connect(self.selectAll)
         vbox.addWidget(allb)
          
+        # button to only submit the selected parameters only
         subb = QtGui.QPushButton('Submit Selected')
         subb.clicked.connect(self.clipboard)
         vbox.addWidget(subb)
-        
-        title = str(self.dataset)+'_'+str(self.directory)+', ' # include the title by default
-        self.all += title
-        
-        tOpt = QtGui.QCheckBox(title)
-        tOpt.stateChanged.connect(self.addParam)
-        vbox.addWidget(tOpt)
-        
+        self.all += self.title + ': '
+
+        # options to add each individual parameter
         for x in sorted(parameters):
             _l=QtGui.QHBoxLayout()
             pw = QtGui.QCheckBox(str(x))
@@ -364,33 +391,10 @@ class PublishWindow(QtGui.QWidget):
             pw.stateChanged.connect(self.addParam)
             self.all += str(x)+', '
             vbox.addLayout(_l)
-
+            
+        # set the layout as a widget
         s.setWidget(w)
-
-    @inlineCallbacks
-    def populate(self): # not presently in use
-   
-        mainLayout = QtGui.QVBoxLayout()
-
-        allb = QtGui.QPushButton('Submit All') 
-        allb.clicked.connect(self.selectAll)
-        mainLayout.addWidget(allb)
-         
-        subb = QtGui.QPushButton('Submit Selected')
-        subb.clicked.connect(self.clipboard)
-        mainLayout.addWidget(subb)
-         
-        parameters = yield self.parent.getParameters(self.dataset, self.directory)
-        print sorted(parameters)
-        for x in sorted(parameters):
-            parameterWidget = QtGui.QCheckBox(str(x)) 
-            #parameterWidget.toggle() # in case you want all selected by default
-            parameterWidget.stateChanged.connect(self.addParam)
-            mainLayout.addWidget(parameterWidget)
-            self.all += str(x)+', '
-        self.setLayout(mainLayout)
-        
-
+    
 class DatasetCheckBoxListWidget(QtGui.QListWidget):
     def __init__(self, parent):
         QtGui.QListWidget.__init__(self)
@@ -452,8 +456,22 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
                 dataX,dataY = self.parent.qmc.plotDict[dataset, directory][index].get_data()
                 fig = pylab.figure()
                 pylab.plot(dataX,dataY)
-                #fig.savefig(str(dataset)+str(directory)+'.png') # names picture specifically, unlike following line
-                fig.savefig('publication.png') # save figure as default name to avoid confusion
+                
+                title = str(dataset)+str(directory)
+                imageLoc = pp.imagePath+title+'.png'
+                fig.savefig(imageLoc) # save figure as default name to avoid confusion
+
+                privatekeyfile = os.path.expanduser(pp.pw)
+                mykey = paramiko.RSAKey.from_private_key_file(privatekeyfile)
+                username = pp.un
+                transport = paramiko.Transport((pp.host, 22))
+                transport.connect(username = username, pkey = mykey)
+                sftp = paramiko.SFTPClient.from_transport(transport)
+                sftp.chdir(pp.blogPath)
+                sftp.put(imageLoc,title+'.png')
+                sftp.close()
+                transport.close()
+                
                 publishWindow = self.parent.newPublishWindow(dataset, directory) # create a publish window
 
     def removeItem(self, item, pos):
