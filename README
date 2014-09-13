@@ -47,3 +47,9 @@ It then saves a plot of the data without displaying it and copies the parameters
 You cna also add comments and select specific parameters to publish.
 Next, it uploads the plot to the server with sftp methods from paramiko so that it can be referred to inline in blog posts.
 Finally, it uses built in xmlrpclib to create a new post on the blog. 
+
+### SSH Details ###
+The public key is stored in authorized_keys in the .ssh folder on the server, one step higher than the web files.
+We temporarily have one private key, which is stored in the group share.
+Changes to the webpage are done by the old synch, which now copies over changes without deleting everything on the server first.
+You can also make changes to the site manually through sftp, but this is not recommended because we prefer centralization.
