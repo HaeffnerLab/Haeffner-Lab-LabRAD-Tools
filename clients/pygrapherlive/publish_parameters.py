@@ -1,23 +1,13 @@
-# for sftp via pysftp to save and upload the plot
+# for sftp uploading of images
 imagePath = 'C:\Users\Admin\Documents\GitHub\Haeffner-Lab-LabRAD-Tools\clients\pygrapherlive\images\\'
-file = open('C:\Users\Admin\Documents\GitHub\Haeffner-Lab-LabRAD-Tools\clients\pygrapherlive\login.txt','r') # replace with ssh key
-string = file.read() # replace with ssh key
-import ast # replace with ssh key
-dict = ast.literal_eval(string) # replace with ssh key
-#un = dict['username'] # replace with ssh key
-#pw = dict['password'] # replace with ssh key
+un = 'ha*' # refers to the longer username
+pw = 'C:\Users\Admin\\testkey' # path to private key on local machine
+host = "research.physics.berkeley.edu" # link to host website, least likely to change
+blogPath = 'web/wp-blog/wp-content/uploads/2014/07/' # path to store images on server 
 
-un = 'ha*'
-pw = 'C:\Users\Admin\\testkey' # this should be the path to the private key
-# privwinkey.ppk made by pageant
-
-host = "research.physics.berkeley.edu"
-blogPath = 'web/wp-blog/wp-content/uploads/2014/07/'
-
-# for webblog via xmlrpclib to upload the test to the blog
+# for webblogging
 wp_url = "http://research.physics.berkeley.edu/haeffner/wp-blog//xmlrpc.php"
-wp_username = "h**" # replace with ssh key
-wp_password = "***" # replace with ssh key
-#wp_password = 'path to other private key'
-categories = ['sqip']
-tags = [] 
+wp_username = "h**" # refers to the shorter username
+wp_password = "***" # this is the usual password
+categories = ['sqip'] # fill this list with all categories you want included
+tags = [] # fill this list with all tags you want included
