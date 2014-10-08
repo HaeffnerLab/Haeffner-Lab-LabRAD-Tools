@@ -61,9 +61,19 @@ class Agilent33220AWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def setFrequency(self, f):
         if self.frequency != f:
+            #print 'FREQuency {}Mhz'.format(float(f))
             yield self.write('FREQuency {}Mhz'.format(float(f)))
+            #yield self.write('APPL:SIN {}MHZ, 3.0 VPP'.format(float(f)))
             self.frequency = f
-    
+
+    @inlineCallbacks
+    def setSine(self, f, a):
+        #print 'FREQuency {}Mhz'.format(float(f))
+        yield self.write('APPL:SIN {}Mhz, {}DBM'.format(float(f), float(a)))
+        print 'APPL:SIN {}Mhz, {}DBM'.format(float(f), float(a))
+        #yield self.write('APPL:SIN {}MHZ, 3.0 VPP'.format(float(f)))
+        self.frequency = f
+
     @inlineCallbacks
     def setAmplitude(self, a):
         if self.amplitude != a:
@@ -79,6 +89,29 @@ class Agilent33220AWrapper(GPIBDeviceWrapper):
                 comstr = 'OUTPut OFF'
             yield self.write(comstr)
             self.output = out
+
+    @inlineCallbacks
+    def setTriggerSource(self,s):
+            comstr = 'TRIGger:SOURce ' + str(s)
+            yield self.write(comstr)
+
+    @inlineCallbacks
+    def setNCycles(self,i):
+        comstr = 'BURSt:NCYCles ' + str(int(i))
+        yield self.write(comstr)
+
+    @inlineCallbacks
+    def setBurst(self, out):
+        if out == True:
+            comstr = 'BURS:STAT ON'
+        else:
+            comstr = 'BURS:STAT OFF'
+        yield self.write(comstr)
+    @inlineCallbacks
+
+    def sendTrigger(self):
+        comstr = 'TRIG'
+        yield self.write(comstr)
 
     @inlineCallbacks
     def setArbitraryWaveform(self, s):
@@ -156,6 +189,44 @@ class AgilentServer(GPIBManagedServer):
         """
         dev = self.selectedDevice(c)
         yield dev.setArbitraryWaveform(s)
+
+    @setting(14, 'Set Trigger source', s = 's', returns = '')
+    def set_trigger_source(self, c, s):
+        """
+        Pass a string of amplitudes. Load waveform into volatile memory
+        and select the waveform in volatile memory.
+        """
+        dev = self.selectedDevice(c)
+        yield dev.setTriggerSource(s)
+
+    @setting(15, 'Send Bus Trigger', returns = '')
+    def send_bus_trigger(self, c, s):
+        """
+        Pass a string of amplitudes. Load waveform into volatile memory
+        and select the waveform in volatile memory.
+        """
+        dev = self.selectedDevice(c)
+        yield dev.sendTrigger()
+
+    @setting(16, 'Set Ncycles', i = 'i', returns = '')
+    def set_ncycles(self, c, i):
+        """Get or set the CW frequency."""
+        dev = self.selectedDevice(c)
+        yield dev.setNCycles(i)
+
+    @setting(17, 'SetSine', f=['v[MHz]'], a=['v[dBm]'], returns='')
+    def setsine(self, c, f=None, a=None):
+        """Get or set the CW frequency."""
+        dev = self.selectedDevice(c)
+        yield dev.setSine(f,a)
+
+    @setting(18, 'SetBurst', os=['b'], returns='')
+    def setburst(self, c, os=None):
+        """Get or set the output status."""
+        dev = self.selectedDevice(c)
+        yield dev.setBurst(os)
+
+
 
 __server__ = AgilentServer()
 
