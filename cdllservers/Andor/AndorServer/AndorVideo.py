@@ -13,7 +13,10 @@ class AndorVideo(QtGui.QWidget):
         self.setup_layout()
         self.live_update_loop = LoopingCall(self.live_update)
         self.connect_layout()
-        
+#        emrange= yield self.server.getemrange(None)
+#        self.emccdSpinBox.setMinimum(emrange[0])
+#        self.emccdSpinBox.setMaximum(emrange[1])
+    @inlineCallbacks
     def setup_layout(self):
         self.setWindowTitle("Andor")
         #layout
@@ -40,9 +43,13 @@ class AndorVideo(QtGui.QWidget):
         emccd_label = QtGui.QLabel("EMCCD Gain")
         emccd_label.setAlignment(QtCore.Qt.AlignRight| QtCore.Qt.AlignVCenter)
         self.emccdSpinBox = QtGui.QSpinBox()
-        self.emccdSpinBox.setSingleStep(1)  
-        self.emccdSpinBox.setMinimum(0)
-        self.emccdSpinBox.setMaximum(255)
+        self.emccdSpinBox.setSingleStep(1)
+        #emrange= yield self.server.getemrange(None)
+        self.emrange= yield self.server.getemrange(None)
+        mingain, maxgain = self.emrange
+        self.emccdSpinBox.setMinimum(mingain)#mingain)
+        self.emccdSpinBox.setMaximum(maxgain)#maxgain)
+        print maxgain
         self.emccdSpinBox.setKeyboardTracking(False)
         layout.addWidget(emccd_label, 2, 4,)
         layout.addWidget(self.emccdSpinBox, 2, 5)
@@ -95,6 +102,10 @@ class AndorVideo(QtGui.QWidget):
      
     @inlineCallbacks
     def connect_layout(self):
+        #self.emrange= yield self.server.getemrange(None)
+        #mingain, maxgain = self.emrange
+        #self.emccdSpinBox.setMinimum(0)
+        #self.emccdSpinBox.setMaximum(4096)
         self.set_image_region_button.clicked.connect(self.on_set_image_region)
         self.plt.scene().sigMouseClicked.connect(self.mouse_clicked)
         exposure = yield self.server.getExposureTime(None)
