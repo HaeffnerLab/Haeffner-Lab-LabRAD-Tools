@@ -417,6 +417,19 @@ class Session( object ):
         dataTags = [( d, sorted( self.dataset_tags.get( d, [] ) ) ) for d in datasets]
         return sessTags, dataTags
 
+class Image:
+    def __init__(self, session):
+        '''
+        dataset is the dataset to which this should be attached
+        '''
+        self.filename = os.path.join(session.dir, 'images.npy')
+
+    def add_data(self, data):
+        fi = open(self.filename, 'ab')
+        numpy.save(self.fi, data)
+        fi.close()
+
+
 class Dataset:
     def __init__( self, session, name, dtype = None, title = None, num = None, create = False ):
         self.parent = session.parent
@@ -1099,6 +1112,20 @@ class DataVault( LabradServer ):
         data, c['filepos'] = dataset.getData( limit, c['filepos'] )
         dataset.keepStreaming( c.ID, c['filepos'] )
         return data
+
+    ### Add in saving camera images as a .npy with the dataset
+
+    @setting(22, data='*i', image_size='*i', repetitions='i', returns = '')
+    def save_image(self, c, data, image_size, repetitions):
+        """
+        Save a CCD image with the currently open dataest.
+        """
+        session = self.get_session(c)
+        x_pixels, y_pixels = image_size
+        data = numpy.reshape(data, (repetitions, y_pixels, x_pixels))
+        image = Image(session)
+        image.add_data(data)
+        
 
     @setting( 100, returns = '(*(ss){independents}, *(sss){dependents})' )
     def variables( self, c ):
