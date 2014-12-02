@@ -425,8 +425,9 @@ class Image:
         self.filename = os.path.join(session.dir, 'images.npy')
 
     def add_data(self, data):
+        print "adding data!!!"
         fi = open(self.filename, 'ab')
-        numpy.save(self.fi, data)
+        numpy.save(fi, data)
         fi.close()
 
 
@@ -1120,7 +1121,7 @@ class DataVault( LabradServer ):
         """
         Save a CCD image with the currently open dataest.
         """
-        session = self.get_session(c)
+        session = self.getSession(c)
         x_pixels, y_pixels = image_size
         data = numpy.reshape(data, (repetitions, y_pixels, x_pixels))
         image = Image(session)

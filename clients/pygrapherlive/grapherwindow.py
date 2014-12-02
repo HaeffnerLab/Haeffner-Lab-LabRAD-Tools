@@ -13,7 +13,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 # added 8/13/14 by William for publish option
 import pylab
-import pyperclip
+#import pyperperclip
 import xmlrpclib 
 import publish_parameters as pp
 import os
