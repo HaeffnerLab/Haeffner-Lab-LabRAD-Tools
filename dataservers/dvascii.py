@@ -425,7 +425,6 @@ class Image:
         self.filename = os.path.join(session.dir, 'images.npy')
 
     def add_data(self, data):
-        print "adding data!!!"
         fi = open(self.filename, 'ab')
         numpy.save(fi, data)
         fi.close()
