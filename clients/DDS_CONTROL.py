@@ -7,8 +7,8 @@ from PyQt4 import QtGui
 The DDS Control GUI lets the user control the DDS channels of the Pulser
 '''
 class DDS_CHAN(QCustomFreqPower):
-    def __init__(self, chan, reactor, cxn, context, parent=None):
-        super(DDS_CHAN, self).__init__('DDS: {}'.format(chan), True, parent)
+    def __init__(self, chan, step_size, reactor, cxn, context, parent=None):
+        super(DDS_CHAN, self).__init__('DDS: {}'.format(chan), True, parent, step_size)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.context = context
@@ -128,7 +128,7 @@ class DDS_CONTROL(QtGui.QFrame):
         server = yield self.cxn.get_server('Pulser')
         yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
-        self.display_channels, self.widgets_per_row = yield self.get_displayed_channels()
+        self.display_channels, self.step_sizes, self.widgets_per_row = yield self.get_displayed_channels()
         self.widgets = {}.fromkeys(self.display_channels)
         self.do_layout()
         self.initialized = True
@@ -142,17 +142,18 @@ class DDS_CONTROL(QtGui.QFrame):
         server = yield self.cxn.get_server('Pulser')
         all_channels = yield server.get_dds_channels(context = self.context)
         channels_to_display, widgets_per_row = yield self.registry_load_displayed(all_channels, 1)
+        step_sizes = yield self.registry_load_step_sizes(channels_to_display)
         if channels_to_display is None:
             channels_to_display = all_channels
         if widgets_per_row is None:
             widgets_per_row = 1
         channels = [name for name in channels_to_display if name in all_channels]
-        returnValue((channels, widgets_per_row))
+        returnValue((channels, step_sizes, widgets_per_row))
      
     @inlineCallbacks
     def registry_load_displayed(self, all_names, default_widgets_per_row):
         reg = yield self.cxn.get_server('Registry')
-        yield reg.cd(['Clients','DDS Control'], True, context = self.context)
+        yield reg.cd(['','Clients','DDS Control'], True, context = self.context)
         try:
             displayed = yield reg.get('display_channels', context = self.context)
         except self.Error as e:
@@ -172,7 +173,24 @@ class DDS_CONTROL(QtGui.QFrame):
             else:
                 raise
         returnValue((displayed, widgets_per_row))
-     
+
+    @inlineCallbacks
+    def registry_load_step_sizes(self, channels_to_display):
+        reg = yield self.cxn.get_server('Registry')
+        #yield reg.cd(['Clients', 'DDS Control'], True, context = self.context)
+        step_sizes = []
+        for channel in channels_to_display:
+            try:
+                step_size = yield reg.get(channel, context = self.context)
+                step_sizes.append(step_size)
+            except self.Error as e:
+                print e
+                if e.code == 21:
+                    step_sizes.append(0.1) # default step size
+                else:
+                    raise
+        returnValue(step_sizes)
+
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
@@ -193,8 +211,9 @@ class DDS_CONTROL(QtGui.QFrame):
     def do_layout(self):
         layout = QtGui.QGridLayout()
         item = 0
-        for chan in self.display_channels:
-            widget = DDS_CHAN(chan, self.reactor, self.cxn, self.context)
+        for chan, step_size in zip(self.display_channels, self.step_sizes):
+            print step_size
+            widget = DDS_CHAN(chan, step_size, self.reactor, self.cxn, self.context)
             self.widgets[chan] = widget
             layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)
             item += 1
