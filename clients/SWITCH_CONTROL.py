@@ -23,7 +23,7 @@ class switchWidget(QtGui.QFrame):
         if self.cxn is  None:
             self.cxn = connection()
             yield self.cxn.connect()
-            from labrad.types import Error
+            from labrad.types import Error#self.tabWidget.addTab(pie
             self.Error = Error
         self.context = yield self.cxn.context()
         try:
