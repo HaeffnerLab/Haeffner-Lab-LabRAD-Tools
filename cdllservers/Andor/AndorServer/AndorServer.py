@@ -11,6 +11,7 @@ from twisted.internet import reactor
 from labrad.server import LabradServer, setting
 from AndorCamera import AndorCamera
 from labrad.units import WithUnit
+import numpy as np
 
 
 """
@@ -315,6 +316,26 @@ class AndorServer(LabradServer):
             self.lock.release()
         returnValue(image)
 
+    @setting(33, "Get Summed Data", num_images = 'i', returns = '*i')
+    def getSummedData(self, c, num_images = 1):
+        ''' Get the counts with the vertical axis summed over. '''
+
+        print 'acquiring: {}'.format(self.getAcquiredData.__name__)
+        yield self.lock.acquire()
+        try:
+            print 'acquired: {}'.format(self.getAcquiredData.__name__)
+            images = yield deferToThread(self.camera.get_acquired_data, num_images)
+            hbin, vbin, hstart, hend, vstart, vend = self.camera.get_image()
+            x_pixels = int( (hend - hstart + 1.) / (hbin) )
+            y_pixels = int(vend - vstart + 1.) / (vbin)
+            images = np.reshape(images, (num_images, y_pixels, x_pixels))
+            images = images.sum(axis=1)
+            images = images.ravel()
+            images = images.tolist()            
+        finally:
+            print 'releasing: {}'.format(self.getAcquiredData.__name__)
+            self.lock.release()
+        returnValue(images)
     '''
     General
     '''
