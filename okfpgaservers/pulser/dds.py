@@ -270,19 +270,22 @@ class DDS(LabradServer):
         ans = arr.tostring()
         return ans
     
-    def _valToInt_coherent(self, channel, freq, ampl, phase = 0, prof = 0):
+
+    def _valToInt_coherent(self, channel, freq, ampl, phase = 0, profile=0):
         '''
         takes the frequency and amplitude values for the specific channel and returns integer representation of the dds setting
         freq is in MHz
         power is in dbm
         '''
         ans = 0
-        for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 35,  13), (phase,channel.boardphaserange, 2 ** 48,  16)]:
+        for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 35,  13), 
+                                   (profile,(0,7),2**32, 3) , (phase,channel.boardphaserange, 2 ** 48,  16)]:
             minim, maxim = r
             resolution = (maxim - minim) / float(2**precision - 1)
             seq = int((val - minim)/resolution) #sequential representation
+            print val, r, m, precision, m*seq, seq, resolution
+
             ans += m*seq
-        ans += prof * 2 ** 32
         return ans
     
     def _intToBuf_coherent(self, num):
