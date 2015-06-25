@@ -65,19 +65,23 @@ class DDS(LabradServer):
         frequency = WithUnit(channel.frequency, 'MHz')
         returnValue(frequency)
     
-    @setting(45, 'Add DDS Pulses',  values = ['*(sv[s]v[s]v[MHz]v[dBm]v[deg])'])
+    @setting(45, 'Add DDS Pulses',  values = ['*(sv[s]v[s]v[MHz]v[dBm]v[deg]i)'])
     def addDDSPulses(self, c, values):
         '''
-        input in the form of a list [(name, start, duration, frequency, amplitude, phase)]
+        input in the form of a list [(name, start, duration, frequency, amplitude, phase, profile)]
         '''
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
         for value in values:
-            try:
+            if len(value) == 5:
                 name,start,dur,freq,ampl = value
-                phase  = 0.0
-            except ValueError:
+                phase = 0.0
+                prof = 0
+            elif len(value) == 6:
                 name,start,dur,freq,ampl,phase = value
+                prof = 0
+            else:
+                name,start,dur,freq,ampl,phase,prof = value
             try:
                 channel = self.ddsDict[name]
             except KeyError:
@@ -86,14 +90,15 @@ class DDS(LabradServer):
             dur = dur['s']
             freq = freq['MHz']
             ampl = ampl['dBm']
-            phase = phase['deg']
+            if phase != 0:
+                phase = phase['deg']
             freq_off, ampl_off = channel.off_parameters
             if freq == 0 or ampl == 0: #off state
                 freq, ampl = freq_off,ampl_off
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
-            num = self.settings_to_num(channel, freq, ampl, phase)
+            num = self.settings_to_num(channel, freq, ampl, phase, prof)
             if not channel.phase_coherent_model:
                 num_off = self.settings_to_num(channel, freq_off, ampl_off)
             else:
@@ -191,11 +196,11 @@ class DDS(LabradServer):
         buf = buf + '\x00\x00' #adding termination
         return buf
     
-    def settings_to_num(self, channel, freq, ampl, phase = 0.0):
+    def settings_to_num(self, channel, freq, ampl, phase = 0.0, prof = 0):
         if not channel.phase_coherent_model:
             num = self._valToInt(channel, freq, ampl)
         else:
-            num = self._valToInt_coherent(channel, freq, ampl, phase)
+            num = self._valToInt_coherent(channel, freq, ampl, phase, prof)
         return num
     
     @inlineCallbacks
@@ -265,17 +270,21 @@ class DDS(LabradServer):
         ans = arr.tostring()
         return ans
     
-    def _valToInt_coherent(self, channel, freq, ampl, phase = 0):
+
+    def _valToInt_coherent(self, channel, freq, ampl, phase = 0, profile=0):
         '''
         takes the frequency and amplitude values for the specific channel and returns integer representation of the dds setting
         freq is in MHz
         power is in dbm
         '''
         ans = 0
-        for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 32,  16), (phase,channel.boardphaserange, 2 ** 48,  16)]:
+        for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 35,  13), 
+                                   (profile,(0,7),2**32, 3) , (phase,channel.boardphaserange, 2 ** 48,  16)]:
             minim, maxim = r
             resolution = (maxim - minim) / float(2**precision - 1)
             seq = int((val - minim)/resolution) #sequential representation
+            print val, r, m, precision, m*seq, seq, resolution
+
             ans += m*seq
         return ans
     

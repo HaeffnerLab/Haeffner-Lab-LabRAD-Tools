@@ -11,6 +11,14 @@ from analysiswindow import AnalysisWindow
 import time
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+# added 8/13/14 by William for publish option
+import pylab
+#import pyperperclip
+import xmlrpclib 
+import publish_parameters as pp
+import os
+import paramiko
+
 class GrapherWindow(QtGui.QWidget):
     """Creates the window for the new plot"""
     def __init__(self, parent, context, windowName):
@@ -20,6 +28,7 @@ class GrapherWindow(QtGui.QWidget):
         self.context = context
         self.windowName = windowName
         self.parameterWindows = {}
+        self.publishWindows = {} # new
         self.datasetCheckboxes = {}
         self.datasetCheckboxesItems = {}
         self.datasetAnalysisCheckboxes = {}
@@ -98,6 +107,7 @@ class GrapherWindow(QtGui.QWidget):
         grapherLayout.addLayout(buttonBox)
 
     # adds a checkbox when a new dataset is overlaid on the graph
+    
     def createDatasetCheckbox(self, dataset, directory, label, index):
         datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
 #        datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + label, self)
@@ -123,7 +133,6 @@ class GrapherWindow(QtGui.QWidget):
             self.datasetCheckboxPositionDict[dataset, directory, index] = self.datasetCheckboxCounter
             self.datasetCheckboxCounter = self.datasetCheckboxCounter + 1
             self.toggleDict[dataset, directory, index] = 1
-
 
 #    # adds a checkbox when a new dataset is overlaid on the graph
 #    def createDatasetAnalysisCheckbox(self, dataset, directory, label, index):
@@ -166,6 +175,7 @@ class GrapherWindow(QtGui.QWidget):
         self.qmc.draw()
 
     # when the autoFit button is checked, it will uncheck the autoscroll button
+    
     def autofitSignal(self):
         if (self.cb1.isChecked()):
             self.cb1.toggle()
@@ -195,6 +205,11 @@ class GrapherWindow(QtGui.QWidget):
         win = ParameterWindow(self, dataset, directory)
         win.show()
         self.parameterWindows[dataset, directory] = win
+    
+    def newPublishWindow(self, dataset, directory):
+        win = PublishWindow(self, dataset, directory)
+        win.show()
+        self.publishWindows[dataset, directory] = win
 
     @inlineCallbacks
     def getParameters(self, dataset, directory):
@@ -221,7 +236,6 @@ class GrapherWindow(QtGui.QWidget):
             except:
                 pass
         self.fileQuit()
-
 
 class FirstWindow(QtGui.QWidget):
     """Creates the opening window"""
@@ -252,7 +266,6 @@ class FirstWindow(QtGui.QWidget):
     def closeEvent(self, event):
         self.reactor.stop()                   
 
-
 class ParameterWindow(QtGui.QWidget):
     """Creates the dataset-specific parameter window"""
     def __init__(self, parent, dataset, directory):
@@ -272,18 +285,125 @@ class ParameterWindow(QtGui.QWidget):
         parameters = yield self.parent.getParameters(self.dataset, self.directory)
         self.parameterListWidget.clear()
         self.parameterListWidget.addItems([str(x) for x in sorted(parameters)])
+        
+class PublishWindow(QtGui.QWidget):
+    """Creates the dataset-specific parameter window - with checkboxes.
+    Then it lets you submit the selected data to the clipboard."""
+    def __init__(self, parent, dataset, directory):
+        QtGui.QWidget.__init__(self)
+        self.parent = parent
+        self.dataset = dataset
+        self.directory = directory
+        self.setWindowTitle('Select parameters to copy')
+        self.title = str(self.dataset)+str(self.directory)
+        self.content = '' # will become the final string sent to the blog body
+        self.imagePath = r'<img alt="title" src="http://research.physics.berkeley.edu/haeffner/wp-blog/wp-content/uploads/2014/07/'+ self.title +'.png"/>'
+        self.paramStrList = []
+        self.all = '' # will become a string of all parameters in selectAll
+        self.resize(210, 250) # arbitrary
+        self.buildLayout()
+        
+    def addDialog(self):
+        text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog','Enter your comment:')
+        # note that text is not a true string yet
+        if ok:
+            self.content = str(text)+' ~ '
+     
+    def addParam(self, state):
+        sender =  self.sender()
+        if state == QtCore.Qt.Checked:
+            self.paramStrList.append(sender.text())
+        else:
+            count = 0
+            for elem in self.paramStrList:
+                if elem == sender.text():
+                        self.paramStrList.pop(count)
+                        count += 1
+    
+    def clipboard(self):
+        string = ''
+        for elem in self.paramStrList:
+            string += str(elem)+', '
+        string += self.imagePath
+        self.content += string
+        pyperclip.copy(string)
+        self.close()
+        self.webblog()
+    
+    def selectAll(self):
+        self.all += self.imagePath
+        self.content = self.content+self.all
+        pyperclip.copy(self.all)
+        self.close()
+        self.webblog()
+    
+    def webblog(self):
+        # this section must be set to fit the computer during installation? needs path and default tags
+        wp_url = pp.wp_url
+        wp_username = pp.wp_username
+        wp_password = pp.wp_password
+        wp_blogid = "1"
+        status_draft = 0
+        status_published = 1 
+        server = xmlrpclib.ServerProxy(wp_url) 
+        title = self.title
+        content = self.content
+        # later add in an option for the user to add comments and tags
+        categories = pp.categories
+        tags = pp.tags
+        data = {'title': title, 'description': content,'categories': categories, 'mt_keywords': tags} 
+        post_id = server.metaWeblog.newPost(wp_blogid, wp_username, wp_password, data, status_published)
+        print 'Content published successfully.'
 
+    @inlineCallbacks
+    def buildLayout(self):
+        # create general layout
+        l=QtGui.QVBoxLayout(self)
+        parameters = yield self.parent.getParameters(self.dataset, self.directory) # this must be done here
+        s=QtGui.QScrollArea()
+        l.addWidget(s)
+ 
+        # add secondary layout for scrolling capabilities
+        w=QtGui.QWidget(self)        
+        vbox=QtGui.QVBoxLayout(w)
+        
+        # button to add a comment, repetition replaces
+        dialog = QtGui.QPushButton('Add Comment', self)
+        dialog.clicked.connect(self.addDialog)  
+        vbox.addWidget(dialog)
+        
+        # button to select all parameters
+        allb = QtGui.QPushButton('Submit All') 
+        allb.clicked.connect(self.selectAll)
+        vbox.addWidget(allb)
+         
+        # button to only submit the selected parameters only
+        subb = QtGui.QPushButton('Submit Selected')
+        subb.clicked.connect(self.clipboard)
+        vbox.addWidget(subb)
+        self.all += self.title + ': '
+
+        # options to add each individual parameter
+        for x in sorted(parameters):
+            _l=QtGui.QHBoxLayout()
+            pw = QtGui.QCheckBox(str(x))
+            _l.addWidget(pw)
+            pw.stateChanged.connect(self.addParam)
+            self.all += str(x)+', '
+            vbox.addLayout(_l)
+            
+        # set the layout as a widget
+        s.setWidget(w)
+    
 class DatasetCheckBoxListWidget(QtGui.QListWidget):
     def __init__(self, parent):
         QtGui.QListWidget.__init__(self)
         self.parent = parent
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.popup) 
-        self.savedAnalysisParameters = {}
+        self.customContextMenuRequested.connect(self.popup)
+        self.savedAnalysisParameters = {}        
+        self.analysisWindows = {}  
 
-        
-        self.analysisWindows = {}       
-        
     def mousePressEvent(self, event):
         """
         mouse clicks events
@@ -310,14 +430,14 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
                 self.togglePoints(pos)
 
         else:
+            publishAction = menu.addAction("Publish") # displayed at top of list
             fitAction = menu.addAction("Fit")
             removeAction = menu.addAction("Remove")
             toggleAction = menu.addAction("Toggle Points")
             parametersAction = menu.addAction("Parameters")
             action = menu.exec_(self.mapToGlobal(pos))
             if action == fitAction:
-    #                print self.count()
-    #                item = self.item(self.count() - 1)  
+                # item = self.item(self.count() - 1)  
                 dataset, directory,index = self.parent.datasetCheckboxesItems[item]              
                 try:
                     test = self.analysisWindows[dataset, directory, index]
@@ -331,7 +451,29 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
                 dataset, directory,index = self.parent.datasetCheckboxesItems[item]
                 self.parent.newParameterWindow(dataset, directory)
 
-    
+            elif action == publishAction:
+                dataset, directory,index = self.parent.datasetCheckboxesItems[item] 
+                dataX,dataY = self.parent.qmc.plotDict[dataset, directory][index].get_data()
+                fig = pylab.figure()
+                pylab.plot(dataX,dataY)
+                
+                title = str(dataset)+str(directory)
+                imageLoc = pp.imagePath+title+'.png'
+                fig.savefig(imageLoc) # save figure as default name to avoid confusion
+
+                privatekeyfile = os.path.expanduser(pp.pw)
+                mykey = paramiko.RSAKey.from_private_key_file(privatekeyfile)
+                username = pp.un
+                transport = paramiko.Transport((pp.host, 22))
+                transport.connect(username = username, pkey = mykey)
+                sftp = paramiko.SFTPClient.from_transport(transport)
+                sftp.chdir(pp.blogPath)
+                sftp.put(imageLoc,title+'.png')
+                sftp.close()
+                transport.close()
+                
+                publishWindow = self.parent.newPublishWindow(dataset, directory) # create a publish window
+
     def removeItem(self, item, pos):
         itemNumberToRemove = self.parent.itemDatasetCheckboxPositionDict[self.itemAt(pos)]
         # now clean up the mess you made

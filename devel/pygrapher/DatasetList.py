@@ -36,10 +36,11 @@ class DatasetList(base, form):
         state = self.selection_widget.cellWidget(row, 0).isChecked()
         self.on_dataset_checked.emit(name, state)
 
-    def add_dataset(self, name):
+    def add_dataset(self, dataset):
         '''
         appends the new dataset to the list
         '''
+        name = dataset.datasetName
         row = self.selection_widget.rowCount()
         self.selection_widget.setRowCount(row + 1)
         widget = QtGui.QCheckBox()

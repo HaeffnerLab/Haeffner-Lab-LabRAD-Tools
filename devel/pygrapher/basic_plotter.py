@@ -9,12 +9,16 @@ from twisted.internet.threads import blockingCallFromThread
 from twisted.internet.defer import Deferred
 
 class Basic_Matplotlib_Plotter(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self,  parent=None):
         super(Basic_Matplotlib_Plotter, self).__init__(parent)
+        self.parent = parent
+        #self.context = context
+        #self.windowName = windowName
         self.artists = {}
         self.should_stop = False
         self.create_layout()
-    
+        #self.setWindowTitle(self.windowName)
+
     def should_continue(self):
         d = Deferred()
         
@@ -34,21 +38,21 @@ class Basic_Matplotlib_Plotter(QtGui.QWidget):
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.mpl_toolbar)
         vbox.addWidget(self.canvas)
-        self.axes.set_xlim([-10,1000])
-        self.axes.set_ylim([-10,1000])
+        self.axes.set_xlim([0,50])
+        self.axes.set_ylim([0,1])
         self.ani = animation.FuncAnimation(self.fig, self.update_figure, self.should_continue, interval=50, blit=True)
         self.setLayout(vbox)
     
     def update_figure(self, _input = None):
-        updated_arists = []
+        updated_artists = []
         for name, (artist, updated, data) in self.artists.iteritems():
             if updated:
                 artist.set_data(data)
                 self.artists[name][1] = False
-                updated_arists.append(artist)
-        return updated_arists
+                updated_artists.append(artist)
+        return updated_artists
             
-    def add_artst(self, name):
+    def add_artist(self, name):
         line, = self.axes.plot([],[], '-o', markersize = 2.0, label = name)
         self.axes.legend()
         self.artists[name] = [line, False, ([],[])]

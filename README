@@ -1,1 +1,55 @@
-This project is meant for easy sharing of LabRAD tools that are useful to the entire lab.
+This project is meant for easy sharing of our version of LabRAD tools that are useful to the entire lab.
+
+### What this Is ###
+"LabRAD" refers to a variety of software packages based on this: http://en.wikipedia.org/wiki/LabRAD
+The most detailed documentation on its motivation and design is section 7 of this thesis: http://web.physics.ucsb.edu/~martinisgroup/theses/Ansmann2009ds.pdf
+The original software no longer has a tutorial but can be downloaded here: http://sourceforge.net/projects/labrad/
+In most cases however, you will want to git pull the software from our page: https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools
+
+### How to Use ###
+Instructions for using LabRAD with AMO labs are being written here: https://github.com/AMOLabRAD/AMOLabRAD/wiki
+Follow those installation steps and basic tutorial, being aware that pylabrad is a python library that is stored separately from LabRAD.
+Also note that the guide is still under construction, so it will not have everything you need.
+You must also install paramiko or similar: http://www.paramiko.org/
+Run labrad.exe and click on the button in the top left corner, which should list "manager" and "registry" in the center.
+Open this in the command line to display "data vault": https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/blob/master/dataservers/dvascii.py
+You will also need to put data in the data_vault, so put the relevant csv files here: https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/tree/master/dataservers
+Note that you will need to create a folder named "__data__" and store your data in their own folders inside it.
+You may need to rename the folder to "data" (or similar) and then edit the path defined in the registry (which will be created after starting LabRAD).
+Finally, you need to allow your computer access by enabling it from another computer running LabRAD, as its IP may be blocked.
+
+### Graphing ###
+The most complicated section of this code is the pygrapherlive module: https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/tree/master/clients/pygrapherlive
+For testing, you can use it directly with grapher, which uses the other scripts, described below:
+canvas         - displays the plots on a Qt canvas
+connections    - connects the displayed windows to the data_vault
+dataset        - prepares incoming data for plotting
+datavault      - refers to the data stored in the data_vault 
+grapherwindow  - defines the objects (windows) that surround the canvas; right click options were added later
+qt4reactor     - uses twisted to interface with the Qt GUI software, which LabRAD is based on
+Other files are less important but some are notable, specifically ones that were added later and make the software more complex:
+analysis       - added for processing data 
+analysiswindow - allows for curve fitting
+fitcurve       - what the other fit scripts are based on; in order to acquire the data, it must nonmodularly refer back 3 parent levels to the data_vault through grapher and connection
+
+### Editing Grapher ###
+The data from the data_vault is referenced separately for plotting (canvas) and curve fitting (analysiswindow). 
+Note that the buttons directly over the plot (e.g. save) are matplotlib widgets and not part of the grapher software here.
+Most interaction occurs through the checkboxes, which are controlled by methods of the class GreapherWindow in grapherwindow.
+ParameterWindow and AnalysisWindow are classes that are opened by the "parameters" and "fit" options on right click, and both reference the data_vault.
+
+### Publishing ###
+The "publish" option (which allows the user to publish data directly to the webblog) has been added.
+It includes changes to grapherwindow and a new script names publish_parameters.
+Be sure to fill out publish_parameters properly; instudtions are in its comments.
+It opens a parameter window much like the "parameters" and accesses the data in the same way that "fit" does, but without referencing analysiswindow or fitcurve.
+It then saves a plot of the data without displaying it and copies the parameters to the clipboard inside the ParameterWindow methods.
+You cna also add comments and select specific parameters to publish.
+Next, it uploads the plot to the server with sftp methods from paramiko so that it can be referred to inline in blog posts.
+Finally, it uses built in xmlrpclib to create a new post on the blog. 
+
+### SSH Details ###
+The public key is stored in authorized_keys in the .ssh folder on the server, one step higher than the web files.
+We temporarily have one private key, which is stored in the group share.
+Changes to the webpage are done by the old synch, which now copies over changes without deleting everything on the server first.
+You can also make changes to the site manually through sftp, but this is not recommended because we prefer centralization.

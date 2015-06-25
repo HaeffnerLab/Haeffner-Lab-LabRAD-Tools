@@ -61,7 +61,7 @@ class linetriggerWidget(QtGui.QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser')
         if self.initialized:
             yield server.signal__new_line_trigger_parameter(SIGNALID, context = self.context)
             state = yield server.line_trigger_state(context = self.context)
