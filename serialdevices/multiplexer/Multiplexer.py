@@ -151,6 +151,7 @@ class Multiplexer( SerialDeviceServer ):
         yield self.reg.cd(['','Servers','Multiplexer'],True)
         for chanName in self.info.getChanNames():
             try:
+                print chanName
                 [state, exp] = yield self.reg.get(chanName)    
             except Error, e:
                 if e.code is 21:
