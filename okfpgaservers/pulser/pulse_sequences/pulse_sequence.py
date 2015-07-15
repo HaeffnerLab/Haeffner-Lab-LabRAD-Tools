@@ -57,6 +57,7 @@ class pulse_sequence(object):
 		"""
 		add a dds pulse to the pulse sequence
 		"""
+		print "Profile: ", profile
 		dds_channel = dds_config.get(channel, None)
 		if dds_channel is not None:
 			#additional configuration provided

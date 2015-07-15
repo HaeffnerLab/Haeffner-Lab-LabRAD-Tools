@@ -98,12 +98,21 @@ class DDS(LabradServer):
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
+
+            if prof == 0:
+                ampl_2 = ampl_off
+                prof_off = 0 
+            else:
+                prof_off = prof+1                
+                ampl_2 = ampl
+            print "Profile ",prof
+            
             num = self.settings_to_num(channel, freq, ampl, phase, prof)
             if not channel.phase_coherent_model:
                 num_off = self.settings_to_num(channel, freq_off, ampl_off)
             else:
                 #note that keeping the frequency the same when switching off to preserve phase coherence
-                num_off = self.settings_to_num(channel, freq, ampl_off, phase) 
+                num_off = self.settings_to_num(channel, freq, ampl_2, phase, prof_off)
             #note < sign, because start can not be 0. 
             #this would overwrite the 0 position of the ram, and cause the dds to change before pulse sequence is launched
             if not self.sequenceTimeRange[0] < start <= self.sequenceTimeRange[1]: 
@@ -277,13 +286,15 @@ class DDS(LabradServer):
         freq is in MHz
         power is in dbm
         '''
+#       profile = 7
+        print ampl, profile
         ans = 0
         for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 35,  13), 
                                    (profile,(0,7),2**32, 3) , (phase,channel.boardphaserange, 2 ** 48,  16)]:
             minim, maxim = r
             resolution = (maxim - minim) / float(2**precision - 1)
             seq = int((val - minim)/resolution) #sequential representation
-            print val, r, m, precision, m*seq, seq, resolution
+            #print val, r, m, precision, m*seq, seq, resolution
 
             ans += m*seq
         return ans
