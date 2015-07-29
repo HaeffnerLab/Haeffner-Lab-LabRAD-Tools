@@ -17,8 +17,10 @@ import pylab
 import xmlrpclib 
 import publish_parameters as pp
 import os
-import paramiko
-
+try: 
+    import paramiko
+except:
+    print "paramiko not installed"
 class GrapherWindow(QtGui.QWidget):
     """Creates the window for the new plot"""
     def __init__(self, parent, context, windowName):

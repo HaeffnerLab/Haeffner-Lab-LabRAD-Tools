@@ -75,7 +75,7 @@ class DDS(LabradServer):
         for value in values:
             if len(value) == 5:
                 name,start,dur,freq,ampl = value
-                phase = 0.0
+                phase = 0.0 
                 prof = 0
             elif len(value) == 6:
                 name,start,dur,freq,ampl,phase = value
@@ -106,7 +106,7 @@ class DDS(LabradServer):
                 prof_off = prof+1                
                 ampl_2 = ampl
             print "Profile ",prof
-            
+           
             num = self.settings_to_num(channel, freq, ampl, phase, prof)
             if not channel.phase_coherent_model:
                 num_off = self.settings_to_num(channel, freq_off, ampl_off)
@@ -122,6 +122,7 @@ class DDS(LabradServer):
             if not dur == 0:#0 length pulses are ignored
                 sequence.addDDS(name, start, num, 'start')
                 sequence.addDDS(name, start + dur, num_off, 'stop')
+        
         
     @setting(46, 'Get DDS Amplitude Range', name = 's', returns = '(vv)')
     def getDDSAmplRange(self, c, name = None):
@@ -202,7 +203,7 @@ class DDS(LabradServer):
             buf = self._intToBuf(num)
         else:
             buf = self._intToBuf_coherent(num)
-        buf = buf + '\x00\x00' #adding termination
+        buf =buf + '\x00\x00' #adding termination
         return buf
     
     def settings_to_num(self, channel, freq, ampl, phase = 0.0, prof = 0):
@@ -224,7 +225,11 @@ class DDS(LabradServer):
         self.api.resetAllDDS()
         self.api.setDDSchannel(addr)  
         self.api.programDDS(buf)
-    
+        print hex(addr)
+        print len(buf)
+        a = ":".join("{:02x}".format(ord(c)) for c in buf)
+        print a
+        
     @inlineCallbacks
     def _setDDSRemote(self, channel, addr, buf):
         cxn = self.remoteConnections[channel.remote]
