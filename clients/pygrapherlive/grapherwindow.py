@@ -87,6 +87,9 @@ class GrapherWindow(QtGui.QWidget):
         #self.cb3.move(290, 39)
 #        self.cb3.toggle()
         self.cb3.clicked.connect(self.autofitSignal) 
+
+        self.cb4 = QtGui.QCheckBox('Probability mode', self)
+
         # button to fit data on screen
         fitButton = QtGui.QPushButton("Fit", self)
         fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
@@ -102,7 +105,8 @@ class GrapherWindow(QtGui.QWidget):
         buttonBox = QtGui.QHBoxLayout()
         buttonBox.addWidget(self.cb1) 
         buttonBox.addWidget(self.cb3)
-        buttonBox.addWidget(self.cb2)  
+        buttonBox.addWidget(self.cb2)
+        buttonBox.addWidget(self.cb4)
         buttonBox.addWidget(fitButton)
         buttonBox.addWidget(windowNameButton) 
         
