@@ -98,17 +98,8 @@ class Graph(QtGui.QWidget):
         for i, label in enumerate(labels):
             self.add_artist(label, dataset, i)
 
-    @inlineCallbacks
-    def draw_stuff(self):
-        from labrad.wrappers import connectAsync
-        cxn = yield connectAsync()
-        directory = ['', 'test', '2016Jan03', '0110_42']
-        name = '2016Jan03_0110_42'
-        dataset = Dataset(cxn, 1, directory, name, self.reactor)
-        yield self.add_dataset(dataset)
-
-    #def closeEvent(self, x):
-    #    self.reactor.stop()
+    def set_xlimits(limits):
+        self.ax.set_xlim(limits)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
