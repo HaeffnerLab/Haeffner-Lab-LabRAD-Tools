@@ -25,7 +25,6 @@ class Dataset(QtCore.QObject):
 
     @inlineCallbacks
     def connectDataVault(self):
-        self.context = yield self.cxn.context()
         yield self.data_vault.cd(self.directory, context = self.context)
         yield self.data_vault.open(self.dataset, context = self.context)
 
@@ -51,7 +50,7 @@ class Dataset(QtCore.QObject):
 
     # signal for new data avalable
     def updateData(self, x, y):
-        print "data updated"
+        #print "data updated"
         self.updateCounter += 1
         self.getData()
 

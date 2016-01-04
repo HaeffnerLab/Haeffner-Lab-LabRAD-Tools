@@ -33,7 +33,7 @@ class Graph(QtGui.QWidget):
         self.tracelist = TraceList()
 
         self.ax = self.figure.add_subplot(111)
-        self.ani = animation.FuncAnimation(self.figure, self.update_figure, self.should_continue, init_func=self.init, interval=25, blit=True)
+        self.ani = animation.FuncAnimation(self.figure, self.update_figure, self.should_continue, init_func=self.init, interval=25, blit=False)
 
         self.ax.set_xlim([0, 100])
         self.ax.set_ylim(ylim)
@@ -98,8 +98,15 @@ class Graph(QtGui.QWidget):
         for i, label in enumerate(labels):
             self.add_artist(label, dataset, i)
 
-    def set_xlimits(limits):
+    def set_xlimits(self, limits):
         self.ax.set_xlim(limits)
+        self.current_limits = limits
+
+    def set_ylimits(self, limits):
+        self.ax.set_ylim(limits)
+
+    def redraw(self):
+        self.canvas.draw()
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
