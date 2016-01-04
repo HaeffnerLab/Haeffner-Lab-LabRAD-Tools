@@ -70,8 +70,9 @@ class Graph(QtGui.QWidget):
         self.tracelist.addTrace(ident)
 
         # connect the checkbox in the tracelist
-        cb = self.tracelist.trace_dict[ident]
-        cb.stateChanged.connect(self.checkboxChanged)
+        self.tracelist.itemChanged.connect(self.checkboxChanged)
+        #cb = self.tracelist.trace_dict[ident]
+        #cb.itemChanged.connect(self.checkboxChanged)
 
     def display(self, ident, shown):
         try:
@@ -81,8 +82,8 @@ class Graph(QtGui.QWidget):
         self.canvas.draw()
 
     def checkboxChanged(self, state):
-        for ident, cb in self.tracelist.trace_dict.iteritems():
-            if cb.isChecked():
+        for ident, item in self.tracelist.trace_dict.iteritems():
+            if item.checkState():
                self.display(ident, True)
             else:
                 self.display(ident, False)
