@@ -46,7 +46,7 @@ class Graph(QtGui.QWidget):
         vbox.addWidget(self.canvas)
         hbox.addLayout(vbox)
         self.setLayout(hbox)
-        self.draw_stuff()
+        #self.draw_stuff()
 
     def init(self):
         line, = self.ax.plot([], [])
@@ -102,13 +102,13 @@ class Graph(QtGui.QWidget):
     def draw_stuff(self):
         from labrad.wrappers import connectAsync
         cxn = yield connectAsync()
-        directory = ['', 'test', '2016Jan03', '0025_24']
-        name = '2016Jan03_0025_24'
+        directory = ['', 'test', '2016Jan03', '0110_42']
+        name = '2016Jan03_0110_42'
         dataset = Dataset(cxn, 1, directory, name, self.reactor)
         yield self.add_dataset(dataset)
 
-    def closeEvent(self, x):
-        self.reactor.stop()
+    #def closeEvent(self, x):
+    #    self.reactor.stop()
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
