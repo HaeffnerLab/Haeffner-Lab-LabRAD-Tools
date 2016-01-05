@@ -15,7 +15,7 @@ directory = ['','Experiments']
 directory.extend(['TestData'])
 directory.extend(dirappend)
 dv.cd(directory ,True, context = cxt)
-output_size = 1
+output_size = 2
 dependents = [('Excitation','Ion {}'.format(ion),'Probability') for ion in range(output_size)]
 dv.new('Rabi Flopping {}'.format(datasetNameAppend),[('Excitation', 'us')], dependents , context = cxt)
 grapher = cxn.grapher

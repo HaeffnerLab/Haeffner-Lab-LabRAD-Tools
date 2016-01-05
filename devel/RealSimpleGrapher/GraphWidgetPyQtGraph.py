@@ -9,9 +9,17 @@ import itertools
 from Dataset import Dataset
 
 import numpy as np
+from numpy import random
+
+class artistParameters():
+    def __init__(self, artist, dataset, index, shown):
+        self.artist = artist
+        self.dataset = dataset
+        self.index = index
+        self.shown = shown
 
 class Graph_PyQtGraph(QtGui.QWidget):
-    def __init__(self, name, reactor, parent=None, ylim=[0,1]):
+    def __init__(self, name, reactor, parent=None):
         super(Graph_PyQtGraph, self).__init__(parent)
         self.reactor = reactor
         self.artists = {}
@@ -28,44 +36,56 @@ class Graph_PyQtGraph(QtGui.QWidget):
     def initUI(self):
         self.tracelist = TraceList()
         self.pw = pg.PlotWidget()
+        self.coords = QtGui.QLineEdit()
+        #self.coords.setText('test')
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.tracelist)
-        hbox.addWidget(self.pw)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.pw)
+        vbox.addWidget(self.coords)
+        hbox.addLayout(vbox)
         self.setLayout(hbox)
         self.legend = self.pw.addLegend()
         self.tracelist.itemChanged.connect(self.checkboxChanged)
         self.pw.plot([],[])
+        #vb = self.pw.addViewBox()
+        vb = self.pw.plotItem.vb
+        self.img = pg.ImageItem(np.random.normal(size=(1,1)))
+        vb.addItem(self.img)
+        #vb.addItem(self.coords)
+        self.pw.scene().sigMouseMoved.connect(self.mouseMoved)
 
     def update_figure(self):
-        for ident, (artist, dataset, index, shown) in self.artists.iteritems():
-            if shown:
-                x = dataset.data[:,0]
-                y = dataset.data[:,index+1]
-                artist.setData(x,y)
+        for ident, params in self.artists.iteritems():
+            if params.shown:
+                index = params.index
+                x = params.dataset.data[:,0]
+                y = params.dataset.data[:,index+1]
+                params.artist.setData(x,y)
 
     def add_artist(self, ident, dataset, index):
         line = self.pw.plot([], [], pen = self.colorChooser.next(), name=ident)
-        self.artists[ident] = [line, dataset, index, True]
+        self.artists[ident] = artistParameters(line, dataset, index, True)
         self.tracelist.addTrace(ident)
 
     def display(self, ident, shown):
         try:
-            artist = self.artists[ident][0]
+            artist = self.artists[ident].artist
             if shown:
                 self.pw.addItem(artist)
-                self.artists[ident][3] = True
+                self.artists[ident].shown = True
             else:
                 self.pw.removeItem(artist)
                 self.legend.removeItem(ident)
-                self.artists[ident][3] = False
+                self.artists[ident].shown = False
         except KeyError:
             raise Exception('404 Artist not found')
 
-    def checkboxChanged(self, state):
+    def checkboxChanged(self):
         for ident, item in self.tracelist.trace_dict.iteritems():
-            if item.checkState():
+            if item.checkState() and not self.artists[ident].shown:
                self.display(ident, True)
-            else:
+            if not item.checkState() and self.artists[ident].shown:
                 self.display(ident, False)
 
     @inlineCallbacks
@@ -79,7 +99,13 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.current_limits = limits
 
     def set_ylimits(self, limits):
-        self.pw.setYRange(limits[0],limits[1])  
+        self.pw.setYRange(limits[0],limits[1])
+
+    def mouseMoved(self, pos):
+        #print "Image position:", self.img.mapFromScene(pos)
+        pnt = self.img.mapFromScene(pos)
+        string = '(' + str(pnt.x()) + ' , ' + str(pnt.y()) + ')'
+        self.coords.setText(string)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
