@@ -3,7 +3,7 @@ Window for holding Graphs
 '''
 import sys
 from PyQt4 import QtGui
-from GraphWidget import Graph
+from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 from ScrollingGraphWidget import ScrollingGraph
 import GUIConfig
 from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
