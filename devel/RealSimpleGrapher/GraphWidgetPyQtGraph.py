@@ -29,7 +29,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
 
-        colors = ['r', 'g', 'b']
+        colors = ['r', 'g', 'b', 'y']
         self.colorChooser = itertools.cycle(colors)
         self.initUI()
 
@@ -37,7 +37,6 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.tracelist = TraceList()
         self.pw = pg.PlotWidget()
         self.coords = QtGui.QLineEdit()
-        #self.coords.setText('test')
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.tracelist)
         vbox = QtGui.QVBoxLayout()
@@ -48,11 +47,9 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.legend = self.pw.addLegend()
         self.tracelist.itemChanged.connect(self.checkboxChanged)
         self.pw.plot([],[])
-        #vb = self.pw.addViewBox()
         vb = self.pw.plotItem.vb
         self.img = pg.ImageItem(np.random.normal(size=(1,1)))
         vb.addItem(self.img)
-        #vb.addItem(self.coords)
         self.pw.scene().sigMouseMoved.connect(self.mouseMoved)
 
     def update_figure(self):
@@ -93,6 +90,8 @@ class Graph_PyQtGraph(QtGui.QWidget):
         labels = yield dataset.getLabels()
         for i, label in enumerate(labels):
             self.add_artist(label, dataset, i)
+        
+        
 
     def set_xlimits(self, limits):
         self.pw.setXRange(limits[0], limits[1])
