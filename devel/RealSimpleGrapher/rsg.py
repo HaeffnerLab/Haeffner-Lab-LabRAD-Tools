@@ -52,7 +52,7 @@ class RealSimpleGrapher(LabradServer):
             # add the plot to the Current tab as well as an additional
             # specified tab for later examination
             ds = self.make_dataset(path, name, dataset)
-            self.gui.graphDict['Current'].add_dataset(ds)
+            self.gui.graphDict['current'].add_dataset(ds)
         ds = self.make_dataset(path, name, dataset)
         self.gui.graphDict[graph].add_dataset(ds)
         
@@ -63,8 +63,8 @@ class RealSimpleGrapher(LabradServer):
     @setting(2, 'Plot with axis', path='*s', graph = 's', name='s', axis = '*v', dataset=['i', 's'], send_to_current = 'b', returns = '')
     def plot_with_axis(self, c, path, graph, name, axis, dataset = 1, send_to_current = True):
         
-        if (graph != 'Current') and (send_to_current == True):
-            self.gui.graphDict['Current'].set_xlimits([min(axis).value, max(axis).value])
+        if (graph != 'current') and (send_to_current == True):
+            self.gui.graphDict['current'].set_xlimits([min(axis).value, max(axis).value])
         self.gui.graphDict[graph].set_xlimits([min(axis).value, max(axis).value])
         self.do_plot(path, graph, name, dataset, send_to_current)
 

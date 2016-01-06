@@ -64,7 +64,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
                 params.artist.setData(x,y)
 
     def add_artist(self, ident, dataset, index):
-        line = self.pw.plot([], [], pen = self.colorChooser.next(), name=ident)
+        line = self.pw.plot([], [], symbol='o', pen = self.colorChooser.next(), name=ident)
         self.artists[ident] = artistParameters(line, dataset, index, True)
         self.tracelist.addTrace(ident)
 

@@ -20,7 +20,7 @@ dependents = [('Excitation','Ion {}'.format(ion),'Probability') for ion in range
 dv.new('Rabi Flopping {}'.format(datasetNameAppend),[('Excitation', 'us')], dependents , context = cxt)
 grapher = cxn.grapher
 
-grapher.plot(directory, 'scroll', datasetNameAppend)
+grapher.plot(directory, 'pmt', datasetNameAppend)
 
 i = 0
 while True:

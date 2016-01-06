@@ -5,6 +5,7 @@ import sys
 from PyQt4 import QtGui
 from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 from ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
+from DoubleGraphWindow import DoubleGraphWindow
 import GUIConfig
 from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
@@ -21,29 +22,36 @@ class GraphWindow(QtGui.QTabWidget):
         reactor = self.reactor
 
         self.graphDict = {}
-        for t, ylim in GUIConfig.tabs.iteritems():
-            g = Graph(t, reactor)
-            self.graphDict[t] = g
-            self.addTab(g, t)
-            g.set_ylimits(ylim)
-            
-        g = ScrollingGraph('scroll', reactor)
-        self.graphDict['scroll'] = g
-        self.addTab(g, 'scroll')
-        g.set_ylimits([0,1])
-        for i in range(4):
-            self.setCurrentIndex(i)
-        self.setCurrentIndex(-1)
-        #self.currentChanged.connect(self.onTabChange)
+
+        for gc in GUIConfig.tabs:
+            if gc.graphs == 1: # standalone graph
+                name = gc.name
+                if gc.isScrolling:
+                    g = ScrollingGraph(name, reactor)
+                else:
+                    g = Graph(name, reactor)
+                self.graphDict[name] = g
+                self.addTab(g, name)
+                g.set_ylimits(gc.ylim)
+
+            if gc.graphs == 2: # double graph
+                gcli = [gc.config1, gc.config2]
+                gli = []
+                for config in gcli:
+                    name = config.name
+                    if config.isScrolling:
+                        g = ScrollingGraph(name, reactor)
+                    else:
+                        g = Graph(name, reactor)
+                    g.set_ylimits(config.ylim)
+                    self.graphDict[name] = g
+                    gli.append(g)
+                self.addTab(DoubleGraphWindow(gli[0], gli[1], reactor), gc.tab)
 
     def insert_tab(self, t):
         g = Graph(t, reactor)
         self.graphDict[t] = g
         self.addTab(g, t)
-
-    def onTabChange(self):
-        for t, g in self.graphDict.iteritems():
-            g.redraw()
         
     def closeEvent(self, x):
         self.reactor.stop()
