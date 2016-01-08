@@ -26,10 +26,11 @@ class GraphWindow(QtGui.QTabWidget):
         for gc in GUIConfig.tabs:
             if gc.graphs == 1: # standalone graph
                 name = gc.name
+                max_ds = gc.max_datasets
                 if gc.isScrolling:
-                    g = ScrollingGraph(name, reactor)
+                    g = ScrollingGraph(name, max_ds, reactor)
                 else:
-                    g = Graph(name, reactor)
+                    g = Graph(name, max_ds, reactor)
                 self.graphDict[name] = g
                 self.addTab(g, name)
                 g.set_ylimits(gc.ylim)
@@ -39,10 +40,11 @@ class GraphWindow(QtGui.QTabWidget):
                 gli = []
                 for config in gcli:
                     name = config.name
+                    max_ds = config.max_datasets
                     if config.isScrolling:
-                        g = ScrollingGraph(name, reactor)
+                        g = ScrollingGraph(name, max_ds, reactor)
                     else:
-                        g = Graph(name, reactor)
+                        g = Graph(name, max_ds, reactor)
                     g.set_ylimits(config.ylim)
                     self.graphDict[name] = g
                     gli.append(g)

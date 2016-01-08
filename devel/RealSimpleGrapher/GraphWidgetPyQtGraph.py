@@ -7,6 +7,7 @@ from twisted.internet.task import LoopingCall
 from twisted.internet.threads import blockingCallFromThread
 import itertools
 from Dataset import Dataset
+import Queue
 
 import numpy as np
 from numpy import random
@@ -19,13 +20,15 @@ class artistParameters():
         self.shown = shown
 
 class Graph_PyQtGraph(QtGui.QWidget):
-    def __init__(self, name, reactor, parent=None):
+    def __init__(self, name, max_datasets, reactor, parent=None):
         super(Graph_PyQtGraph, self).__init__(parent)
         self.reactor = reactor
         self.artists = {}
-        self.datasets = {} # a single dataset might have multiple traces
         self.should_stop = False
         self.name = name
+
+        self.dataset_queue = Queue.Queue(max_datasets)
+        
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
 
@@ -36,7 +39,6 @@ class Graph_PyQtGraph(QtGui.QWidget):
     def initUI(self):
         self.tracelist = TraceList(self)
         self.pw = pg.PlotWidget()
-        #self.coords = QtGui.QLineEdit()
         self.coords = QtGui.QLabel('')
         self.title = QtGui.QLabel(self.name)
         hbox = QtGui.QHBoxLayout()
@@ -68,6 +70,15 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.artists[ident] = artistParameters(line, dataset, index, True)
         self.tracelist.addTrace(ident)
 
+    def remove_artist(self, ident):
+        try:
+            artist = self.artists[ident].artist
+            self.pw.removeItem(artist)
+            self.legend.removeItem(ident)
+            self.tracelist.removeTrace(ident)
+        except:
+            print "remove failed"
+
     def display(self, ident, shown):
         try:
             artist = self.artists[ident].artist
@@ -90,11 +101,21 @@ class Graph_PyQtGraph(QtGui.QWidget):
 
     @inlineCallbacks
     def add_dataset(self, dataset):
+        try:
+            self.dataset_queue.put(dataset, block=False)
+        except Queue.Full:
+            remove_ds = self.dataset_queue.get()
+            self.remove_dataset(remove_ds)
+            self.dataset_queue.put(dataset, block=False)
         labels = yield dataset.getLabels()
         for i, label in enumerate(labels):
             self.add_artist(label, dataset, i)
-        
-        
+
+    @inlineCallbacks
+    def remove_dataset(self, dataset):
+        labels = yield dataset.getLabels()
+        for label in labels:
+            self.remove_artist(label)
 
     def set_xlimits(self, limits):
         self.pw.setXRange(limits[0], limits[1])
