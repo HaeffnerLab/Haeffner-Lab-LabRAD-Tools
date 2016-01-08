@@ -3,10 +3,10 @@ Window for holding Graphs
 '''
 import sys
 from PyQt4 import QtGui
+import GUIConfig
 from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 from ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
 from DoubleGraphWindow import DoubleGraphWindow
-import GUIConfig
 from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import blockingCallFromThread

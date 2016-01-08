@@ -1,7 +1,9 @@
 '''
 Configuration settings for Grapher gui
 '''
-
+import pyqtgraph as pg
+pg.setConfigOption('background', 'w')
+pg.setConfigOption('foreground', 'b')
 class graphConfig():
     def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 3):
         self.name = name
