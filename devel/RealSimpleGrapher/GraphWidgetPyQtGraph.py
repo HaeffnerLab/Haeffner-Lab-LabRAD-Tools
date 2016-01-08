@@ -61,10 +61,12 @@ class Graph_PyQtGraph(QtGui.QWidget):
     def update_figure(self):
         for ident, params in self.artists.iteritems():
             if params.shown:
-                index = params.index
-                x = params.dataset.data[:,0]
-                y = params.dataset.data[:,index+1]
-                params.artist.setData(x,y)
+                try:
+                    index = params.index
+                    x = params.dataset.data[:,0]
+                    y = params.dataset.data[:,index+1]
+                    params.artist.setData(x,y)
+                except: pass
 
     def add_artist(self, ident, dataset, index):
         line = self.pw.plot([], [], symbol='o', pen = self.colorChooser.next(), name=ident)

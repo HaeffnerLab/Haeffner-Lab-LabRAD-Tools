@@ -37,7 +37,8 @@ class Dataset(QtCore.QObject):
     @inlineCallbacks
     def openDataset(self):
         yield self.data_vault.cd(self.directory, context = self.context)
-        yield self.data_vault.open(self.dataset, context = self.context)
+        k = yield self.data_vault.open(self.dataset, context = self.context)
+        print k
 
     @inlineCallbacks
     def getParameters(self):

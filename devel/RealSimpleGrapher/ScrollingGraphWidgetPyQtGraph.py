@@ -3,15 +3,19 @@ from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 class ScrollingGraph_PyQtGraph(Graph):
     def __init__(self, name, reactor, parent = None, ylim=[0,1]):
         super(ScrollingGraph_PyQtGraph, self).__init__(name, reactor, parent)
+        self.set_xlimits([0, 100])
 
     def update_figure(self, _input = None):
 
         for ident, params in self.artists.iteritems():
             if params.shown:
-                index = params.index
-                x = params.dataset.data[:,0]
-                y = params.dataset.data[:,index+1]
-                params.artist.setData(x,y)
+                try:
+                    index = params.index
+                    x = params.dataset.data[:,0]
+                    y = params.dataset.data[:,index+1]
+                    params.artist.setData(x,y)
+                except: pass
+                
         try:
             pointsToKeep = 100
             if len(x) < pointsToKeep:
@@ -21,7 +25,6 @@ class ScrollingGraph_PyQtGraph(Graph):
                 xmin_cur, xmax_cur = self.current_limits
                 x_cur = x[-1] # current largest x value
                 window_width = xmax_cur - xmin_cur
-                
                 # scroll if we've reached 75% of the window
                 if (x_cur - xmin_cur > 0.75*window_width):
                     shift = (xmax_cur - xmin_cur)/2.0
