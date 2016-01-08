@@ -21,7 +21,7 @@ dv.new('Rabi Flopping {}'.format(datasetNameAppend),[('Excitation', 'us')], depe
 dv.add_parameter('plotLive', True, context = cxt)
 grapher = cxn.grapher
 
-grapher.plot(directory, datasetNameAppend, 'pmt')
+grapher.plot(directory, datasetNameAppend, 'spectrum')
 
 i = 0
 while True:

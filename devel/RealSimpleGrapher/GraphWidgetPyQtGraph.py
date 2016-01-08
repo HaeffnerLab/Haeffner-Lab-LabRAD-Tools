@@ -53,7 +53,8 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.tracelist.itemChanged.connect(self.checkboxChanged)
         self.pw.plot([],[])
         vb = self.pw.plotItem.vb
-        self.img = pg.ImageItem(np.random.normal(size=(1,1)))
+        #self.img = pg.ImageItem(np.random.normal(size=(1,1)))
+        self.img = pg.ImageItem()
         vb.addItem(self.img)
         self.pw.scene().sigMouseMoved.connect(self.mouseMoved)
 
