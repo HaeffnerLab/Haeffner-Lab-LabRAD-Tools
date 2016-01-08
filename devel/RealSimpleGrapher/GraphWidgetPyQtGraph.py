@@ -34,7 +34,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.initUI()
 
     def initUI(self):
-        self.tracelist = TraceList()
+        self.tracelist = TraceList(self)
         self.pw = pg.PlotWidget()
         self.coords = QtGui.QLineEdit()
         hbox = QtGui.QHBoxLayout()

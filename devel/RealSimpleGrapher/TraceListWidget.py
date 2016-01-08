@@ -1,16 +1,20 @@
-import sys
 from PyQt4 import QtGui
 from PyQt4 import QtCore
+from ParameterListWidget import ParameterList
 
 class TraceList(QtGui.QListWidget):
-    def __init__(self):
+    def __init__(self, parent):
         super(TraceList, self).__init__()
+        self.parent = parent
+        self.windows = []
         self.initUI()
 
     def initUI(self):
         self.trace_dict = {}
         item = QtGui.QListWidgetItem('Traces')
         item.setCheckState(QtCore.Qt.Checked)
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.popupMenu)
 
     def addTrace(self, ident):
         item = QtGui.QListWidgetItem(ident)
@@ -24,30 +28,17 @@ class TraceList(QtGui.QListWidget):
         self.takeItem(row)
         item = None
 
-
-'''
-class TraceList(QtGui.QWidget):
-    
-    def __init__(self):
-        super(TraceList, self).__init__()
-        self.initUI()
-
-    def initUI(self):
-        self.layout = QtGui.QVBoxLayout()
-        self.setLayout(self.layout)
-        self.trace_dict = {}
-
-    def addTrace(self, ident):
-
-        cb = QtGui.QCheckBox(ident, self)
-        cb.setChecked(True)
-        self.trace_dict[ident] = cb
-        self.layout.addWidget(cb)
-
-    def removeTrace(self, ident):
-        
-        widget = self.trace_dict[ident]
-        self.layout.removeWidget(widget)
-        widget.deleteLater()
-        widget = None
-'''
+    def popupMenu(self, pos):
+        menu = QtGui.QMenu()
+        item = self.itemAt(pos)
+        if (item == None): pass # didn't click on anything
+        else:
+            ident = str(item.text())
+            parametersAction = menu.addAction('Parameters')
+            action = menu.exec_(self.mapToGlobal(pos))
+            
+            if action == parametersAction:
+                dataset = self.parent.artists[ident].dataset
+                pl = ParameterList(dataset)
+                self.windows.append(pl)
+                pl.show()
