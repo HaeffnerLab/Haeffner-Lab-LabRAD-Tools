@@ -32,7 +32,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
 
-        colors = ['r', 'g', 'b', 'y']
+        colors = ['r', 'g', 'y', 'c', 'm', 'w']
         self.colorChooser = itertools.cycle(colors)
         self.initUI()
 
@@ -69,7 +69,8 @@ class Graph_PyQtGraph(QtGui.QWidget):
                 except: pass
 
     def add_artist(self, ident, dataset, index):
-        line = self.pw.plot([], [], symbol='o', pen = self.colorChooser.next(), name=ident)
+        new_color = self.colorChooser.next()
+        line = self.pw.plot([], [], symbol='o', symbolBrush = new_color, pen = new_color, name=ident)
         self.artists[ident] = artistParameters(line, dataset, index, True)
         self.tracelist.addTrace(ident)
 

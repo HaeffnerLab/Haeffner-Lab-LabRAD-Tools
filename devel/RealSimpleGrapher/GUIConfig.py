@@ -2,10 +2,10 @@
 Configuration settings for Grapher gui
 '''
 import pyqtgraph as pg
-pg.setConfigOption('background', 'w')
-pg.setConfigOption('foreground', 'b')
+pg.setConfigOption('background', 'k')
+pg.setConfigOption('foreground', 'y')
 class graphConfig():
-    def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 3):
+    def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 6):
         self.name = name
         self.ylim = ylim
         self.isScrolling = isScrolling
@@ -26,7 +26,14 @@ tabs =[
     graphConfig('spectrum'),
     graphConfig('rabi'),
     doubleGraphConfig('carriers',
-                      graphConfig('S12D52'), graphConfig('S12D12')),
+                      graphConfig('car1'), graphConfig('car2')),
     doubleGraphConfig('sidebands',
                       graphConfig('radial1'), graphConfig('radial2')),
+       
+    doubleGraphConfig('molmer-sorensen',
+                      graphConfig('ms_time'), graphConfig('local_stark')),
+       
+    doubleGraphConfig('vaet',
+                      graphConfig('vaet_time'), graphConfig('vaet_delta')),
+    graphConfig('parity'),
 ]

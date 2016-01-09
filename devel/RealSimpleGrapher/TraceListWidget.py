@@ -7,6 +7,7 @@ class TraceList(QtGui.QListWidget):
         super(TraceList, self).__init__()
         self.parent = parent
         self.windows = []
+        self.setStyleSheet("background-color:black;")
         self.initUI()
 
     def initUI(self):
@@ -18,6 +19,10 @@ class TraceList(QtGui.QListWidget):
 
     def addTrace(self, ident):
         item = QtGui.QListWidgetItem(ident)
+
+        item.setForeground(QtGui.QColor(255, 255, 255))
+        item.setBackground(QtGui.QColor(0, 0, 0))
+
         item.setCheckState(QtCore.Qt.Checked)
         self.addItem(item)
         self.trace_dict[ident] = item
