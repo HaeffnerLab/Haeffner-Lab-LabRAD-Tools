@@ -62,8 +62,8 @@ class Graph(QtGui.QWidget):
         return artists
 
     def add_artist(self, ident, dataset, index):
-        line, = self.ax.plot([], [], '-o', markersize = 2.0, label = ident)
-        self.ax.legend()
+        line, = self.ax.plot([], [], '-o', markersize = 1.0, label = ident)
+        #self.ax.legend()
         # dataset is the dataset object
         # index is the position in the dataset object this trace lives
         self.artists[ident] = [line, dataset, index]

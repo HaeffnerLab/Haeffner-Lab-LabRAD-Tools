@@ -36,4 +36,5 @@ tabs =[
     doubleGraphConfig('vaet',
                       graphConfig('vaet_time'), graphConfig('vaet_delta')),
     graphConfig('parity'),
+    graphConfig('vaet_ms_det'),
 ]

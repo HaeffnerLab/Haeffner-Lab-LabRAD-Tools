@@ -49,7 +49,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         vbox.addWidget(self.coords)
         hbox.addLayout(vbox)
         self.setLayout(hbox)
-        self.legend = self.pw.addLegend()
+        #self.legend = self.pw.addLegend()
         self.tracelist.itemChanged.connect(self.checkboxChanged)
         self.pw.plot([],[])
         vb = self.pw.plotItem.vb
@@ -78,7 +78,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         try:
             artist = self.artists[ident].artist
             self.pw.removeItem(artist)
-            self.legend.removeItem(ident)
+            #self.legend.removeItem(ident)
             self.tracelist.removeTrace(ident)
         except:
             print "remove failed"
@@ -91,7 +91,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
                 self.artists[ident].shown = True
             else:
                 self.pw.removeItem(artist)
-                self.legend.removeItem(ident)
+                #self.legend.removeItem(ident)
                 self.artists[ident].shown = False
         except KeyError:
             raise Exception('404 Artist not found')
