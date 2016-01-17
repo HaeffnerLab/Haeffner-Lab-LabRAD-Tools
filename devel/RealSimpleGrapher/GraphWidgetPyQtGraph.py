@@ -18,6 +18,9 @@ class artistParameters():
         self.dataset = dataset
         self.index = index
         self.shown = shown
+        self.last_update = 0 # update counter in the Dataset object
+                             # only redraw if the dataset has a higher
+                             # update count
 
 class Graph_PyQtGraph(QtGui.QWidget):
     def __init__(self, name, max_datasets, reactor, parent=None):
@@ -62,10 +65,14 @@ class Graph_PyQtGraph(QtGui.QWidget):
         for ident, params in self.artists.iteritems():
             if params.shown:
                 try:
+                    ds = params.dataset
                     index = params.index
-                    x = params.dataset.data[:,0]
-                    y = params.dataset.data[:,index+1]
-                    params.artist.setData(x,y)
+                    current_update = ds.updateCounter
+                    if params.last_update < current_update:
+                        x = ds.data[:,0]
+                        y = ds.data[:,index+1]
+                        params.last_update = current_update
+                        params.artist.setData(x,y)
                 except: pass
 
     def add_artist(self, ident, dataset, index):

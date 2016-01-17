@@ -37,8 +37,7 @@ class Dataset(QtCore.QObject):
     @inlineCallbacks
     def openDataset(self):
         yield self.data_vault.cd(self.directory, context = self.context)
-        k = yield self.data_vault.open(self.dataset, context = self.context)
-        print k
+        yield self.data_vault.open(self.dataset, context = self.context)
 
     @inlineCallbacks
     def getParameters(self):
@@ -49,9 +48,7 @@ class Dataset(QtCore.QObject):
             parameterValues.append( (parameter, parameterValue) )
         returnValue(parameterValues)
 
-    # signal for new data avalable
     def updateData(self, x, y):
-        #print "data updated"
         self.updateCounter += 1
         self.getData()
 
