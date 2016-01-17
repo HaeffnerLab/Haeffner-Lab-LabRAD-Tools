@@ -23,14 +23,15 @@ class artistParameters():
                              # update count
 
 class Graph_PyQtGraph(QtGui.QWidget):
-    def __init__(self, name, max_datasets, reactor, parent=None):
+    def __init__(self, config, reactor, parent=None):
         super(Graph_PyQtGraph, self).__init__(parent)
         self.reactor = reactor
         self.artists = {}
         self.should_stop = False
-        self.name = name
+        self.name = config.name
+        self.show_points = config.show_points
 
-        self.dataset_queue = Queue.Queue(max_datasets)
+        self.dataset_queue = Queue.Queue(config.max_datasets)
         
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
@@ -56,7 +57,6 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.tracelist.itemChanged.connect(self.checkboxChanged)
         self.pw.plot([],[])
         vb = self.pw.plotItem.vb
-        #self.img = pg.ImageItem(np.random.normal(size=(1,1)))
         self.img = pg.ImageItem()
         vb.addItem(self.img)
         self.pw.scene().sigMouseMoved.connect(self.mouseMoved)
@@ -77,7 +77,10 @@ class Graph_PyQtGraph(QtGui.QWidget):
 
     def add_artist(self, ident, dataset, index):
         new_color = self.colorChooser.next()
-        line = self.pw.plot([], [], symbol='o', symbolBrush = new_color, pen = new_color, name=ident)
+        if self.show_points:
+            line = self.pw.plot([], [], symbol='o', symbolBrush = new_color, pen = new_color, name = ident)
+        else:
+            line = self.pw.plot([], [], pen = new_color, name = ident)
         self.artists[ident] = artistParameters(line, dataset, index, True)
         self.tracelist.addTrace(ident)
 
