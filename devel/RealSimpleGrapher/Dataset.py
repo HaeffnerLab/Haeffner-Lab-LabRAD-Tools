@@ -8,15 +8,12 @@ import numpy as np
 
 class Dataset(QtCore.QObject):
     
-    def __init__(self, data_vault, context, dataset, directory, datasetName, reactor, parent=None):
+    def __init__(self, data_vault, context, dataset_location,reactor):
         super(Dataset, self).__init__()
         self.data = None
         self.accessingData = DeferredLock()
-        self.parent = parent
         self.reactor = reactor
-        self.dataset = dataset
-        self.directory = directory
-        self.datasetName = datasetName
+        self.dataset_location = dataset_location
         self.data_vault = data_vault
         self.updateCounter = 0
         self.context = context
@@ -25,8 +22,9 @@ class Dataset(QtCore.QObject):
 
     @inlineCallbacks
     def connectDataVault(self):
-        yield self.data_vault.cd(self.directory, context = self.context)
-        yield self.data_vault.open(self.dataset, context = self.context)
+        yield self.data_vault.cd(self.dataset_location[0], context = self.context)
+        path, dataset_name = yield self.data_vault.open(self.dataset_location[1], context = self.context)
+        self.dataset_name = dataset_name
 
     @inlineCallbacks
     def setupListeners(self):
@@ -36,8 +34,8 @@ class Dataset(QtCore.QObject):
 
     @inlineCallbacks
     def openDataset(self):
-        yield self.data_vault.cd(self.directory, context = self.context)
-        yield self.data_vault.open(self.dataset, context = self.context)
+        yield self.data_vault.cd(self.dataset_location[0], context = self.context)
+        yield self.data_vault.open(self.dataset_location[1], context = self.context)
 
     @inlineCallbacks
     def getParameters(self):
@@ -70,7 +68,7 @@ class Dataset(QtCore.QObject):
         yield self.openDataset()
         variables = yield self.data_vault.variables(context = self.context)
         for i in range(len(variables[1])):
-            labels.append(variables[1][i][1] + ' - ' + self.datasetName)
+            labels.append(variables[1][i][1] + ' - ' + self.dataset_name)
         returnValue(labels)
 
     @inlineCallbacks
