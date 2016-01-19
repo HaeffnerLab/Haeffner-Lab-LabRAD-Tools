@@ -140,12 +140,11 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def makeNewDataSet(self, folder, name):
         yield self.dv.cd(folder, True)
-        newSet = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
+        ds = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
         self.startTime = time.time()
         yield self.addParameters(self.startTime)
-        name = newSet[1]
         if self.grapher is not None:
-            self.grapher.plot(folder, 'PMT Counts', 'pmt', name, False)
+            self.grapher.plot(ds, 'pmt',False)
         returnValue(name)
     
     @inlineCallbacks
