@@ -65,7 +65,7 @@ class RealSimpleGrapher(LabradServer):
         if (graph != 'current') and (send_to_current == True):
             self.gui.graphDict['current'].set_xlimits([min(axis).value, max(axis).value])
         self.gui.graphDict[graph].set_xlimits([min(axis).value, max(axis).value])
-        self.do_plot(datset_location, graph, send_to_current)
+        self.do_plot(dataset_location, graph, send_to_current)
 
 if __name__ == '__main__':
     from labrad import util
