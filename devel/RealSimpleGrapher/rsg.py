@@ -61,7 +61,7 @@ class RealSimpleGrapher(LabradServer):
         self.do_plot(dataset_location, graph, send_to_current)
 
     @setting(2, 'Plot with axis', dataset_location = ['(*s, s)', '(*s, i)'], graph = 's', axis = '*v', send_to_current = 'b', returns = '')
-    def plot_with_axis(self, c, dataset_location, name, graph, axis, send_to_current = True):
+    def plot_with_axis(self, c, dataset_location, graph, axis, send_to_current = True):
         if (graph != 'current') and (send_to_current == True):
             self.gui.graphDict['current'].set_xlimits([min(axis).value, max(axis).value])
         self.gui.graphDict[graph].set_xlimits([min(axis).value, max(axis).value])

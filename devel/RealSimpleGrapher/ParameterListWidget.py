@@ -10,7 +10,7 @@ class ParameterList(QtGui.QWidget):
         mainLayout = QtGui.QVBoxLayout() 
         self.parameterListWidget = QtGui.QListWidget()
         mainLayout.addWidget(self.parameterListWidget)        
-        self.setWindowTitle(str(dataset.dataset) + " " + str(dataset.directory))
+        self.setWindowTitle(str(dataset.dataset_name))# + " " + str(dataset.directory))
         self.populate()
         self.setLayout(mainLayout)
         self.show()
