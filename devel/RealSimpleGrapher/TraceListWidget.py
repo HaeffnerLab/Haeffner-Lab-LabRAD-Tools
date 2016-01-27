@@ -54,5 +54,11 @@ class TraceList(QtGui.QListWidget):
             if action == togglecolorsAction:               
                 # option to change color of line
                 new_color = self.parent.colorChooser.next()
-                self.parent.artists[ident].artist.setData(color = new_color, symbolBrush = new_color)
+                #self.parent.artists[ident].artist.setData(color = new_color, symbolBrush = new_color)
+                if self.parent.show_points:
+                    self.parent.artists[ident].artist.setData(pen = new_color, symbolBrush = new_color)
+                else:
+                    self.parent.artists[ident].artist.setData(pen = new_color)
+
+                
                
