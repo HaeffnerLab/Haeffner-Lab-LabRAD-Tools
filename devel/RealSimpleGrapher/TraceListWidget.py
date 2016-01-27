@@ -40,10 +40,19 @@ class TraceList(QtGui.QListWidget):
         else:
             ident = str(item.text())
             parametersAction = menu.addAction('Parameters')
+            togglecolorsAction = menu.addAction('Toggle colors')
+
             action = menu.exec_(self.mapToGlobal(pos))
             
             if action == parametersAction:
+                # option to show parameters in separate window
                 dataset = self.parent.artists[ident].dataset
                 pl = ParameterList(dataset)
                 self.windows.append(pl)
                 pl.show()
+
+            if action == togglecolorsAction:               
+                # option to change color of line
+                new_color = self.parent.colorChooser.next()
+                self.parent.artists[ident].artist.setData(color = new_color, symbolBrush = new_color)
+               
