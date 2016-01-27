@@ -22,17 +22,24 @@ class doubleGraphConfig():
         self.config2 = config2
         self.graphs = 2
 
+class quadGraphConfig():
+    def __init__(self, tab, config1, config2, config3, config4):
+        self.tab = tab
+        self.config1 = config1
+        self.config2 = config2
+        self.config3 = config3
+        self.config4 = config4
+        self.graphs = 4
+
 
 tabs =[
     graphConfig('current', max_datasets = 1),
     graphConfig('pmt', ylim=[0,30], isScrolling=True, max_datasets = 1, show_points = False),
     graphConfig('spectrum'),
     graphConfig('rabi'),
-    doubleGraphConfig('carriers',
-                      graphConfig('car1'), graphConfig('car2')),
-    doubleGraphConfig('sidebands',
+    quadGraphConfig('calibrations',
+                      graphConfig('car1'), graphConfig('car2'),
                       graphConfig('radial1'), graphConfig('radial2')),
-       
     doubleGraphConfig('molmer-sorensen',
                       graphConfig('ms_time'), graphConfig('local_stark')),
        
