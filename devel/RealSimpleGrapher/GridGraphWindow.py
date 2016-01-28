@@ -1,5 +1,5 @@
 '''
-Window containing two side by side graphs
+Window containing a grid of graphs
 '''
 import sys
 from PyQt4 import QtGui
@@ -10,17 +10,17 @@ from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import blockingCallFromThread
 
-class DoubleGraphWindow(QtGui.QWidget):
-    def __init__(self, g1, g2, reactor, parent=None):
-        super(DoubleGraphWindow, self).__init__(parent)
+class GridGraphWindow(QtGui.QWidget):
+    def __init__(self, g_list, row_list, column_list, reactor, parent=None):
+        super(GridGraphWindow, self).__init__(parent)
         self.reactor = reactor        
-        self.initUI(g1, g2)
+        self.initUI(g_list, row_list, column_list)
         self.show()
 
-    def initUI(self, g1, g2):
+    def initUI(self, g_list, row_list, column_list):
         reactor = self.reactor
-
-        layout = QtGui.QHBoxLayout()
-        layout.addWidget(g1)
-        layout.addWidget(g2)
+        layout = QtGui.QGridLayout()
+        for k in range(len(g_list)):
+            layout.addWidget(g_list[k], row_list[k], column_list[k])
         self.setLayout(layout)
+
