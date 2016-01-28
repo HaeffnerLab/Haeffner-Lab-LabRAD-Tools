@@ -15,36 +15,44 @@ class graphConfig():
         self.graphs = 1 # just a single graph
         self.show_points = show_points
 
-class doubleGraphConfig():
-    def __init__(self, tab, config1, config2):
+class gridGraphConfig():
+    def __init__(self, tab, config_list):
         self.tab = tab
-        self.config1 = config1
-        self.config2 = config2
-        self.graphs = 2
+        self.config_list = config_list[0::3]
+        self.row_list = config_list[1::3]
+        self.column_list = config_list[2::3]
 
-class quadGraphConfig():
-    def __init__(self, tab, config1, config2, config3, config4):
-        self.tab = tab
-        self.config1 = config1
-        self.config2 = config2
-        self.config3 = config3
-        self.config4 = config4
-        self.graphs = 4
+        self.graphs = len(self.config_list)
 
 
 tabs =[
-    graphConfig('current', max_datasets = 1),
-    graphConfig('pmt', ylim=[0,30], isScrolling=True, max_datasets = 1, show_points = False),
-    graphConfig('spectrum'),
-    graphConfig('rabi'),
-    quadGraphConfig('calibrations',
-                      graphConfig('car1'), graphConfig('car2'),
-                      graphConfig('radial1'), graphConfig('radial2')),
-    doubleGraphConfig('molmer-sorensen',
-                      graphConfig('ms_time'), graphConfig('local_stark')),
-       
-    doubleGraphConfig('vaet',
-                      graphConfig('vaet_time'), graphConfig('vaet_delta')),
-    graphConfig('parity'),
-    graphConfig('vaet_ms_det'),
+    gridGraphConfig('current', [graphConfig('current', max_datasets = 1), 0, 0]),
+    gridGraphConfig('pmt', [graphConfig('pmt', ylim=[0,30], isScrolling=True, max_datasets = 1, show_points = False), 0, 0]),
+    gridGraphConfig('spectrum', [graphConfig('spectrum'), 0, 0]),
+    gridGraphConfig('rabi', [graphConfig('rabi'), 0, 0]),
+    gridGraphConfig('calibrations', [
+                      graphConfig('car1'), 0, 0,
+                      graphConfig('car2'), 0, 1,                      
+                      graphConfig('radial1'), 1, 0,
+                      graphConfig('radial2'), 1, 1]),
+    gridGraphConfig('molmer-sorensen',[
+                      graphConfig('ms_time'), 0, 0,
+                      graphConfig('local_stark'), 0, 1]),
+
+    gridGraphConfig('vaet',[
+                      graphConfig('vaet_time'), 0, 0,
+                      graphConfig('vaet_delta'), 0, 1]),
+    gridGraphConfig('parity', [graphConfig('parity'), 0, 0]),
+    gridGraphConfig('testgrid',
+        [
+            graphConfig('fig1'), 0, 0,
+            graphConfig('fig2'), 0, 1,
+            graphConfig('fig3'), 2, 2,
+            graphConfig('fig4'), 1, 2
+        ]),
+    gridGraphConfig('testgrid2',
+        [
+            graphConfig('fig1123'), 0, 0,
+        ])
 ]
+
