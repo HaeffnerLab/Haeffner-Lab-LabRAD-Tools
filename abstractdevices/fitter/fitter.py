@@ -1,3 +1,20 @@
+"""
+### BEGIN NODE INFO
+[info]
+name = Fitter
+version = 1.0
+description = 
+
+[startup]
+cmdline = %PYTHON% %FILE%
+timeout = 20
+
+[shutdown]
+message = 987654321
+timeout = 5
+### END NODE INFO
+"""
+
 #install qt4 reactor for the GUI
 from PyQt4 import QtGui
 a = QtGui.QApplication( [])

@@ -105,7 +105,8 @@ class SDTracker(LabradServer):
         self.B_field = numpy.append(self.B_field , B['gauss'])
         self.line_center = numpy.append(self.line_center , freq['MHz'])
         #try to save to data vault
-        yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
+        #yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
+        yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'])
         self.do_fit()
 
     @setting(12, 'Set Measurement One Line', line = 'sv[MHz]', returns = '')

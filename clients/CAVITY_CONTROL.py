@@ -31,7 +31,7 @@ class cavityWidget(QtGui.QWidget):
     
     def createDict(self):
         self.d = {}
-        #self.d['397'] = widgetWrapper( serverName = '397', displayName = '397 SHG Cavity', regName = 'range397', globalRange = (0,2500))
+        self.d['397'] = widgetWrapper( serverName = '397', displayName = '397 SHG Cavity', regName = 'range397', globalRange = (0,2500))
         self.d['866'] = widgetWrapper( serverName = '866', displayName = '866 Cavity', regName = 'range866', globalRange = (0,2500))
         self.d['422'] = widgetWrapper( serverName = '422', displayName = '422 Offset', regName = 'range422', globalRange = (0,2500))
         self.d['854'] = widgetWrapper( serverName = '854',displayName = '854 Cavity', regName = 'range854', globalRange = (0,2500))
@@ -79,7 +79,7 @@ class cavityWidget(QtGui.QWidget):
         #lay out the widget
         layout = QtGui.QVBoxLayout()
         self.setLayout(layout)
-        for name in ['866','422','854','397D', '729inject']: #sets the order of appearance
+        for name in ['866','422','854','397', '729inject', '397D']: #sets the order of appearance
             layout.addWidget(self.d[name].widget)
         #connect functions
         for widgetWrapper in self.d.values():

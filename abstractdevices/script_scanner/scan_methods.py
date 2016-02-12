@@ -131,12 +131,14 @@ class experiment(experiment_info):
         self.should_stop = self.sc.pause_or_stop(self.ident)
         if self.should_stop:
             self.sc.stop_confirmed(self.ident)
+        self.parent.should_stop = self.should_stop
         return self.should_stop
     
     def make_experiment(self, subexprt_cls):
         subexprt = subexprt_cls(cxn = self.cxn)
         subexprt._connect()
         subexprt._load_required_parameters()
+        subexprt.parent = self
         return subexprt
     
     def set_progress_limits(self, min_progress, max_progress):

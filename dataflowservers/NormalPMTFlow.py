@@ -89,6 +89,12 @@ class NormalPMTFlow( LabradServer):
         except AttributeError:
             self.dv = None
             print 'Not Connected: Data Vault'
+            
+        try:
+            self.grapher = yield self.client.grapher
+        except AttributeError:
+            self.grapher = None
+            print "no grapher"
     
     @inlineCallbacks
     def disconnect_data_vault(self):
@@ -134,10 +140,11 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def makeNewDataSet(self, folder, name):
         yield self.dv.cd(folder, True)
-        newSet = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
+        ds = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
         self.startTime = time.time()
         yield self.addParameters(self.startTime)
-        name = newSet[1]
+        if self.grapher is not None:
+            self.grapher.plot(ds, 'pmt',False)
         returnValue(name)
     
     @inlineCallbacks
