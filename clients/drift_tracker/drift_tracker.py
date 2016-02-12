@@ -305,7 +305,8 @@ class drift_tracker(QtGui.QWidget):
         xmin,xmax = self.b_drift.get_xlim()
         xmin-= 10
         xmax+= 10
-        points = 1000
+        
+        points = 1000        
         x = numpy.linspace(xmin, xmax, points) 
         y = 1000 * numpy.polyval(p, 60*x)
         frequency_scale = 1.4 #KHz / mgauss
@@ -363,6 +364,23 @@ class drift_tracker(QtGui.QWidget):
             lines.append(label)
         line = axes.plot(x,y, 'b*')[0]
         lines.append(line)
+        
+        #set window limits
+        xmin = numpy.amin(x)
+        xmax = numpy.amax(x)
+        ymin = numpy.amin(y)
+        ymax = numpy.amax(y)
+        if xmin == xmax:
+            xlims = [xmin-5,xmax+5]
+            ylims = [ymin-2,ymax+2]
+        else:
+            xspan = xmax-xmin
+            yspan = ymax-ymin
+            xlims = [xmin-0.25*xspan,xmax+0.5*xspan]
+            ylims = [ymin-0.5*yspan,ymax+0.5*yspan]
+        axes.set_xlim(xlims)
+        axes.set_ylim(ylims)
+        
         self.drift_canvas.draw()
         
     def update_spectrum(self, lines):
