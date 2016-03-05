@@ -37,6 +37,10 @@ class SDTracker(LabradServer):
         self.fitter = fitter()
         self.t_measure_line_center = numpy.array([])
         self.t_measure_B = numpy.array([])
+        self.t_measure_B_nofit = numpy.array([])
+        self.B_field_nofit = numpy.array([])        
+        self.t_measure_line_center_nofit = numpy.array([])
+        self.line_center_nofit = numpy.array([])                
         self.B_field = numpy.array([])
         self.line_center = numpy.array([])
         self.B_fit = None
@@ -187,6 +191,8 @@ class SDTracker(LabradServer):
     def remove_B_measurement(self, c, point):
         '''removes the point w, can also be negative to count from the end'''
         try:
+            self.t_measure_B_nofit = numpy.append(self.t_measure_B_nofit, self.t_measure_B[point])
+            self.B_field_nofit = numpy.append(self.B_field_nofit, self.B_field[point])
             self.t_measure_B = numpy.delete(self.t_measure_B, point)
             self.B_field = numpy.delete(self.B_field, point)
         except ValueError or IndexError:
@@ -197,6 +203,8 @@ class SDTracker(LabradServer):
     def remove_line_center_measurement(self, c, point):
         '''removes the point w, can also be negative to count from the end'''
         try:
+            self.t_measure_line_center_nofit = numpy.append(self.t_measure_line_center_nofit, self.t_measure_line_center[point])
+            self.line_center_nofit = numpy.append(self.line_center_nofit, self.line_center[point])
             self.t_measure_line_center = numpy.delete(self.t_measure_line_center, point)
             self.line_center = numpy.delete(self.line_center, point)
         except ValueError or IndexError:
@@ -212,6 +220,16 @@ class SDTracker(LabradServer):
         for t, freq in zip(self.t_measure_line_center, self.line_center):
             history_line_center.append((WithUnit(t,'s'), WithUnit(freq, 'MHz')))
         return [history_B, history_line_center]
+    
+    @setting(14, 'Get Excluded Points', returns = '(*(v[s]v[gauss]) *(v[s]v[MHz]))')
+    def get_excluded_points(self, c):
+        excluded_B = []
+        excluded_line_center = []
+        for t,b_field in zip(self.t_measure_B_nofit, self.B_field_nofit):
+            excluded_B.append((WithUnit(t,'s'),WithUnit(b_field,'gauss')))
+        for t, freq in zip(self.t_measure_line_center_nofit, self.line_center_nofit):
+            excluded_line_center.append((WithUnit(t,'s'), WithUnit(freq, 'MHz')))
+        return [excluded_B, excluded_line_center]
     
     @setting(9, 'History Duration', duration = '*v[s]', returns = '*v[s]')
     def get_history_duration(self, c, duration = None):

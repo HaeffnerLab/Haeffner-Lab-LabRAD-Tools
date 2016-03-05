@@ -5,6 +5,10 @@ import pyqtgraph as pg
 pg.setConfigOption('background', 'k')
 pg.setConfigOption('foreground', 'y')
 
+class traceListConfig():
+    def __init__(self, background_color = 'white'):
+        self.background_color = background_color
+
 class graphConfig():
     def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 6,
                  show_points = True):

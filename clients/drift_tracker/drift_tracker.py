@@ -201,6 +201,7 @@ class drift_tracker(QtGui.QWidget):
         server = yield self.cxn.get_server('SD Tracker')
         try:
             yield server.remove_b_measurement(to_remove)
+            print to_remove
         except self.Error as e:
             self.displayError(e.msg)
     @inlineCallbacks
@@ -282,16 +283,22 @@ class drift_tracker(QtGui.QWidget):
         try:
             server = yield self.cxn.get_server('SD Tracker')
             history_B, history_line_center = yield server.get_fit_history()
+            excluded_B, excluded_line_center = yield server.get_excluded_points()
             fit_b = yield server.get_fit_parameters('bfield')
             fit_f = yield server.get_fit_parameters('linecenter')
         except Exception as e:
             #no fit available
+            print e
             pass
         else:
             inunits_b = [(t['min'], b['mgauss']) for (t,b) in history_B]
             inunits_f = [(t['min'], freq['kHz']) for (t,freq) in history_line_center]
-            self.update_track(inunits_b, self.b_drift, self.b_drift_lines)
-            self.update_track(inunits_f, self.line_drift, self.line_drift_lines)
+            inunits_b_nofit = [(t['min'], b['mgauss']) for (t,b) in excluded_B]
+            inunits_f_nofit = [(t['min'], freq['kHz']) for (t,freq) in excluded_line_center]            
+            self.update_track((inunits_b,inunits_b_nofit), self.b_drift, self.b_drift_lines)
+            self.update_track((inunits_f,inunits_f_nofit), self.line_drift, self.line_drift_lines)
+
+            
             self.plot_fit_b(fit_b)
             self.plot_fit_f(fit_f)
     
@@ -305,7 +312,8 @@ class drift_tracker(QtGui.QWidget):
         xmin,xmax = self.b_drift.get_xlim()
         xmin-= 10
         xmax+= 10
-        points = 1000
+        
+        points = 1000        
         x = numpy.linspace(xmin, xmax, points) 
         y = 1000 * numpy.polyval(p, 60*x)
         frequency_scale = 1.4 #KHz / mgauss
@@ -351,8 +359,13 @@ class drift_tracker(QtGui.QWidget):
         for i in range(len(lines)):
             line = lines.pop()
             line.remove()
-        x = numpy.array([m[0] for m in meas])
-        y = [m[1] for m in meas]
+        fitted = meas[0]
+        not_fitted = meas[1]
+        x = numpy.array([m[0] for m in fitted])
+        y = [m[1] for m in fitted]
+        xnofit = numpy.array([m[0] for m in not_fitted])
+        ynofit = [m[1] for m in not_fitted]
+        
         #annotate the last point
         try:
             last = y[-1]
@@ -362,7 +375,27 @@ class drift_tracker(QtGui.QWidget):
             label = axes.annotate('Last Point: {0:.2f} {1}'.format(last, axes.get_ylabel()), xy = (0.5, 0.9), xycoords = 'axes fraction', fontsize = 13.0)
             lines.append(label)
         line = axes.plot(x,y, 'b*')[0]
+        line_nofit = axes.plot(xnofit,ynofit, 'ro')[0]
+        
         lines.append(line)
+        lines.append(line_nofit)
+        
+        #set window limits
+        xmin = numpy.amin(x)
+        xmax = numpy.amax(x)
+        ymin = numpy.amin(y)
+        ymax = numpy.amax(y)
+        if xmin == xmax:
+            xlims = [xmin-5,xmax+5]
+            ylims = [ymin-2,ymax+2]
+        else:
+            xspan = xmax-xmin
+            yspan = ymax-ymin
+            xlims = [xmin-0.25*xspan,xmax+0.5*xspan]
+            ylims = [ymin-0.5*yspan,ymax+0.5*yspan]
+        axes.set_xlim(xlims)
+        axes.set_ylim(ylims)
+        
         self.drift_canvas.draw()
         
     def update_spectrum(self, lines):

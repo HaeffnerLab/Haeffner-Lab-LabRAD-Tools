@@ -1,13 +1,15 @@
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from ParameterListWidget import ParameterList
+from GUIConfig import traceListConfig
 
 class TraceList(QtGui.QListWidget):
     def __init__(self, parent):
         super(TraceList, self).__init__()
         self.parent = parent
         self.windows = []
-        self.setStyleSheet("background-color:black;")
+        self.config = traceListConfig()
+        self.setStyleSheet("background-color:%s;" % self.config.background_color)
         self.initUI()
 
     def initUI(self):
