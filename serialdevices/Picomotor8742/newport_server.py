@@ -39,9 +39,8 @@ class NewportServer(LabradServer):
     @setting(1, 'Get Position', axis = 'i', returns = 'i')
     def get_position(self, c, axis):
         cmd = self.construct_command(axis, 'TP?')
-        pos = yield self.controller.command(cmd)
-        print pos
-        return pos
+        pos = yield self.controller.command(cmd, int_reply = True)
+        returnValue(pos)
 
     @setting(2, 'Absolute Move', axis = 'i', pos = 'i')
     def absolute_move(self, c, axis, pos):

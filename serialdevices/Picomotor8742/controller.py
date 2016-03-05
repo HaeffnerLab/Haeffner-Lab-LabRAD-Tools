@@ -160,7 +160,7 @@ class Controller(object):
                                                             ))
 
 
-    def parse_reply(self, reply):
+    def parse_reply(self, reply, int_reply):
         """Take controller's reply and make human readable
 
         Args:
@@ -169,15 +169,16 @@ class Controller(object):
         Returns:
             reply (str): Cleaned string of controller reply
         """
-
-        # convert hex to characters 
         reply = ''.join([chr(x) for x in reply])
         reply = reply.rstrip()
-        reply = int(reply[2:])
+        if int_reply:
+            reply = reply.rstrip()
+            reply = int(reply[2:])
         return reply
 
 
-    def command(self, newfocus_command):
+
+    def command(self, newfocus_command, int_reply = False):
         """Send NewFocus formatted command
 
         Args:
@@ -199,7 +200,7 @@ class Controller(object):
 
         # if a reply is expected, parse it
         if get_reply:
-            return self.parse_reply(reply)
+            return self.parse_reply(reply, int_reply)
 
 
     def start_console(self):
