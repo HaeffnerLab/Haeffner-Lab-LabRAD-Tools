@@ -25,6 +25,9 @@ from controller import Controller
 class NewportServer(LabradServer):
 
     name = 'NewportServer'
+    
+    # signal arguments are (axis, new absolute position)
+    on_position_change = Signal(144821, 'signal: position change', '(ii)' )
 
     def construct_command(self, axis, command, nn = None):
         if nn is None:
@@ -63,7 +66,8 @@ class NewportServer(LabradServer):
         self.inCommunication.release()
 
         self.position_dict[axis] = pos
-    
+        self.notifyOtherListeners(c, (axis, pos))    
+
     @setting(2, 'Relative Move', axis = 'i', steps = 'i')
     def relative_move(self, c, axis, steps):
         """
@@ -74,6 +78,7 @@ class NewportServer(LabradServer):
         self.inCommunication.relase()
 
         self.position_dict[axis] += steps
+        self.notifyOtherListeners(c, (axis, self.position_dict[axis]) )
 
     @setting(3, 'Mark current setpoint')
     def mark_setpoint(self, c):
@@ -102,19 +107,19 @@ class NewportServer(LabradServer):
             yield self.controller.absolute_move( axis, self.setpoint[axis] )
             pos = self.setpoint[axis]
             self.position_dict[axis] = pos
+            self.notifyOtherListeners(c, (axis, pos))
+        self.inCommunication.release()
 
-    def notifyOtherListeners(self, context, message, f):
+    def notifyOtherListeners(self, context, message):
         notified = self.listeners.copy()
         notified.remove(context.ID)
-        f(message.notified)
+        self.on_position_change(message, notified)
 
     def initContext(self, c):
         self.listeners.add(c.ID)
     
     def expireContext(self, c):
         self.listeners.remove(c.ID)
-    
-        
 
 if __name__ == "__main__":
     from labrad import util
