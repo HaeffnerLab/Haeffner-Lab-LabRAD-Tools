@@ -13,13 +13,30 @@ class PICOMOTOR_AXIS(QtGui.QWidget):
 
     def initUI(self):
 
-        hbox = QtGui.QHBoxLayout()
-        self.button_increase = QtGui.QPushButton('>', self)
-        self.button_decrease = QtGui.QPushButton('<', self)
-        #self.button.clicked.connect(self.handleButton)
-        hbox.addWidget(self.button_decrease)
-        hbox.addWidget(self.button_decrease)
-        self.setLayout(hbox)
+        # absolute position
+        absolute = QtGui.QHBoxLayout()
+        self.absolute_position = QtGui.QSpinBox()
+        self.move_absolute_button = QtGui.QPushButton('Move')
+        absolute.addStretch(1)
+        absolute.addWidget(self.absolute_position)
+        absolute.addWidget(self.move_absolute_button)
+
+        # move forward or back by some number of steps
+        updown = QtGui.QHBoxLayout()
+        self.step_size = QtGui.QSpinBox()
+        self.button_increase = QtGui.QPushButton('>')
+        self.button_decrease = QtGui.QPushButton('<')
+        updown.addStretch(1)
+        updown.addWidget(self.step_size)
+        updown.addWidget(self.button_decrease)
+        updown.addWidget(self.button_increase)
+
+        vbox = QtGui.QVBoxLayout()
+        vbox.addStretch(1)
+        vbox.addLayout(absolute)
+        vbox.addLayout(updown)
+        #self.setGeometry(300, 300, 300, 150)
+        self.setLayout(vbox)
 
 if __name__ == '__main__':
 
