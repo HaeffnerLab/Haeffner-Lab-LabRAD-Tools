@@ -202,29 +202,25 @@ class Controller(object):
         if get_reply:
             return self.parse_reply(reply, int_reply)
 
+        
+    def construct_command(self, axis, command, nn = None):
+        if nn is None:
+            return str(axis) + command
+        else:
+            return str(axis) + command + str(nn)
 
-    def start_console(self):
-        """Continuously ask user for a command
-        """
-        print('''
-        Picomotor Command Line
-        ---------------------------
+    def get_position(self, axis):
+        cmd = self.construct_command(axis, 'TP?')
+        pos = self.command(cmd, int_reply = True)
+        return pos
 
-        Enter a valid NewFocus command, or 'quit' to exit the program.
+    def absolute_move(self, axis, pos):
+        cmd = self.construct_command(axis, 'PA', pos)
+        self.command(cmd)
 
-        Common Commands:
-            xMV[+-]: .....Indefinitely move motor 'x' in + or - direction
-                 ST: .....Stop all motor movement
-              xPRnn: .....Move motor 'x' 'nn' steps
-        \n
-        ''')
+    def relative_move(self, axis, steps):
+        cmd = self.construct_command(axis, 'PR', steps)
+        self.command(cmd)
 
-        while True:
-            command = raw_input("Input > ")
-            if command.lower() in ['q', 'quit', 'exit']: 
-                break
-            else:
-                rep = self.command(command)
-                if rep:
-                    print("Output: {}".format(rep))
-
+    
+             
