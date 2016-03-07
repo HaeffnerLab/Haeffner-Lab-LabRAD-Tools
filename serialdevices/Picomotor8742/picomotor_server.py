@@ -3,10 +3,10 @@
 '''
 ### BEGIN NODE INFO
 [info]
-name = Newport
+name = Picomotor
 version = 1.2
 description =
-instancename = Newport
+instancename = Picomotor
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
@@ -22,9 +22,9 @@ from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, D
 from twisted.internet.threads import deferToThread
 from controller import Controller
 
-class NewportServer(LabradServer):
+class PicomotorServer(LabradServer):
 
-    name = 'NewportServer'
+    name = 'PicomotorServer'
     
     # signal arguments are (axis, new absolute position)
     on_position_change = Signal(144821, 'signal: position change', '(ii)' )
@@ -41,6 +41,7 @@ class NewportServer(LabradServer):
         self.position_dict = dict.fromkeys( [1, 2, 3, 4], 0)
         self.setpoint = dict.fromkeys( [1, 2, 3, 4], 0)
         self.inCommunication = DeferredLock()
+        self.listeners = set()
 
 
     @setting(0, 'Get Position', axis = 'i', returns = 'i')
@@ -51,9 +52,10 @@ class NewportServer(LabradServer):
         """
         yield self.inCommunication.acquire()
         pos = yield self.controller.get_position(axis)
-        self.inCommunication.relase()
+        self.inCommunication.release()
 
         self.position_dict[axis] = pos
+        self.notifyOtherListeners(c, (axis, pos))
         returnValue(pos)
 
     @setting(1, 'Absolute Move', axis = 'i', pos = 'i')
@@ -75,7 +77,7 @@ class NewportServer(LabradServer):
         """
         yield self.inCommunication.acquire()
         yield self.controller.relative_move(axis, steps)
-        self.inCommunication.relase()
+        self.inCommunication.release()
 
         self.position_dict[axis] += steps
         self.notifyOtherListeners(c, (axis, self.position_dict[axis]) )
@@ -123,4 +125,4 @@ class NewportServer(LabradServer):
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer( NewportServer() )
+    util.runServer( PicomotorServer() )
