@@ -8,8 +8,12 @@ from PyQt4 import QtCore
 
 class PICOMOTOR_AXIS(QtGui.QWidget):
     
-    def __init__(self, name, axis):
+    def __init__(self, name, axis, reactor):
         QtGui.QWidget.__init__(self)
+        self.reactor = reactor
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        #self.context = context
+        #self.cxn = cxn
         self.axis = axis
         self.initUI(name)
 
@@ -19,7 +23,8 @@ class PICOMOTOR_AXIS(QtGui.QWidget):
         title.setAlignment(QtCore.Qt.AlignCenter)
         # absolute position
         absolute = QtGui.QHBoxLayout()
-        self.absolute_position = QtGui.QLineEdit()
+        self.absolute_position = QtGui.QSpinBox()
+        self.absolute_position.setRange(-100000, 100000)
         self.move_absolute_button = QtGui.QPushButton('Move')
         absolute.addStretch(1)
         absolute.addWidget(self.absolute_position)
@@ -28,6 +33,7 @@ class PICOMOTOR_AXIS(QtGui.QWidget):
         # move forward or back by some number of steps
         updown = QtGui.QHBoxLayout()
         self.step_size = QtGui.QSpinBox()
+        self.step_size.setRange(0, 10000)
         self.button_increase = QtGui.QPushButton('>')
         self.button_decrease = QtGui.QPushButton('<')
         updown.addStretch(1)
@@ -41,21 +47,48 @@ class PICOMOTOR_AXIS(QtGui.QWidget):
         vbox.addLayout(absolute)
         vbox.addLayout(updown)
         #self.setGeometry(300, 300, 300, 150)
+
+        self.button_increase.clicked.connect(self.move_pos)
+        self.button_decrease.clicked.connect(self.move_neg)
+        self.move_absolute_button.clicked.connect(self.move_absolute)
         self.setLayout(vbox)
+
+    @inlineCallbacks
+    def move_pos(self, x):
+        move = self.step_size.value()
+        print move
+        yield None
+
+    @inlineCallbacks
+    def move_neg(self, x):
+        move = -self.step_size.value()
+        print move
+        yield None
+    
+    @inlineCallbacks
+    def move_absolute(self, x):
+        move = self.absolute_position.value()
+        print move
+        yield None
+
+    def closeEvent(self, x):
+        self.reactor.stop()
 
 class PICOMOTOR_CONTROL(QtGui.QWidget):
 
-    def __init__(self):
+    def __init__(self, reactor):
         QtGui.QWidget.__init__(self)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.reactor = reactor
         self.initUI()
     
     def initUI(self):
         grid = QtGui.QGridLayout()
-        
-        axes = [PICOMOTOR_AXIS('local_horiz', 1),
-                PICOMOTOR_AXIS('local_vert', 2),
-                PICOMOTOR_AXIS('global_horiz', 3),
-                PICOMOTOR_AXIS('global_vert', 4)]
+        reactor = self.reactor
+        axes = [PICOMOTOR_AXIS('local_horiz', 1, reactor),
+                PICOMOTOR_AXIS('local_vert', 2, reactor),
+                PICOMOTOR_AXIS('global_horiz', 3, reactor),
+                PICOMOTOR_AXIS('global_vert', 4, reactor)]
 
         grid.addWidget(axes[0], 1,1)
         grid.addWidget(axes[1], 1,2)
@@ -63,11 +96,15 @@ class PICOMOTOR_CONTROL(QtGui.QWidget):
         grid.addWidget(axes[3], 2,2)
         self.setLayout(grid)
 
+    def closeEvent(self, x):
+        self.reactor.stop()
+
 if __name__ == '__main__':
 
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    #window = PICOMOTOR_AXIS('local_horiz', 1)
-    window = PICOMOTOR_CONTROL()
+    app = QtGui.QApplication([])
+    import qt4reactor
+    qt4reactor.install()
+    from twisted.internet import reactor
+    window = PICOMOTOR_CONTROL(reactor)
     window.show()
-    sys.exit(app.exec_())
+    reactor.run()
