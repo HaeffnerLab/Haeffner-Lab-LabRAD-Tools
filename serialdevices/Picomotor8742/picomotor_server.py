@@ -70,10 +70,11 @@ class PicomotorServer(LabradServer):
         self.position_dict[axis] = pos
         self.notifyOtherListeners(c, (axis, pos))    
 
-    @setting(2, 'Relative Move', axis = 'i', steps = 'i')
+    @setting(2, 'Relative Move', axis = 'i', steps = 'i', returns = 'i')
     def relative_move(self, c, axis, steps):
         """
-        Move the given axis the given number of steps
+        Move the given axis the given number of steps.
+        Returns the new absolute position.
         """
         yield self.inCommunication.acquire()
         yield self.controller.relative_move(axis, steps)
@@ -81,6 +82,8 @@ class PicomotorServer(LabradServer):
 
         self.position_dict[axis] += steps
         self.notifyOtherListeners(c, (axis, self.position_dict[axis]) )
+        
+        returnValue(self.position_dict[axis])
 
     @setting(3, 'Mark current setpoint')
     def mark_setpoint(self, c):
