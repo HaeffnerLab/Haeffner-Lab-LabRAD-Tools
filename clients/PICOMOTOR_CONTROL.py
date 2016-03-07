@@ -80,7 +80,7 @@ class PICOMOTOR_AXIS(QtGui.QWidget):
 
     def updatePosition(self, pos):
         # set absolute position label and spin boxes to the new current position
-        self.absolute_position_label.setText('current:   %d'%pos)
+        self.absolute_position_label.setText('current:   %d' % pos)
         self.absolute_position_spin.setValue(pos)
 
     def closeEvent(self, x):
