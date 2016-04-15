@@ -46,7 +46,8 @@ tabs =[
     gridGraphConfig('vaet',[
                       graphConfig('vaet_time'), 0, 0,
                       graphConfig('vaet_delta'), 0, 1]),
-    gridGraphConfig('parity', [graphConfig('parity'), 0, 0])
+    gridGraphConfig('parity', [graphConfig('parity'), 0, 0]),
+    gridGraphConfig('ramsey', [graphConfig('ramsey'), 0, 0])
 ]
 
 #    gridGraphConfig('testgrid',

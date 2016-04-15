@@ -143,8 +143,13 @@ class NormalPMTFlow( LabradServer):
         ds = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
         self.startTime = time.time()
         yield self.addParameters(self.startTime)
-        if self.grapher is not None:
+        try:
+            self.grapher = yield self.client.grapher
             self.grapher.plot(ds, 'pmt',False)
+        except AttributeError:
+            self.grapher = None
+            print "no grapher"
+            
         returnValue(name)
     
     @inlineCallbacks

@@ -3,7 +3,7 @@ Control for Newport picomotor stages
 '''
 from twisted.internet.defer import inlineCallbacks, returnValue
 from connection import connection
-from PICOMOTOR_CONTROL_CONFIG import *
+from PICOMOTOR_CONTROL_config import *
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
