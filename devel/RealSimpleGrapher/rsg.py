@@ -21,6 +21,7 @@ from labrad.server import LabradServer, setting
 name =  Real Simple Grapher
 version = 1.0
 description = 
+instancename = Real Simple Grapher
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20

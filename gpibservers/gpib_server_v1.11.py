@@ -106,7 +106,7 @@ class GPIBBusServer(LabradServer):
         c['timeout'] = self.defaultTimeout
 
     def getDevice(self, c):
-        if c['addr'] not in self.devices:
+        if c['addr'] not in self.devices:
             raise Exception('Could not find device ' + c['addr'])
         instr = self.devices[c['addr']]
         instr.timeout = c['timeout']['s']

@@ -5,6 +5,10 @@ import pyqtgraph as pg
 pg.setConfigOption('background', 'k')
 pg.setConfigOption('foreground', 'y')
 
+class traceListConfig():
+    def __init__(self, background_color = 'white'):
+        self.background_color = background_color
+
 class graphConfig():
     def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 6,
                  show_points = True):
@@ -43,16 +47,17 @@ tabs =[
                       graphConfig('vaet_time'), 0, 0,
                       graphConfig('vaet_delta'), 0, 1]),
     gridGraphConfig('parity', [graphConfig('parity'), 0, 0]),
-    gridGraphConfig('testgrid',
-        [
-            graphConfig('fig1'), 0, 0,
-            graphConfig('fig2'), 0, 1,
-            graphConfig('fig3'), 2, 2,
-            graphConfig('fig4'), 1, 2
-        ]),
-    gridGraphConfig('testgrid2',
-        [
-            graphConfig('fig1123'), 0, 0,
-        ])
+    gridGraphConfig('ramsey', [graphConfig('ramsey'), 0, 0])
 ]
 
+#    gridGraphConfig('testgrid',
+#        [
+#            graphConfig('fig1'), 0, 0,
+#            graphConfig('fig2'), 0, 1,
+#            graphConfig('fig3'), 2, 2,
+#            graphConfig('fig4'), 1, 2
+#        ]),
+#    gridGraphConfig('testgrid2',
+#        [
+#            graphConfig('fig1123'), 0, 0,
+#        ])

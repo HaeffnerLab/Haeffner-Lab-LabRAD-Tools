@@ -2,7 +2,6 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import returnValue
 from twisted.internet.threads import deferToThread
 from ctypes import c_long, c_buffer, c_float, windll, pointer
-from APT_config import stageConfiguration
 
 """
 ### BEGIN NODE INFO

@@ -131,7 +131,10 @@ class experiment(experiment_info):
         self.should_stop = self.sc.pause_or_stop(self.ident)
         if self.should_stop:
             self.sc.stop_confirmed(self.ident)
-        self.parent.should_stop = self.should_stop
+        try:
+            self.parent.should_stop = self.should_stop
+        except:
+            pass
         return self.should_stop
     
     def make_experiment(self, subexprt_cls):
