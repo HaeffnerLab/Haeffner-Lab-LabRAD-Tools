@@ -118,7 +118,7 @@ import numpy as np
 from itertools import cycle
 
 
-TIMERREFRESH = .01 #s
+TIMERREFRESH = .01 
 MAXDATASETSIZE = 100000
 #SCALEFACTOR = 1.5
 SCROLLFRACTION = .8; # Data reaches this much of the screen before auto-scroll takes place
@@ -445,12 +445,17 @@ class Qt4MplCanvas(FigureCanvas):
             if (currentX > SCROLLFRACTION * xwidth + xmin):
                 self.autofitDataX(currentX, MAX)
             elif (currentX < (1 - SCROLLFRACTION- .15) * xwidth + xmin): # -.15 since usually data travels right
-                self.autofitDataX(currentX, MIN)        
-            if (currentYmax > SCROLLFRACTION * ywidth + ymin):
-                self.autofitDataY(currentYmax, MAX)
-            elif (currentYmin < (1 - SCROLLFRACTION) * ywidth + ymin):
-                self.autofitDataY(currentYmin, MIN)
-        
+                self.autofitDataX(currentX, MIN)
+            
+            if not self.parent.cb4.isChecked():
+                if (currentYmax > SCROLLFRACTION * ywidth + ymin):
+                    self.autofitDataY(currentYmax, MAX)
+                elif (currentYmin < (1 - SCROLLFRACTION) * ywidth + ymin):
+                    self.autofitDataY(currentYmin, MIN)
+                    
+            if self.parent.cb4.isChecked():
+                self.ax.set_ylim(0,1)
+
 #    def getDataXLimits(self):
 #        xmin = None
 #        xmax = None
@@ -552,7 +557,10 @@ class Qt4MplCanvas(FigureCanvas):
         self.ax.set_xlim(xmin - .1*xwidth, xmax + .1*xwidth)
         ymin, ymax = self.getDataYLimits()
         ywidth = abs(ymax - ymin)
-        self.ax.set_ylim(ymin - .1*ywidth, ymax + .1*ywidth)
+        if self.parent.cb4.isChecked():
+            self.ax.set_ylim(0, 1)
+        else:
+            self.ax.set_ylim(ymin - .1*ywidth, ymax + .1*ywidth)
         self.draw()
         #self.ax.set_xlim(self.initialxmin, self.maxX)
         #self.draw()

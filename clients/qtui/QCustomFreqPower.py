@@ -24,10 +24,12 @@ class TextChangingButton(QtGui.QPushButton):
         return QtCore.QSize(37, 26)
 
 class QCustomFreqPower(QtGui.QFrame):
-    def __init__(self, title, switchable = True, parent=None):
+    def __init__(self, title, switchable = True, parent=None, stepSize = 0.1):
         QtGui.QWidget.__init__(self, parent)
+        self.stepSize = stepSize
         self.setFrameStyle(0x0001 | 0x0030)
         self.makeLayout(title, switchable)
+
     
     def makeLayout(self, title, switchable):
         layout = QtGui.QGridLayout()
@@ -47,7 +49,7 @@ class QCustomFreqPower(QtGui.QFrame):
         self.spinFreq = QtGui.QDoubleSpinBox()
         self.spinFreq.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         self.spinFreq.setDecimals(3)
-        self.spinFreq.setSingleStep(0.1)
+        self.spinFreq.setSingleStep(self.stepSize)
         self.spinFreq.setRange(10.0,250.0)
         self.spinFreq.setKeyboardTracking(False)
         self.spinPower = QtGui.QDoubleSpinBox()

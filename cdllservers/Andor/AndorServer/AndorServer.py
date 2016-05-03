@@ -11,6 +11,8 @@ from twisted.internet import reactor
 from labrad.server import LabradServer, setting
 from AndorCamera import AndorCamera
 from labrad.units import WithUnit
+import numpy as np
+
 
 """
 ### BEGIN NODE INFO
@@ -271,7 +273,8 @@ class AndorServer(LabradServer):
             yield deferToThread(self.camera.prepare_acqusition)
             yield deferToThread(self.camera.start_acquisition)
             #necessary so that start_acquisition call completes even for long kinetic series
-            yield self.wait(0.050)
+            #yield self.wait(0.050)
+            yield self.wait(0.1)
         finally:
             print 'releasing: {}'.format(self.startAcquisition.__name__)
             self.lock.release()
@@ -313,6 +316,26 @@ class AndorServer(LabradServer):
             self.lock.release()
         returnValue(image)
 
+    @setting(33, "Get Summed Data", num_images = 'i', returns = '*i')
+    def getSummedData(self, c, num_images = 1):
+        ''' Get the counts with the vertical axis summed over. '''
+
+        print 'acquiring: {}'.format(self.getAcquiredData.__name__)
+        yield self.lock.acquire()
+        try:
+            print 'acquired: {}'.format(self.getAcquiredData.__name__)
+            images = yield deferToThread(self.camera.get_acquired_data, num_images)
+            hbin, vbin, hstart, hend, vstart, vend = self.camera.get_image()
+            x_pixels = int( (hend - hstart + 1.) / (hbin) )
+            y_pixels = int(vend - vstart + 1.) / (vbin)
+            images = np.reshape(images, (num_images, y_pixels, x_pixels))
+            images = images.sum(axis=1)
+            images = images.ravel()
+            images = images.tolist()            
+        finally:
+            print 'releasing: {}'.format(self.getAcquiredData.__name__)
+            self.lock.release()
+        returnValue(images)
     '''
     General
     '''
@@ -359,9 +382,9 @@ class AndorServer(LabradServer):
         finally:
             print 'releasing: {}'.format(self.setNumberKinetics.__name__)
             self.lock.release()
-    
+    # UPDATED THE TIMEOUT. FIX IT LATER
     @setting(28, "Wait For Kinetic", timeout = 'v[s]',returns = 'b')
-    def waitForKinetic(self, c, timeout = WithUnit(10,'s')):
+    def waitForKinetic(self, c, timeout = WithUnit(1,'s')):
         '''Waits until the given number of kinetic images are completed'''
         requestCalls = int(timeout['s'] / 0.050 ) #number of request calls
         for i in range(requestCalls):
@@ -371,8 +394,9 @@ class AndorServer(LabradServer):
                 print 'acquired : {}'.format(self.waitForKinetic.__name__)
                 status = yield deferToThread(self.camera.get_status)
                 #useful for debugging of how many iterations have been completed in case of missed trigger pulses
-#                 a,b = yield deferToThread(self.camera.get_series_progress)
-#                 print a,b
+                a,b = yield deferToThread(self.camera.get_series_progress)
+                print a,b
+                print status
             finally:
                 print 'releasing: {}'.format(self.waitForKinetic.__name__)
                 self.lock.release()
@@ -392,6 +416,13 @@ class AndorServer(LabradServer):
             print 'releasing: {}'.format(self.get_detector_dimensions.__name__)
             self.lock.release()
         returnValue(dimensions)
+
+    @setting(32, "getemrange", returns = '(ii)')
+    def getemrange(self, c):
+        #emrange = yield self.camera.get_camera_em_gain_range()
+        #returnValue(emrange)
+        return self.camera.get_camera_em_gain_range()
+
         
     def wait(self, seconds, result=None):
         """Returns a deferred that will be fired later"""

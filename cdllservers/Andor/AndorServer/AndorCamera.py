@@ -201,6 +201,7 @@ class AndorCamera(object):
         if (ERROR_CODE[error] == 'DRV_SUCCESS'):
             self.info.min_gain = min_gain.value
             self.info.max_gain = max_gain.value
+            return (min_gain.value, max_gain.value)
         else:
             raise Exception(ERROR_CODE[error])
         
@@ -227,7 +228,7 @@ class AndorCamera(object):
             raise Exception("Incorrect read mode {}".format(mode))
         error = self.dll.SetReadMode(c.c_int(mode_number))
         if (ERROR_CODE[error] == 'DRV_SUCCESS'):
-            self.info.read_mode = mode      
+            self.info.read_mode = mode
         else:
             raise Exception(ERROR_CODE[error])
     

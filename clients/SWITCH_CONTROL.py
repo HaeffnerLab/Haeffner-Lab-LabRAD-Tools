@@ -23,7 +23,7 @@ class switchWidget(QtGui.QFrame):
         if self.cxn is  None:
             self.cxn = connection()
             yield self.cxn.connect()
-            from labrad.types import Error
+            from labrad.types import Error#self.tabWidget.addTab(pie
             self.Error = Error
         self.context = yield self.cxn.context()
         try:
@@ -93,7 +93,8 @@ class switchWidget(QtGui.QFrame):
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         #get switch names and add them to the layout, and connect their function
-        layout.addWidget(QtGui.QLabel('Switches'),0,0)
+        #layout.addWidget(QtGui.QLabel('Switches'),0,0)
+        #print channels
         for order,name in enumerate(channels):
             #setting up physical container
             groupBox = QtGui.QGroupBox(name) 

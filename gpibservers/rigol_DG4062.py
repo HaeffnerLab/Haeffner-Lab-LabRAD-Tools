@@ -219,7 +219,15 @@ class RigolDG4062Wrapper(GPIBDeviceWrapper):
         else:
             raise Exception("Incorrect mode")
         returnValue(burst_mode)
-        
+
+    @inlineCallbacks
+    def setBurstCycles(self, cycles):
+        yield self.write('BURST:NCYCles {}'.format(int(cycles)))
+
+    @inlineCallbacks
+    def trigger(self):
+        yield self.write('*TRG')
+
     @inlineCallbacks
     def setBurstMode(self, burst_mode, source):
         if burst_mode == 'gated':
@@ -336,6 +344,21 @@ class RigolDG4062Server(GPIBManagedServer):
         if burst_mode is not None:
             yield dev.setBurstMode(burst_mode, source)
         returnValue(dev.burst_mode)
+
+    @setting(34, 'Burst Cycles', cycles='i', returns = '')
+    def burst_mode(self, c, cycles):
+        '''Set or get the burst mode of the device. Can be 'triggered', 'gated' or 'infinity' '''
+        dev = self.selectedDevice(c)
+        yield dev.setBurstCycles(cycles)
+
+    @setting(35, 'Trigger', returns = '')
+    def trigger(self, c):
+        '''Set or get the burst mode of the device. Can be 'triggered', 'gated' or 'infinity' '''
+        dev = self.selectedDevice(c)
+        yield dev.trigger()
+
+
+
     '''
     Settings 40 to 50 are related to ARB mode
     '''

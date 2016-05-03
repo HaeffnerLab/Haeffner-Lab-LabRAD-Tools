@@ -116,6 +116,12 @@ class TektronixTDS2014CWrapper(GPIBDeviceWrapper):
         result = yield self.write('MEASUrement:IMMed:TYPe PK2pk')
         returnValue(result)
 
+    @inlineCallbacks
+    def setrms(self): #sets reading to rms
+        result = yield self.write('MEASUrement:IMMed:TYPe CRMs')
+        returnValue(result)
+
+
 
 class TektronixTDSServer(GPIBManagedServer):
     #Provides basic control for Tektronix 2014C Oscilloscope
@@ -190,7 +196,7 @@ class TektronixTDSServer(GPIBManagedServer):
         t0=self.tdsDict['X0']
         dt=self.tdsDict['Xinc']
         length=self.tdsDict['Datalength']        
-        tarray = t0 + dt*array(range(length))        
+        tarray = t0 + dt*array(range(length))
         intarr = numpy.vstack((tarray,voltarray))
         answer = intarr.transpose()
         returnValue(answer)
@@ -213,7 +219,15 @@ class TektronixTDSServer(GPIBManagedServer):
         answer = yield dev.setpk2pkstr()
         print 'success'
         returnValue(answer)
-        
+
+    @setting(108, 'setrms', returns='')
+    def setpk2pk(self, c):
+        dev = self.selectedDevice(c)
+        answer = yield dev.setrms()
+        print 'success'
+        returnValue(answer)
+
+
 
     @inlineCallbacks
     def _readX0(self, c):

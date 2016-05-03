@@ -36,6 +36,8 @@ class cavityWidget(QtGui.QWidget):
         self.d['422'] = widgetWrapper( serverName = '422', displayName = '422 Offset', regName = 'range422', globalRange = (0,2500))
         self.d['854'] = widgetWrapper( serverName = '854',displayName = '854 Cavity', regName = 'range854', globalRange = (0,2500))
         self.d['397D'] =  widgetWrapper( serverName = '397D', displayName = '397 Diode Cavity', regName = 'range397D', globalRange = (0,2500))
+        self.d['729inject'] =  widgetWrapper( serverName = '729inject', displayName = '729inject', regName = 'range729inject', globalRange = (0,2500))
+
         
     @inlineCallbacks
     def connect(self):
@@ -77,7 +79,7 @@ class cavityWidget(QtGui.QWidget):
         #lay out the widget
         layout = QtGui.QVBoxLayout()
         self.setLayout(layout)
-        for name in ['397','866','422','854','397D']: #sets the order of appearance
+        for name in ['866','422','854','397', '729inject', '397D']: #sets the order of appearance
             layout.addWidget(self.d[name].widget)
         #connect functions
         for widgetWrapper in self.d.values():

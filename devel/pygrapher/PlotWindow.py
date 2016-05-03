@@ -10,6 +10,8 @@ from twisted.internet.task import LoopingCall
 
 import time
 
+import IPython as ip
+
 # pg.setConfigOption('background', 'w')
 # pg.setConfigOption('foreground', 'k')
 
@@ -27,6 +29,7 @@ class PlotWindow(QtGui.QWidget):
     
     def __init__(self, reactor):
         super(PlotWindow, self).__init__()
+        QtCore.pyqtRemoveInputHook()
         #dictionary in the form dataset_name: dataset_info
         self.reactor = reactor
         self.datasets = {}
@@ -39,6 +42,7 @@ class PlotWindow(QtGui.QWidget):
         self.plot_widget.add_artist(dataset.datasetName)
         print "added artist " + dataset.datasetName
         self.dataset_list.add_dataset(dataset)
+        #ip.embed()
         #dataset.getData()
         #yield deferToThread(time.sleep, 0.1)
         #try:
@@ -79,7 +83,9 @@ class PlotWindow(QtGui.QWidget):
         self.dataset_list.move_button.pressed.connect(self.test_hide)
     
     def test_hide(self):
-        self.plot_widget.hide('1', False)
+        #self.plot_widget.hide('1', False)
+        ip.embed()
+    
         
     @inlineCallbacks
     def on_change(self):

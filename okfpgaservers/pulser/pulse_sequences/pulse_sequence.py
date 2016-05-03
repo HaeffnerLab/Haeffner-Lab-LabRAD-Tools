@@ -53,10 +53,11 @@ class pulse_sequence(object):
 				raise Exception('{0} {1} value not provided for the {2} Pulse Sequence'.format(collection, parameter_name, self.__class__.__name__))
 		return new_dict
 	
-	def addDDS(self, channel, start, duration, frequency, amplitude, phase = WithUnit(0, 'deg')):
+	def addDDS(self, channel, start, duration, frequency, amplitude, phase = WithUnit(0, 'deg'), profile = 0):
 		"""
 		add a dds pulse to the pulse sequence
 		"""
+		#print "Profile: ", profile
 		dds_channel = dds_config.get(channel, None)
 		if dds_channel is not None:
 			#additional configuration provided
@@ -64,7 +65,7 @@ class pulse_sequence(object):
 			frequency = dds_channel.freq_conversion(frequency)
 			amplitude = dds_channel.ampl_conversion(amplitude)
 			phase = dds_channel.phase_conversion(phase)
-		self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase))
+		self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase, profile))
 	
 	def addTTL(self, channel, start, duration):
 		"""

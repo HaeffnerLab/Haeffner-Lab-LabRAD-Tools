@@ -108,7 +108,10 @@ class ParameterVault(LabradServer):
         if t == 'string':
             return (t, item)
         else:
-            raise Exception("Can't save, not one of checkable types")
+            # Should we really do this and circumvent the exception here?? Philipp
+            # In script scanner a boolean is set via the full_info. Does not wotk from a shell (The content is missing?)
+            return (t, value)
+            #raise Exception("Can't save, not one of checkable types") #TODO FIXME ??????????
 
     def check_parameter(self, name, value):
         """
