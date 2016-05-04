@@ -7,9 +7,6 @@ import GUIConfig
 from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 from ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
 from GridGraphWindow import GridGraphWindow
-from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
-from twisted.internet.task import LoopingCall
-from twisted.internet.threads import blockingCallFromThread
 
 class GraphWindow(QtGui.QTabWidget):
     def __init__(self, reactor, parent=None):

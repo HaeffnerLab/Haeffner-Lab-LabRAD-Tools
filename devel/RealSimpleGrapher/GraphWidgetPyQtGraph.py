@@ -1,10 +1,9 @@
 import sys
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
 from TraceListWidget import TraceList
-from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
-from twisted.internet.threads import blockingCallFromThread
 import itertools
 from Dataset import Dataset
 import Queue
