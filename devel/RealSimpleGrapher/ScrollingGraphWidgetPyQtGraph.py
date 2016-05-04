@@ -4,6 +4,7 @@ class ScrollingGraph_PyQtGraph(Graph):
     def __init__(self, name, reactor, parent = None, ylim=[0,1]):
         super(ScrollingGraph_PyQtGraph, self).__init__(name, reactor, parent)
         self.set_xlimits([0, 100])
+	self.pointsToKeep = 100
 
     def update_figure(self, _input = None):
 
