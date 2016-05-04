@@ -18,9 +18,9 @@ class ScrollingGraph_PyQtGraph(Graph):
                 except: pass
                 
         try:
-            pointsToKeep = 100
-            if len(x) < pointsToKeep:
-                self.set_xlimits( [min(x), max(x)] )
+            if len(x) < self.pointsToKeep:
+		pass
+                #self.set_xlimits( [min(x), max(x)] )
             else:
                 # see if we need to redraw
                 xmin_cur, xmax_cur = self.current_limits
