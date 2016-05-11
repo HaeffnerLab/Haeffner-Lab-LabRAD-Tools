@@ -1,10 +1,9 @@
 import sys
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
 from TraceListWidget import TraceList
-from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
-from twisted.internet.threads import blockingCallFromThread
 import itertools
 from Dataset import Dataset
 import Queue
@@ -60,6 +59,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.img = pg.ImageItem()
         vb.addItem(self.img)
         self.pw.scene().sigMouseMoved.connect(self.mouseMoved)
+	self.pw.sigRangeChanged.connect(self.rangeChanged)
 
     def update_figure(self):
         for ident, params in self.artists.iteritems():
@@ -112,6 +112,12 @@ class Graph_PyQtGraph(QtGui.QWidget):
                self.display(ident, True)
             if not item.checkState() and self.artists[ident].shown:
                 self.display(ident, False)
+
+    def rangeChanged(self):
+	
+	lims = self.pw.viewRange()
+	self.pointsToKeep =  lims[0][1] - lims[0][0]
+	self.current_limits = [lims[0][0], lims[0][1]]
 
     @inlineCallbacks
     def add_dataset(self, dataset):
