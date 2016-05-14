@@ -1,6 +1,7 @@
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from ParameterListWidget import ParameterList
+from DataVaultListWidget import DataVaultList
 from GUIConfig import traceListConfig
 
 class TraceList(QtGui.QListWidget):
@@ -35,12 +36,23 @@ class TraceList(QtGui.QListWidget):
         self.takeItem(row)
         item = None
 
+    def dummyFunction(self, value):
+	print value
+
     def popupMenu(self, pos):
         menu = QtGui.QMenu()
         item = self.itemAt(pos)
-        if (item == None): pass # didn't click on anything
+        if (item == None): 
+	    dataaddAction = menu.addAction('Add Data Set')
+	    
+	    action = menu.exec_(self.mapToGlobal(pos))
+	    if action == dataaddAction:
+		dvlist = DataVaultList(self)
+		dvlist.traceClicked.connect(self.dummyFunction)
+		self.windows.append(dvlist)
+		dvlist.show()
         else:
-            ident = str(item.text())
+	    ident = str(item.text())
             parametersAction = menu.addAction('Parameters')
             togglecolorsAction = menu.addAction('Toggle colors')
 
