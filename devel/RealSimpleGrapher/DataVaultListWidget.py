@@ -5,16 +5,17 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, D
 import socket
 
 class DataVaultList(QtGui.QWidget):
-    traceClicked = QtCore.pyqtSignal('QString')
 
-    def __init__(self, parent = None):
+    def __init__(self, tracename, parent = None):
         super(DataVaultList, self).__init__()
+	self.tracename = tracename
 	self.connect()
 
     @inlineCallbacks
     def connect(self):
 	from labrad.wrappers import connectAsync
 	self.cxn = yield connectAsync(name = socket.gethostname() + ' Data Vault Client')
+	self.grapher = yield self.cxn.grapher
 	self.dv = yield self.cxn.data_vault
 	self.initializeGUI()
 
@@ -46,7 +47,8 @@ class DataVaultList(QtGui.QWidget):
 	     try:
 	          yield self.dv.cd(str(item))
 	     except:
-		  self.traceClicked.emit(str(item))
+		  path = yield self.dv.cd()
+		  yield self.grapher.plot((path, str(item)), self.tracename, False)
 	self.populate()
 
     def closeEvent(self, event):
