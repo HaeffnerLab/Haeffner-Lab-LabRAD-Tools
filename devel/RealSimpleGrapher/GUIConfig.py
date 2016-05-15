@@ -30,7 +30,7 @@ class gridGraphConfig():
 
 
 tabs =[
-    gridGraphConfig('current', [graphConfig('current', max_datasets = 1), 0, 0]),
+    gridGraphConfig('current', [graphConfig('current', max_datasets = 1, show_points = False), 0, 0]),
     gridGraphConfig('pmt', [graphConfig('pmt', ylim=[0,30], isScrolling=True, max_datasets = 1, show_points = False), 0, 0]),
     gridGraphConfig('spectrum', [graphConfig('spectrum'), 0, 0]),
     gridGraphConfig('rabi', [graphConfig('rabi'), 0, 0]),
