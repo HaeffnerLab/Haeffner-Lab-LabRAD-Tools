@@ -11,6 +11,7 @@ class TraceList(QtGui.QListWidget):
         self.windows = []
         self.config = traceListConfig()
         self.setStyleSheet("background-color:%s;" % self.config.background_color)
+	self.name = 'pmt'
         self.initUI()
 
     def initUI(self):
@@ -36,9 +37,6 @@ class TraceList(QtGui.QListWidget):
         self.takeItem(row)
         item = None
 
-    def dummyFunction(self, value):
-	print value
-
     def popupMenu(self, pos):
         menu = QtGui.QMenu()
         item = self.itemAt(pos)
@@ -47,10 +45,10 @@ class TraceList(QtGui.QListWidget):
 	    
 	    action = menu.exec_(self.mapToGlobal(pos))
 	    if action == dataaddAction:
-		dvlist = DataVaultList(self)
-		dvlist.traceClicked.connect(self.dummyFunction)
+		dvlist = DataVaultList(self.parent.name)
 		self.windows.append(dvlist)
 		dvlist.show()
+
         else:
 	    ident = str(item.text())
             parametersAction = menu.addAction('Parameters')
