@@ -91,6 +91,7 @@ class Sequence():
                 #add termination
                 for name in dds_program.iterkeys():
                     dds_program[name] +=  '\x00\x00'
+                    #dds_program[name] =  '\x00\x00' + dds_program[name] #CAUTION THIS SHOULD NOT BE LIKE THAT
                 #at the end of the sequence, reset dds
                 lastTTL = max(self.switchingTimes.keys())
                 self._addNewSwitch(lastTTL ,self.resetDDS, 1 )

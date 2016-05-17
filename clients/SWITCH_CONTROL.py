@@ -94,6 +94,7 @@ class switchWidget(QtGui.QFrame):
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         #get switch names and add them to the layout, and connect their function
         #layout.addWidget(QtGui.QLabel('Switches'),0,0)
+        #print channels
         for order,name in enumerate(channels):
             #setting up physical container
             groupBox = QtGui.QGroupBox(name) 
