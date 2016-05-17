@@ -36,7 +36,7 @@ class DataVaultList(QtGui.QWidget):
 	self.dataListWidget.addItem('...')
         self.dataListWidget.addItems(ls[0])
 	if ls[1] is not None:
-		self.dataListWidget.addItems(ls[1])
+		self.dataListWidget.addItems(sorted(ls[1]))
     
     @inlineCallbacks
     def onDoubleclick(self, item):
