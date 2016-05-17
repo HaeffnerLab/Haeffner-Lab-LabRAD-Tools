@@ -38,6 +38,7 @@ class KeithleyWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def initialize(self):
         self.dcVolts = yield self.getdcVolts()
+        self.fourres = yield self.get4res()
         self.outputStateKnown = False
         self.output = True
 
@@ -45,6 +46,11 @@ class KeithleyWrapper(GPIBDeviceWrapper):
     def getdcVolts(self):
         self.dcVolts = yield self.query('MEAS:VOLT:DC?').addCallback(float)
         returnValue(self.dcVolts)
+
+    @inlineCallbacks
+    def get4res(self):
+        self.fourres = yield self.query('MEAS:FRESistance?').addCallback(float)
+        returnValue(self.fourres)
 
 class KeithleyServer(GPIBManagedServer):
     name = 'Keithley 2110 DMM' # Server name
@@ -61,6 +67,19 @@ class KeithleyServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         voltage = yield dev.getdcVolts()
         returnValue(voltage)
+
+
+    @setting(12, '4 Wire Res')
+    def dcVolts(self, c):
+        dev = self.selectedDevice(c)
+        return dev.fourres
+    
+
+    @setting(13, 'Get 4 Wire Res', returns = 'v')
+    def getdcVolts(self, c):
+        dev = self.selectedDevice(c)
+        resistance = yield dev.get4res()
+        returnValue(resistance)
         
 __server__ = KeithleyServer()
 
