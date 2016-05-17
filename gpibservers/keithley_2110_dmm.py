@@ -68,13 +68,11 @@ class KeithleyServer(GPIBManagedServer):
         voltage = yield dev.getdcVolts()
         returnValue(voltage)
 
-
     @setting(12, '4 Wire Res')
     def dcVolts(self, c):
         dev = self.selectedDevice(c)
         return dev.fourres
-    
-
+  
     @setting(13, 'Get 4 Wire Res', returns = 'v')
     def getdcVolts(self, c):
         dev = self.selectedDevice(c)

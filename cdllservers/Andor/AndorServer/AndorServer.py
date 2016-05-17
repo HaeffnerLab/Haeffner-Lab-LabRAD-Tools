@@ -330,7 +330,7 @@ class AndorServer(LabradServer):
             y_pixels = int(vend - vstart + 1.) / (vbin)
             images = np.reshape(images, (num_images, y_pixels, x_pixels))
             images = images.sum(axis=1)
-            images = images.ravel()
+            images = np.ravel(images, order='C')
             images = images.tolist()            
         finally:
             print 'releasing: {}'.format(self.getAcquiredData.__name__)
