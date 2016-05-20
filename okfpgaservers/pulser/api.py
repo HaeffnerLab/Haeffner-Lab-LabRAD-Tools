@@ -169,7 +169,7 @@ class api(object):
     
     def programDDS(self, prog):
         '''program the dds channel with a list of frequencies and amplitudes. The channel of the particular channel must be selected first'''
-        self.xem.WriteToBlockPipeIn(0x81, 2, prog)
+        self.xem.WriteToBlockPipeIn(0x81, 2, bytearray(prog))
     
     def initializeDDS(self):
         '''force reprogram of all dds chips during initialization'''

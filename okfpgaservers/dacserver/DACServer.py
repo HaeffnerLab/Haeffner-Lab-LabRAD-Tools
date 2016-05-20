@@ -52,10 +52,11 @@ class Voltage( object ):
         
     def __getHexRep( self ):
         port = bin(self.channel.dacChannelNumber)[2:].zfill(5)
-        if hc.pulseTriggered: setN = bin(self.set_num)[2:].zfill(10)
-        else: setN = bin(1)[2:].zfill(10)
+        #if hc.pulseTriggered: setN = bin(self.set_num)[2:].zfill(10)
+        #else: setN = bin(1)[2:].zfill(10)
+        setN = bin(1)[2:].zfill(10)
         voltage = bin(self.digital_voltage)[2:].zfill(16)
-        big = voltage + port + setN + '0'        
+        big = voltage + port + setN + '0'
         return chr(int(big[8:16], 2)) + chr(int(big[:8],2))+ chr(int(big[24:32], 2)) + chr(int(big[16:24], 2))
 
 
@@ -207,16 +208,25 @@ class DACServer(LabradServer):
     def initServer(self):
         self.registry = self.client.registry
         self.initializeBoard()
+        print "board initialized"
 #        for i in hc.notused_dict:
 #            print i
 #            self.queue.insert(Voltage(i, 0))
 #            yield self.writeToFPGA(0)
 #            yield self.setIndividualAnalogVoltages(0, [(i, 0)])     
         yield self.setCalibrations()
+        print "did calibrations"
         try: 
             yield self.setPreviousControlFile()
+            
+            print "previous file set"
 #            yield self.setIndividualDigitalVoltages(0, [(s, 0) for s in self.dacun_dict.keys()])
-        except: yield self.setVoltagesZero()
+        except:
+            print "could load old file...set to zero"
+
+            yield self.setVoltagesZero()
+
+        print "voltagestozero"
         print self.registry_path
 
     def initializeBoard(self):
@@ -255,6 +265,8 @@ class DACServer(LabradServer):
         yield self.registry.cd(self.registry_path + ['none_specified'], True)
         self.control = Control('none_specified')
         yield self.setIndividualAnalogVoltages(0, [(s, 0) for s in self.dac_dict.keys()])
+
+        print "voltages set"
 
     @setting(0, "Set Control File", Cfile_path='s')
     def setControlFile(self, c, Cfile_path):
@@ -335,9 +347,18 @@ class DACServer(LabradServer):
 
     def writeToFPGA(self, c):
         self.api.resetFIFODAC()
+
+        print "this one worked"
+
         for i in range(len(self.queue.set_dict[self.queue.current_set])):
-            v = self.queue.get() 
-            self.api.setDACVoltage(v.hex_rep)
+            v = self.queue.get()
+
+            print "in the for loop"
+            try:
+                self.api.setDACVoltage(v.hex_rep)
+            except:
+                print v.channel.name, v.analog_voltage, v.digital_voltage
+
             #print v.channel.name, v.analog_voltage
             if v.channel.name in dict(hc.elec_dict.items() + hc.sma_dict.items()).keys():
                 self.current_voltages[v.channel.name] = v.analog_voltage

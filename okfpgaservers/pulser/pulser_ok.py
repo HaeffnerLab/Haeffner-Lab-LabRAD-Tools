@@ -1,5 +1,6 @@
 #Created on Feb 22, 2012
 #@author: Michael Ramm, Haeffner Lab
+
 '''
 ### BEGIN NODE INFO
 [info]
@@ -17,6 +18,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 '''
+
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, Deferred
@@ -29,7 +31,11 @@ from api import api
 from linetrigger import LineTrigger
 import numpy
 
-class Pulser(LabradServer, DDS, LineTrigger):
+print 'in the right file'
+
+
+class Pulser(DDS, LineTrigger, LabradServer):
+#class Pulser(LabradServer, DDS, LineTrigger):
     
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
