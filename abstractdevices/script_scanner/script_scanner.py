@@ -47,7 +47,6 @@ class ScriptScanner(LabradServer, Signals):
         loads script information from the configuration file
         '''
         for import_path, class_name in config.scripts:
-            print import_path, class_name
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
@@ -68,6 +67,8 @@ class ScriptScanner(LabradServer, Signals):
                     print 'Name is not provided for class {0} in module {1}'.format(class_name, module)
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
+ 
+
                     
     @setting(0, "Get Available Scripts", returns = '*s')
     def get_available_scripts(self, c):

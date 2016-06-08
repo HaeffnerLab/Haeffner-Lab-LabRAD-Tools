@@ -8,6 +8,7 @@ SIGNALID1 = 187567
 SIGNALID2 = 187568
 SIGNALID3 = 187569
 SIGNALID4 = 187570
+SIGNALID5 = 187571 # for the new locked state signals
 
 class widgetWrapper(object):
     def __init__(self, chanName, wavelength, hint):
@@ -38,7 +39,13 @@ class widgetWrapper(object):
         self.widget.spinBox.setValue(exposure)
         if disableSignals:
             self.widget.checkBox.blockSignals(False)
-        
+            
+    def setLockedState(self, lockedState, laserlockOn): # for laserlock
+        # lockedState, 0 or 1
+        if laserlockOn:
+            self.widget.setLCDDisplay(lockedState)
+        else:
+            self.widget.setLCDDisplay(-1)
             
 class multiplexerWidget(QtGui.QWidget):
     def __init__(self, reactor, parent = None):
@@ -49,11 +56,19 @@ class multiplexerWidget(QtGui.QWidget):
         uic.loadUi(path,self)
         self.d = {}
         self.connect() 
+        
+        self.server_laserlock = None
     
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync('192.168.169.49')
+        try:
+            self.server_laserlock = yield self.cxn.laserlock_server
+            self.listenlock = True
+        except:
+            self.listenlock = False #tells server not to listen if can't connect to server
+            print "Laserlock server not responding"
         try:
             self.server = yield self.cxn.multiplexer_server
             yield self.initializeGUI()
@@ -63,7 +78,12 @@ class multiplexerWidget(QtGui.QWidget):
         
     @inlineCallbacks
     def initializeGUI(self):
-        #get initial values
+        try:
+            yield self.server_laserlock.start_cycling() # start the laserlock server
+            #get initial values
+        except:
+            print "Laserlock Server not responding"
+    
         state = yield self.server.is_cycling()
         self.pushButton.setChecked(state)
         self.setButtonText()
@@ -83,6 +103,18 @@ class multiplexerWidget(QtGui.QWidget):
             wrapper.setExposure(exp)
             state = yield self.server.get_state(name)
             wrapper.setState(state)
+            
+            try:
+                lockedState = yield self.server_laserlock.get_lockedstate(name) 
+            except:
+                lockedState = -3
+                
+            if lockedState == -1:
+                print "Warning: Laser", name, "is not configured with the Laser Lock Detection box yet."
+            elif lockedState == -2:
+                print 'Warning: No laser of name ', name, 'in Laserlock_config.py.'
+            wrapper.setLockedState(lockedState, True) # in the future, we should add an "enable alerts" feature
+            
             self.grid.addWidget(wrapper.widget,location[0], location[1])
             #connect widgets
             wrapper.widget.checkBox.stateChanged.connect(self.setStateWrapper(name))
@@ -101,6 +133,11 @@ class multiplexerWidget(QtGui.QWidget):
         yield self.server.addListener(listener = self.followNewFreq, source = None, ID = SIGNALID3)
         yield self.server.signal__updated_whether_cycling(SIGNALID4)
         yield self.server.addListener(listener = self.followNewCycling, source = None, ID = SIGNALID4)
+        if self.listenlock:
+            yield self.server_laserlock.signal__new_lockedstate_measured(SIGNALID5) # for laserlock
+            yield self.server_laserlock.addListener(listener = self.followNewLockedState, source = None, ID = SIGNALID5)
+        else:
+            None
     
     def followNewState(self,x,(chanName,state)):
         if chanName in self.d.keys():
@@ -113,7 +150,13 @@ class multiplexerWidget(QtGui.QWidget):
     def followNewFreq(self, x, (chanName, freq)):
         if chanName in self.d.keys():
             self.d[chanName].setFreq(freq)
-    
+
+    def followNewLockedState(self, x, (chanName, lockedState)): # for laserlock
+        #laserlockOn = self.pushButton.isChecked() 
+        laserlockOn = True #for now, always have laserlockOn == True
+        if chanName in self.d.keys():
+            self.d[chanName].setLockedState(lockedState, laserlockOn)
+
     def followNewCycling(self, x, cycling):
         self.pushButton.blockSignals(True)
         self.pushButton.setChecked(cycling)
@@ -175,6 +218,29 @@ class multiplexerChannel(QtGui.QWidget):
     
     def setHint(self, hint):
         self.expectedfreq.setText(hint)
+        
+    def setLCDDisplay(self, lockedState): # for laserlock: the lcdNumber display widget
+        '''
+        Parameters: 
+        #int laserNum: number from {1,2,3,...,7}
+        int lockedState: 0 or 1 for a single laser, instead of for all 7;
+            value to display in the LCD (either 0 or 1);  if -1, it means that laserlock widget is off
+        '''
+        colors = {0:'red', 1:'green'}
+        if lockedState == -1: # means laserlockOn is false or this laser is not configured for the Laser Lock detection box yet
+            self.lcdNumber.setStyleSheet("QWidget {background-color: white }")
+            self.lcdNumber.display(-1)
+        elif lockedState == -2: # laser's name is not in Laser_config.py
+            self.lcdNumber.setStyleSheet("QWidget {background-color: white }")
+            self.lcdNumber.display(-2)
+        elif lockedState == -3: # laserlock server is not responding
+            self.lcdNumber.setStyleSheet("QWidget {background-color: white }")
+            self.lcdNumber.display(-3)
+        elif lockedState == 0 or lockedState == 1: 
+            self.lcdNumber.setStyleSheet("QWidget {background-color: " + colors[lockedState] + " }")
+            self.lcdNumber.display(lockedState)
+        else:
+            print 'Error: lockedState is something other than -1, 0, or 1.'
 
 if __name__=="__main__":
     a = QtGui.QApplication( [] )

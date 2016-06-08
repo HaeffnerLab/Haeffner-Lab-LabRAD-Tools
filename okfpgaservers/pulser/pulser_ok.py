@@ -71,7 +71,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
                 state = self.cnot(channel.manualinv, channel.manualstate)
                 self.api.setManual(channelnumber, state)
             else:
-                self.api.setAuto(channelnumber, channel.autoinv)
+                self.api.setAuto(channelnumber, channel.autoinv)   
     
     @inlineCallbacks
     def initializeRemote(self):

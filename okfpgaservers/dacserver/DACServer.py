@@ -377,23 +377,27 @@ class DACServer(LabradServer):
         new_dim=zip(*vector)
         idx = new_dim[0].index(ramped_multipole)
 
-        #self.queue.clear()
-#        self.setFirstVoltages(c)
-        
+        ## Ramp to a field
+        vector[idx] = (ramped_multipole,ramp[0])
+        self.control.populateVoltageMatrix(vector)
+        yield self.setMultipoleValues(c, vector)
         for field in ramp:
             self.queue.advance()
             vector[idx] = (ramped_multipole,field)
             self.control.populateVoltageMatrix(vector)
-            print hc.elec_dict.keys()
             yield self.setMultipoleValues(c, vector)
-#            for e in hc.elec_dict.keys():
-#                v = Voltage(hc.elec_dict[e],self.control.voltage_matrix[e][self.control.position])
-#                self.queue.insert(v)
-#                print v.analog_voltage
+        ## ramp back    
+        ramp.reverse()
+        for field in ramp:
+            self.queue.advance()
+            vector[idx] = (ramped_multipole,field)
+            self.control.populateVoltageMatrix(vector)
+            yield self.setMultipoleValues(c, vector)
+        self.queue.reset()
     
     @setting(16, "get queue")
     def getQueue(self,c):
-        print self.queue.set_dict
+        return self.queue.current_set
 
         
 ###################################################
