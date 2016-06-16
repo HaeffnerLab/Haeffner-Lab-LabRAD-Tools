@@ -687,6 +687,7 @@ class Dataset:
         raise BadParameterError( name )
 
     def addData( self, data ):
+
         varcount = len( self.independents ) + len( self.dependents )
         if not len( data ) or not isinstance( data[0], list ):
             data = [data]
@@ -797,7 +798,7 @@ class NumpyDataset( Dataset ):
 
     def addData( self, data ):
         varcount = len( self.independents ) + len( self.dependents )
-        data = data.asarray
+        #data = data.asarray
 
         # reshape single row
         if len( data.shape ) == 1:

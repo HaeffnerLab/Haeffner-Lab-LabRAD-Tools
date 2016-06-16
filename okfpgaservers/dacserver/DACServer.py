@@ -71,7 +71,7 @@ class Control(object):
     def getInfo(self):
         head = []
         body = []
-        print "getting info"
+        #print "getting info"
         Cfile_text = open(self.Cfile_path).read().split('\n')[:-1]
         
         print Cfile_text
@@ -84,7 +84,7 @@ class Control(object):
         try: self.position = int(head[1].split('osition:')[1])
         except: self.position = 0
         self.num_columns = len(body[0])
-        print self.num_columns
+        #print self.num_columns
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
@@ -208,26 +208,26 @@ class DACServer(LabradServer):
     def initServer(self):
         self.registry = self.client.registry
         self.initializeBoard()
-        print "board initialized"
+       # print "board initialized"
 #        for i in hc.notused_dict:
 #            print i
 #            self.queue.insert(Voltage(i, 0))
 #            yield self.writeToFPGA(0)
 #            yield self.setIndividualAnalogVoltages(0, [(i, 0)])     
         yield self.setCalibrations()
-        print "did calibrations"
+       # print "did calibrations"
         try: 
             yield self.setPreviousControlFile()
             
             print "previous file set"
 #            yield self.setIndividualDigitalVoltages(0, [(s, 0) for s in self.dacun_dict.keys()])
         except:
-            print "could load old file...set to zero"
+           # print "could load old file...set to zero"
 
             yield self.setVoltagesZero()
 
-        print "voltagestozero"
-        print self.registry_path
+      #  print "voltagestozero"
+      #  print self.registry_path
 
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
@@ -338,7 +338,7 @@ class DACServer(LabradServer):
         (portNum, newVolts)
         """
         for (port, av) in analog_voltages:
-            print (port,av)
+           # print (port,av)
             self.queue.insert(Voltage(self.dac_dict[port], analog_voltage=av))
             if self.dac_dict[port].smaOutNumber and self.control.Cfile_name:
                 yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'])
@@ -348,12 +348,12 @@ class DACServer(LabradServer):
     def writeToFPGA(self, c):
         self.api.resetFIFODAC()
 
-        print "this one worked"
+       # print "this one worked"
 
         for i in range(len(self.queue.set_dict[self.queue.current_set])):
             v = self.queue.get()
 
-            print "in the for loop"
+           # print "in the for loop"
             try:
                 self.api.setDACVoltage(v.hex_rep)
             except:

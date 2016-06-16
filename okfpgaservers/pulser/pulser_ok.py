@@ -31,9 +31,6 @@ from api import api
 from linetrigger import LineTrigger
 import numpy
 
-print 'in the right file'
-
-
 class Pulser(DDS, LineTrigger, LabradServer):
 #class Pulser(LabradServer, DDS, LineTrigger):
     
@@ -64,6 +61,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
         self.initializeSettings()
         yield self.initializeDDS()
         self.listeners = set()
+
 
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
@@ -336,15 +334,20 @@ class Pulser(DDS, LineTrigger, LabradServer):
         """
         Sets how long to collect photonslist in either 'Normal' or 'Differential' mode of operation
         """
-        new_time = float(new_time)
+        #new_time = float(new_time)
+        new_time = new_time['s']
+        #print new_time.unit
+        #print self.collectionTimeRange[0].unit
         if not self.collectionTimeRange[0]<=new_time<=self.collectionTimeRange[1]: raise Exception('incorrect collection time')
-        if mode not in self.collectionTime.keys(): raise("Incorrect mode")
+        if mode not in self.collectionTime.keys(): raise Exception('Incorrect mode')
         if mode == 'Normal':
             self.collectionTime[mode] = new_time
             yield self.inCommunication.acquire()
+            print "calling setPMTCountRate"
             yield deferToThread(self.api.setPMTCountRate, new_time)
             self.clear_next_pmt_counts = 3 #assign to clear next two counts
             self.inCommunication.release()
+            print "communication released"
         elif mode == 'Differential':
             self.collectionTime[mode] = new_time
             self.clear_next_pmt_counts = 3 #assign to clear next two counts
@@ -372,7 +375,9 @@ class Pulser(DDS, LineTrigger, LabradServer):
         currently stored because it may hang the device.
         """
         yield self.inCommunication.acquire()
+        print 'comm acquired'
         countlist = yield deferToThread(self.doGetAllCounts)
+        print countlist
         self.inCommunication.release()
         returnValue(countlist)
     
@@ -413,11 +418,19 @@ class Pulser(DDS, LineTrigger, LabradServer):
         
     def doGetAllCounts(self):
         inFIFO = self.api.getNormalTotal()
+        print "inFIFO"
+        print inFIFO
+        print "reading"
         reading = self.api.getNormalCounts(inFIFO)
+        #print 'Got the normal counts'
         split = self.split_len(reading, 4)
+        #print 'split success'
         countlist = map(self.infoFromBuf, split)
+        #print countlist
         countlist = map(self.convertKCperSec, countlist)
+        #print countlist
         countlist = self.appendTimes(countlist, time.time())
+        #print countlist
         countlist = self.clear_pmt_counts(countlist)
         return countlist
 

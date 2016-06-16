@@ -203,7 +203,7 @@ class DDS(LabradServer):
             buf = self._intToBuf(num)
         else:
             buf = self._intToBuf_coherent(num)
-        buf =buf + '\x00\x00' #adding termination
+        buf = buf + '\x00\x00' #adding termination
         return buf
     
     def settings_to_num(self, channel, freq, ampl, phase = 0.0, prof = 0):

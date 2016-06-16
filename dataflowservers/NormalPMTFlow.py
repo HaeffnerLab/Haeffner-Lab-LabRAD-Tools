@@ -139,6 +139,7 @@ class NormalPMTFlow( LabradServer):
        
     @inlineCallbacks
     def makeNewDataSet(self, folder, name):
+        print "making new data set"
         yield self.dv.cd(folder, True)
         ds = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
         self.startTime = time.time()
@@ -166,6 +167,7 @@ class NormalPMTFlow( LabradServer):
     @setting(1, 'Start New Dataset', setName = 's', returns = 's')
     def setNewDataSet(self, c, setName = None):
         """Starts new dataset, if name not provided, it will be the same"""
+        print "starting new dataset"
         if setName is not None: self.dataSetName = setName
         self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
         otherListeners = self.getOtherListeners(c)
@@ -177,12 +179,15 @@ class NormalPMTFlow( LabradServer):
         """
         Start recording Time Resolved Counts into Data Vault
         """
+        print "setting mode"
         if mode not in self.modes: raise Exception('Incorrect Mode')
         if not self.recording.running:
             self.currentMode = mode
             yield self.pulser.set_mode(mode)
+            print "not running and set mode"
         else:
             yield self.dostopRecording()
+            print "stopped recording"
             self.currentMode = mode
             yield self.dorecordData()
         otherListeners = self.getOtherListeners(c)      
@@ -214,8 +219,12 @@ class NormalPMTFlow( LabradServer):
         #then starts the recording loop
         newSet = None
         self.keepRunning = True
+        print "do record data"
+        print self.collection_period['s']
         yield self.pulser.set_collection_time(self.collection_period, self.currentMode)
+        print "set collection time"
         yield self.pulser.set_mode(self.currentMode)
+        print "set mode"
         if self.currentMode == 'Differential':
             yield self._programPulserDiff()
         if self.openDataSet is None:
@@ -305,6 +314,7 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def _programPulserDiff(self):
         yield self.pulser.new_sequence()
+        print "new sequence"
         yield self.pulser.add_ttl_pulse('DiffCountTrigger', T.Value(0.0,'us'), T.Value(10.0,'us'))
         yield self.pulser.add_ttl_pulse('DiffCountTrigger', self.collection_period, T.Value(10.0,'us'))
         yield self.pulser.add_ttl_pulse('866DP', T.Value(0.0,'us'), self.collection_period)
