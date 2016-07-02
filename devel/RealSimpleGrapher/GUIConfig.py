@@ -11,13 +11,14 @@ class traceListConfig():
 
 class graphConfig():
     def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 6,
-                 show_points = True):
+                 show_points = True, grid_on = False):
         self.name = name
         self.ylim = ylim
         self.isScrolling = isScrolling
         self.max_datasets = max_datasets
         self.graphs = 1 # just a single graph
         self.show_points = show_points
+	self.grid_on = grid_on
 
 class gridGraphConfig():
     def __init__(self, tab, config_list):
@@ -31,7 +32,7 @@ class gridGraphConfig():
 
 tabs =[
     gridGraphConfig('current', [graphConfig('current', max_datasets = 1, show_points = False), 0, 0]),
-    gridGraphConfig('pmt', [graphConfig('pmt', ylim=[0,30], isScrolling=True, max_datasets = 1, show_points = False), 0, 0]),
+    gridGraphConfig('pmt', [graphConfig('pmt', ylim=[0,30], isScrolling=True, max_datasets = 1, show_points = False, grid_on = True), 0, 0]),
     gridGraphConfig('spectrum', [graphConfig('spectrum'), 0, 0]),
     gridGraphConfig('rabi', [graphConfig('rabi'), 0, 0]),
     gridGraphConfig('calibrations', [
