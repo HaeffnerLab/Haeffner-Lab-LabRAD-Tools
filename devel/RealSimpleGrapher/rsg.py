@@ -56,6 +56,8 @@ class RealSimpleGrapher(LabradServer):
             self.gui.graphDict['current'].add_dataset(ds)
         ds = self.make_dataset(dataset_location)
         self.gui.graphDict[graph].add_dataset(ds)
+	tabindex = self.gui.indexOf(self.gui.tabDict[graph])
+	self.gui.setCurrentIndex(tabindex)
         
     @setting(1, 'Plot', dataset_location = ['(*s, s)', '(*s, i)'], graph = 's', send_to_current = 'b' ,returns = '')
     def plot(self, c,  dataset_location, graph, send_to_current = True):
