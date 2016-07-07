@@ -19,22 +19,19 @@ class ScrollingGraph_PyQtGraph(Graph):
                 except: pass
    
         try:
-            if False == True:
-		pass
-                #self.set_xlimits( [min(x), 2 * max(x)] )
-            else:
-		mousepressed =  QtGui.qApp.mouseButtons()
-		if (mousepressed == QtCore.Qt.LeftButton) or (mousepressed == QtCore.Qt.RightButton):
-			return 
-                # see if we need to redraw
-                xmin_cur, xmax_cur = self.current_limits
-                x_cur = x[-1] # current largest x value
-                window_width = xmax_cur - xmin_cur
-                # scroll if we've reached 75% of the window
-                if (x_cur > (xmin_cur + 0.75*window_width) and (x_cur < xmax_cur)):
-                    shift = (xmax_cur - xmin_cur)/2.0
-                    xmin = xmin_cur + shift
-                    xmax = xmax_cur + shift
-                    self.set_xlimits( [xmin, xmax] )
+
+	    mousepressed =  QtGui.qApp.mouseButtons()
+	    if (mousepressed == QtCore.Qt.LeftButton) or (mousepressed == QtCore.Qt.RightButton):
+		return 
+            # see if we need to redraw
+            xmin_cur, xmax_cur = self.current_limits
+            x_cur = x[-1] # current largest x value
+            window_width = xmax_cur - xmin_cur
+            # scroll if we've reached 75% of the window
+            if (x_cur > (xmin_cur + 0.75*window_width) and (x_cur < xmax_cur)):
+                shift = (xmax_cur - xmin_cur)/2.0
+                xmin = xmin_cur + shift
+                xmax = xmax_cur + shift
+                self.set_xlimits( [xmin, xmax] )
         except:
             pass
