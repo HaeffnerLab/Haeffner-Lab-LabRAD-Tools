@@ -19,6 +19,7 @@ class GraphWindow(QtGui.QTabWidget):
         reactor = self.reactor
 
         self.graphDict = {}
+	self.tabDict = {}
 
         for gc in GUIConfig.tabs:
             gcli = gc.config_list
@@ -33,7 +34,10 @@ class GraphWindow(QtGui.QTabWidget):
                 g.set_ylimits(config.ylim)
                 self.graphDict[name] = g
                 gli.append(g)
-            self.addTab(GridGraphWindow(gli, gc.row_list, gc.column_list, reactor), gc.tab)
+	    widget = GridGraphWindow(gli, gc.row_list, gc.column_list, reactor)
+	    self.tabDict[name] = widget
+            self.addTab(widget, gc.tab)
+	    self.setMovable(True)
             
 
     def insert_tab(self, t):

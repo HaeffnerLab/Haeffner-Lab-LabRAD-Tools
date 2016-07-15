@@ -29,6 +29,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.should_stop = False
         self.name = config.name
         self.show_points = config.show_points
+	self.grid_on = config.grid_on
 
         self.dataset_queue = Queue.Queue(config.max_datasets)
         
@@ -85,6 +86,8 @@ class Graph_PyQtGraph(QtGui.QWidget):
             line = self.pw.plot([], [], symbol='o', symbolBrush = new_color, pen = new_color, name = ident)
         else:
             line = self.pw.plot([], [], pen = new_color, name = ident)
+	if self.grid_on:
+	   self.pw.showGrid(x=True, y=True)
         self.artists[ident] = artistParameters(line, dataset, index, True)
         self.tracelist.addTrace(ident)
 
