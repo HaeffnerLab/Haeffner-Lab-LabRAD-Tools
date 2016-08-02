@@ -52,11 +52,10 @@ class Voltage( object ):
         
     def __getHexRep( self ):
         port = bin(self.channel.dacChannelNumber)[2:].zfill(5)
-        #if hc.pulseTriggered: setN = bin(self.set_num)[2:].zfill(10)
-        #else: setN = bin(1)[2:].zfill(10)
-        setN = bin(1)[2:].zfill(10)
+        if hc.pulseTriggered: setN = bin(self.set_num)[2:].zfill(10)
+        else: setN = bin(1)[2:].zfill(10)
         voltage = bin(self.digital_voltage)[2:].zfill(16)
-        big = voltage + port + setN + '0'
+        big = voltage + port + setN + '0'        
         return chr(int(big[8:16], 2)) + chr(int(big[:8],2))+ chr(int(big[24:32], 2)) + chr(int(big[16:24], 2))
 
 
@@ -71,7 +70,7 @@ class Control(object):
     def getInfo(self):
         head = []
         body = []
-        #print "getting info"
+        print "getting info"
         Cfile_text = open(self.Cfile_path).read().split('\n')[:-1]
         
         print Cfile_text
@@ -84,7 +83,7 @@ class Control(object):
         try: self.position = int(head[1].split('osition:')[1])
         except: self.position = 0
         self.num_columns = len(body[0])
-        #print self.num_columns
+        print self.num_columns
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
@@ -208,26 +207,17 @@ class DACServer(LabradServer):
     def initServer(self):
         self.registry = self.client.registry
         self.initializeBoard()
-       # print "board initialized"
 #        for i in hc.notused_dict:
 #            print i
 #            self.queue.insert(Voltage(i, 0))
 #            yield self.writeToFPGA(0)
 #            yield self.setIndividualAnalogVoltages(0, [(i, 0)])     
         yield self.setCalibrations()
-       # print "did calibrations"
         try: 
             yield self.setPreviousControlFile()
-            
-            print "previous file set"
 #            yield self.setIndividualDigitalVoltages(0, [(s, 0) for s in self.dacun_dict.keys()])
-        except:
-           # print "could load old file...set to zero"
-
-            yield self.setVoltagesZero()
-
-      #  print "voltagestozero"
-      #  print self.registry_path
+        except: yield self.setVoltagesZero()
+        print self.registry_path
 
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
@@ -265,8 +255,6 @@ class DACServer(LabradServer):
         yield self.registry.cd(self.registry_path + ['none_specified'], True)
         self.control = Control('none_specified')
         yield self.setIndividualAnalogVoltages(0, [(s, 0) for s in self.dac_dict.keys()])
-
-        print "voltages set"
 
     @setting(0, "Set Control File", Cfile_path='s')
     def setControlFile(self, c, Cfile_path):
@@ -338,7 +326,7 @@ class DACServer(LabradServer):
         (portNum, newVolts)
         """
         for (port, av) in analog_voltages:
-           # print (port,av)
+            print (port,av)
             self.queue.insert(Voltage(self.dac_dict[port], analog_voltage=av))
             if self.dac_dict[port].smaOutNumber and self.control.Cfile_name:
                 yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'])
@@ -347,18 +335,9 @@ class DACServer(LabradServer):
 
     def writeToFPGA(self, c):
         self.api.resetFIFODAC()
-
-       # print "this one worked"
-
         for i in range(len(self.queue.set_dict[self.queue.current_set])):
-            v = self.queue.get()
-
-           # print "in the for loop"
-            try:
-                self.api.setDACVoltage(v.hex_rep)
-            except:
-                print v.channel.name, v.analog_voltage, v.digital_voltage
-
+            v = self.queue.get() 
+            self.api.setDACVoltage(v.hex_rep)
             #print v.channel.name, v.analog_voltage
             if v.channel.name in dict(hc.elec_dict.items() + hc.sma_dict.items()).keys():
                 self.current_voltages[v.channel.name] = v.analog_voltage
@@ -398,23 +377,27 @@ class DACServer(LabradServer):
         new_dim=zip(*vector)
         idx = new_dim[0].index(ramped_multipole)
 
-        #self.queue.clear()
-#        self.setFirstVoltages(c)
-        
+        ## Ramp to a field
+        vector[idx] = (ramped_multipole,ramp[0])
+        self.control.populateVoltageMatrix(vector)
+        yield self.setMultipoleValues(c, vector)
         for field in ramp:
             self.queue.advance()
             vector[idx] = (ramped_multipole,field)
             self.control.populateVoltageMatrix(vector)
-            print hc.elec_dict.keys()
             yield self.setMultipoleValues(c, vector)
-#            for e in hc.elec_dict.keys():
-#                v = Voltage(hc.elec_dict[e],self.control.voltage_matrix[e][self.control.position])
-#                self.queue.insert(v)
-#                print v.analog_voltage
+        ## ramp back    
+        ramp.reverse()
+        for field in ramp:
+            self.queue.advance()
+            vector[idx] = (ramped_multipole,field)
+            self.control.populateVoltageMatrix(vector)
+            yield self.setMultipoleValues(c, vector)
+        self.queue.reset()
     
     @setting(16, "get queue")
     def getQueue(self,c):
-        print self.queue.set_dict
+        return self.queue.current_set
 
         
 ###################################################

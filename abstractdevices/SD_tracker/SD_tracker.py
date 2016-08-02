@@ -153,11 +153,15 @@ class SDTracker(LabradServer):
         try:
             B = self.fitter.evaluate(current_time, self.B_fit)
             center = self.fitter.evaluate(current_time, self.line_center_fit)
+            #print 'try worked'
         except TypeError:
+            print 'exception coming'
             raise Exception ("Fit is not available")
         B = WithUnit(B, 'gauss')
         center = WithUnit(center, 'MHz')
         result = self.tr.get_transition_energies(B, center)
+        #print 'heres the result'
+        #print result
         for name,freq in result:
             lines.append((name, freq))
         return lines
@@ -166,8 +170,15 @@ class SDTracker(LabradServer):
     def get_current_line(self, c, name):
         lines = yield self.get_current_lines(c)
         d = dict(lines)
+        print 'done getting lines'
+        #print d.makeReport()
         try:
-            returnValue(d[name])
+            print 'trying now'
+            print name
+            yield d[name]
+            return 
+            #return d[name]
+            #returnValue(d[name])
         except KeyError:
             raise Exception ("Requested line not found")
     

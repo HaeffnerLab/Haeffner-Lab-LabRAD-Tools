@@ -1,6 +1,5 @@
 import ok
 from DacConfiguration import hardwareConfiguration
-import IPython
 
 class api(object):
     '''class containing all commands for interfacing with the fpga'''
@@ -30,7 +29,7 @@ class api(object):
     
     def programOKBoard(self):
         prog = self.xem.ConfigureFPGA(self.okDeviceFile)
-        if prog: raise Exception("Not able to program FPGA")
+        if prog: raise("Not able to program FPGA")
         pll = ok.PLL22150()
         self.xem.GetEepromPLL22150Configuration(pll)
         pll.SetDiv1(pll.DivSrc_VCO,4)
@@ -43,5 +42,4 @@ class api(object):
         self.xem.ActivateTriggerIn(0x40,8)  
         
     def setDACVoltage(self, volstr):
-        self.xem.WriteToBlockPipeIn(0x82, 2, bytearray(volstr))
-
+        self.xem.WriteToBlockPipeIn(0x82, 2, volstr)   

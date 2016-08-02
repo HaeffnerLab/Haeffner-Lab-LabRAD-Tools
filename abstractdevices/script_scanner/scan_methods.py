@@ -78,6 +78,8 @@ class experiment(experiment_info):
         self.run(cxn, context)
     
     def _load_required_parameters(self, overwrite = False):
+        print 'heres the required params'
+        print self.required_parameters
         d = self._load_parameters_dict(self.required_parameters)
         self.parameters.update(d, overwrite = overwrite)
         
@@ -86,12 +88,17 @@ class experiment(experiment_info):
         d = TreeDict()
         for collection,parameter_name in params:
             try:
+                print 'trying param vault'
+                print self.pv
                 value = self.pv.get_parameter(collection, parameter_name)
+                print value
             except Exception as e:
                 print e
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
                 d['{0}.{1}'.format(collection, parameter_name)] = value
+        print 'loading parameter dict'
+        print d.makeReport()
         return d
     
     def set_parameters(self, parameter_dict):

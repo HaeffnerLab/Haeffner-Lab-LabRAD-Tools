@@ -87,7 +87,7 @@ class saved_frequencies_table(QtGui.QTableWidget):
         form = '{' + '0:.{}f'.format(self.sig_figs) + '}' + ' {}'.format( self.suffix)
         for enum,tup in enumerate(info):
             name,val = tup
-            val_name = form.format(val)
+            val_name = form.format(val['MHz'])
             try:
                 label = self.cellWidget(enum, 0)
                 label.setText(name)

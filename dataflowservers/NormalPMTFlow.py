@@ -184,10 +184,10 @@ class NormalPMTFlow( LabradServer):
         if not self.recording.running:
             self.currentMode = mode
             yield self.pulser.set_mode(mode)
-            print "not running and set mode"
+            
         else:
             yield self.dostopRecording()
-            print "stopped recording"
+            
             self.currentMode = mode
             yield self.dorecordData()
         otherListeners = self.getOtherListeners(c)      
@@ -219,12 +219,12 @@ class NormalPMTFlow( LabradServer):
         #then starts the recording loop
         newSet = None
         self.keepRunning = True
-        print "do record data"
+        
         print self.collection_period['s']
         yield self.pulser.set_collection_time(self.collection_period, self.currentMode)
-        print "set collection time"
+       
         yield self.pulser.set_mode(self.currentMode)
-        print "set mode"
+        
         if self.currentMode == 'Differential':
             yield self._programPulserDiff()
         if self.openDataSet is None:

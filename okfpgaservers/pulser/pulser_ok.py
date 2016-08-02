@@ -343,11 +343,9 @@ class Pulser(DDS, LineTrigger, LabradServer):
         if mode == 'Normal':
             self.collectionTime[mode] = new_time
             yield self.inCommunication.acquire()
-            print "calling setPMTCountRate"
             yield deferToThread(self.api.setPMTCountRate, new_time)
             self.clear_next_pmt_counts = 3 #assign to clear next two counts
             self.inCommunication.release()
-            print "communication released"
         elif mode == 'Differential':
             self.collectionTime[mode] = new_time
             self.clear_next_pmt_counts = 3 #assign to clear next two counts
@@ -375,9 +373,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
         currently stored because it may hang the device.
         """
         yield self.inCommunication.acquire()
-        print 'comm acquired'
         countlist = yield deferToThread(self.doGetAllCounts)
-        print countlist
         self.inCommunication.release()
         returnValue(countlist)
     
@@ -418,9 +414,6 @@ class Pulser(DDS, LineTrigger, LabradServer):
         
     def doGetAllCounts(self):
         inFIFO = self.api.getNormalTotal()
-        print "inFIFO"
-        print inFIFO
-        print "reading"
         reading = self.api.getNormalCounts(inFIFO)
         #print 'Got the normal counts'
         split = self.split_len(reading, 4)
