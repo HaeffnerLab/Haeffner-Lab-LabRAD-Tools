@@ -53,7 +53,7 @@ class multiplexerWidget(QtGui.QWidget):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('192.168.169.49')
+        self.cxn = yield connectAsync('192.168.169.49',password='lab')
         try:
             self.server = yield self.cxn.multiplexer_server
             yield self.initializeGUI()

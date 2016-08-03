@@ -171,16 +171,20 @@ class SDTracker(LabradServer):
         lines = yield self.get_current_lines(c)
         d = dict(lines)
         print 'done getting lines'
+        print d.keys()
         #print d.makeReport()
         try:
             print 'trying now'
             print name
-            yield d[name]
-            return 
+            temp = d[name]
+            yield temp
+            return
+            #return temp
             #return d[name]
             #returnValue(d[name])
         except KeyError:
             raise Exception ("Requested line not found")
+        
     
     @setting(7, "Get Current B", returns = 'v[gauss]')
     def get_current_b(self, c):

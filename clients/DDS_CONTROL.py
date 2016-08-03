@@ -140,8 +140,11 @@ class DDS_CONTROL(QtGui.QFrame):
         listed in the registry. If there is no listing, will display all channels.
         '''
         server = yield self.cxn.get_server('Pulser')
+        
         all_channels = yield server.get_dds_channels(context = self.context)
+        
         channels_to_display, widgets_per_row = yield self.registry_load_displayed(all_channels, 1)
+        
         step_sizes = yield self.registry_load_step_sizes(channels_to_display)
         if channels_to_display is None:
             channels_to_display = all_channels
@@ -184,11 +187,12 @@ class DDS_CONTROL(QtGui.QFrame):
                 step_size = yield reg.get(channel, context = self.context)
                 step_sizes.append(step_size)
             except self.Error as e:
-                print e
-                if e.code == 21:
-                    step_sizes.append(0.1) # default step size
-                else:
-                    raise
+                #print e
+                #if e.code == 21:
+                 #   step_sizes.append(0.1) # default step size
+                #else:
+                    #raise
+                step_sizes.append(0.1)
         returnValue(step_sizes)
 
     @inlineCallbacks
