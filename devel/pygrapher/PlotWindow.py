@@ -104,7 +104,7 @@ class PlotWindow(QtGui.QWidget):
                                   
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import common.clients.qt4reactor as qt4reactor
+    import qt4reactor as qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     latticeGUI = PlotWindow(reactor)
