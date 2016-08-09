@@ -10,7 +10,7 @@ class traceListConfig():
         self.background_color = background_color
 
 class graphConfig():
-    def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 6,
+    def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 20,
                  show_points = True):
         self.name = name
         self.ylim = ylim
@@ -40,12 +40,18 @@ tabs =[
                       graphConfig('radial1'), 1, 0,
                       graphConfig('radial2'), 1, 1]),
     gridGraphConfig('molmer-sorensen',[
-                      graphConfig('ms_time'), 0, 0,
-                      graphConfig('local_stark'), 0, 1]),
+                      graphConfig('ms_time'), 0, 0]),
 
     gridGraphConfig('vaet',[
                       graphConfig('vaet_time'), 0, 0,
                       graphConfig('vaet_delta'), 0, 1]),
+
+    gridGraphConfig('local_stark',[
+                      graphConfig('ms_local_stark'), 0, 0,
+                      graphConfig('ms_local_stark_detuning'), 1, 0,
+                      graphConfig('vaet_local_stark'), 0, 1,
+                      graphConfig('vaet_local_stark_detuning'), 1, 1]),
+    
     gridGraphConfig('parity', [graphConfig('parity'), 0, 0]),
     gridGraphConfig('ramsey', [graphConfig('ramsey'), 0, 0])
 ]

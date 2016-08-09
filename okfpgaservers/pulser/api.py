@@ -169,6 +169,8 @@ class api(object):
     
     def programDDS(self, prog):
         '''program the dds channel with a list of frequencies and amplitudes. The channel of the particular channel must be selected first'''
+        #import IPython
+        #IPython.embed()
         self.xem.WriteToBlockPipeIn(0x81, 2, prog)
     
     def initializeDDS(self):

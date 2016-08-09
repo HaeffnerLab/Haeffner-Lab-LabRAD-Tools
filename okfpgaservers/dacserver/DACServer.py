@@ -400,11 +400,15 @@ class DACServer(LabradServer):
     @setting(14, "Get DAC  Channel Name", port_number='i', returns='s' )
     def getDACChannelName(self, c, port_number):
         '''
-        Return the channal name for a given port port number.
+        Return the channel name for a given port port number.
         '''
         for key in self.dac_dict.keys():
             if self.dac_dict[key].dacChannelNumber == port_number:
                 return key
+
+    @setting(15, "Set Endcap Voltages", analog_voltage='v')
+    def setEndcapVoltages(self, c, analog_voltage):
+        self.setIndividualAnalogVoltages(c, [('endcap1', analog_voltage), ('endcap2', analog_voltage)])
 
     def initContext(self, c):
         self.listeners.add(c.ID)
