@@ -56,8 +56,11 @@ class FitWindow(QtGui.QWidget):
             else:
                 vary_select.setCheckState(QtCore.Qt.Unchecked)
 
-            manual_value.setValue(0.0)
-            fitted_value.setText(str(0.0003))
+            manualValue = self.fw.getManualValue(p)
+            manual_value.setValue(manualValue)
+
+            fittedValue = self.fw.getFittedValue(p)
+            fitted_value.setText(str(fittedValue))
             self.parameterTable.setItem(i, 0, vary_select)
             self.parameterTable.setCellWidget(i, 1, label)
             self.parameterTable.setCellWidget(i, 2, manual_value)

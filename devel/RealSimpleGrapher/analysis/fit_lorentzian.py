@@ -26,7 +26,7 @@ class Lorentzian(Model):
         p[2] = abs(p[2]) # fwhm is positive
         return p[3] +  p[1]*0.5*p[2]/( (x - p[0])**2 + (0.5*p[2])**2)
 
-    def guess_center(cls, x, y):
+    def guess_center(self, x, y):
         max_index = np.argmax(y)
         return x[max_index]
 
