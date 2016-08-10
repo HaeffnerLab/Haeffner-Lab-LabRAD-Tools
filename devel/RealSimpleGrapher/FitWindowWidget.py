@@ -14,16 +14,18 @@ class RowInfo():
 
 class FitWindow(QtGui.QWidget):
 
-    def __init__(self, dataset, index):
+    def __init__(self, dataset, index, parent):
         super(FitWindow, self).__init__()
         self.dataset = dataset
         self.index = index
+        self.parent = parent
         self.fw = FitWrapper(dataset, index)
         self.row_info_dict = {}
+        self.ident = 'Fit: ' + str(self.dataset.dataset_name)
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Fit: ' + str(self.dataset.dataset_name))
+        self.setWindowTitle(self.ident)
         mainLayout = QtGui.QVBoxLayout()
 
         self.model_select = QtGui.QComboBox(self)
@@ -106,6 +108,23 @@ class FitWindow(QtGui.QWidget):
             print fitted_value
             row.fitted_value.setText( str(fitted_value) )
 
+    def plotFit(self):
+        '''
+        Plot the fitted parameters.
+        We need to wrap the data in a dataset
+        object to use add_artist in GraphWidget
+        '''
+
+        class dataset():
+            def __init__(self, data):
+                self.data = data
+                self.updateCounter = 1
+        data = self.fw.evaluateFittedParameters()
+        ds = dataset(data)
+        print ds.data
+        self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
+        self.parent.parent.update_figure()
+
     def onActivated(self):
         '''
         Run when model is changed.
@@ -127,4 +146,4 @@ class FitWindow(QtGui.QWidget):
         self.updateParametersToFitter()
         self.fw.doFit()
         self.updateParametersFromFitter()
-        
+        self.plotFit()

@@ -77,7 +77,7 @@ class TraceList(QtGui.QListWidget):
             if action == fitAction:
                 dataset = self.parent.artists[ident].dataset
                 index = self.parent.artists[ident].index
-                fw = FitWindow(dataset, index)
+                fw = FitWindow(dataset, index, self)
                 self.windows.append(fw)
                 fw.show()
                 
