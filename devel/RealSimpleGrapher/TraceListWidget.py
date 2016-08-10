@@ -2,6 +2,7 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 from ParameterListWidget import ParameterList
 from DataVaultListWidget import DataVaultList
+from FitWindowWidget import FitWindow
 from GUIConfig import traceListConfig
 
 class TraceList(QtGui.QListWidget):
@@ -53,6 +54,7 @@ class TraceList(QtGui.QListWidget):
 	    ident = str(item.text())
             parametersAction = menu.addAction('Parameters')
             togglecolorsAction = menu.addAction('Toggle colors')
+            fitAction = menu.addAction('Fit')
 
             action = menu.exec_(self.mapToGlobal(pos))
             
@@ -72,5 +74,11 @@ class TraceList(QtGui.QListWidget):
                 else:
                     self.parent.artists[ident].artist.setData(pen = new_color)
 
+            if action == fitAction:
+                dataset = self.parent.artists[ident].dataset
+                index = self.parent.artists[ident].index
+                fw = FitWindow(dataset, index)
+                self.windows.append(fw)
+                fw.show()
                 
                
