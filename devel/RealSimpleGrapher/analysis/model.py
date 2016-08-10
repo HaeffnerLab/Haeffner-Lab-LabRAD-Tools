@@ -40,7 +40,7 @@ class Model():
         n = len(self.parameters.keys())
         full_params = [None for k in range(n)]
         
-        for param in self.parameters.keys():
+        for key in self.parameters.keys():
             if not self.parameters[key].vary:
                 index = self.parameters[key].index
                 value = self.parameters[key].manual_value

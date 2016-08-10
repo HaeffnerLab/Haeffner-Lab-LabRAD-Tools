@@ -2,6 +2,16 @@ from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 from analysis.fitting import FitWrapper
 
+class RowInfo():
+    '''
+    Container for the widgets with
+    each row in the parameters table
+    '''
+    def __init__(self, vary, manual_value, fitted_value):
+        self.vary_select = vary
+        self.manual_value = manual_value
+        self.fitted_value = fitted_value
+
 class FitWindow(QtGui.QWidget):
 
     def __init__(self, dataset, index):
@@ -9,6 +19,7 @@ class FitWindow(QtGui.QWidget):
         self.dataset = dataset
         self.index = index
         self.fw = FitWrapper(dataset, index)
+        self.row_info_dict = {}
         self.initUI()
 
     def initUI(self):
@@ -24,13 +35,16 @@ class FitWindow(QtGui.QWidget):
 
         self.fitButton = QtGui.QPushButton('Fit', self)
 
-        self.model_select.activated.connect(self.onActivated)
         self.fw.setModel(self.model_select.currentText())
-        self.setupParameterTable()
 
         mainLayout.addWidget(self.model_select)
         mainLayout.addWidget(self.parameterTable)
         mainLayout.addWidget(self.fitButton)
+        
+        self.model_select.activated.connect(self.onActivated)
+        self.fitButton.clicked.connect(self.onClick)
+
+        self.setupParameterTable()
         self.setLayout(mainLayout)
         self.show()
 
@@ -45,11 +59,14 @@ class FitWindow(QtGui.QWidget):
         params = self.fw.getParameters()
         self.parameterTable.setRowCount(len(params))
         for i,p in enumerate(params):
+
             vary_select = QtGui.QTableWidgetItem()
             label = QtGui.QLabel(p)
             manual_value = QtGui.QDoubleSpinBox()
             fitted_value = QtGui.QTableWidgetItem()
-            
+
+            self.row_info_dict[p] = RowInfo(vary_select, manual_value, fitted_value)
+
             vary_select.setFlags(QtCore.Qt.ItemIsUserCheckable|QtCore.Qt.ItemIsEnabled)
             if self.fw.getVary(p):
                 vary_select.setCheckState(QtCore.Qt.Checked)
@@ -64,14 +81,50 @@ class FitWindow(QtGui.QWidget):
             self.parameterTable.setItem(i, 0, vary_select)
             self.parameterTable.setCellWidget(i, 1, label)
             self.parameterTable.setCellWidget(i, 2, manual_value)
-            self.parameterTable.setItem(i, 3, fitted_value)
+            self.parameterTable.setItem(i, 3, fitted_value)            
 
     def updateParametersToFitter(self):
         params = self.fw.getParameters()
-        for i, p in enumerate(params):
-            pass
+        for p in params:
+            row = self.row_info_dict[p]
+            vary = row.vary_select.checkState()
+            manual_value = row.manual_value.value()
+            if vary:
+                self.fw.setVary(p, True)
+                print p + " vary"
+            else:
+                self.fw.setVary(p, False)
+                print p + " fixed"
+
+            self.fw.setManualValue(p, manual_value)
+
+    def updateParametersFromFitter(self):
+        params = self.fw.getParameters()
+        for p in params:
+            row = self.row_info_dict[p]
+            fitted_value = self.fw.getFittedValue(p)
+            print fitted_value
+            row.fitted_value.setText( str(fitted_value) )
 
     def onActivated(self):
+        '''
+        Run when model is changed.
+        Reset row_info_dict each
+        time the model is changed.
+        '''
         model = self.model_select.currentText()
         self.fw.setModel(model)
+        self.row_info_dict = {}
         self.setupParameterTable()
+
+    def onClick(self):
+        '''
+        Send table parameters to fitter,
+        perform fit, and then update
+        paramter table with the results
+        '''
+
+        self.updateParametersToFitter()
+        self.fw.doFit()
+        self.updateParametersFromFitter()
+        
