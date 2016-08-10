@@ -9,8 +9,8 @@ class Lorentzian(Model):
         self.parameters = {
             'center': ParameterInfo('center', 0, self.guess_center),
             'scale': ParameterInfo('scale', 1, self.guess_scale),
-            'fwhm': ParameterInfo('fwhm', 2, self.guess_fwhm, False),
-            'offset': ParameterInfo('offset', 3, self.guess_offset, False)
+            'fwhm': ParameterInfo('fwhm', 2, self.guess_fwhm),
+            'offset': ParameterInfo('offset', 3, self.guess_offset)
             }
 
     def model(self, x, p):
@@ -34,7 +34,7 @@ class Lorentzian(Model):
         return 1.0
     
     def guess_fwhm(self, x, y):
-        return (max(x) - min(x))/2.0
+        return (max(x) - min(x))/6.0
     
     def guess_offset(self, x, y):
         return 0.

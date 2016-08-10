@@ -1,5 +1,6 @@
 # Generic fitter class
 
+import numpy as np
 from scipy import optimize
 from fit_lorentzian import Lorentzian
 
@@ -15,7 +16,12 @@ class FitWrapper():
         self.model = Lorentzian()
 
     def getParameters(self):
-        return self.model.parameters.keys()
+        '''
+        Returns a list of params
+        sorted in order of index
+        '''
+        params = self.model.parameters.keys()
+        return sorted(params, key=lambda p: self.model.parameters[p].index)
 
     def getVary(self, p):
         return self.model.parameters[p].vary
@@ -54,7 +60,6 @@ class FitWrapper():
         varied_positions = self.model.varied_positions()
         fixed_positions = self.model.fixed_positions()
         x0 = [self.model.param_from_index(k).manual_value for k in varied_positions]
-
         result = optimize.leastsq(residual, x0)
         result = result[0]
 
@@ -68,3 +73,51 @@ class FitWrapper():
         for pos in fixed_positions:
             param = self.model.param_from_index(pos)
             param.fit_value = param.manual_value
+
+    def evaluateFittedParameters(self):
+        '''
+        Evaluate the model on a fine grid
+        Return 2-d numpy array data where
+        data[:,0] = fine_grid
+        data[:,1] = model evaluated on fitted parameters
+        '''
+
+        x = self.dataset.data[:,0]
+        n = len(x)
+        N = 10*n
+        xmin = x[0]; xmax = x[-1]
+        fine_grid = np.linspace(xmin, xmax, N)
+
+        p0 = []
+        for p in self.getParameters():
+            p0.append(self.getFittedValue(p))
+        y = self.model.model(fine_grid, p0)
+        
+        data = np.zeros((N, 2))
+        data[:,0] = fine_grid
+        data[:,1] = y
+        return data
+
+    def evaluateManualParameters(self):
+        '''
+        Evaluate the model on a fine grid
+        Return 2-d numpy array data where
+        data[:,0] = fine_grid
+        data[:,1] = model evaluated on manual parameters
+        '''
+
+        x = self.dataset.data[:,0]
+        n = len(x)
+        N = 10*n
+        xmin = x[0]; xmax = x[-1]
+        fine_grid = np.linspace(xmin, xmax, N)
+
+        p0 = []
+        for p in self.getParameters():
+            p0.append(self.getManualValue(p))
+        y = self.model.model(fine_grid, p0)
+        
+        data = np.zeros((N, 2))
+        data[:,0] = fine_grid
+        data[:,1] = y
+        return data
