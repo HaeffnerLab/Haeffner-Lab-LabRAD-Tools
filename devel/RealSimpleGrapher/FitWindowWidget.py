@@ -93,11 +93,8 @@ class FitWindow(QtGui.QWidget):
             manual_value = row.manual_value.value()
             if vary:
                 self.fw.setVary(p, True)
-                print p + " vary"
             else:
                 self.fw.setVary(p, False)
-                print p + " fixed"
-
             self.fw.setManualValue(p, manual_value)
 
     def updateParametersFromFitter(self):
@@ -121,9 +118,13 @@ class FitWindow(QtGui.QWidget):
                 self.updateCounter = 1
         data = self.fw.evaluateFittedParameters()
         ds = dataset(data)
-        print ds.data
-        self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
-        self.parent.parent.update_figure()
+        try:
+            # remove the previous fit
+            self.parent.parent.remove_artist(self.ident)
+            self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
+        except:
+            self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
+        
 
     def onActivated(self):
         '''
@@ -147,3 +148,6 @@ class FitWindow(QtGui.QWidget):
         self.fw.doFit()
         self.updateParametersFromFitter()
         self.plotFit()
+
+    def closeEvent(self, event):
+        self.parent.parent.remove_artist(self.ident)
