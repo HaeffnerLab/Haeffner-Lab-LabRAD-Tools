@@ -124,7 +124,6 @@ class FitWindow(QtGui.QWidget):
             self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
         except:
             self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
-        
 
     def onActivated(self):
         '''
