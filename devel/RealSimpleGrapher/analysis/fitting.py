@@ -3,17 +3,23 @@
 import numpy as np
 from scipy import optimize
 from fit_lorentzian import Lorentzian
+from fit_gaussian import Gaussian
 
 class FitWrapper():
 
-    models = ['Lorentzian', 'Gaussian', 'Rabi']
+    models = ['Lorentzian', 'Gaussian']
 
     def __init__(self, dataset, index):
         self.dataset = dataset
         self.index = index
 
     def setModel(self, model):
-        self.model = Lorentzian()
+
+        model_dict = {
+            'Lorentzian': Lorentzian,
+            'Gaussian': Gaussian
+            }
+        self.model = model_dict[model]()
 
     def getParameters(self):
         '''
