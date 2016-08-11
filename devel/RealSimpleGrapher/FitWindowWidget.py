@@ -37,7 +37,7 @@ class FitWindow(QtGui.QWidget):
 
         self.fitButton = QtGui.QPushButton('Fit', self)
 
-        self.fw.setModel(self.model_select.currentText())
+        self.fw.setModel(str(self.model_select.currentText()))
 
         mainLayout.addWidget(self.model_select)
         mainLayout.addWidget(self.parameterTable)
@@ -131,7 +131,7 @@ class FitWindow(QtGui.QWidget):
         Reset row_info_dict each
         time the model is changed.
         '''
-        model = self.model_select.currentText()
+        model = str(self.model_select.currentText())
         self.fw.setModel(model)
         self.row_info_dict = {}
         self.setupParameterTable()

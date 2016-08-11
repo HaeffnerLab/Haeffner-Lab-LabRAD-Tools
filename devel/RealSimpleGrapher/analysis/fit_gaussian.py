@@ -31,10 +31,10 @@ class Gaussian(Model):
         return x[max_index]
 
     def guess_A(self, x, y):
-        return np.argmax(y)
+        return max(y)
 
     def guess_sigma(self, x, y):
         return (max(x) - min(x))/6.0
 
     def guess_offset(self, x, y):
-        return 0.
+        return 0.0
