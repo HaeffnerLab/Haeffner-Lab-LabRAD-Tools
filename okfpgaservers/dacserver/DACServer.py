@@ -367,37 +367,6 @@ class DACServer(LabradServer):
         
 ##################################################   
 
-    @setting(15, "Ramp Multipole", ramped_multipole='s',start = 'v', stop = 'v',steps='i')
-    def ramp_multipole(self, c, ramped_multipole, start, stop, steps):
-        ramp = []
-        for i in range(0,steps+1):
-            ramp.append(start+float(i)*(stop-start)/steps)
-        
-        vector = self.control.multipole_vector.items()
-        new_dim=zip(*vector)
-        idx = new_dim[0].index(ramped_multipole)
-
-        ## Ramp to a field
-        vector[idx] = (ramped_multipole,ramp[0])
-        self.control.populateVoltageMatrix(vector)
-        yield self.setMultipoleValues(c, vector)
-        for field in ramp:
-            self.queue.advance()
-            vector[idx] = (ramped_multipole,field)
-            self.control.populateVoltageMatrix(vector)
-            yield self.setMultipoleValues(c, vector)
-        ## ramp back    
-        ramp.reverse()
-        for field in ramp:
-            self.queue.advance()
-            vector[idx] = (ramped_multipole,field)
-            self.control.populateVoltageMatrix(vector)
-            yield self.setMultipoleValues(c, vector)
-        self.queue.reset()
-    
-    @setting(16, "get queue")
-    def getQueue(self,c):
-        return self.queue.current_set
 
         
 ###################################################
@@ -457,6 +426,39 @@ class DACServer(LabradServer):
     @setting(15, "Set Endcap Voltages", analog_voltage='v')
     def setEndcapVoltages(self, c, analog_voltage):
         self.setIndividualAnalogVoltages(c, [('endcap1', analog_voltage), ('endcap2', analog_voltage)])
+
+    @setting(16, "Ramp Multipole", ramped_multipole='s',start = 'v', stop = 'v',steps='i')
+    def ramp_multipole(self, c, ramped_multipole, start, stop, steps):
+        ramp = []
+        for i in range(0,steps+1):
+            ramp.append(start+float(i)*(stop-start)/steps)
+        
+        vector = self.control.multipole_vector.items()
+        new_dim=zip(*vector)
+        idx = new_dim[0].index(ramped_multipole)
+
+        ## Ramp to a field
+        vector[idx] = (ramped_multipole,ramp[0])
+        self.control.populateVoltageMatrix(vector)
+        yield self.setMultipoleValues(c, vector)
+        for field in ramp:
+            self.queue.advance()
+            vector[idx] = (ramped_multipole,field)
+            self.control.populateVoltageMatrix(vector)
+            yield self.setMultipoleValues(c, vector)
+        ## ramp back    
+        ramp.reverse()
+        for field in ramp:
+            self.queue.advance()
+            vector[idx] = (ramped_multipole,field)
+            self.control.populateVoltageMatrix(vector)
+            yield self.setMultipoleValues(c, vector)
+        self.queue.reset()
+    
+    @setting(17, "get queue")
+    def getQueue(self,c):
+        return self.queue.current_set
+
 
     def initContext(self, c):
         self.listeners.add(c.ID)
