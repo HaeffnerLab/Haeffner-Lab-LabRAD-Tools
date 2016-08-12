@@ -76,9 +76,13 @@ class FitWindow(QtGui.QWidget):
                 vary_select.setCheckState(QtCore.Qt.Unchecked)
 
             manualValue = self.fw.getManualValue(p)
+            manual_value.setDecimals(6)
+            manual_value.setRange(-1000000000, 1000000000)
             manual_value.setValue(manualValue)
 
             fittedValue = self.fw.getFittedValue(p)
+            #fitted_value.setDecimals(6)
+            #fitted_value.setRange(-1000000000, 1000000000)
             fitted_value.setText(str(fittedValue))
             self.parameterTable.setItem(i, 0, vary_select)
             self.parameterTable.setCellWidget(i, 1, label)
