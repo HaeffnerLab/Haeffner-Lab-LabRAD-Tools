@@ -34,18 +34,20 @@ class ModelTest():
         self.fw = FitWrapper(ds, 0)
         self.fw.setModel(self.name)
 
+        for p in self.fw.getParameters():
+            self.fw.getManualValue(p) # force guess of initial parameters
+
         self.x = x
         self.y = y
 
     def fit(self):
-        for p in self.fw.getParameters():
-            self.fw.getManualValue(p) # force guess of initial parameters
         self.fw.doFit()
         
-    def plot(self):
-        output = self.fw.evaluateFittedParameters()
+    def plot(self, fit = True):
         plt.plot(self.x, self.y, 'ro')
-        plt.plot(output[:,0], output[:,1])
+        if fit:
+            output = self.fw.evaluateFittedParameters() 
+            plt.plot(output[:,0], output[:,1])
         plt.show()
         
     def print_results(self):

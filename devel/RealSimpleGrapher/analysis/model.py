@@ -5,7 +5,6 @@ class ParameterInfo():
         self.parameter = parameter
         self.vary = vary
         self.guess_func = guess_func
-        self.vary = vary
         self.index = index
 
 class Model():

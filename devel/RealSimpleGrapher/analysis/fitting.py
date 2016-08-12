@@ -4,10 +4,12 @@ import numpy as np
 from scipy import optimize
 from fit_lorentzian import Lorentzian
 from fit_gaussian import Gaussian
+from fit_linear import Linear
+from fit_rabi import Rabi
 
 class FitWrapper():
 
-    models = ['Lorentzian', 'Gaussian']
+    models = ['Lorentzian', 'Gaussian', 'Rabi', 'Linear']
 
     def __init__(self, dataset, index):
         self.dataset = dataset
@@ -17,7 +19,9 @@ class FitWrapper():
 
         model_dict = {
             'Lorentzian': Lorentzian,
-            'Gaussian': Gaussian
+            'Gaussian': Gaussian,
+            'Linear': Linear,
+            'Rabi': Rabi,
             }
         self.model = model_dict[model]()
 
