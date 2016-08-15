@@ -259,7 +259,7 @@ class NormalPMTFlow( LabradServer):
         initrunning = self.recording.running #if recording when the call is made, need to stop and restart
         if initrunning:
             yield self.recording.stop()
-        yield self.pulser.set_collection_time(timelength['s'], mode)
+        yield self.pulser.set_collection_time(timelength, mode)
         if initrunning:
             if mode == 'Differential':
                 yield self._stopPulserDiff()
