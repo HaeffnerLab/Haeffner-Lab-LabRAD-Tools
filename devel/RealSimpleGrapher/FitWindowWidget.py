@@ -27,6 +27,7 @@ class FitWindow(QtGui.QWidget):
     def initUI(self):
         self.setWindowTitle(self.ident)
         mainLayout = QtGui.QVBoxLayout()
+        buttons = QtGui.QHBoxLayout()
 
         self.model_select = QtGui.QComboBox(self)
         for model in self.fw.models:
@@ -37,14 +38,19 @@ class FitWindow(QtGui.QWidget):
 
         self.fitButton = QtGui.QPushButton('Fit', self)
 
+        self.plotButton = QtGui.QPushButton('Plot manual', self)
+
         self.fw.setModel(str(self.model_select.currentText()))
 
         mainLayout.addWidget(self.model_select)
         mainLayout.addWidget(self.parameterTable)
-        mainLayout.addWidget(self.fitButton)
+        mainLayout.addLayout(buttons)
+        buttons.addWidget(self.fitButton)
+        buttons.addWidget(self.plotButton)
         
         self.model_select.activated.connect(self.onActivated)
         self.fitButton.clicked.connect(self.onClick)
+        self.plotButton.clicked.connect(self.onPlot)
 
         self.setupParameterTable()
         self.setLayout(mainLayout)
@@ -102,12 +108,17 @@ class FitWindow(QtGui.QWidget):
             self.fw.setManualValue(p, manual_value)
 
     def updateParametersFromFitter(self):
+        '''
+        Set the fitted and manual parameters
+        fields to the fit values
+        '''
         params = self.fw.getParameters()
         for p in params:
             row = self.row_info_dict[p]
             fitted_value = self.fw.getFittedValue(p)
-            print fitted_value
             row.fitted_value.setText( str(fitted_value) )
+            row.manual_value.setValue( fitted_value )
+            
 
     def plotFit(self):
         '''
@@ -151,6 +162,28 @@ class FitWindow(QtGui.QWidget):
         self.fw.doFit()
         self.updateParametersFromFitter()
         self.plotFit()
+
+    def onPlot(self):
+        '''
+        Plot the manual parameters. See documentation
+        for plotFit()
+        '''
+
+        class dataset():
+            def __init__(self, data):
+                self.data = data
+                self.updateCounter = 1
+
+        self.updateParametersToFitter()
+        data = self.fw.evaluateManualParameters()
+        ds = dataset(data)
+        try:
+            # remove the previous plot
+            self.parent.parent.remove_artist(self.ident)
+            self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
+        except:
+            self.parent.parent.add_artist(self.ident, ds, 0, no_points = True)
+
 
     def closeEvent(self, event):
         self.parent.parent.remove_artist(self.ident)
