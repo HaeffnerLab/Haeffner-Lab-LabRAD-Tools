@@ -43,7 +43,10 @@ class cavityWidget(QtGui.QWidget):
     def connect(self):
         from labrad.wrappers import connectAsync
         from labrad.types import Error
-        self.cxn = yield connectAsync('192.168.169.49')
+        try:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab', tls_mode='off')
+        except:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab')
         self.server = yield self.cxn.laserdac
         self.registry = yield self.cxn.registry
         yield self.loadDict()

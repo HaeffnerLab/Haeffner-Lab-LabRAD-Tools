@@ -62,7 +62,10 @@ class multiplexerWidget(QtGui.QWidget):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('192.168.169.49')
+        try:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab',tls_mode='off')
+        except:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab')
         try:
             self.server_laserlock = yield self.cxn.laserlock_server
             self.listenlock = True
