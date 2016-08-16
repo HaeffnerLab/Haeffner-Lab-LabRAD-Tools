@@ -21,8 +21,6 @@ import matplotlib.pyplot as plt
 import sys
 from labrad.server import LabradServer, setting, Signal, inlineCallbacks
 from twisted.internet.defer import returnValue
-from scipy import interpolate
-from scipy.interpolate import UnivariateSpline as UniSpline
 from numpy import genfromtxt, arange
 import numpy as np
 from api import api
@@ -87,23 +85,6 @@ class Control(object):
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
-
-    def populateVoltageMatrix(self, multipole_vector):
-        self.multipole_vector = {m: v for (m,v) in multipole_vector}
-        for e in hc.elec_dict.keys():
-            self.voltage_matrix[e] = [0. for n in range(self.num_columns)]
-            for n in range(self.num_columns):
-                for m in self.multipoles:
-                    self.voltage_matrix[e][n] += self.multipole_matrix[e][m][n] * self.multipole_vector[m]
-        if self.num_columns > 1: self.interpolateVoltageMatrix()
-     
-    def interpolateVoltageMatrix(self):
-        # fix step size here
-        num_positions = 10*(self.num_columns - 1.)
-        inc = (self.num_columns-1)/num_positions
-        partition = arange(0, (num_positions + 1) * inc, inc)
-        splineFit = {elec: UniSpline(range(self.num_columns) , self.voltage_matrix[elec], s=0) for elec in hc.elec_dict.keys()}
-        self.voltage_matrix = {elec: splineFit[elec](partition) for elec in hc.elec_dict.keys()}
 
     def getVoltages(self): 
         return [(e, self.voltage_matrix[e][self.position]) for e in hc.elec_dict.keys()]

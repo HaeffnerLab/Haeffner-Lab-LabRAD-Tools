@@ -37,7 +37,6 @@ class cavityWidget(QtGui.QWidget):
         self.d['854'] = widgetWrapper( serverName = '854',displayName = '854 Cavity', regName = 'range854', globalRange = (0,2500))
         self.d['397D'] =  widgetWrapper( serverName = '397D', displayName = '397 Diode Cavity', regName = 'range397D', globalRange = (0,2500))
         self.d['729inject'] =  widgetWrapper( serverName = '729inject', displayName = '729inject', regName = 'range729inject', globalRange = (0,2500))
-
         
     @inlineCallbacks
     def connect(self):
