@@ -59,7 +59,11 @@ class CHANNEL_CONTROL (QtGui.QWidget):
     def connect(self):
         from labrad.wrappers import connectAsync
         from labrad.types import Error
-        self.cxn = yield connectAsync()
+        try:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab', tls_mode='off')
+        except:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab')
+
         self.dacserver = yield self.cxn.dac_server
         yield self.setupListeners()
         yield self.followSignal(0, 0)
@@ -71,8 +75,9 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         return iu
 
     def sendToServer(self):
-        if self.inputUpdated:            
-            self.dacserver.set_individual_analog_voltages([(self.changedChannel, round(self.controls[self.changedChannel].spinLevel.value(), 3))]*17)
+        if self.inputUpdated:
+            value = float(round(self.controls[self.changedChannel].spinLevel.value(), 3))
+            self.dacserver.set_individual_analog_voltages([(self.changedChannel, value)])
             self.inputUpdated = False
             
     @inlineCallbacks    
