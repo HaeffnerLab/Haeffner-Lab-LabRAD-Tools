@@ -16,6 +16,7 @@ class QCustomSpinBox(QtGui.QWidget):
         self.spinLevel.setDecimals(3)
         self.level = 0
         self.spinLevel.valueChanged.connect(self.spinLevelChanged)
+        self.setStepSize(0.001) #set step size of box
 
     def setValues(self, level):
         self.disconnectAll()

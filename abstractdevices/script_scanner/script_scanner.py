@@ -40,7 +40,7 @@ class ScriptScanner(LabradServer, Signals):
     def initServer(self):
         self.script_parameters = {}
         self.scheduler = scheduler(Signals)
-        self.load_scripts()
+	self.load_scripts()
     
     def load_scripts(self):
         '''
