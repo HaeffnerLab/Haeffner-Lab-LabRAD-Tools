@@ -111,14 +111,17 @@ class DDS_CONTROL(QtGui.QFrame):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        try:
-            from labrad.types import Error
-            self.Error = Error
-            yield self.initialize()
-        except Exception, e:
-            print e
-            print 'DDS CONTROL: Pulser not available'
-            self.setDisabled(True)
+        from labrad.types import Error
+        self.Error = Error
+        yield self.initialize()
+        #try:
+        #    from labrad.types import Error
+        #    self.Error = Error
+        #    yield self.initialize()
+        #except Exception, e:
+        #    print e
+        #    print 'DDS CONTROL: Pulser not available'
+        #    self.setDisabled(True)
         self.cxn.add_on_connect('DDS_CW', self.reinitialize)
         self.cxn.add_on_disconnect('DDS_CW', self.disable)
      
@@ -176,18 +179,14 @@ class DDS_CONTROL(QtGui.QFrame):
     @inlineCallbacks
     def registry_load_step_sizes(self, channels_to_display):
         reg = yield self.cxn.get_server('Registry')
-        #yield reg.cd(['Clients', 'DDS Control'], True, context = self.context)
+        yield reg.cd(['Clients', 'DDS Control'], True, context = self.context)
         step_sizes = []
         for channel in channels_to_display:
             try:
                 step_size = yield reg.get(channel, context = self.context)
                 step_sizes.append(step_size)
             except self.Error as e:
-                print e
-                if e.code == 21:
-                    step_sizes.append(0.1) # default step size
-                else:
-                    raise
+                step_sizes.append(0.1)
         returnValue(step_sizes)
 
     @inlineCallbacks
@@ -211,7 +210,6 @@ class DDS_CONTROL(QtGui.QFrame):
         layout = QtGui.QGridLayout()
         item = 0
         for chan, step_size in zip(self.display_channels, self.step_sizes):
-            print step_size
             widget = DDS_CHAN(chan, step_size, self.reactor, self.cxn, self.context)
             self.widgets[chan] = widget
             layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)

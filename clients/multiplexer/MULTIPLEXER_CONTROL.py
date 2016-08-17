@@ -62,7 +62,10 @@ class multiplexerWidget(QtGui.QWidget):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('192.168.169.49')
+        try:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab',tls_mode='off')
+        except:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab')
         try:
             self.server_laserlock = yield self.cxn.laserlock_server
             self.listenlock = True
@@ -89,6 +92,7 @@ class multiplexerWidget(QtGui.QWidget):
         self.setButtonText()
         #fill out information in all available channels
         all_channels = yield self.server.get_available_channels()
+        print all_channels
         for name in all_channels:
             wavelength = yield self.server.get_wavelength_from_channel(name)
             widget_config = config.info.get(name, None)

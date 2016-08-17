@@ -37,13 +37,15 @@ class cavityWidget(QtGui.QWidget):
         self.d['854'] = widgetWrapper( serverName = '854',displayName = '854 Cavity', regName = 'range854', globalRange = (0,2500))
         self.d['397D'] =  widgetWrapper( serverName = '397D', displayName = '397 Diode Cavity', regName = 'range397D', globalRange = (0,2500))
         self.d['729inject'] =  widgetWrapper( serverName = '729inject', displayName = '729inject', regName = 'range729inject', globalRange = (0,2500))
-
         
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
         from labrad.types import Error
-        self.cxn = yield connectAsync('192.168.169.49')
+        try:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab', tls_mode='off')
+        except:
+            self.cxn = yield connectAsync('192.168.169.49',password='lab')
         self.server = yield self.cxn.laserdac
         self.registry = yield self.cxn.registry
         yield self.loadDict()

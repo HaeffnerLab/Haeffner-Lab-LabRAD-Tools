@@ -157,21 +157,14 @@ class DDS_CONTROL(QtGui.QFrame):
         try:
             displayed = yield reg.get('display_channels', context = self.context)
         except self.Error as e:
-            if e.code == 21:
-                #key error
-                yield reg.set('display_channels', all_names, context = self.context)
-                displayed = None
-            else:
-                raise
+            yield reg.set('display_channels', all_names, context = self.context)
+            displayed = None
+
         try:
             widgets_per_row = yield reg.get('widgets_per_row', context = self.context)
         except self.Error as e:
-            if e.code == 21:
-                #key error
-                yield reg.set('widgets_per_row', 1, context = self.context)
-                widgets_per_row = None
-            else:
-                raise
+            yield reg.set('widgets_per_row', 1, context = self.context)
+            widgets_per_row = None
         returnValue((displayed, widgets_per_row))
 
     @inlineCallbacks
@@ -184,11 +177,7 @@ class DDS_CONTROL(QtGui.QFrame):
                 step_size = yield reg.get(channel, context = self.context)
                 step_sizes.append(step_size)
             except self.Error as e:
-                print e
-                if e.code == 21:
-                    step_sizes.append(0.1) # default step size
-                else:
-                    raise
+                step_sizes.append(0.1)
         returnValue(step_sizes)
 
     @inlineCallbacks
