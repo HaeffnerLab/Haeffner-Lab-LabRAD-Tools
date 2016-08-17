@@ -92,6 +92,7 @@ class multiplexerWidget(QtGui.QWidget):
         self.setButtonText()
         #fill out information in all available channels
         all_channels = yield self.server.get_available_channels()
+        print all_channels
         for name in all_channels:
             wavelength = yield self.server.get_wavelength_from_channel(name)
             widget_config = config.info.get(name, None)

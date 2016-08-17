@@ -4,7 +4,7 @@ class channelConfiguration(object):
     """
 
 
-    def __init__(self, dacChannelNumber, trapElectrodeNumber = None, smaOutNumber = None, name = None, boardVoltageRange = (-10, 10), allowedVoltageRange = (0.0, 2.5)):
+    def __init__(self, dacChannelNumber, trapElectrodeNumber = None, smaOutNumber = None, name = None, boardVoltageRange = (-10, 10), allowedVoltageRange = (0.0, 10.0)):
         self.dacChannelNumber = dacChannelNumber
         self.trapElectrodeNumber = trapElectrodeNumber
         self.smaOutNumber = smaOutNumber

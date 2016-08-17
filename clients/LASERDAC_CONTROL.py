@@ -4,8 +4,11 @@ from numpy import *
 from qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks, returnValue
 import sys
-# sys.path.append('/home/cct/LabRAD/common/abstractdevices')
-from common.okfpgaservers.laserdac.DacConfiguration import hardwareConfiguration as hc
+
+sys.path.append('c:\Users\lab-user\LabRAD\common\okfpgaservers\laserdac')
+
+#from common.okfpgaservers.laserdac.DacConfiguration import hardwareConfiguration as hc
+from DacConfiguration import hardwareConfiguration as hc
 
 from qtui.SliderSpin import SliderSpin
 
