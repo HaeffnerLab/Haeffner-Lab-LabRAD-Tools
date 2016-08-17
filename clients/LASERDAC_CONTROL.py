@@ -5,10 +5,12 @@ from qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks, returnValue
 import sys
 
-sys.path.append('c:\Users\lab-user\LabRAD\common\okfpgaservers\laserdac')
 
-#from common.okfpgaservers.laserdac.DacConfiguration import hardwareConfiguration as hc
-from DacConfiguration import hardwareConfiguration as hc
+try:
+    from common.okfpgaservers.laserdac.DacConfiguration import hardwareConfiguration as hc
+except:
+    sys.path.append('c:\Users\lab-user\LabRAD\common\okfpgaservers\laserdac')
+    from DacConfiguration import hardwareConfiguration as hc
 
 from qtui.SliderSpin import SliderSpin
 
