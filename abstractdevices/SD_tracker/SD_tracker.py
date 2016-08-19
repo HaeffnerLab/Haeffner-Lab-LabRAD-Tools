@@ -21,6 +21,7 @@ import time
 from SD_tracker_config import config as conf
 from SD_calculator import Transitions_SD, fitter
 import numpy
+#from labrad.units import WithUnit
 
 class SDTracker(LabradServer):
     """Provides ability to track drifts of the SD line"""
@@ -170,18 +171,20 @@ class SDTracker(LabradServer):
     def get_current_line(self, c, name):
         lines = yield self.get_current_lines(c)
         d = dict(lines)
-        print 'done getting lines'
-        print d.keys()
+##        print 'done getting lines'
+##        print d.keys()
+##        temp = WithUnit(1.0,'MHz')
+##        yield temp
+##        return
+##        try:
+##            yield d[name]
+##            return
+##        except KeyError:
+##            raise Exception("Requested line not found")
         #print d.makeReport()
         try:
-            print 'trying now'
-            print name
-            temp = d[name]
-            yield temp
-            return
-            #return temp
             #return d[name]
-            #returnValue(d[name])
+            returnValue(d[name])
         except KeyError:
             raise Exception ("Requested line not found")
         

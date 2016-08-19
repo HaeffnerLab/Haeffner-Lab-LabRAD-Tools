@@ -114,7 +114,6 @@ class api(object):
         buf = "\x00"* ( number * 2 )
         #buf = bytearray(buf)
         self.xem.ReadFromBlockPipeOut(0xa1,2,buf)
-        print'in getNormalCounts and past reading'
         return buf
     
     def getReadoutTotal(self):

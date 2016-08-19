@@ -220,7 +220,8 @@ class NormalPMTFlow( LabradServer):
         newSet = None
         self.keepRunning = True
         
-        print self.collection_period['s']
+        #print self.collection_period['s']
+        
         yield self.pulser.set_collection_time(self.collection_period, self.currentMode)
        
         yield self.pulser.set_mode(self.currentMode)
