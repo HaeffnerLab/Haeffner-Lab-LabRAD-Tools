@@ -69,9 +69,9 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         except:
             self.cxn = yield connectAsync('192.168.169.49',password='lab')
 
-        self.dacserver = yield self.cxn.dac_server
         yield self.setupListeners()
-        yield self.followSignal(0, 0)
+        if self.initialized:
+            yield self.followSignal(0, 0)
 
     def inputHasUpdated(self, name):
         def iu():
@@ -87,8 +87,22 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             
     @inlineCallbacks    
     def setupListeners(self):
-        yield self.dacserver.signal__ports_updated(SIGNALID2)
-        yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
+        try:
+            self.dacserver = yield self.cxn.dac_server
+            yield self.dacserver.signal__ports_updated(SIGNALID2)
+            yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
+            self.initialized = True
+            self.setEnabled(True)
+        except:
+            self.initialized = False
+            self.setEnabled(False)
+
+        # signal when server connects or disconnects
+        yield self.cxn.manager.subscribe_to_named_message('Server Connect', 9898989, True)
+        yield self.cxn.manager.subscribe_to_named_message('Server Disconnect', 9898989+1, True)
+        yield self.cxn.manager.addListener(listener = self.followServerConnect, source = None, ID = 9898989)
+        yield self.cxn.manager.addListener(listener = self.followServerDisconnect, source = None, ID = 9898989+1)    
+        
     
     @inlineCallbacks
     def followSignal(self, x, s):
@@ -96,6 +110,33 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         av = yield self.dacserver.get_analog_voltages()
         for (c, v) in av:
             self.controls[c].setValueNoSignal(v)
+
+    @inlineCallbacks
+    def followServerConnect(self, cntx, server_name):
+        server_name = server_name[1]
+        if server_name == 'DAC Server':
+            self.dacserver = yield self.cxn['DAC Server']
+            yield self.dacserver.signal__ports_updated(SIGNALID2)
+            yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
+            self.initialized = True
+            yield self.followSignal(0, 0)
+            self.setEnabled(True)
+        else:
+            yield None
+
+    @inlineCallbacks
+    def followServerDisconnect(self, cntx, server_name):
+        server_name = server_name[1]
+        if server_name == 'DAC Server':
+            self.initialized = False
+            self.setEnabled(False)
+            yield None
+        else:
+            yield None
+
+    def setEnabled(self, value):
+        for key in self.controls.keys():
+            self.controls[key].spinLevel.setEnabled(value)
 
     def closeEvent(self, x):
         self.reactor.stop()        
