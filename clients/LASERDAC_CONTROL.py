@@ -88,7 +88,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
     @inlineCallbacks    
     def setupListeners(self):
         try:
-            self.dacserver = yield self.cxn.['LASERDAC Server']
+            self.dacserver = yield self.cxn['LASERDAC Server']
             yield self.dacserver.signal__ports_updated(SIGNALID2)
             yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
             self.initialized = True
