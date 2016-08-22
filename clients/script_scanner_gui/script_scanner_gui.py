@@ -4,7 +4,7 @@ from scripting_widget import scripting_widget
 from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 
-class script_scanner_gui(QtGui.QWidget):
+class script_scanner_gui(QtGui.QTabWidget):
     
     SIGNALID = 319245
     
@@ -326,12 +326,16 @@ class script_scanner_gui(QtGui.QWidget):
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
+        self.ScanWidget = ScanWidget(self.reactor, self)
+        mainView = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
-        self.setLayout(layout)
+        mainView.setLayout(layout)
+        self.addTab(mainView, 'Main')
+        #self.setLayout(layout)
         self.setWindowTitle('Script Scanner Gui')
-    
+
     def displayError(self, text):
         #runs the message box in a non-blocking method
         message = QtGui.QMessageBox(self.scripting_widget)
