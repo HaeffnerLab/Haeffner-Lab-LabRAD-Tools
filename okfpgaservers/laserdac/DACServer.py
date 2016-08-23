@@ -1,10 +1,10 @@
 '''
 ### BEGIN NODE INFO
 [info]
-name = DAC Server
+name = LASERDAC Server
 version = 1.0
 description =
-instancename = DAC Server
+instancename = LASERDAC Server
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -26,7 +26,7 @@ import numpy as np
 from api import api
 from DacConfiguration import hardwareConfiguration as hc
 
-SERVERNAME = 'DAC Server'
+SERVERNAME = 'LASERDAC Server'
 SIGNALID = 270837
 
 
@@ -194,9 +194,8 @@ class DACServer(LabradServer):
 #            yield self.writeToFPGA(0)
 #            yield self.setIndividualAnalogVoltages(0, [(i, 0)])     
         yield self.setCalibrations()
-        try: 
-            yield self.setPreviousControlFile()
-#            yield self.setIndividualDigitalVoltages(0, [(s, 0) for s in self.dacun_dict.keys()])
+        try:
+            yield self.setPreviousVoltages()
         except: yield self.setVoltagesZero()
         print self.registry_path
 
@@ -246,15 +245,8 @@ class DACServer(LabradServer):
 
     @inlineCallbacks
     def setPreviousVoltages(self):
-        ''' Try to set previous voltages used with current Cfile '''
-        yield self.registry.cd(self.registry_path + [self.control.Cfile_name], True)
-        
-        try: multipole_vector = yield self.registry.get('multipole_vector')         
-        except: multipole_vector = [(k, 0) for k in self.control.multipoles] # if no previous multipole values have been recorded, set them to zero. 
-        yield self.setMultipoleValues(0, multipole_vector)   
-        
-        yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'], True)
-        for k in hc.sma_dict.keys():
+        yield self.registry.cd(self.registry_path + ['voltages'], True)
+        for k in hc.elec_dict.keys():
             try: av = yield self.registry.get(k)
             except: av = 0. # if no previous voltage has been recorded, set to zero. 
             yield self.setIndividualAnalogVoltages(0, [(k, av)])        
@@ -313,9 +305,8 @@ class DACServer(LabradServer):
             except:
                 pass
             self.queue.insert(Voltage(self.dac_dict[port], analog_voltage=av))
-            if self.dac_dict[port].smaOutNumber and self.control.Cfile_name:
-                yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'])
-                yield self.registry.set(port, av)
+            yield self.registry.cd(self.registry_path + ['voltages'])
+            yield self.registry.set(port, av)
         yield self.writeToFPGA(c)
 
     def writeToFPGA(self, c):
