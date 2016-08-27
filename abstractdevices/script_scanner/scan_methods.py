@@ -37,7 +37,7 @@ class experiment(experiment_info):
             try:
                 self.cxn = labrad.connect()
             except Exception as e:
-                raise Exception ("Not able to connecto LabRAD")
+                raise Exception ("Not able to connect to LabRAD")
         try:
             self._define_servers(self.cxn)
         except Exception as e:

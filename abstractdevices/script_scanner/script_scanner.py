@@ -47,6 +47,7 @@ class ScriptScanner(Signals, LabradServer):
         loads script information from the configuration file
         '''
         for import_path, class_name in config.scripts:
+            print class_name
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
@@ -255,6 +256,39 @@ class ScriptScanner(Signals, LabradServer):
             raise Exception ("Trying to confirm error finish of script with ID {0} but it was not running".format(script_ID))
         status.error_finish_confirmed(error_message)
         self.scheduler.remove_if_external(script_ID)
+
+    @setting(37, 'Check Parameters', script = 's', status='s', returns = '*(ss)')
+    def check_parameters(self, c, script, status):
+        '''
+        Set status 'valid' to return parameters which already exist
+        in parameter vault
+        Set status 'invalid' to return parameters which do not exist
+        in parameter vault
+        '''
+        if script not in self.script_parameters.keys():
+            raise Exception ("Script {} Not Found".format(script))
+        try:
+            pv = self.client.parametervault
+        except:
+            pv = None
+            raise Exception('Cannot connect to ParameterVault')
+
+        valid = []
+        invalid = []
+
+        if pv is not None:
+            parameters = self.script_parameters[script].parameters
+            for collection, parameter_name in parameters:
+                try:
+                    value = pv.get_parameter(collection, parameter_name)
+                    valid.append( (collection, parameter_name ) )
+                except Exception as e:
+                    print e
+                    invalid.append( (collection, parameter_name) )
+
+        if status == 'valid': return valid
+        elif status == 'invalid': return invalid
+        else: raise Exception("Incorrect status")
 
     @inlineCallbacks
     def stopServer(self):
