@@ -3,8 +3,9 @@ from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
 from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
+from script_explorer_widget import script_explorer_widget
 
-class script_scanner_gui(QtGui.QWidget):
+class script_scanner_gui(QtGui.QTabWidget):
     
     SIGNALID = 319245
     
@@ -326,10 +327,15 @@ class script_scanner_gui(QtGui.QWidget):
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
+        self.script_explorer = script_explorer_widget(self.reactor, self)
+
+        control = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
-        self.setLayout(layout)
+        control.setLayout(layout)
+        self.addTab(control, 'Scan Control')
+        self.addTab(self.script_explorer, 'Script Explorer')
         self.setWindowTitle('Script Scanner Gui')
     
     def displayError(self, text):
