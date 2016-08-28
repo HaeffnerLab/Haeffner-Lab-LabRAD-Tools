@@ -42,7 +42,7 @@ class ParameterVault(LabradServer):
         self.listeners.remove(c.ID)   
         
     def getOtherListeners(self,c):
-        """Returns the set of all listeners excluding he provided context c."""
+        """Returns the set of all listeners excluding the provided context c."""
         notified = self.listeners.copy()
         notified.remove(c.ID)
         return notified
@@ -94,7 +94,15 @@ class ParameterVault(LabradServer):
             fullDir = regDir + key
             yield self.client.registry.cd(fullDir)
             yield self.client.registry.set(parameter_name, value)
-    
+
+    @inlineCallbacks
+    def save_single_parameter(self, collection, parameter_name, value):
+        regDir = self.registryDirectory
+        regDir.extend([collection])
+        yield self.client.registry.cd(regDir, True)
+        yield self.client.registry.set(parameter_name, value)
+        
+        
     def _save_full(self, key, value):
         """
         Checks the type parameter if the value falls within range
@@ -163,39 +171,56 @@ class ParameterVault(LabradServer):
             result = self.check_parameter(key, result)
         return result
 
-    @setting(2, "Get Parameter Names", collection = 's', returns = '*s')
+    @setting(2, 'New Parameter', collection = 's', parameter_name = 's', value = '?', returns = '')
+    def new_parameter(self, c, collection, parameter_name, value):
+        '''
+        Create a new parameter, and save it in the registry
+        value is a tuple of the form (t, val) where
+        t is type of parameter, and value is a setting for
+        that parameter
+        '''
+        key = (collection, parameter_name)
+        if key in self.parameters.keys():
+            raise Exception('Parameter already exists')
+        else:
+            self.parameters[key] = value
+            yield self.save_single_parameter(collection, parameter_name, value)
+            notified = self.getOtherListeners(c)
+            self.onParameterChange((key[0], key[1]), notified)
+        
+    @setting(3, "Get Parameter Names", collection = 's', returns = '*s')
     def getParameterNames(self, c, collection):
         """Get Parameter Names"""
         parameter_names = self._get_parameter_names(collection)
         return parameter_names
     
-    @setting(3, "Save Parameters To Registry", returns = '')
+    @setting(4, "Save Parameters To Registry", returns = '')
     def saveParametersToRegistry(self, c):
         """Get Experiment Parameter Names"""
         yield self.save_parameters()
     
-    @setting(4, "Get Collections", returns = '*s')
+    @setting(5, "Get Collections", returns = '*s')
     def get_collection_names(self, c):
         collections = self._get_collections()
         return collections    
         
-    @setting(5, "Refresh Parameters", returns = '')
+    @setting(6, "Refresh Parameters", returns = '')
     def refresh_parameters(self, c):
         """Saves Parameters To Registry, then realods them"""
         yield self.save_parameters()
         yield self.load_parameters()
     
-    @setting(6, "Reload Parameters", returns = '')
+    @setting(7, "Reload Parameters", returns = '')
     def reload_parameters(self, c):
         """Discards current parameters and reloads them from registry"""
         yield self.load_parameters()
-    
+
     @inlineCallbacks
     def stopServer(self):
         try:
             yield self.save_parameters()
         except AttributeError:
-            #if values don't exist yet, i.e stopServer was called due to an Identification Rrror
+            #if values don't exist yet, i.e stopServer was called due to an Identification Error
             pass
       
 if __name__ == "__main__":
