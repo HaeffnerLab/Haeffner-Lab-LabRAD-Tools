@@ -111,7 +111,6 @@ class script_scanner_gui(QtGui.QWidget):
         # these collections already exist in parametervault
         collections = yield pv.get_collections(context = self.context)
         undef = yield sc.get_undefined_parameters(script)
-        print undef
         value = ('undefined', None)
         for collection, param in undef:
             if collection in collections: # the collection already exists
@@ -242,7 +241,6 @@ class script_scanner_gui(QtGui.QWidget):
                 self.displayError(e.msg)
             else:
                 self.ParametersEditor.show_only(parameters)
-                #self.ParametersEditor.show_undefined_parameters(undef_parameters)
         else:
             #empty string corresponds to no selection
             self.ParametersEditor.show_all()
