@@ -257,13 +257,11 @@ class ScriptScanner(Signals, LabradServer):
         status.error_finish_confirmed(error_message)
         self.scheduler.remove_if_external(script_ID)
 
-    @setting(37, 'Check Parameters', script = 's', status='s', returns = '*(ss)')
-    def check_parameters(self, c, script, status):
+    @setting(37, 'Get Undefined Parameters', script = 's', returns = '*(ss)')
+    def get_undefined_parameters(self, c, script):
         '''
-        Set status 'valid' to return parameters which already exist
-        in parameter vault
-        Set status 'invalid' to return parameters which do not exist
-        in parameter vault
+        Returns parameters which have not been defined
+        in the parametervault
         '''
         if script not in self.script_parameters.keys():
             raise Exception ("Script {} Not Found".format(script))
@@ -272,23 +270,13 @@ class ScriptScanner(Signals, LabradServer):
         except:
             pv = None
             raise Exception('Cannot connect to ParameterVault')
-
-        valid = []
         invalid = []
-
         if pv is not None:
             parameters = self.script_parameters[script].parameters
             for collection, parameter_name in parameters:
-                try:
-                    value = pv.get_parameter(collection, parameter_name)
-                    valid.append( (collection, parameter_name ) )
-                except Exception as e:
-                    print e
-                    invalid.append( (collection, parameter_name) )
-
-        if status == 'valid': return valid
-        elif status == 'invalid': return invalid
-        else: raise Exception("Incorrect status")
+                defined = yield pv.verify_parameter_defined(collection, parameter_name)
+                if not defined: invalid.append( (collection, parameter_name) )
+        returnValue( invalid )
 
     @inlineCallbacks
     def stopServer(self):

@@ -16,7 +16,7 @@ timeout = 20
 ### END NODE INFO
 """
 from labrad.server import LabradServer, setting, Signal
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 class ParameterVault(LabradServer):
     """
@@ -126,7 +126,7 @@ class ParameterVault(LabradServer):
         Perform bound checking on the parameter
         """
         t,item = value
-        print name, t, t  == 'bool'
+        #print name, t, t  == 'bool'
         if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
             return item[2]
@@ -214,6 +214,14 @@ class ParameterVault(LabradServer):
     def reload_parameters(self, c):
         """Discards current parameters and reloads them from registry"""
         yield self.load_parameters()
+
+    @setting(8, 'Verify Parameter Defined', collection = 's', parameter_name = 's', returns = 'b')
+    def verify_parameter_defined(self, c, collection, parameter_name):
+        key = (collection, parameter_name)
+        if key in self.parameters.keys():
+            return True
+        else:
+            return False
 
     @inlineCallbacks
     def stopServer(self):

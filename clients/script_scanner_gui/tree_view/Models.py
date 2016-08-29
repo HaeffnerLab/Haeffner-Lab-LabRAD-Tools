@@ -181,6 +181,14 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         index = self.index(row_count, 0, parent_index)
         return index
     
+    def insert_undefined_parameter(self, parameter_name, info, parent_index):
+        collectionNode = self.getNode(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = UndefinedParemeterNode(parameter_name, info, collectionNode)
+        self.endInsertRows()
+        index = self.index(row_count, 0, parent_index)
+        return index
+
     def set_parameter(self, index, info):
         node = index.internalPointer()
         node.set_full_info(info)

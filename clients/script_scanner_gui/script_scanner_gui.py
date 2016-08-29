@@ -84,6 +84,7 @@ class script_scanner_gui(QtGui.QTabWidget):
         scheduled = yield sc.get_scheduled(context = self.context)
         for experiment in available:
             self.scripting_widget.addExperiment(experiment)
+            self.script_explorer.addExperiment(experiment)
         for ident,name,order in queued:
             self.scripting_widget.addQueued(ident, name, order)
         for ident,name,duration in scheduled:
@@ -101,6 +102,25 @@ class script_scanner_gui(QtGui.QTabWidget):
             for param_name in parameters:
                 value = yield pv.get_parameter(collection, param_name, False)
                 self.ParametersEditor.add_parameter(collection, param_name, value)
+
+    @inlineCallbacks
+    def populateUndefinedParameters(self, script):
+        print "populating undefined parameters"
+        pv = yield self.cxn.get_server('ParameterVault')
+        sc = yield self.cxn.get_server('ScriptScanner')
+        # these collections already exist in parametervault
+        collections = yield pv.get_collections(context = self.context)
+        undef = yield sc.get_undefined_parameters(script)
+        print undef
+        value = ('undefined', None)
+        for collection, param in undef:
+            if collection in collections: # the collection already exists
+                pass
+                #self.ParametersEditor.add_parameter(collection, param, value)
+            else:
+                self.ParametersEditor.add_collection_node(collection)
+                #self.ParametersEditor.add_parameter(collection, param, value)
+        
             
     @inlineCallbacks
     def setupListenersScriptScanner(self):
@@ -217,10 +237,13 @@ class script_scanner_gui(QtGui.QTabWidget):
         if selected_experiment:
             try:
                 parameters = yield sc.get_script_parameters(selected_experiment)
+                yield self.populateUndefinedParameters(selected_experiment)
+                #undef_parameters = yield sc.get_undefined_parameters(selected_experiment)
             except self.Error as e:
                 self.displayError(e.msg)
             else:
                 self.ParametersEditor.show_only(parameters)
+                #self.ParametersEditor.show_undefined_parameters(undef_parameters)
         else:
             #empty string corresponds to no selection
             self.ParametersEditor.show_all()
