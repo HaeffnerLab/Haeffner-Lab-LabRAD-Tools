@@ -5,7 +5,7 @@ from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 from script_explorer_widget import script_explorer_widget
 
-class script_scanner_gui(QtGui.QTabWidget):
+class script_scanner_gui(QtGui.QWidget):
     
     SIGNALID = 319245
     
@@ -84,7 +84,6 @@ class script_scanner_gui(QtGui.QTabWidget):
         scheduled = yield sc.get_scheduled(context = self.context)
         for experiment in available:
             self.scripting_widget.addExperiment(experiment)
-            self.script_explorer.addExperiment(experiment)
         for ident,name,order in queued:
             self.scripting_widget.addQueued(ident, name, order)
         for ident,name,duration in scheduled:
@@ -235,13 +234,10 @@ class script_scanner_gui(QtGui.QTabWidget):
     def on_experiment_selected(self, selected_experiment):
         sc = yield self.cxn.get_server('ScriptScanner')
         selected_experiment = str(selected_experiment)
-        print "experiment selected"
         if selected_experiment:
             try:
                 parameters = yield sc.get_script_parameters(selected_experiment)
                 yield self.populateUndefinedParameters(selected_experiment)
-                undef_parameters = yield sc.get_undefined_parameters(selected_experiment)
-                print undef_parameters
             except self.Error as e:
                 self.displayError(e.msg)
             else:
@@ -353,15 +349,12 @@ class script_scanner_gui(QtGui.QTabWidget):
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
-        self.script_explorer = script_explorer_widget(self.reactor, self)
-
-        control = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
-        control.setLayout(layout)
-        self.addTab(control, 'Scan Control')
-        self.addTab(self.script_explorer, 'Script Explorer')
+        self.setLayout(layout)
+        #self.addTab(control, 'Scan Control')
+        #self.addTab(self.script_explorer, 'Script Explorer')
         self.setWindowTitle('Script Scanner Gui')
     
     def displayError(self, text):
