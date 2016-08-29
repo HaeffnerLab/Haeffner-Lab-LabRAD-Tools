@@ -566,9 +566,9 @@ class UndefinedParameterNode(Node):
 
     def data(self, column):
         if column < 1:
-            return super(BoolNode, self).data(column)
+            return super(UndefinedParameterNode, self).data(column)
         elif column == 1:
-            return self.string_format()
+            return "UNDEFINED"
         elif column == 2:
             return self._collection
         elif column == 3:
@@ -578,6 +578,3 @@ class UndefinedParameterNode(Node):
         value = value.toPyObject()
         if column == 3:
             self._value = value
-
-
-

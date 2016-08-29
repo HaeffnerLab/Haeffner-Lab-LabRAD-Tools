@@ -100,6 +100,7 @@ class script_scanner_gui(QtGui.QTabWidget):
             self.ParametersEditor.add_collection_node(collection)
             parameters = yield pv.get_parameter_names(collection)
             for param_name in parameters:
+                print (collection, param_name)
                 value = yield pv.get_parameter(collection, param_name, False)
                 self.ParametersEditor.add_parameter(collection, param_name, value)
 
@@ -116,10 +117,10 @@ class script_scanner_gui(QtGui.QTabWidget):
         for collection, param in undef:
             if collection in collections: # the collection already exists
                 pass
-                #self.ParametersEditor.add_parameter(collection, param, value)
+                self.ParametersEditor.add_parameter(collection, param, value)
             else:
                 self.ParametersEditor.add_collection_node(collection)
-                #self.ParametersEditor.add_parameter(collection, param, value)
+                self.ParametersEditor.add_parameter(collection, param, value)
         
             
     @inlineCallbacks
@@ -234,11 +235,13 @@ class script_scanner_gui(QtGui.QTabWidget):
     def on_experiment_selected(self, selected_experiment):
         sc = yield self.cxn.get_server('ScriptScanner')
         selected_experiment = str(selected_experiment)
+        print "experiment selected"
         if selected_experiment:
             try:
                 parameters = yield sc.get_script_parameters(selected_experiment)
                 yield self.populateUndefinedParameters(selected_experiment)
-                #undef_parameters = yield sc.get_undefined_parameters(selected_experiment)
+                undef_parameters = yield sc.get_undefined_parameters(selected_experiment)
+                print undef_parameters
             except self.Error as e:
                 self.displayError(e.msg)
             else:

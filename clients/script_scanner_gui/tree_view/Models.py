@@ -2,6 +2,7 @@ from PyQt4 import QtCore
 from Data import ParameterNode, CollectionNode, ScanNode, BoolNode
 from Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode
 from Data import DurationBandwidthNode, SpectrumSensitivityNode
+from Data import UndefinedParameterNode
 
 class ParametersTreeModel(QtCore.QAbstractItemModel):
     
@@ -183,8 +184,9 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
     
     def insert_undefined_parameter(self, parameter_name, info, parent_index):
         collectionNode = self.getNode(parent_index)
+        row_count =  self.rowCount(parent_index)
         self.beginInsertRows(parent_index, row_count, row_count)
-        childNode = UndefinedParemeterNode(parameter_name, info, collectionNode)
+        childNode = UndefinedParameterNode(parameter_name, info, collectionNode)
         self.endInsertRows()
         index = self.index(row_count, 0, parent_index)
         return index
