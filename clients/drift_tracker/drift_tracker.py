@@ -130,7 +130,6 @@ class drift_tracker(QtGui.QWidget):
         layout.addWidget(self.frequency_table, 0, 0, 6, 1)
         layout.addWidget(self.entry_table, 0, 1, 2, 1)
         layout.addWidget(self.entry_button, 2, 1, 1, 1)
-        #layout.addWidget(QtGui.QLabel(), 2, 1, 1, 1)
         layout.addWidget(self.Bfield_entry, 3, 1, 1, 1)
         layout.addWidget(self.linecenter_entry, 4, 1, 1, 1)
         layout.addWidget(self.entry_Bfield_and_center_button, 5, 1, 1, 1)
