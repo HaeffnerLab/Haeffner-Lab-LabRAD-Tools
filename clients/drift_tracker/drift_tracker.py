@@ -94,10 +94,24 @@ class drift_tracker(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
         self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites)
-        self.entry_button = QtGui.QPushButton("Submit")
+
+        self.Bfield_entry = QtGui.QDoubleSpinBox()
+        self.Bfield_entry.setRange(0.0, 5.0)
+        self.Bfield_entry.setSuffix(' Gauss')
+
+        self.linecenter_entry = QtGui.QDoubleSpinBox()
+        self.linecenter_entry.setRange(0.0, 5.0)
+        self.linecenter_entry.setSuffix(' MHz')
+        
+        self.entry_Bfield_and_center_button = QtGui.QPushButton("Submit Bfield + Center")
+
+        self.entry_button = QtGui.QPushButton("Submit Lines")
         self.copy_clipboard_button = QtGui.QPushButton("Copy Info to Clipboard")
+
+        self.remove_all_B_and_lines_button = QtGui.QPushButton("Remove all B and Line Centers")
         self.remove_B_button = QtGui.QPushButton("Remove B")
         self.remove_line_center_button = QtGui.QPushButton("Remove Line Center")
+
         self.remove_B_count = QtGui.QSpinBox()
         self.remove_B_count.setRange(-20,20)
         self.remove_line_center_count = QtGui.QSpinBox()
@@ -113,10 +127,17 @@ class drift_tracker(QtGui.QWidget):
         self.track_line_center_duration.setSuffix('min')
         self.track_line_center_duration.setRange(1, 1000)
         
-        layout.addWidget(self.frequency_table, 0, 0, 1, 1)
-        layout.addWidget(self.entry_table, 0, 1 , 1 , 1)
-        layout.addWidget(self.entry_button, 1, 1, 1, 1)
-        layout.addWidget(self.copy_clipboard_button, 1, 0, 1, 1)
+        layout.addWidget(self.frequency_table, 0, 0, 6, 1)
+        layout.addWidget(self.entry_table, 0, 1, 2, 1)
+        layout.addWidget(self.entry_button, 2, 1, 1, 1)
+        #layout.addWidget(QtGui.QLabel(), 2, 1, 1, 1)
+        layout.addWidget(self.Bfield_entry, 3, 1, 1, 1)
+        layout.addWidget(self.linecenter_entry, 4, 1, 1, 1)
+        layout.addWidget(self.entry_Bfield_and_center_button, 5, 1, 1, 1)
+
+        hlp_layout = QtGui.QHBoxLayout()
+        hlp_layout.addWidget(self.copy_clipboard_button)
+        hlp_layout.addWidget(self.remove_all_B_and_lines_button)
         
         remove_B_layout = QtGui.QHBoxLayout() 
         remove_B_layout.addWidget(self.remove_B_count)
@@ -126,8 +147,6 @@ class drift_tracker(QtGui.QWidget):
         remove_line_center_layout.addWidget(self.remove_line_center_count)
         remove_line_center_layout.addWidget(self.remove_line_center_button)    
 
-        update_layout = QtGui.QHBoxLayout() 
-        
         keep_B_layout = QtGui.QHBoxLayout()
         keep_B_layout.addWidget(QtGui.QLabel("Tracking Duration (B)"))
         keep_B_layout.addWidget(self.track_B_duration)
@@ -136,11 +155,12 @@ class drift_tracker(QtGui.QWidget):
         keep_line_center_layout.addWidget(QtGui.QLabel("Tracking Duration (Line Center)"))
         keep_line_center_layout.addWidget(self.track_line_center_duration)
         
-        layout.addLayout(update_layout, 2, 1, 1, 1)
-        layout.addLayout(remove_B_layout, 2, 0, 1, 1)
-        layout.addLayout(remove_line_center_layout, 3, 0, 1, 1)
-        layout.addLayout(keep_B_layout, 2, 1, 1, 1)
-        layout.addLayout(keep_line_center_layout, 3, 1, 1, 1)
+        layout.addLayout(hlp_layout, 6, 0, 1, 1)
+        layout.addLayout(remove_B_layout, 7, 0, 1, 1)
+        layout.addLayout(remove_line_center_layout, 8, 0, 1, 1)
+        layout.addLayout(keep_B_layout, 7, 1, 1, 1)
+        layout.addLayout(keep_line_center_layout, 8, 1, 1, 1)
+        
         return layout
         
     def connect_layout(self):
