@@ -266,7 +266,7 @@ class SDTracker(LabradServer):
         return [ WithUnit(self.keep_B_measurements,'s'), WithUnit(self.keep_line_center_measurements, 's') ]
 
     @setting(16, 'Get Last B Field', returns = 'v')
-    def get_last_B_field(self, c):        
+    def get_last_b_field(self, c):        
         ''' returns the last entered B field '''
         return self.B_field[-1]
 
@@ -274,6 +274,16 @@ class SDTracker(LabradServer):
     def get_last_line_center(self, c):
         ''' returns the last entered line center '''
         return self.line_center[-1]
+
+    @setting(19, 'Get B Field', returns = '*v')
+    def get_b_field(self, c):        
+        ''' returns all entered B fields '''
+        return self.B_field
+
+    @setting(20, 'Get Line Center', returns = '*v')
+    def get_line_center(self, c):
+        ''' returns all entered line centers '''
+        return self.line_center
 
     @setting(18, "Get Lines From Bfield and Center", B = 'v[gauss]', freq = 'v[MHz]', returns = '*(sv[MHz])')
     def get_lines_from_bfield_and_center(self, c, B, freq):

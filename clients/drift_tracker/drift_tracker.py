@@ -120,7 +120,7 @@ class drift_tracker(QtGui.QWidget):
         self.copy_clipboard_button = QtGui.QPushButton("Copy Info to Clipboard")
 
         self.remove_all_B_and_lines_button = QtGui.QPushButton("Remove all B and Line Centers")
-        self.remove_all_B_and_lines_button.setDisabled(True) # not programmed yet
+        #self.remove_all_B_and_lines_button.setDisabled(True) # not programmed yet
 
         self.remove_B_button = QtGui.QPushButton("Remove B")
         self.remove_line_center_button = QtGui.QPushButton("Remove Line Center")
@@ -254,18 +254,22 @@ class drift_tracker(QtGui.QWidget):
     def on_remove_all_B_and_line_centers(self, clicked):
         server = yield self.cxn.get_server('SD Tracker')
 
-        # not implemented yet
-        to_remove = 0 
+        b_field = yield server.get_b_field()
+        line_center = yield server.get_line_center()
 
         # remove all line centers
         try:
-            yield server.remove_line_center_measurement(to_remove)
+            # call the remove function as many times as the array is long
+            for k in range(len(line_center)):
+                yield server.remove_line_center_measurement(0)
         except self.Error as e:
             self.displayError(e.msg)
 
         # remove all Bfields
         try:
-            yield server.remove_b_measurement(to_remove)
+            # call the remove function as many times as the array is long
+            for k in range(len(b_field)):
+                yield server.remove_b_measurement(0)
         except self.Error as e:
             self.displayError(e.msg)
 
