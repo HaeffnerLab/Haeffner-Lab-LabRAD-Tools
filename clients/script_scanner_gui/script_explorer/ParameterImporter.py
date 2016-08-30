@@ -94,4 +94,4 @@ class ParameterImportWidget(propBase, propForm):
 
         if (col is not None) and (par is not None):
             pv.new_parameter(col, par, full_info)
-        
+            self.parent.removeCurrentRow()

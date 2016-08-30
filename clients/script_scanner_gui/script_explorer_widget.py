@@ -67,3 +67,7 @@ class script_explorer_widget(QtGui.QWidget):
         '''
         self.tree_model.removeRows( 0, self.tree_model.rowCount() )
         self.parameters = {}
+
+    def removeCurrentRow(self):
+        curIndex = self.tree_view.selectionModel().currentIndex()
+        self.tree_model.removeRow(curIndex.row())

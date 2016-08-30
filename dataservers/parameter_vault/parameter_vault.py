@@ -100,7 +100,6 @@ class ParameterVault(LabradServer):
         regDir = []
         regDir.extend(self.registryDirectory)
         regDir.extend([collection])
-        print regDir
         yield self.client.registry.cd(regDir, True)
         yield self.client.registry.set(parameter_name, value)
         
