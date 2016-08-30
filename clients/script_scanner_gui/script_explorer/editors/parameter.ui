@@ -16,7 +16,7 @@
   <widget class="QComboBox" name="uiUnit">
    <property name="geometry">
     <rect>
-     <x>210</x>
+     <x>180</x>
      <y>40</y>
      <width>101</width>
      <height>27</height>
@@ -42,7 +42,7 @@
   <widget class="QDoubleSpinBox" name="uiMax">
    <property name="geometry">
     <rect>
-     <x>120</x>
+     <x>100</x>
      <y>40</y>
      <width>62</width>
      <height>27</height>
@@ -71,7 +71,7 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>110</x>
      <y>20</y>
      <width>66</width>
      <height>17</height>

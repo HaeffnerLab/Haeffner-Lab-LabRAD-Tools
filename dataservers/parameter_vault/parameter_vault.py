@@ -97,8 +97,10 @@ class ParameterVault(LabradServer):
 
     @inlineCallbacks
     def save_single_parameter(self, collection, parameter_name, value):
-        regDir = self.registryDirectory
+        regDir = []
+        regDir.extend(self.registryDirectory)
         regDir.extend([collection])
+        print regDir
         yield self.client.registry.cd(regDir, True)
         yield self.client.registry.set(parameter_name, value)
         
@@ -186,7 +188,7 @@ class ParameterVault(LabradServer):
             self.parameters[key] = value
             yield self.save_single_parameter(collection, parameter_name, value)
             notified = self.getOtherListeners(c)
-            self.onParameterChange((key[0], key[1]), notified)
+            #self.onParameterChange((key[0], key[1]), notified)
         
     @setting(3, "Get Parameter Names", collection = 's', returns = '*s')
     def getParameterNames(self, c, collection):

@@ -4,10 +4,9 @@ from script_explorer.ParameterImporter import ParameterImportWidget
 
 class script_explorer_widget(QtGui.QWidget):
 
-    def __init__(self, reactor, parent, font = None):
+    def __init__(self, parent, font = None):
         super(script_explorer_widget, self).__init__(parent)
         self.font = font
-        self.reactor = reactor
         self.parent = parent
         self.experiments = []
         if self.font is None:

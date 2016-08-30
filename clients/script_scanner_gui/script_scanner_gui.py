@@ -348,7 +348,7 @@ class script_scanner_gui(QtGui.QTabWidget):
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
         control.setLayout(layout)
-        self.script_explorer = script_explorer_widget(self.reactor, self)
+        self.script_explorer = script_explorer_widget(self)
         self.addTab(control, 'Scan Control')
         self.addTab(self.script_explorer, 'Parameter Editor')
         self.setWindowTitle('Script Scanner Gui')

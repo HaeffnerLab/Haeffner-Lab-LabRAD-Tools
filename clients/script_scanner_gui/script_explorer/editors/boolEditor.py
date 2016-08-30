@@ -15,6 +15,11 @@ class BoolEditor(base, form):
 
     def guess(self):
         '''
-        There's no guessin' a boolean
+        Ain't no guessin' a boolean
         '''
         pass
+
+    def full_info(self):
+        b = self.uiCheck.isChecked()
+        full_info = ('bool', b)
+        return full_info

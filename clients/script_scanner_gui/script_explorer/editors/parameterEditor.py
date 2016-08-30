@@ -1,5 +1,4 @@
 from PyQt4 import QtGui, QtCore, uic
-
 import os
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"parameter.ui")
@@ -51,3 +50,18 @@ class ParameterEditor(base, form):
         else:
             index = self.uiUnit.findText('')
             self.uiUnit.setCurrentIndex(index)
+
+        self.uiMin.setValue(-100.)
+        self.uiMax.setValue(100)
+
+    def full_info(self):
+        '''
+        Full info for creating parameter
+        '''
+        from labrad.units import WithUnit as U
+        unit = str(self.uiUnit.currentText())
+        minim = self.uiMin.value()
+        maxim = self.uiMax.value()
+        value = (maxim + minim)/2.0
+        full_info = ('parameter', [U(minim, unit), U(maxim, unit), U(value, unit)])
+        return full_info

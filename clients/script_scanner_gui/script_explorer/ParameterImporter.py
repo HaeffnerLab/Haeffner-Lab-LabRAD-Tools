@@ -1,5 +1,5 @@
 from PyQt4 import  uic
-#from editors.newParameterEditor import newParameterEditor
+from twisted.internet.defer import inlineCallbacks
 from editors.parameterEditor import ParameterEditor
 from editors.boolEditor import BoolEditor
 
@@ -31,21 +31,21 @@ class ParameterImportWidget(propBase, propForm):
         for t in self.types:
             self.uiTypeSelect.addItem(t)
 
-        self._parameterEditor = ParameterEditor(self)
-        self._boolEditor = BoolEditor(self)
         self._editors = {
-            'parameter': self._parameterEditor,
-            'bool': self._boolEditor,
+            'parameter': ParameterEditor(self),
+            'bool': BoolEditor(self),
             }
 
-        self.stackedWidget.addWidget(self._parameterEditor)
-        self.stackedWidget.addWidget(self._boolEditor)
-        self.stackedWidget.setCurrentWidget(self._parameterEditor)
+        for e in self._editors.keys():
+            w = self._editors[e]
+            self.stackedWidget.addWidget(w)
+
         self.connect_layout()
         self.show_only_editor('parameter')
 
     def connect_layout(self):
         self.uiTypeSelect.currentIndexChanged.connect(self.on_selection_change)
+        self.uiSubmit.clicked.connect(self.submit)
 
     def show_only_editor(self, editor):
         self.current_editor = self._editors[editor]
@@ -54,20 +54,26 @@ class ParameterImportWidget(propBase, propForm):
 
     def on_selection_change(self, index):
         new_editor = self.uiTypeSelect.currentText()
-        self.show_only_editor(str(new_editor))
-        #try:
-        #    self.show_only_editor(new_editor)
-        #except Error as e:
-        #    print e
-        #    print "Editor not implemented: {}".format(new_editor)
-        
+        self.show_only_editor(str(new_editor))        
 
     def show_none(self):
         for editor in self._editors.keys():
             self._editors[editor].setVisible(False)
 
     def new_parameter(self, collection, parameter):
-        self.current_collection = collection
-        self.current_parameter = parameter
+        self.current_collection = str(collection)
+        self.current_parameter = str(parameter)
         name_string = collection + ', ' + parameter
         self.uiParameterName.setText(name_string)
+
+    @inlineCallbacks
+    def submit(self, args):
+        pv = yield self.parent.parent.cxn.get_server('ParameterVault')
+        editor = self.current_editor
+        full_info =  editor.full_info()
+        col = self.current_collection
+        par = self.current_parameter
+
+        if (col is not None) and (par is not None):
+            pv.new_parameter(col, par, full_info)
+        
