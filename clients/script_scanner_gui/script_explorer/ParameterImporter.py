@@ -2,7 +2,7 @@ from PyQt4 import  uic
 from twisted.internet.defer import inlineCallbacks
 from editors.parameterEditor import ParameterEditor
 from editors.boolEditor import BoolEditor
-
+from editors.scanEditor import ScanEditor
 import os
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"editors", "Editors.ui")
@@ -34,6 +34,7 @@ class ParameterImportWidget(propBase, propForm):
         self._editors = {
             'parameter': ParameterEditor(self),
             'bool': BoolEditor(self),
+            'scan': ScanEditor(self)
             }
 
         for e in self._editors.keys():
@@ -80,6 +81,12 @@ class ParameterImportWidget(propBase, propForm):
             index = self.uiTypeSelect.findText('bool')
             self.uiTypeSelect.setCurrentIndex(index)
             self.show_only_editor('bool')
+
+        elif 'scan' in parameter:
+            index = self.uiTypeSelect.findText('scan')
+            self.uiTypeSelect.setCurrentIndex(index)
+            self.show_only_editor('scan')
+
         else:
             index = self.uiTypeSelect.findText('parameter')
             self.uiTypeSelect.setCurrentIndex(index)

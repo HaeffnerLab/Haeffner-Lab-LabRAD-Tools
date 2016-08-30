@@ -19,15 +19,15 @@ class script_explorer_widget(QtGui.QWidget):
     def setupLayout(self):
 
         layout = QtGui.QGridLayout()
-        label = QtGui.QLabel('Experiment', font = self.font)
-        self.dropdown = QtGui.QComboBox()
-        self.dropdown.setMaxVisibleItems(30)
-        self.dropdown.addItem('')#add empty item for no selection state    
+        label = QtGui.QLabel('Undefined parameters', font = self.font)
+        #self.dropdown = QtGui.QComboBox()
+        #self.dropdown.setMaxVisibleItems(30)
+        #self.dropdown.addItem('')#add empty item for no selection state    
         #enable sorting
-        sorting_model = QtGui.QSortFilterProxyModel(self.dropdown)
-        sorting_model.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        sorting_model.setSourceModel(self.dropdown.model())
-        self.dropdown.model().setParent(sorting_model)
+        #sorting_model = QtGui.QSortFilterProxyModel(self.dropdown)
+        #sorting_model.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        #sorting_model.setSourceModel(self.dropdown.model())
+        #self.dropdown.model().setParent(sorting_model)
 
         self.tree_view = QtGui.QTreeView()
         self.tree_model = QtGui.QStandardItemModel()
@@ -39,7 +39,7 @@ class script_explorer_widget(QtGui.QWidget):
         self.tree_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addWidget(self.dropdown, 0, 1, 1, 1)
+        #layout.addWidget(self.dropdown, 0, 1, 1, 1)
         layout.addWidget(self.tree_view, 1, 0, 2, 1)
         layout.addWidget(self.parameter_importer, 3, 0, 2, 1)
         self.setLayout(layout)
@@ -53,9 +53,10 @@ class script_explorer_widget(QtGui.QWidget):
         self.parameter_importer.new_parameter(collection, parameter)
 
     def addExperiment(self, experiment):
-        self.dropdown.addItem(experiment)
-        self.dropdown.model().sort(0)
-        self.experiments.append(experiment)
+        pass
+        #self.dropdown.addItem(experiment)
+        #self.dropdown.model().sort(0)
+        #self.experiments.append(experiment)
 
     def add_parameter(self, collection, parameter):
         p = QtGui.QStandardItem(collection + ", " + parameter)
