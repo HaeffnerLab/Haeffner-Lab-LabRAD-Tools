@@ -284,6 +284,8 @@ class drift_tracker(QtGui.QWidget):
             self.Bfield_entry.setValue(b_field*1.0e3)
             self.linecenter_entry.setValue(line_center*1.0e3)
 
+            self.resize_spec_graph()
+
         except self.Error as e:
             self.displayError(e.msg)
     
@@ -308,6 +310,8 @@ class drift_tracker(QtGui.QWidget):
                 # get the current line from the server
                 new_freq = hlp[line_info[k][0]]
                 self.entry_table.cellWidget(k, 1).setValue(new_freq.value)                
+
+            self.resize_spec_graph()
 
         except self.Error as e:
             self.displayError(e.msg)        
@@ -507,6 +511,22 @@ class drift_tracker(QtGui.QWidget):
     def update_listing(self, lines):
         listing = [(self.favorites.get(line, line), freq) for line,freq in lines]
         self.frequency_table.fill_out_widget(listing)
+    
+    @inlineCallbacks
+    def resize_spec_graph(self):
+        # set the limits of the predicted spectrum to the extrema
+        try:
+            server = yield self.cxn.get_server('SD Tracker')
+            curr_lines = yield server.get_current_lines()
+
+            curr_lines = dict(curr_lines)
+            hlp, my_min = min(curr_lines.iteritems(), key = lambda x: x[1])
+            hlp, my_max = max(curr_lines.iteritems(), key = lambda x: x[1])
+            self.spec.set_xlim(left = my_min.value - 1.0, right = my_max.value + 1.0)
+
+        except Exception as e:
+            #no lines available
+            return
         
     @inlineCallbacks
     def disable(self):
