@@ -61,10 +61,28 @@ class ParameterImportWidget(propBase, propForm):
             self._editors[editor].setVisible(False)
 
     def new_parameter(self, collection, parameter):
+        '''
+        A new parameter is selected in the list view.
+        Called from the parent class
+        '''
         self.current_collection = str(collection)
         self.current_parameter = str(parameter)
         name_string = collection + ', ' + parameter
         self.uiParameterName.setText(name_string)
+        self.guess(str(parameter))
+
+    def guess(self, parameter):
+        '''
+        Guess which parameter to show based on the parameter name
+        '''
+
+        if 'enable' in parameter:
+            index = self.uiTypeSelect.findText('bool')
+            self.uiTypeSelect.setCurrentIndex(index)
+            self.show_only_editor('bool')
+        else:
+            index = self.uiTypeSelect.findText('parameter')
+            self.uiTypeSelect.setCurrentIndex(index)
 
     @inlineCallbacks
     def submit(self, args):

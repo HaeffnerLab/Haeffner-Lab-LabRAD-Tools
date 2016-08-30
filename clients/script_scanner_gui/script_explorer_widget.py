@@ -51,7 +51,6 @@ class script_explorer_widget(QtGui.QWidget):
         item = self.tree_model.item(row)
         collection, parameter = item.text().split(', ')
         self.parameter_importer.new_parameter(collection, parameter)
-        print collection, parameter
 
     def addExperiment(self, experiment):
         self.dropdown.addItem(experiment)

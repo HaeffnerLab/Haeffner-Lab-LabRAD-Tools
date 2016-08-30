@@ -31,7 +31,6 @@ class ParameterEditor(base, form):
         '''
 
         param = self.parent.current_parameter
-
         if param is None:
             param = ''
 
