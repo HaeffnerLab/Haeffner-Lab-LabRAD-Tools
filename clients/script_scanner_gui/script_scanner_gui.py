@@ -5,7 +5,7 @@ from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 from script_explorer_widget import script_explorer_widget
 
-class script_scanner_gui(QtGui.QWidget):
+class script_scanner_gui(QtGui.QTabWidget):
     
     SIGNALID = 319245
     
@@ -84,6 +84,7 @@ class script_scanner_gui(QtGui.QWidget):
         scheduled = yield sc.get_scheduled(context = self.context)
         for experiment in available:
             self.scripting_widget.addExperiment(experiment)
+            self.script_explorer.addExperiment(experiment)
         for ident,name,order in queued:
             self.scripting_widget.addQueued(ident, name, order)
         for ident,name,duration in scheduled:
@@ -112,14 +113,9 @@ class script_scanner_gui(QtGui.QWidget):
         collections = yield pv.get_collections(context = self.context)
         undef = yield sc.get_undefined_parameters(script)
         value = ('undefined', None)
+        self.script_explorer.clear()
         for collection, param in undef:
-            if collection in collections: # the collection already exists
-                pass
-                self.ParametersEditor.add_parameter(collection, param, value)
-            else:
-                self.ParametersEditor.add_collection_node(collection)
-                self.ParametersEditor.add_parameter(collection, param, value)
-        
+            self.script_explorer.add_parameter(collection, param)
             
     @inlineCallbacks
     def setupListenersScriptScanner(self):
@@ -347,12 +343,14 @@ class script_scanner_gui(QtGui.QWidget):
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
+        control = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
-        self.setLayout(layout)
-        #self.addTab(control, 'Scan Control')
-        #self.addTab(self.script_explorer, 'Script Explorer')
+        control.setLayout(layout)
+        self.script_explorer = script_explorer_widget(self.reactor, self)
+        self.addTab(control, 'Scan Control')
+        self.addTab(self.script_explorer, 'Parameter Editor')
         self.setWindowTitle('Script Scanner Gui')
     
     def displayError(self, text):
