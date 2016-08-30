@@ -103,15 +103,15 @@ class drift_tracker(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
         self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites, initial_selection = self.initial_selection, initial_values = self.initial_values)
-
+        
         self.Bfield_entry = QtGui.QDoubleSpinBox()
         self.Bfield_entry.setRange(0.0, 10000.0)
-        self.Bfield_entry.setDecimals(2)
+        self.Bfield_entry.setDecimals(6)
         self.Bfield_entry.setSuffix(' mGauss')
 
         self.linecenter_entry = QtGui.QDoubleSpinBox()
         self.linecenter_entry.setRange(-50000.0, 0.0)
-        self.linecenter_entry.setDecimals(2)
+        self.linecenter_entry.setDecimals(6)
         self.linecenter_entry.setSuffix(' kHz')
         
         self.entry_Bfield_and_center_button = QtGui.QPushButton("Submit B and Line Center")
@@ -120,6 +120,8 @@ class drift_tracker(QtGui.QWidget):
         self.copy_clipboard_button = QtGui.QPushButton("Copy Info to Clipboard")
 
         self.remove_all_B_and_lines_button = QtGui.QPushButton("Remove all B and Line Centers")
+        self.remove_all_B_and_lines_button.setDisabled(True) # not programmed yet
+
         self.remove_B_button = QtGui.QPushButton("Remove B")
         self.remove_line_center_button = QtGui.QPushButton("Remove Line Center")
 
@@ -177,7 +179,10 @@ class drift_tracker(QtGui.QWidget):
         self.remove_B_button.clicked.connect(self.on_remove_B)
         self.remove_line_center_button.clicked.connect(self.on_remove_line_center)
         self.remove_all_B_and_lines_button.clicked.connect(self.on_remove_all_B_and_line_centers)
+        
         self.entry_button.clicked.connect(self.on_entry)
+        self.entry_Bfield_and_center_button.clicked.connect(self.on_entry_Bfield_and_center)
+        
         self.track_B_duration.valueChanged.connect(self.on_new_B_track_duration)
         self.track_line_center_duration.valueChanged.connect(self.on_new_line_center_track_duration)
         self.copy_clipboard_button.pressed.connect(self.do_copy_info_to_clipboard)
@@ -271,9 +276,42 @@ class drift_tracker(QtGui.QWidget):
         with_units = [(name, self.WithUnit(val, 'MHz')) for name,val in info]
         try:
             yield server.set_measurements(with_units)
+
+            # update entry boxes with the last points
+            b_field = yield server.get_last_b_field()
+            line_center = yield server.get_last_line_center()
+
+            self.Bfield_entry.setValue(b_field*1.0e3)
+            self.linecenter_entry.setValue(line_center*1.0e3)
+
         except self.Error as e:
             self.displayError(e.msg)
     
+    @inlineCallbacks
+    def on_entry_Bfield_and_center(self, clicked):
+        server = yield self.cxn.get_server('SD Tracker')
+        B_with_units = self.WithUnit(self.Bfield_entry.value()/1.0e3, 'gauss')
+        f_with_units = self.WithUnit(self.linecenter_entry.value()/1.0e3, 'MHz')
+
+        hlp1 = [('Bfield', B_with_units)]
+        hlp2 = [('line_center', f_with_units)] # workaround, needs fixing
+
+        try:
+            yield server.set_measurements_with_bfield_and_line_center(hlp1, hlp2)
+
+            # get the currently chosen lines
+            hlp = yield server.get_lines_from_bfield_and_center(B_with_units, f_with_units)
+            hlp = dict(hlp)
+
+            line_info = self.entry_table.get_info() # e.g. [('S-1/2D-3/2', -14.3), ('S-1/2D-5/2', -19.3)]
+            for k in range(len(line_info)):
+                # get the current line from the server
+                new_freq = hlp[line_info[k][0]]
+                self.entry_table.cellWidget(k, 1).setValue(new_freq.value)                
+
+        except self.Error as e:
+            self.displayError(e.msg)        
+
     @inlineCallbacks
     def on_new_B_track_duration(self, value):
         server = yield self.cxn.get_server('SD Tracker')
@@ -353,11 +391,6 @@ class drift_tracker(QtGui.QWidget):
             self.plot_fit_b(fit_b)
             self.plot_fit_f(fit_f)
             
-            # update entry boxes with the last points
-            self.Bfield_entry.setValue(inunits_b[-1][1])
-            self.linecenter_entry.setValue(inunits_f[-1][1])
-
-    
     def plot_fit_b(self, p):
         for i in range(len(self.b_drift_fit_line)):
             l = self.b_drift_fit_line.pop()
