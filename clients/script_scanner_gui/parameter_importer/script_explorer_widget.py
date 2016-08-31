@@ -1,5 +1,5 @@
 from PyQt4 import QtGui, QtCore
-from script_explorer.ParameterImporter import ParameterImportWidget
+from ParameterImporter import ParameterImportWidget
 
 class script_explorer_widget(QtGui.QWidget):
 
@@ -29,7 +29,7 @@ class script_explorer_widget(QtGui.QWidget):
         self.tree_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.tree_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 
-        layout.addWidget(label, 0, 0, 1, 1)
+        #layout.addWidget(label, 0, 0, 1, 1)
         layout.addWidget(self.tree_view, 1, 0, 2, 1)
         layout.addWidget(self.parameter_importer, 3, 0, 2, 1)
         self.setLayout(layout)
@@ -39,15 +39,10 @@ class script_explorer_widget(QtGui.QWidget):
 
     def currentChanged(self, current, old):
         row = current.row()
-        item = self.tree_model.item(row)
-        collection, parameter = item.text().split(', ')
-        self.parameter_importer.new_parameter(collection, parameter)
-
-    def addExperiment(self, experiment):
-        pass
-        #self.dropdown.addItem(experiment)
-        #self.dropdown.model().sort(0)
-        #self.experiments.append(experiment)
+        if row != -1:
+            item = self.tree_model.item(row)
+            collection, parameter = item.text().split(', ')
+            self.parameter_importer.new_parameter(collection, parameter)
 
     def add_parameter(self, collection, parameter):
         p = QtGui.QStandardItem(collection + ", " + parameter)

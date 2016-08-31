@@ -3,7 +3,7 @@ from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
 from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
-from script_explorer_widget import script_explorer_widget
+from parameter_importer.script_explorer_widget import script_explorer_widget
 
 class script_scanner_gui(QtGui.QWidget):
     
@@ -84,7 +84,6 @@ class script_scanner_gui(QtGui.QWidget):
         scheduled = yield sc.get_scheduled(context = self.context)
         for experiment in available:
             self.scripting_widget.addExperiment(experiment)
-            self.script_explorer.addExperiment(experiment)
         for ident,name,order in queued:
             self.scripting_widget.addQueued(ident, name, order)
         for ident,name,duration in scheduled:
@@ -100,19 +99,17 @@ class script_scanner_gui(QtGui.QWidget):
             self.ParametersEditor.add_collection_node(collection)
             parameters = yield pv.get_parameter_names(collection)
             for param_name in parameters:
-                print (collection, param_name)
                 value = yield pv.get_parameter(collection, param_name, False)
                 self.ParametersEditor.add_parameter(collection, param_name, value)
 
     @inlineCallbacks
     def populateUndefinedParameters(self, script):
-        print "populating undefined parameters"
         pv = yield self.cxn.get_server('ParameterVault')
         sc = yield self.cxn.get_server('ScriptScanner')
         # these collections already exist in parametervault
         collections = yield pv.get_collections(context = self.context)
         undef = yield sc.get_undefined_parameters(script)
-        value = ('undefined', None)
+        undef = sorted(undef, key = lambda k: k[0]) # sort by collection
         self.script_explorer.clear()
         for collection, param in undef:
             self.script_explorer.add_parameter(collection, param)
@@ -354,7 +351,7 @@ class script_scanner_gui(QtGui.QWidget):
         control.setLayout(layout)
         self.script_explorer = script_explorer_widget(self)
         tab.addTab(control, 'Scan Control')
-        tab.addTab(self.script_explorer, 'Parameter Editor')
+        tab.addTab(self.script_explorer, 'Parameter Creator')
 
         topLevelLayout.addWidget(tab)
         self.setLayout(topLevelLayout)
