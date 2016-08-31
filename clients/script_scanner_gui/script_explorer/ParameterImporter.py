@@ -4,6 +4,10 @@ from editors.parameterEditor import ParameterEditor
 from editors.boolEditor import BoolEditor
 from editors.scanEditor import ScanEditor
 from editors.selectionEditor import SelectionEditor
+from editors.lineSelectionEditor import LineSelectionEditor
+from editors.sidebandSelectionEditor import SidebandSelectionEditor
+from editors.spectrumSensitivityEditor import SpectrumSensitivityEditor
+from editors.stringEditor import StringEditor
 import os
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"editors", "Editors.ui")
@@ -13,13 +17,12 @@ class ParameterImportWidget(propBase, propForm):
     types = [
         'parameter',
         'scan',
-        'selection',
         'line_selection',
         'sideband_selection',
-        'string',
+        'selection',
         'bool',
-        'duration_bandwidth',
-        'spectrum_sensitivity'
+        'spectrum_sensitivity',
+        'string',
         ]
 
     def __init__(self, parent = None):
@@ -38,6 +41,10 @@ class ParameterImportWidget(propBase, propForm):
             'bool': BoolEditor(self),
             'scan': ScanEditor(self),
             'selection': SelectionEditor(self),
+            'line_selection':LineSelectionEditor(self),
+            'sideband_selection':SidebandSelectionEditor(self),
+            'spectrum_sensitivity':SpectrumSensitivityEditor(self),
+            'string':StringEditor(self)
             }
 
         for e in self._editors.keys():
@@ -83,13 +90,19 @@ class ParameterImportWidget(propBase, propForm):
         if 'enable' in parameter:
             index = self.uiTypeSelect.findText('bool')
             self.uiTypeSelect.setCurrentIndex(index)
-            self.show_only_editor('bool')
 
         elif 'scan' in parameter:
             index = self.uiTypeSelect.findText('scan')
             self.uiTypeSelect.setCurrentIndex(index)
-            self.show_only_editor('scan')
-            
+
+        elif 'line_select' in parameter:
+            index = self.uiTypeSelect.findText('line_selection')
+            self.uiTypeSelect.setCurrentIndex(index)
+
+        elif 'sideband_select' in parameter:
+            index = self.uiTypeSelect.findText('sideband_selection')
+            self.uiTypeSelect.setCurrentIndex(index)
+
         else:
             index = self.uiTypeSelect.findText('parameter')
             self.uiTypeSelect.setCurrentIndex(index)

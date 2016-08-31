@@ -25,5 +25,4 @@ class SelectionEditor(base, form):
             selections.append( selection.strip() )
             
         full_info = ('selection_simple', (selections[0], selections))
-        return full_info
-        
+        return full_info        

@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QPlainTextEdit" name="uiInput">
+  <widget class="QTextEdit" name="uiInput">
    <property name="geometry">
     <rect>
      <x>10</x>
