@@ -23,11 +23,20 @@ class drift_tracker(QtGui.QWidget):
         self.clipboard = clipboard
         self.cxn = cxn
         self.subscribed = False
-        #see if favoirtes are provided in the configuration. if not, use an empty dictionary
+        #see if favorites are provided in the configuration. if not, use an empty dictionary
         try:
             self.favorites =  c.favorites
         except AttributeError:
             self.favorites = {}
+        try:
+            self.initial_selection =  c.initial_selection
+        except AttributeError:
+            self.initial_selection = []
+        try:
+            self.initial_values =  c.initial_values
+        except AttributeError:
+            self.initial_values = []
+
         updater = LoopingCall(self.update_lines)
         updater.start(c.update_rate)
         self.create_layout()
@@ -93,11 +102,29 @@ class drift_tracker(QtGui.QWidget):
     def create_widget_layout(self):
         layout = QtGui.QGridLayout()
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
-        self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites)
-        self.entry_button = QtGui.QPushButton("Submit")
+        self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites, initial_selection = self.initial_selection, initial_values = self.initial_values)
+        
+        self.Bfield_entry = QtGui.QDoubleSpinBox()
+        self.Bfield_entry.setRange(0.0, 10000.0)
+        self.Bfield_entry.setDecimals(6)
+        self.Bfield_entry.setSuffix(' mGauss')
+
+        self.linecenter_entry = QtGui.QDoubleSpinBox()
+        self.linecenter_entry.setRange(-50000.0, 0.0)
+        self.linecenter_entry.setDecimals(6)
+        self.linecenter_entry.setSuffix(' kHz')
+        
+        self.entry_Bfield_and_center_button = QtGui.QPushButton("Submit B and Line Center")
+
+        self.entry_button = QtGui.QPushButton("Submit Lines")
         self.copy_clipboard_button = QtGui.QPushButton("Copy Info to Clipboard")
+
+        self.remove_all_B_and_lines_button = QtGui.QPushButton("Remove all B and Line Centers")
+        #self.remove_all_B_and_lines_button.setDisabled(True) # not programmed yet
+
         self.remove_B_button = QtGui.QPushButton("Remove B")
         self.remove_line_center_button = QtGui.QPushButton("Remove Line Center")
+
         self.remove_B_count = QtGui.QSpinBox()
         self.remove_B_count.setRange(-20,20)
         self.remove_line_center_count = QtGui.QSpinBox()
@@ -113,10 +140,16 @@ class drift_tracker(QtGui.QWidget):
         self.track_line_center_duration.setSuffix('min')
         self.track_line_center_duration.setRange(1, 1000)
         
-        layout.addWidget(self.frequency_table, 0, 0, 1, 1)
-        layout.addWidget(self.entry_table, 0, 1 , 1 , 1)
-        layout.addWidget(self.entry_button, 1, 1, 1, 1)
-        layout.addWidget(self.copy_clipboard_button, 1, 0, 1, 1)
+        layout.addWidget(self.frequency_table, 0, 0, 6, 1)
+        layout.addWidget(self.entry_table, 0, 1, 2, 1)
+        layout.addWidget(self.entry_button, 2, 1, 1, 1)
+        layout.addWidget(self.Bfield_entry, 3, 1, 1, 1)
+        layout.addWidget(self.linecenter_entry, 4, 1, 1, 1)
+        layout.addWidget(self.entry_Bfield_and_center_button, 5, 1, 1, 1)
+
+        hlp_layout = QtGui.QHBoxLayout()
+        hlp_layout.addWidget(self.copy_clipboard_button)
+        hlp_layout.addWidget(self.remove_all_B_and_lines_button)
         
         remove_B_layout = QtGui.QHBoxLayout() 
         remove_B_layout.addWidget(self.remove_B_count)
@@ -126,8 +159,6 @@ class drift_tracker(QtGui.QWidget):
         remove_line_center_layout.addWidget(self.remove_line_center_count)
         remove_line_center_layout.addWidget(self.remove_line_center_button)    
 
-        update_layout = QtGui.QHBoxLayout() 
-        
         keep_B_layout = QtGui.QHBoxLayout()
         keep_B_layout.addWidget(QtGui.QLabel("Tracking Duration (B)"))
         keep_B_layout.addWidget(self.track_B_duration)
@@ -136,17 +167,22 @@ class drift_tracker(QtGui.QWidget):
         keep_line_center_layout.addWidget(QtGui.QLabel("Tracking Duration (Line Center)"))
         keep_line_center_layout.addWidget(self.track_line_center_duration)
         
-        layout.addLayout(update_layout, 2, 1, 1, 1)
-        layout.addLayout(remove_B_layout, 2, 0, 1, 1)
-        layout.addLayout(remove_line_center_layout, 3, 0, 1, 1)
-        layout.addLayout(keep_B_layout, 2, 1, 1, 1)
-        layout.addLayout(keep_line_center_layout, 3, 1, 1, 1)
+        layout.addLayout(hlp_layout, 6, 0, 1, 1)
+        layout.addLayout(remove_B_layout, 7, 0, 1, 1)
+        layout.addLayout(remove_line_center_layout, 8, 0, 1, 1)
+        layout.addLayout(keep_B_layout, 7, 1, 1, 1)
+        layout.addLayout(keep_line_center_layout, 8, 1, 1, 1)
+        
         return layout
         
     def connect_layout(self):
         self.remove_B_button.clicked.connect(self.on_remove_B)
         self.remove_line_center_button.clicked.connect(self.on_remove_line_center)
+        self.remove_all_B_and_lines_button.clicked.connect(self.on_remove_all_B_and_line_centers)
+        
         self.entry_button.clicked.connect(self.on_entry)
+        self.entry_Bfield_and_center_button.clicked.connect(self.on_entry_Bfield_and_center)
+        
         self.track_B_duration.valueChanged.connect(self.on_new_B_track_duration)
         self.track_line_center_duration.valueChanged.connect(self.on_new_line_center_track_duration)
         self.copy_clipboard_button.pressed.connect(self.do_copy_info_to_clipboard)
@@ -201,9 +237,10 @@ class drift_tracker(QtGui.QWidget):
         server = yield self.cxn.get_server('SD Tracker')
         try:
             yield server.remove_b_measurement(to_remove)
-            print to_remove
+            #print to_remove
         except self.Error as e:
             self.displayError(e.msg)
+
     @inlineCallbacks
     def on_remove_line_center(self, clicked):
         to_remove = self.remove_line_center_count.value()
@@ -211,7 +248,31 @@ class drift_tracker(QtGui.QWidget):
         try:
             yield server.remove_line_center_measurement(to_remove)
         except self.Error as e:
-            self.displayError(e.msg)    
+            self.displayError(e.msg)
+
+    @inlineCallbacks
+    def on_remove_all_B_and_line_centers(self, clicked):
+        server = yield self.cxn.get_server('SD Tracker')
+
+        b_field = yield server.get_b_field()
+        line_center = yield server.get_line_center()
+
+        # remove all line centers
+        try:
+            # call the remove function as many times as the array is long
+            for k in range(len(line_center)):
+                yield server.remove_line_center_measurement(0)
+        except self.Error as e:
+            self.displayError(e.msg)
+
+        # remove all Bfields
+        try:
+            # call the remove function as many times as the array is long
+            for k in range(len(b_field)):
+                yield server.remove_b_measurement(0)
+        except self.Error as e:
+            self.displayError(e.msg)
+
     @inlineCallbacks
     def on_entry(self, clicked):
         server = yield self.cxn.get_server('SD Tracker')
@@ -219,9 +280,46 @@ class drift_tracker(QtGui.QWidget):
         with_units = [(name, self.WithUnit(val, 'MHz')) for name,val in info]
         try:
             yield server.set_measurements(with_units)
+
+            # update entry boxes with the last points
+            b_field = yield server.get_last_b_field()
+            line_center = yield server.get_last_line_center()
+
+            self.Bfield_entry.setValue(b_field*1.0e3)
+            self.linecenter_entry.setValue(line_center*1.0e3)
+
+            self.resize_spec_graph()
+
         except self.Error as e:
             self.displayError(e.msg)
     
+    @inlineCallbacks
+    def on_entry_Bfield_and_center(self, clicked):
+        server = yield self.cxn.get_server('SD Tracker')
+        B_with_units = self.WithUnit(self.Bfield_entry.value()/1.0e3, 'gauss')
+        f_with_units = self.WithUnit(self.linecenter_entry.value()/1.0e3, 'MHz')
+
+        hlp1 = [('Bfield', B_with_units)]
+        hlp2 = [('line_center', f_with_units)] # workaround, needs fixing
+
+        try:
+            yield server.set_measurements_with_bfield_and_line_center(hlp1, hlp2)
+
+            # get the currently chosen lines
+            hlp = yield server.get_lines_from_bfield_and_center(B_with_units, f_with_units)
+            hlp = dict(hlp)
+
+            line_info = self.entry_table.get_info() # e.g. [('S-1/2D-3/2', -14.3), ('S-1/2D-5/2', -19.3)]
+            for k in range(len(line_info)):
+                # get the current line from the server
+                new_freq = hlp[line_info[k][0]]
+                self.entry_table.cellWidget(k, 1).setValue(new_freq.value)                
+
+            self.resize_spec_graph()
+
+        except self.Error as e:
+            self.displayError(e.msg)        
+
     @inlineCallbacks
     def on_new_B_track_duration(self, value):
         server = yield self.cxn.get_server('SD Tracker')
@@ -298,10 +396,9 @@ class drift_tracker(QtGui.QWidget):
             self.update_track((inunits_b,inunits_b_nofit), self.b_drift, self.b_drift_lines)
             self.update_track((inunits_f,inunits_f_nofit), self.line_drift, self.line_drift_lines)
 
-            
             self.plot_fit_b(fit_b)
             self.plot_fit_f(fit_f)
-    
+            
     def plot_fit_b(self, p):
         for i in range(len(self.b_drift_fit_line)):
             l = self.b_drift_fit_line.pop()
@@ -355,7 +452,7 @@ class drift_tracker(QtGui.QWidget):
             returnValue(lines)
     
     def update_track(self, meas, axes, lines):
-        #clear all current lines
+        # clear all current lines
         for i in range(len(lines)):
             line = lines.pop()
             line.remove()
@@ -366,7 +463,7 @@ class drift_tracker(QtGui.QWidget):
         xnofit = numpy.array([m[0] for m in not_fitted])
         ynofit = [m[1] for m in not_fitted]
         
-        #annotate the last point
+        # annotate the last point
         try:
             last = y[-1]
         except IndexError:
@@ -397,7 +494,7 @@ class drift_tracker(QtGui.QWidget):
         axes.set_ylim(ylims)
         
         self.drift_canvas.draw()
-        
+               
     def update_spectrum(self, lines):
         #clear all lines by removing them from the self.spectral_lines list
         for i in range(len(self.spectral_lines)):
@@ -418,6 +515,22 @@ class drift_tracker(QtGui.QWidget):
     def update_listing(self, lines):
         listing = [(self.favorites.get(line, line), freq) for line,freq in lines]
         self.frequency_table.fill_out_widget(listing)
+    
+    @inlineCallbacks
+    def resize_spec_graph(self):
+        # set the limits of the predicted spectrum to the extrema
+        try:
+            server = yield self.cxn.get_server('SD Tracker')
+            curr_lines = yield server.get_current_lines()
+
+            curr_lines = dict(curr_lines)
+            hlp, my_min = min(curr_lines.iteritems(), key = lambda x: x[1])
+            hlp, my_max = max(curr_lines.iteritems(), key = lambda x: x[1])
+            self.spec.set_xlim(left = my_min.value - 1.0, right = my_max.value + 1.0)
+
+        except Exception as e:
+            #no lines available
+            return
         
     @inlineCallbacks
     def disable(self):

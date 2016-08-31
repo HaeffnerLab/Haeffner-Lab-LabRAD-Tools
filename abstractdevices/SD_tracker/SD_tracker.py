@@ -103,13 +103,42 @@ class SDTracker(LabradServer):
         if name1 not in self.tr.transitions() or name2 not in self.tr.transitions():
             raise Exception("Lines do not match known transitions")
         if name1 == name2: raise Exception("Provided Measurements must be of different lines")
+        
         B,freq = self.tr.energies_to_magnetic_field( ( (name1,f1),(name2,f2) ))
+        
+        # arrays which contain the time when the measurement was taken
         self.t_measure_B = numpy.append(self.t_measure_B , t_measure)
         self.t_measure_line_center= numpy.append(self.t_measure_line_center, t_measure)
+
+        # arrays of B_field and line center
         self.B_field = numpy.append(self.B_field , B['gauss'])
         self.line_center = numpy.append(self.line_center , freq['MHz'])
-        #try to save to data vault
-        #yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
+        
+        # try to save to data vault
+        # yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
+        # save the epoch time, NOT the time since the software started t_measure
+        yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'])
+        self.do_fit()
+
+    @setting(15, 'Set Measurements with Bfield and Line Center', B = '*(sv[gauss])', freq = '*(sv[MHz])', returns = '')
+    def set_measurements_with_bfield_and_line_center(self, c, B, freq):
+        '''takes the Bfield and the line center and sets up tracking'''
+        t_measure = time.time() - self.start_time
+       
+        B = B[0][1]
+        freq = freq[0][1]
+
+        # arrays which contain the time when the measurement was taken
+        self.t_measure_B = numpy.append(self.t_measure_B , t_measure)
+        self.t_measure_line_center= numpy.append(self.t_measure_line_center, t_measure)
+
+        # arrays of B_field and line center
+        self.B_field = numpy.append(self.B_field , B['gauss'])
+        self.line_center = numpy.append(self.line_center , freq['MHz'])
+        
+        # try to save to data vault
+        # yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
+        # save the epoch time, NOT the time since the software started t_measure
         yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'])
         self.do_fit()
 
@@ -120,8 +149,6 @@ class SDTracker(LabradServer):
         name,f = line
         if name not in self.tr.transitions():
             raise Exception("Line does not match a known transition")
-
-        
 
     @inlineCallbacks
     def save_result_datavault(self, t_measure, freq, b_field):
@@ -237,7 +264,32 @@ class SDTracker(LabradServer):
             self.keep_B_measurements = duration[0]['s']
             self.keep_line_center_measurements = duration[1]['s']
         return [ WithUnit(self.keep_B_measurements,'s'), WithUnit(self.keep_line_center_measurements, 's') ]
-    
+
+    @setting(16, 'Get Last B Field', returns = 'v')
+    def get_last_b_field(self, c):        
+        ''' returns the last entered B field '''
+        return self.B_field[-1]
+
+    @setting(17, 'Get Last Line Center', returns = 'v')
+    def get_last_line_center(self, c):
+        ''' returns the last entered line center '''
+        return self.line_center[-1]
+
+    @setting(19, 'Get B Field', returns = '*v')
+    def get_b_field(self, c):        
+        ''' returns all entered B fields '''
+        return self.B_field
+
+    @setting(20, 'Get Line Center', returns = '*v')
+    def get_line_center(self, c):
+        ''' returns all entered line centers '''
+        return self.line_center
+
+    @setting(18, "Get Lines From Bfield and Center", B = 'v[gauss]', freq = 'v[MHz]', returns = '*(sv[MHz])')
+    def get_lines_from_bfield_and_center(self, c, B, freq):
+        all_lines = self.tr.get_transition_energies(B, freq)
+        return all_lines
+
     def do_fit(self):
         self.remove_old_measurements()
         if (len(self.t_measure_B) and len(self.t_measure_line_center)):

@@ -11,20 +11,23 @@ class dropdown(QtGui.QComboBox):
     
     new_selection = QtCore.pyqtSignal(str)
      
-    def __init__(self, reactor, font = None, names = [], favorites = {}, info_position = None, only_show_favorites = False, parent = None ):
+    def __init__(self, reactor, font = None, names = [], favorites = {}, initial_selection = None, info_position = None, only_show_favorites = False, parent = None ):
         super(dropdown, self).__init__(parent)
         self.reactor = reactor
         self.info_position = info_position
         self.selected = None
         self.favorites = favorites
         self.only_show_favorites = only_show_favorites
+        self.initial_selection = initial_selection
         if font is not None:
             self.setFont(font)
         self.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
         self.SizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.set_dropdown(names)
         self.currentIndexChanged[int].connect(self.on_user_selection)
-        #select the first item
+        #select the item set in the config file
+        if initial_selection is not None:
+            self.set_selected(initial_selection)
         
     def set_selected(self, linename):
         '''
