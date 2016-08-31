@@ -25,7 +25,7 @@ class ParametersEditor(base, form):
         self._parameter = {}
     
     def clear_all(self):
-        'clears all parameters'
+        '''clears all parameters'''
         self._model.clear_model()
         self._collection = {}
         self._parameter = {}
@@ -74,6 +74,9 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_spectrum_sensitivity(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'undefined':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_undefined_parameter(parameter_name, info, collection_node)
         else:
             print 'unknown value type', value_type, collection_name, parameter_name
     

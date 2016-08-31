@@ -3,6 +3,7 @@ from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
 from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
+from parameter_importer.script_explorer_widget import script_explorer_widget
 
 class script_scanner_gui(QtGui.QWidget):
     
@@ -100,6 +101,18 @@ class script_scanner_gui(QtGui.QWidget):
             for param_name in parameters:
                 value = yield pv.get_parameter(collection, param_name, False)
                 self.ParametersEditor.add_parameter(collection, param_name, value)
+
+    @inlineCallbacks
+    def populateUndefinedParameters(self, script):
+        pv = yield self.cxn.get_server('ParameterVault')
+        sc = yield self.cxn.get_server('ScriptScanner')
+        # these collections already exist in parametervault
+        collections = yield pv.get_collections(context = self.context)
+        undef = yield sc.get_undefined_parameters(script)
+        undef = sorted(undef, key = lambda k: k[0]) # sort by collection
+        self.script_explorer.clear()
+        for collection, param in undef:
+            self.script_explorer.add_parameter(collection, param)
             
     @inlineCallbacks
     def setupListenersScriptScanner(self):
@@ -216,6 +229,7 @@ class script_scanner_gui(QtGui.QWidget):
         if selected_experiment:
             try:
                 parameters = yield sc.get_script_parameters(selected_experiment)
+                yield self.populateUndefinedParameters(selected_experiment)
             except self.Error as e:
                 self.displayError(e.msg)
             else:
@@ -326,10 +340,22 @@ class script_scanner_gui(QtGui.QWidget):
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
+
+        topLevelLayout = QtGui.QHBoxLayout()
+
+        tab = QtGui.QTabWidget()
+        control = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
-        self.setLayout(layout)
+        control.setLayout(layout)
+        self.script_explorer = script_explorer_widget(self)
+        tab.addTab(control, 'Scan Control')
+        tab.addTab(self.script_explorer, 'Parameter Creator')
+
+        topLevelLayout.addWidget(tab)
+        self.setLayout(topLevelLayout)
+
         self.setWindowTitle('Script Scanner Gui')
     
     def displayError(self, text):

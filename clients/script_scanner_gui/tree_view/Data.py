@@ -382,7 +382,7 @@ class SidebandElectorNode(Node):
     
     def string_format(self):
         s = ''
-        labels = ['radial 1 : ', 'radial 2 : ', 'axial : ', 'micormotion : ']
+        labels = ['radial 1 : ', 'radial 2 : ', 'axial : ', 'micromotion : ']
         values = [self._radial1, self._radial2, self._axial, self._micromotion]
         for name, sideband in zip(labels, values):
             if sideband:
@@ -545,3 +545,36 @@ class SpectrumSensitivityNode(Node):
             self._duration = value
         if column == 6:
             self._amplitude = value
+
+class UndefinedParameterNode(Node):
+
+    columns = 3
+
+    def __init__(self, name, info, parent = None):
+        super(UndefinedParameterNode, self).__init__(name, parent)
+        self._collection = parent.name()
+        self._value = None
+
+    def filter_text(self):
+        return self.parent().name() + self.name()
+
+    def string_format(self):
+        return '{0}'.format(self._value)
+
+    def path(self):
+        return (self._collection, self.name())
+
+    def data(self, column):
+        if column < 1:
+            return super(UndefinedParameterNode, self).data(column)
+        elif column == 1:
+            return "UNDEFINED"
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._value
+
+    def setData(self, column, value):
+        value = value.toPyObject()
+        if column == 3:
+            self._value = value
