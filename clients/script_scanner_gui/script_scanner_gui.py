@@ -5,7 +5,7 @@ from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 from script_explorer_widget import script_explorer_widget
 
-class script_scanner_gui(QtGui.QTabWidget):
+class script_scanner_gui(QtGui.QWidget):
     
     SIGNALID = 319245
     
@@ -343,14 +343,22 @@ class script_scanner_gui(QtGui.QTabWidget):
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
+
+        topLevelLayout = QtGui.QHBoxLayout()
+
+        tab = QtGui.QTabWidget()
         control = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
         control.setLayout(layout)
         self.script_explorer = script_explorer_widget(self)
-        self.addTab(control, 'Scan Control')
-        self.addTab(self.script_explorer, 'Parameter Editor')
+        tab.addTab(control, 'Scan Control')
+        tab.addTab(self.script_explorer, 'Parameter Editor')
+
+        topLevelLayout.addWidget(tab)
+        self.setLayout(topLevelLayout)
+
         self.setWindowTitle('Script Scanner Gui')
     
     def displayError(self, text):
