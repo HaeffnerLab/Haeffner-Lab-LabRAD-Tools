@@ -1,38 +1,43 @@
-from PyQt4 import QtGui
+#from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore, uic
 import sys
 import os
 import subprocess
 from functools import partial
-from CONFIG_EDITOR_config import labrad_folder
+from CONFIG_EDITOR_config import labrad_folders
 
 class CONFIG_EDITOR(QtGui.QMainWindow):
 
-    def __init__(self):
-        super(CONFIG_EDITOR, self).__init__()
+    def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
+        super(CONFIG_EDITOR, self).__init__(parent)
+
+	self.reactor = reactor
 
         self.current_file = None
-        self.get_config_files(labrad_folder)
+        self.get_config_files(labrad_folders)
         self.initUI()
 
 
-    def get_config_files(self, folder = '.'):
+    def get_config_files(self, folders = '.'):
         # finds all config files in folder
         self.config_path_list = []
         self.config_file_list = []
         
-        for (paths, dirs, files) in os.walk(folder):
-            for file in files:
-                if      'config' in file \
-                    and 'example' not in file \
-                    and 'sample' not in file \
-                    and '.pyc' not in file \
-                    and '.jar' not in file \
-                    and '.git' not in paths: # check if filename contains string 'config'
+        for folder in folders:
+		for (paths, dirs, files) in os.walk(folder):
+	            for file in files:
+	                if      'config' in file \
+			    and '.py' in file \
+	                    and 'example' not in file \
+	                    and 'sample' not in file \
+	                    and '.pyc' not in file \
+	                    and '.jar' not in file \
+	                    and '.py~' not in file \
+	                    and '.swp' not in file \
+	                    and '.git' not in paths: # check if filename contains string 'config'
 
-                    self.config_path_list.append(paths)
-                    self.config_file_list.append(file)
-
-
+	                    self.config_path_list.append(paths)
+	                    self.config_file_list.append(file)
 
     def initUI(self):
         newAction = QtGui.QAction('New', self)
@@ -103,20 +108,21 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
         except:
             return
          
+    def closeEvent(self, x):
+        self.reactor.stop()  
 
 
-def main():
 
-    app = QtGui.QApplication(sys.argv)
-
-    config_editor = CONFIG_EDITOR()
-
-    sys.exit(app.exec_())
-
-     
+         
 
 if __name__ == '__main__':
 
-    main()
+    a = QtGui.QApplication( [] )
+    clipboard = a.clipboard()
+    import qt4reactor
+    qt4reactor.install()
+    from twisted.internet import reactor
+    CONFIG_EDITOR = CONFIG_EDITOR(reactor, clipboard)
+    CONFIG_EDITOR.show()
+    reactor.run()
 
-  

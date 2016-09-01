@@ -1,0 +1,293 @@
+from PyQt4 import QtGui, uic
+import os
+import RGBconverter as RGB
+from twisted.internet.defer import inlineCallbacks
+from MULTIPLEXER_CONTROL_config_2 import multiplexer_control_config as config
+
+SIGNALID1 = 187567
+SIGNALID2 = 187568
+SIGNALID3 = 187569
+SIGNALID4 = 187570
+SIGNALID5 = 187571 # for the new locked state signals
+
+class widgetWrapper(object):
+    def __init__(self, chanName, wavelength, hint):
+        self.chanName = chanName
+        self.wavelength = wavelength
+        self.hint = hint
+        self.widget = None
+        self.codeDict = {-3.0: 'UnderExposed', -4.0: 'OverExposed', -5.0: 'NeedStartWM', -6.0 :'NotMeasured'}
+        self.widget = multiplexerChannel(self.wavelength, self.hint, self.chanName)           
+        
+    def setFreq(self, freq):
+        if freq in self.codeDict.keys():
+            text = self.codeDict[freq]
+        else:
+            text = '%.5f'%freq
+        self.widget.freq.setText(text)            
+            
+    def setState(self, state, disableSignals = False):
+        if disableSignals:
+            self.widget.checkBox.blockSignals(True)
+        self.widget.checkBox.setChecked(state)
+        if disableSignals:
+            self.widget.checkBox.blockSignals(False)
+        
+    def setExposure(self, exposure, disableSignals = False):
+        if disableSignals:
+            self.widget.checkBox.blockSignals(True)
+        self.widget.spinBox.setValue(exposure)
+        if disableSignals:
+            self.widget.checkBox.blockSignals(False)
+    
+    def setLockedState(self, lockedState, laserlockOn): # for laserlock
+        # lockedState, 0 or 1
+        
+#         self.widget.lockedState.setText(lockedState) 
+        #self.widget.setLabel(str(lockedState))
+        
+        '''
+        self.widget.setLCDDisplay(1, 1)
+        self.widget.setLCDDisplay(2, 0)
+        self.widget.setLCDDisplay(7, 1)
+        
+        
+        if laserlockOn:
+            singleLockedState_L1 = (int(lockedState)) /1000000; # either a 1 or a 0
+            singleLockedState_L2 = (int(lockedState)) /100000 % 10;
+            singleLockedState_L3 = (int(lockedState)) /10000 % 10;
+            singleLockedState_L4 = (int(lockedState)) /1000 % 10;
+            singleLockedState_L5 = (int(lockedState)) /100 % 10;
+            singleLockedState_L6 = (int(lockedState)) /10 % 10;
+            singleLockedState_L7 = (int(lockedState)) /1 % 10;
+            
+            self.widget.setLCDDisplay(1, singleLockedState_L1)
+            self.widget.setLCDDisplay(2, singleLockedState_L2)
+            self.widget.setLCDDisplay(3, singleLockedState_L3)
+            self.widget.setLCDDisplay(4, singleLockedState_L4)
+            self.widget.setLCDDisplay(5, singleLockedState_L5)
+            self.widget.setLCDDisplay(6, singleLockedState_L6)
+            self.widget.setLCDDisplay(7, singleLockedState_L7)
+        else:
+            self.widget.setLCDDisplay(1, -1)
+            self.widget.setLCDDisplay(2, -1)
+            self.widget.setLCDDisplay(3, -1)
+            self.widget.setLCDDisplay(4, -1)
+            self.widget.setLCDDisplay(5, -1)
+            self.widget.setLCDDisplay(6, -1)
+            self.widget.setLCDDisplay(7, -1)
+        '''
+        
+        
+        if laserlockOn:
+            self.widget.setLCDDisplay(lockedState)
+        
+        
+            
+class multiplexerWidget(QtGui.QWidget):
+    def __init__(self, reactor, parent = None):
+        super(multiplexerWidget, self).__init__(parent)
+        self.reactor = reactor
+        basepath =  os.path.dirname(__file__)
+        path = os.path.join(basepath,'..','qtui','Multiplexer.ui')
+        uic.loadUi(path,self)
+        self.d = {}
+        self.connect() 
+        
+        self.server_laserlock = None
+        # No need for this once the laserlock_server is put into laser room computer
+        # self.cxn_laserlock = None # no need
+    
+    @inlineCallbacks
+    def connect(self):
+        from labrad.wrappers import connectAsync
+        self.cxn = yield connectAsync('192.168.169.49') #
+        
+        # @@@ Needs to change once we put the laserlock_server in the laser room computer
+        # self.cxn_laserlock = yield connectAsync('127.0.0.1') # no need
+        
+        try:
+            self.server = yield self.cxn.multiplexer_server # note: self.server is the multiplexer server
+            #self.server_laserlock = yield self.cxn_laserlock.laserlock_server # no need
+            self.server_laserlock = yield self.cxn.laserlock_server
+            yield self.initializeGUI()
+            yield self.setupListeners()
+        except:
+            self.setEnabled(False)
+        
+    @inlineCallbacks
+    def initializeGUI(self):
+        yield self.server_laserlock.start_cycling() # start the laserlock server
+        
+        #get initial values
+        state = yield self.server.is_cycling()
+        self.pushButton.setChecked(state)
+        self.setButtonText()
+        #fill out information in all available channels
+        all_channels = yield self.server.get_available_channels()
+        for name in all_channels:
+            wavelength = yield self.server.get_wavelength_from_channel(name)
+            widget_config = config.info.get(name, None)
+            if widget_config is not None: 
+                user_hint,  location = widget_config
+            else:
+                continue
+            wrapper = widgetWrapper(name, wavelength, user_hint)
+            freq = yield self.server.get_frequency(name)
+            wrapper.setFreq(float(freq))
+            exp = yield self.server.get_exposure(name)
+            wrapper.setExposure(exp)
+            state = yield self.server.get_state(name)
+            wrapper.setState(state)
+            
+            
+            lockedState = yield self.server_laserlock.get_lockedstate(name) # for laserlock @@@:need to change the channel names
+            #lockedState = 1
+            wrapper.setLockedState(lockedState, True ) #for now, always have laserlockOn == True
+            
+            
+            self.grid.addWidget(wrapper.widget,location[0], location[1])
+            #connect widgets
+            wrapper.widget.checkBox.stateChanged.connect(self.setStateWrapper(name))
+            wrapper.widget.spinBox.valueChanged.connect(self.setExposureWrapper(name))
+            self.d[name] = wrapper
+        #connect functions
+        self.pushButton.toggled.connect(self.setOnOff)
+
+    @inlineCallbacks
+    def setupListeners(self):
+        yield self.server.signal__channel_toggled(SIGNALID1)
+        yield self.server.addListener(listener = self.followNewState, source = None, ID = SIGNALID1)
+        yield self.server.signal__new_exposure_set(SIGNALID2)
+        yield self.server.addListener(listener = self.followNewExposure, source = None, ID = SIGNALID2)
+        yield self.server.signal__new_frequency_measured(SIGNALID3)
+        yield self.server.addListener(listener = self.followNewFreq, source = None, ID = SIGNALID3)
+        yield self.server.signal__updated_whether_cycling(SIGNALID4)
+        yield self.server.addListener(listener = self.followNewCycling, source = None, ID = SIGNALID4)
+        yield self.server_laserlock.signal__new_lockedstate_measured(SIGNALID5) # for laserlock
+        yield self.server_laserlock.addListener(listener = self.followNewLockedState, source = None, ID = SIGNALID5)
+    
+    def followNewState(self,x,(chanName,state)):
+        if chanName in self.d.keys():
+            self.d[chanName].setState(state, True)
+        
+    def followNewExposure(self, x, (chanName,exp)):
+        if chanName in self.d.keys():
+            self.d[chanName].setExposure(exp, True)
+    
+    def followNewFreq(self, x, (chanName, freq)):
+        if chanName in self.d.keys():
+            self.d[chanName].setFreq(freq)
+    
+    def followNewLockedState(self, x, (chanName, lockedState)): # for laserlock
+        #laserlockOn = self.pushButton.isChecked() 
+        laserlockOn = True #for now, always have laserlockOn == True
+        
+        if chanName in self.d.keys():
+            self.d[chanName].setLockedState(lockedState, laserlockOn)
+    
+    def followNewCycling(self, x, cycling):
+        self.pushButton.blockSignals(True)
+        self.pushButton.setChecked(cycling)
+        self.pushButton.blockSignals(False)
+        self.setButtonText()
+    
+    def setButtonText(self):
+        if self.pushButton.isChecked():
+            self.pushButton.setText('ON')
+        else:
+            self.pushButton.setText('OFF')
+    
+    @inlineCallbacks
+    def setOnOff(self, pressed):
+        if pressed:
+            yield self.server.start_cycling()
+        else:
+            yield self.server.stop_cycling()
+        self.setButtonText()
+        
+    
+        
+    def setStateWrapper(self, chanName):
+        def func(state):
+            self.setState(chanName, state)
+        return func
+    
+    def setExposureWrapper(self, chanName):
+        def func(state):
+            self.setExposure(chanName, state)
+        return func 
+    
+    @inlineCallbacks
+    def setState(self, chanName, state):
+        yield self.server.set_state(chanName,bool(state))
+    
+    @inlineCallbacks
+    def setExposure(self, chanName, exp):
+        yield self.server.set_exposure(chanName,exp)
+    
+    def closeEvent(self, x):
+        self.reactor.stop()  
+
+class multiplexerChannel(QtGui.QWidget):
+    def __init__(self, wavelength, hint, name, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        basepath =  os.path.dirname(__file__)
+        path = os.path.join(basepath,'..','qtui','MultiplexerChannel_2.ui')
+        uic.loadUi(path,self)
+        self.RGBconverter = RGB.RGBconverter()
+        self.setColor(wavelength)
+        self.setHint(hint)
+        self.setLabel(name)
+        
+    def setColor(self, wavelength):
+        [r,g,b] = self.RGBconverter.wav2RGB(int(wavelength))
+        self.label.setStyleSheet('color:rgb(%d,%d,%d)' %(r,g,b))
+        
+    def setLabel(self, name):
+        self.label.setText(name)
+    
+    def setHint(self, hint):
+        self.expectedfreq.setText(hint)
+        
+    def setLCDDisplay(self, lockedState): # for laserlock: the lcdNumber display widget
+        '''
+        Parameters: 
+        #int laserNum: number from {1,2,3,...,7}
+        int lockedState: 0 or 1 for a single laser, instead of for all 7;
+            value to display in the LCD (either 0 or 1);  if -1, it means that laserlock widget is off
+        '''
+        
+        '''
+        laserLCDs = {1:self.lcdNumber, 2:self.lcdNumber_2, 3:self.lcdNumber_3, 4:self.lcdNumber_4, 5:self.lcdNumber_5, 6:self.lcdNumber_6, 7:self.lcdNumber_7}
+        colors = {0:'red', 1:'green'}
+        
+        if state == -1:
+            laserLCDs[laserNum].setStyleSheet("QWidget {background-color: white }")
+            laserLCDs[laserNum].display(-1)
+        else:
+            laserLCDs[laserNum].setStyleSheet("QWidget {background-color: " + colors[state] + " }")
+            laserLCDs[laserNum].display(state)
+        '''
+        
+        colors = {0:'red', 1:'green'}
+        
+        if lockedState == -1: # means laserlockOn is false
+            self.lcdNumber.setStyleSheet("QWidget {background-color: white }")
+            self.lcdNumber.display(-1)
+        elif lockedState == 0 or lockedState == 1: 
+            self.lcdNumber.setStyleSheet("QWidget {background-color: " + colors[lockedState] + " }")
+            self.lcdNumber.display(lockedState)
+        else:
+            print 'Error: lockedState is something other than -1, 0, or 1.'
+        
+        
+
+if __name__=="__main__":
+    a = QtGui.QApplication( [] )
+    import qt4reactor
+    qt4reactor.install()
+    from twisted.internet import reactor
+    multiplexerWidget = multiplexerWidget(reactor)
+    multiplexerWidget.show()
+    reactor.run()
