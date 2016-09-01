@@ -3,6 +3,7 @@ import sys
 import os
 import subprocess
 from functools import partial
+from CONFIG_EDITOR_config import labrad_folder
 
 class CONFIG_EDITOR(QtGui.QMainWindow):
 
@@ -10,7 +11,7 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
         super(CONFIG_EDITOR, self).__init__()
 
         self.current_file = None
-        self.get_config_files('/home/lattice/LabRAD')
+        self.get_config_files(labrad_folder)
         self.initUI()
 
 
@@ -66,7 +67,7 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
 
         self.text = QtGui.QTextEdit(self)
         self.setCentralWidget(self.text)
-        self.setGeometry(300,300,300,300)
+        self.setGeometry(300,300,800,600)
         self.setWindowTitle('Notepad')
         self.show()
 
