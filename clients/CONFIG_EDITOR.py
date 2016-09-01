@@ -1,3 +1,4 @@
+# Config Editor
 from PyQt4 import QtGui, QtCore, uic
 import sys
 import os
