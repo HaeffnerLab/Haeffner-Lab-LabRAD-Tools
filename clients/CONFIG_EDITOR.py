@@ -1,4 +1,5 @@
 from PyQt4 import QtGui
+import sys
 import os
 import subprocess
 from functools import partial
@@ -9,7 +10,7 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
         super(CONFIG_EDITOR, self).__init__()
 
         self.current_file = None
-        self.get_config_files('/home/boerge/tmp/labrad')
+        self.get_config_files('/home/lattice/LabRAD')
         self.initUI()
 
 
@@ -23,6 +24,8 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
                 if      'config' in file \
                     and 'example' not in file \
                     and 'sample' not in file \
+                    and '.pyc' not in file \
+                    and '.jar' not in file \
                     and '.git' not in paths: # check if filename contains string 'config'
 
                     self.config_path_list.append(paths)
