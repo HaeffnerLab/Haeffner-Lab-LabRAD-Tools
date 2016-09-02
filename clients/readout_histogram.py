@@ -1,6 +1,12 @@
 from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+# this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
+try:
+	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+except:
+	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+
+
 from matplotlib.figure import Figure
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
