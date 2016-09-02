@@ -6,6 +6,8 @@ import subprocess
 from functools import partial
 from CONFIG_EDITOR_config import labrad_folders
 
+import syntax
+
 class CONFIG_EDITOR(QtGui.QMainWindow):
 
     def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
@@ -41,60 +43,56 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
 
     def initUI(self):
         newAction = QtGui.QPushButton('New')
-        #newAction.setShortcut('Ctrl+N')
-        #newAction.setStatusTip('Create new file')
-        #newAction.triggered.connect(self.newFile)
+        newAction.setShortcut('Ctrl+N')
+        newAction.setStatusTip('Create new file')
         newAction.pressed.connect(self.newFile)
 
         saveAction = QtGui.QPushButton('Save')
         saveAction.setShortcut('Ctrl+S')
         saveAction.setStatusTip('Save current file')
         saveAction.pressed.connect(self.saveFile)
-
+        
         openAction = QtGui.QPushButton('Open')
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Open a file')
         openAction.pressed.connect(partial(self.openFile, None))
-
-	buttonWidget = QtGui.QWidget()
-	buttons_layout = QtGui.QHBoxLayout()
-	buttons_layout.addWidget(newAction)
-	buttons_layout.addWidget(saveAction)
-	buttons_layout.addWidget(openAction)
-	buttonWidget.setLayout(buttons_layout)
-
-	comboBoxWidget = QtGui.QComboBox()
-	self.file_actions = []
+        
+        buttonWidget = QtGui.QWidget()
+        buttons_layout = QtGui.QHBoxLayout()
+        buttons_layout.addWidget(newAction)
+        buttons_layout.addWidget(saveAction)
+        buttons_layout.addWidget(openAction)
+        buttonWidget.setLayout(buttons_layout)
+        
+        self.comboBoxWidget = QtGui.QComboBox()
+        self.comboBoxWidget.addItem('Choose a file')
         for k, path in sorted(zip(self.config_file_list, self.config_path_list)):
-            hlp = path.split('/')
-            #self.file_actions.append(QtGui.QAction(hlp[-1] + '/' + k, self))
-            #self.file_actions[-1].triggered.connect(partial(self.open_config_file, k, path))
-            #fileMenu.addAction(self.file_actions[-1])
-	    comboBoxWidget.addItem(hlp[-1] + '/' + k)
+            self.comboBoxWidget.addItem(os.path.join(path, k))
 
-	self.text = QtGui.QTextEdit(self)
-        #self.setCentralWidget(self.text)
+        self.comboBoxWidget.currentIndexChanged.connect(self.open_config_file)
+
+        #self.text = QtGui.QTextEdit(self)
+        self.text = QtGui.QPlainTextEdit(self)
+
         self.setGeometry(300,300,800,600)
-        self.setWindowTitle('Notepad')
+        self.setWindowTitle('Config Editor')
+        
+        centralWidget = QtGui.QWidget()
+        mylayout = QtGui.QVBoxLayout()
+        mylayout.addWidget(buttonWidget)
+        mylayout.addWidget(self.comboBoxWidget)
+        mylayout.addWidget(self.text)
+        centralWidget.setLayout(mylayout)
+        
+        self.setCentralWidget(centralWidget)
 
-	centralWidget = QtGui.QWidget()
-	mylayout = QtGui.QVBoxLayout()
-	mylayout.addWidget(buttonWidget)
-	mylayout.addWidget(comboBoxWidget)
-	mylayout.addWidget(self.text)
-	centralWidget.setLayout(mylayout)
-
-	self.setCentralWidget(centralWidget)
-
-        #self.show()
-	return
-
+        return
         
 
-    def open_config_file(self, filename, path):
-        full_filename = os.path.join(path, filename)
+    def open_config_file(self, current_index):
+        full_filename = self.comboBoxWidget.currentText()
+        #full_filename = os.path.join(path, filename)
         self.openFile(full_filename)
-        self.current_file = full_filename
 
     def newFile(self):
         self.text.clear()
@@ -112,13 +110,21 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
         f.close()
 
     def openFile(self, filename = None):
+        if filename == "Choose a file":
+            self.current_file = None
+            self.text.clear()
+            return
         if filename is None:
             filename = QtGui.QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
 
         try:
             f = open(filename, 'r')
             filedata = f.read()
-            self.text.setText(filedata)
+            highlight = syntax.PythonHighlighter(self.text.document())
+            self.text.setPlainText(filedata)
+            self.text.show()
+
+            self.current_file = filename
             f.close()            
         except:
             return
