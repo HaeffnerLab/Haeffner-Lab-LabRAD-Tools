@@ -97,6 +97,7 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
     def newFile(self):
         self.text.clear()
         self.current_file = None
+        self.comboBoxWidget.setCurrentIndex(0)
 
     def saveFile(self):
         if self.current_file is None:
