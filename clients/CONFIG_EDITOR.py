@@ -40,41 +40,56 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
 	                    self.config_file_list.append(file)
 
     def initUI(self):
-        newAction = QtGui.QAction('New', self)
-        newAction.setShortcut('Ctrl+N')
-        newAction.setStatusTip('Create new file')
-        newAction.triggered.connect(self.newFile)
+        newAction = QtGui.QPushButton('New')
+        #newAction.setShortcut('Ctrl+N')
+        #newAction.setStatusTip('Create new file')
+        #newAction.triggered.connect(self.newFile)
+        newAction.pressed.connect(self.newFile)
 
-        saveAction = QtGui.QAction('Save', self)
+        saveAction = QtGui.QPushButton('Save')
         saveAction.setShortcut('Ctrl+S')
         saveAction.setStatusTip('Save current file')
-        saveAction.triggered.connect(self.saveFile)
+        saveAction.pressed.connect(self.saveFile)
 
-        openAction = QtGui.QAction('Open', self)
+        openAction = QtGui.QPushButton('Open')
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Open a file')
-        openAction.triggered.connect(partial(self.openFile, None))
+        openAction.pressed.connect(partial(self.openFile, None))
 
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(newAction)
-        fileMenu.addAction(saveAction)
-        fileMenu.addAction(openAction)
+	buttonWidget = QtGui.QWidget()
+	buttons_layout = QtGui.QHBoxLayout()
+	buttons_layout.addWidget(newAction)
+	buttons_layout.addWidget(saveAction)
+	buttons_layout.addWidget(openAction)
+	buttonWidget.setLayout(buttons_layout)
 
-        fileMenu = menubar.addMenu('&Config Files')
-
-        self.file_actions = []
+	comboBoxWidget = QtGui.QComboBox()
+	self.file_actions = []
         for k, path in sorted(zip(self.config_file_list, self.config_path_list)):
             hlp = path.split('/')
-            self.file_actions.append(QtGui.QAction(hlp[-1] + '/' + k, self))
-            self.file_actions[-1].triggered.connect(partial(self.open_config_file, k, path))
-            fileMenu.addAction(self.file_actions[-1])
+            #self.file_actions.append(QtGui.QAction(hlp[-1] + '/' + k, self))
+            #self.file_actions[-1].triggered.connect(partial(self.open_config_file, k, path))
+            #fileMenu.addAction(self.file_actions[-1])
+	    comboBoxWidget.addItem(hlp[-1] + '/' + k)
 
-        self.text = QtGui.QTextEdit(self)
-        self.setCentralWidget(self.text)
+	self.text = QtGui.QTextEdit(self)
+        #self.setCentralWidget(self.text)
         self.setGeometry(300,300,800,600)
         self.setWindowTitle('Notepad')
-        self.show()
+
+	centralWidget = QtGui.QWidget()
+	mylayout = QtGui.QVBoxLayout()
+	mylayout.addWidget(buttonWidget)
+	mylayout.addWidget(comboBoxWidget)
+	mylayout.addWidget(self.text)
+	centralWidget.setLayout(mylayout)
+
+	self.setCentralWidget(centralWidget)
+
+        #self.show()
+	return
+
+        
 
     def open_config_file(self, filename, path):
         full_filename = os.path.join(path, filename)
