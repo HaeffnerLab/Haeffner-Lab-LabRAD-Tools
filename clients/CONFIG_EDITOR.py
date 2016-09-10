@@ -28,8 +28,8 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
         for folder in folders:
 		for (paths, dirs, files) in os.walk(folder):
 	            for file in files:
-	                if      'config' in file \
-			    and '.py' in file \
+	                if      ('config' in file or 'Config' in file or 'CONFIG' in file) \
+        			    and '.py' in file \
 	                    and 'example' not in file \
 	                    and 'sample' not in file \
 	                    and '.pyc' not in file \
