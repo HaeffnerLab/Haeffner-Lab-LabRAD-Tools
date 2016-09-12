@@ -70,7 +70,7 @@ class RealSimpleGrapher(LabradServer):
         minim = min(axis)
         maxim = max(axis)
         if (graph != 'current') and (send_to_current == True):
-            self.gui.graphDict['current'].set_xlimits([min(axis).value, max(axis).value])
+            self.gui.graphDict['current'].set_xlimits([minim[minim.units], maxim[maxim.units]])
         self.gui.graphDict[graph].set_xlimits([minim[minim.units], maxim[maxim.units]])
         #self.gui.graphDict[graph].set_xlimits([min(axis).value, max(axis).value])
         self.do_plot(dataset_location, graph, send_to_current)
