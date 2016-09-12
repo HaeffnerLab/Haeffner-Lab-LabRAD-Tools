@@ -29,6 +29,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.should_stop = False
         self.name = config.name
         self.show_points = config.show_points
+	self.grid_on = config.grid_on
 
         self.dataset_queue = Queue.Queue(config.max_datasets)
         
@@ -44,13 +45,17 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.pw = pg.PlotWidget()
         self.coords = QtGui.QLabel('')
         self.title = QtGui.QLabel(self.name)
-        hbox = QtGui.QHBoxLayout()
-        hbox.addWidget(self.tracelist)
+	frame = QtGui.QFrame()
+	splitter = QtGui.QSplitter()
+        splitter.addWidget(self.tracelist)
+	hbox = QtGui.QHBoxLayout()
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.title)
         vbox.addWidget(self.pw)
         vbox.addWidget(self.coords)
-        hbox.addLayout(vbox)
+	frame.setLayout(vbox)
+	splitter.addWidget(frame)
+        hbox.addWidget(splitter)
         self.setLayout(hbox)
         #self.legend = self.pw.addLegend()
         self.tracelist.itemChanged.connect(self.checkboxChanged)
@@ -75,12 +80,18 @@ class Graph_PyQtGraph(QtGui.QWidget):
                         params.artist.setData(x,y)
                 except: pass
 
-    def add_artist(self, ident, dataset, index):
+    def add_artist(self, ident, dataset, index, no_points = False):
+        '''
+        no_points is an override parameter to the global show_points setting.
+        It is to allow data fits to be plotted without points
+        '''
         new_color = self.colorChooser.next()
-        if self.show_points:
+        if self.show_points and not no_points:
             line = self.pw.plot([], [], symbol='o', symbolBrush = new_color, pen = new_color, name = ident)
         else:
             line = self.pw.plot([], [], pen = new_color, name = ident)
+	if self.grid_on:
+	   self.pw.showGrid(x=True, y=True)
         self.artists[ident] = artistParameters(line, dataset, index, True)
         self.tracelist.addTrace(ident)
 

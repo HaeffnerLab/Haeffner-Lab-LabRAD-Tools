@@ -1,6 +1,8 @@
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from ParameterListWidget import ParameterList
+from DataVaultListWidget import DataVaultList
+from FitWindowWidget import FitWindow
 from GUIConfig import traceListConfig
 
 class TraceList(QtGui.QListWidget):
@@ -10,6 +12,7 @@ class TraceList(QtGui.QListWidget):
         self.windows = []
         self.config = traceListConfig()
         self.setStyleSheet("background-color:%s;" % self.config.background_color)
+	self.name = 'pmt'
         self.initUI()
 
     def initUI(self):
@@ -38,11 +41,20 @@ class TraceList(QtGui.QListWidget):
     def popupMenu(self, pos):
         menu = QtGui.QMenu()
         item = self.itemAt(pos)
-        if (item == None): pass # didn't click on anything
+        if (item == None): 
+	    dataaddAction = menu.addAction('Add Data Set')
+	    
+	    action = menu.exec_(self.mapToGlobal(pos))
+	    if action == dataaddAction:
+		dvlist = DataVaultList(self.parent.name)
+		self.windows.append(dvlist)
+		dvlist.show()
+
         else:
-            ident = str(item.text())
+	    ident = str(item.text())
             parametersAction = menu.addAction('Parameters')
             togglecolorsAction = menu.addAction('Toggle colors')
+            fitAction = menu.addAction('Fit')
 
             action = menu.exec_(self.mapToGlobal(pos))
             
@@ -62,5 +74,11 @@ class TraceList(QtGui.QListWidget):
                 else:
                     self.parent.artists[ident].artist.setData(pen = new_color)
 
+            if action == fitAction:
+                dataset = self.parent.artists[ident].dataset
+                index = self.parent.artists[ident].index
+                fw = FitWindow(dataset, index, self)
+                self.windows.append(fw)
+                fw.show()
                 
                
