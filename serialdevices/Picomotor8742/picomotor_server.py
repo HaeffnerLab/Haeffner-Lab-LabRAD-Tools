@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Picomotor
-version = 1.2
+version = 1.3
 description =
 instancename = Picomotor
 [startup]

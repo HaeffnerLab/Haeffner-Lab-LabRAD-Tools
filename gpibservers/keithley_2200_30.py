@@ -18,7 +18,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Keithley Server
+name = Keithley 2220_30 Server
 version = 1.0
 description = 
 
