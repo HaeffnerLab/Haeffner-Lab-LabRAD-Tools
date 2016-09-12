@@ -156,7 +156,7 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def addParameters(self, start):
         yield self.dv.add_parameter("Window", ["PMT Counts"])
-        yield self.dv.add_parameter('plotLive',True)
+        #yield self.dv.add_parameter('plotLive',True)
         yield self.dv.add_parameter('startTime',start)
     
     @setting(0, 'Set Save Folder', folder = '*s', returns = '')
