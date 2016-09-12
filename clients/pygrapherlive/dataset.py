@@ -135,10 +135,11 @@ class Dataset(QtCore.QObject):
     def getData(self,context):
         Data = yield self.cxn.data_vault.get(100, context = context)
         if (self.data == None):
-            self.data = Data.asarray
+            #self.data = Data.asarray
+            self.data = Data
         else:
             yield self.accessingData.acquire()         
-            self.data = np.append(self.data, Data.asarray, 0)
+            self.data = np.append(self.data, Data, 0)
             self.accessingData.release()
         
     @inlineCallbacks

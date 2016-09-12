@@ -21,6 +21,7 @@ import time
 from SD_tracker_config import config as conf
 from SD_calculator import Transitions_SD, fitter
 import numpy
+#from labrad.units import WithUnit
 
 class SDTracker(LabradServer):
     """Provides ability to track drifts of the SD line"""
@@ -180,11 +181,15 @@ class SDTracker(LabradServer):
         try:
             B = self.fitter.evaluate(current_time, self.B_fit)
             center = self.fitter.evaluate(current_time, self.line_center_fit)
+            #print 'try worked'
         except TypeError:
+            print 'exception coming'
             raise Exception ("Fit is not available")
         B = WithUnit(B, 'gauss')
         center = WithUnit(center, 'MHz')
         result = self.tr.get_transition_energies(B, center)
+        #print 'heres the result'
+        #print result
         for name,freq in result:
             lines.append((name, freq))
         return lines
@@ -193,10 +198,23 @@ class SDTracker(LabradServer):
     def get_current_line(self, c, name):
         lines = yield self.get_current_lines(c)
         d = dict(lines)
+##        print 'done getting lines'
+##        print d.keys()
+##        temp = WithUnit(1.0,'MHz')
+##        yield temp
+##        return
+##        try:
+##            yield d[name]
+##            return
+##        except KeyError:
+##            raise Exception("Requested line not found")
+        #print d.makeReport()
         try:
+            #return d[name]
             returnValue(d[name])
         except KeyError:
             raise Exception ("Requested line not found")
+        
     
     @setting(7, "Get Current B", returns = 'v[gauss]')
     def get_current_b(self, c):

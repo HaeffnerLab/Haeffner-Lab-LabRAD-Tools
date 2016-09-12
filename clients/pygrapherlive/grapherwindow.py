@@ -4,7 +4,7 @@ The plot and all relevant plot options are managed by the Grapher Window.
 
 from PyQt4 import QtGui, QtCore
 from canvas import Qt4MplCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from datavault import DataVaultWidget
 from analysis import AnalysisWidget
 from analysiswindow import AnalysisWindow

@@ -54,7 +54,6 @@ class pmtWidget(QtGui.QWidget):
         index = self.comboBox.findText(mode)
         self.comboBox.setCurrentIndex(index)
         self.lcdNumber.display('OFF')
-        
         self.doubleSpinBox.setValue(duration['s'])
     
     def followSignal(self,signal,value):
@@ -73,6 +72,7 @@ class pmtWidget(QtGui.QWidget):
             self.lineEdit.setText(val)
             self.lineEdit.blockSignals(False)
         if setting == 'state':
+            print "this shit is on"
             self.pushButton.blockSignals(True)
             if val =='on':
                 self.pushButton.setChecked(True)
@@ -92,6 +92,7 @@ class pmtWidget(QtGui.QWidget):
             yield self.server.record_data()
             newset = yield self.server.currentdataset()
             self.lineEdit.setText(newset)
+            pass
         else:
             yield self.server.stoprecording()
             self.lcdNumber.display('OFF')

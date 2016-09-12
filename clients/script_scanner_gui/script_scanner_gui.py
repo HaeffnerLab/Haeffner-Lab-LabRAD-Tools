@@ -216,6 +216,12 @@ class script_scanner_gui(QtGui.QWidget):
         collection, parameter_name = parameter
         steps = int(steps)
         units = str(units)
+        #maxim = float(maxim)
+        #minim = float(minim)
+        #maxim=U.Value(maxim,units)
+        #minim=U.Value(minim,units)
+        #steps=U.Value(steps,units)
+
         sc = yield self.cxn.get_server('ScriptScanner')
         try:
             yield sc.new_script_scan(scan_script, measure_script, collection, parameter_name, minim, maxim, steps, units)

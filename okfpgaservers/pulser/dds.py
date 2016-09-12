@@ -203,7 +203,7 @@ class DDS(LabradServer):
             buf = self._intToBuf(num)
         else:
             buf = self._intToBuf_coherent(num)
-        buf =buf + '\x00\x00' #adding termination
+        buf = buf + '\x00\x00' #adding termination
         return buf
     
     def settings_to_num(self, channel, freq, ampl, phase = 0.0, prof = 0):
@@ -225,10 +225,10 @@ class DDS(LabradServer):
         self.api.resetAllDDS()
         self.api.setDDSchannel(addr)  
         self.api.programDDS(buf)
-        print hex(addr)
-        print len(buf)
+        #print hex(addr)
+        #print len(buf)
         a = ":".join("{:02x}".format(ord(c)) for c in buf)
-        print a
+        #print a
         
     @inlineCallbacks
     def _setDDSRemote(self, channel, addr, buf):
@@ -292,13 +292,21 @@ class DDS(LabradServer):
         power is in dbm
         '''
 #       profile = 7
-        print ampl, profile
+        #print ampl, profile
         ans = 0
         for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 35,  13), 
                                    (profile,(0,7),2**32, 3) , (phase,channel.boardphaserange, 2 ** 48,  16)]:
             minim, maxim = r
             resolution = (maxim - minim) / float(2**precision - 1)
-            seq = int((val - minim)/resolution) #sequential representation
+            #seq = int((val['deg'] - minim)/resolution) #sequential representation
+            #print maxim
+            #print minim
+	    try:
+		hlp = val[val.unit]
+	    except:
+		hlp = val
+	    #print hlp
+	    seq = int((hlp - minim)/resolution) #sequential representation
             #print val, r, m, precision, m*seq, seq, resolution
 
             ans += m*seq

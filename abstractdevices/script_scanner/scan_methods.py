@@ -87,6 +87,7 @@ class experiment(experiment_info):
         for collection,parameter_name in params:
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
+                print value
             except Exception as e:
                 print e
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
@@ -217,8 +218,10 @@ class repeat_reload(experiment):
         directory = ['','ScriptScanner']
         directory.extend([strftime("%Y%b%d",local_time), strftime("%H%M_%S", local_time)])
         dv.cd(directory, True, context = context)
-        dv.new(dataset_name, [('Iteration', 'Arb')], [(self.script.name, 'Arb', 'Arb')], context = context)
+        ds = dv.new(dataset_name, [('Iteration', 'Arb')], [(self.script.name, 'Arb', 'Arb')], context = context)
         dv.add_parameter('plotLive',True, context = context)
+
+        
         
     def update_progress(self, iteration):
         progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / self.repetitions
@@ -244,6 +247,7 @@ class scan_experiment_1D(experiment):
         return 'Scanning {0} in {1}'.format(self.parameter, name)
     
     def initialize(self, cxn, context, ident):
+        print 'initializing'
         self.script = self.make_experiment(self.script_cls)
         self.script.initialize(cxn, context, ident)
         self.navigate_data_vault(cxn, context)
@@ -266,9 +270,9 @@ class scan_experiment_1D(experiment):
         directory = ['','ScriptScanner']
         directory.extend([strftime("%Y%b%d",local_time), strftime("%H%M_%S", local_time)])
         dv.cd(directory, True, context = context)
-        dv.new(dataset_name, [('Iteration', 'Arb')], [(self.script.name, 'Arb', 'Arb')], context = context)
+        ds = dv.new(dataset_name, [('Iteration', 'Arb')], [(self.script.name, 'Arb', 'Arb')], context = context)
         dv.add_parameter('plotLive',True, context = context)
-            
+
     def update_progress(self, iteration):
         progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / len(self.scan_points)
         self.sc.script_set_progress(self.ident,  progress)
@@ -299,6 +303,7 @@ class scan_experiment_1D_measure(experiment):
         self.scan_script.initialize(cxn, context, ident)
         self.measure_script.initialize(cxn, context, ident)
         self.navigate_data_vault(cxn, context)
+
     
     def run(self, cxn, context):
         for i, scan_value in enumerate(self.scan_points):
@@ -321,8 +326,9 @@ class scan_experiment_1D_measure(experiment):
         directory = ['','ScriptScanner']
         directory.extend([strftime("%Y%b%d",local_time), strftime("%H%M_%S", local_time)])
         dv.cd(directory, True, context = context)
-        dv.new(dataset_name, [('Iteration', 'Arb')], [(self.measure_script.name, 'Arb', 'Arb')], context = context)
+        ds = dv.new(dataset_name, [('Iteration', 'Arb')], [(self.measure_script.name, 'Arb', 'Arb')], context = context)
         dv.add_parameter('plotLive',True, context = context)
+
             
     def update_progress(self, iteration):
         progress = self.min_progress + (self.max_progress - self.min_progress) * float(iteration + 1.0) / len(self.scan_points)

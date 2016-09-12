@@ -40,14 +40,14 @@ class ScriptScanner(Signals, LabradServer):
     def initServer(self):
         self.script_parameters = {}
         self.scheduler = scheduler(Signals)
-	self.load_scripts()
+        self.load_scripts()
     
     def load_scripts(self):
         '''
         loads script information from the configuration file
         '''
         for import_path, class_name in config.scripts:
-            print class_name
+            #print import_path, class_name
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]

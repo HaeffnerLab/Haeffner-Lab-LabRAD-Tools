@@ -73,19 +73,12 @@ class QCustomFreqPower(QtGui.QFrame):
         
     def setPowerNoSignal(self, power):
         self.spinPower.blockSignals(True)
-	# try if new labrad and except if old labrad
-        try:
-		self.spinPower.setValue(power['dBm'])
-	except:
-		self.spinPower.setValue(power)
+        self.spinPower.setValue(power['dBm'])
         self.spinPower.blockSignals(False)
         
     def setFreqNoSignal(self, freq):
         self.spinFreq.blockSignals(True)
-        try:
-		self.spinFreq.setValue(freq['MHz'])
-	except:		
-		self.spinFreq.setValue(freq)
+        self.spinFreq.setValue(freq['MHz'])
         self.spinFreq.blockSignals(False)
     
     def setStateNoSignal(self, state):

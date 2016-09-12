@@ -98,6 +98,9 @@ class cavityWidget(QtGui.QWidget):
         yield self.registry.cd(['','Clients','Cavity Control'],True)
         for widgetWrapper in self.d.values():
             widget = widgetWrapper.widget
+            #from labrad.units import WithUnit
+            #[minim,maxim] = [WithUnit(widget.minrange.value(),'mV'), WithUnit(widget.maxrange.value(),'mV')]
+            
             [min,max] = [widget.minrange.value(), widget.maxrange.value()]
             yield self.registry.set(widgetWrapper.regName, [min,max])
     
@@ -107,6 +110,11 @@ class cavityWidget(QtGui.QWidget):
         try:
             range = yield self.registry.get(rangeName)
             range = list(range)
+            from labrad.units import WithUnit
+            #range = [WithUnit(0,'mV'),WithUnit(2500,'mV')]
+            #print 'got the range from registry'
+            #print range
+            #exit()
         except:
             print 'problem with acquiring range from registry'
             range = [0,2500]
@@ -117,7 +125,15 @@ class cavityWidget(QtGui.QWidget):
     def sendToServer(self):
         for widgetWrapper in self.d.values():
             if widgetWrapper.updated:
+                from labrad.units import WithUnit
+                #import labrad.units as U
+                #val = WithUnit(widgetWrapper.widget.spin.value(),'mV')
+                #print widgetWrapper.serverName.range
+                print 'trying to send to server'
                 yield self.server.setvoltage(widgetWrapper.serverName, widgetWrapper.widget.spin.value())
+                print 'sent to server'
+                exit()
+                #yield self.server.setvoltage(widgetWrapper.serverName, widgetWrapper.widget.spin.value())
                 widgetWrapper.updated = False
 
     def closeEvent(self, x):
