@@ -40,7 +40,9 @@ class RealSimpleGrapher(LabradServer):
     @inlineCallbacks
     def initServer(self):
         self.listeners = set()
+        print 'trying to make gui'
         self.gui = GraphWindow(reactor)
+        print 'done making gui'
         self.dv = yield self.client.data_vault
 
     def make_dataset(self, dataset_location):
@@ -65,9 +67,12 @@ class RealSimpleGrapher(LabradServer):
 
     @setting(2, 'Plot with axis', dataset_location = ['(*s, s)', '(*s, i)'], graph = 's', axis = '*v', send_to_current = 'b', returns = '')
     def plot_with_axis(self, c, dataset_location, graph, axis, send_to_current = True):
+        minim = min(axis)
+        maxim = max(axis)
         if (graph != 'current') and (send_to_current == True):
             self.gui.graphDict['current'].set_xlimits([min(axis).value, max(axis).value])
-        self.gui.graphDict[graph].set_xlimits([min(axis).value, max(axis).value])
+        self.gui.graphDict[graph].set_xlimits([minim[minim.units], maxim[maxim.units]])
+        #self.gui.graphDict[graph].set_xlimits([min(axis).value, max(axis).value])
         self.do_plot(dataset_location, graph, send_to_current)
 
 if __name__ == '__main__':

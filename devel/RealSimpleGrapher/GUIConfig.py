@@ -10,7 +10,7 @@ class traceListConfig():
         self.background_color = background_color
 
 class graphConfig():
-    def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 6,
+    def __init__(self, name, ylim=[0,1], isScrolling=False, max_datasets = 25,
                  show_points = True):
         self.name = name
         self.ylim = ylim
@@ -18,6 +18,7 @@ class graphConfig():
         self.max_datasets = max_datasets
         self.graphs = 1 # just a single graph
         self.show_points = show_points
+        self.grid_on = False
 
 class gridGraphConfig():
     def __init__(self, tab, config_list):
@@ -30,24 +31,25 @@ class gridGraphConfig():
 
 
 tabs =[
-    gridGraphConfig('current', [graphConfig('current', max_datasets = 1), 0, 0]),
+    #gridGraphConfig('current', [graphConfig('current', max_datasets = 1), 0, 0]),
     gridGraphConfig('pmt', [graphConfig('pmt', ylim=[0,30], isScrolling=True, max_datasets = 1, show_points = False), 0, 0]),
     gridGraphConfig('spectrum', [graphConfig('spectrum'), 0, 0]),
     gridGraphConfig('rabi', [graphConfig('rabi'), 0, 0]),
-    gridGraphConfig('calibrations', [
-                      graphConfig('car1'), 0, 0,
-                      graphConfig('car2'), 0, 1,                      
-                      graphConfig('radial1'), 1, 0,
-                      graphConfig('radial2'), 1, 1]),
-    gridGraphConfig('molmer-sorensen',[
-                      graphConfig('ms_time'), 0, 0,
-                      graphConfig('local_stark'), 0, 1]),
-
-    gridGraphConfig('vaet',[
-                      graphConfig('vaet_time'), 0, 0,
-                      graphConfig('vaet_delta'), 0, 1]),
-    gridGraphConfig('parity', [graphConfig('parity'), 0, 0]),
-    gridGraphConfig('ramsey', [graphConfig('ramsey'), 0, 0])
+    gridGraphConfig('scan',[graphConfig('scan'),0,0])
+##    gridGraphConfig('calibrations', [
+##                      graphConfig('car1'), 0, 0,
+##                      graphConfig('car2'), 0, 1,                      
+##                      graphConfig('radial1'), 1, 0,
+##                      graphConfig('radial2'), 1, 1])
+##    gridGraphConfig('molmer-sorensen',[
+##                      graphConfig('ms_time'), 0, 0,
+##                      graphConfig('local_stark'), 0, 1]),
+##
+##    gridGraphConfig('vaet',[
+##                      graphConfig('vaet_time'), 0, 0,
+##                      graphConfig('vaet_delta'), 0, 1]),
+##    gridGraphConfig('parity', [graphConfig('parity'), 0, 0]),
+##    gridGraphConfig('ramsey', [graphConfig('ramsey'), 0, 0])
 ]
 
 #    gridGraphConfig('testgrid',
