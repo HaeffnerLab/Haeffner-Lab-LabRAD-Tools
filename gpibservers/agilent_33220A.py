@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Agilent Server
+name = Agilent 3320A Server
 version = 1.0
 description = 
 

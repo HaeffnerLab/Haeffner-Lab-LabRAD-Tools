@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = HP Server
+name = Keithley 6487 Server
 version = 1.1
 description = 
-instancename = %LABRADNODE% HP Server
+instancename = %LABRADNODE% Keithley 6487 Server
 
 [startup]
 cmdline = %PYTHON% %FILE%

@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Keithley Server
+name = Keithley 2100 DMM Server
 version = 1.0
 description = 
 
