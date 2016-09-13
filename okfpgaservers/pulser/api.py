@@ -138,7 +138,7 @@ class api(object):
     def setPMTCountRate(self, time):
         #takes time in seconds
         time = int(1000*time)
-        print time
+        #print time
         self.xem.SetWireInValue(0x01,0x64)
         self.xem.UpdateWireIns()
         
