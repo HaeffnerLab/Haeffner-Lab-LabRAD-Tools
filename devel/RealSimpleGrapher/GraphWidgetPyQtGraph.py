@@ -29,7 +29,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.should_stop = False
         self.name = config.name
         self.show_points = config.show_points
-	self.grid_on = config.grid_on
+    	self.grid_on = config.grid_on
 
         self.dataset_queue = Queue.Queue(config.max_datasets)
         
