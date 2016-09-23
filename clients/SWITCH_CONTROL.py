@@ -18,6 +18,7 @@ class switchWidget(QtGui.QFrame):
         self.cxn = cxn
         self.connect()
         
+        
     @inlineCallbacks
     def connect(self):
         if self.cxn is  None:
@@ -43,6 +44,7 @@ class switchWidget(QtGui.QFrame):
         get a list of all available channels from the pulser. only show the ones
         listed in the registry. If there is no listing, will display all channels.
         '''
+
         server = yield self.cxn.get_server('Pulser')
         all_channels = yield server.get_channels(context = self.context)
         all_names = [el[0] for el in all_channels]

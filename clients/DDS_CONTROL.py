@@ -2,6 +2,7 @@ from qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
 from connection import connection
 from PyQt4 import QtGui
+from labrad.units import WithUnit
 
 '''
 The DDS Control GUI lets the user control the DDS channels of the Pulser
@@ -46,9 +47,9 @@ class DDS_CHAN(QCustomFreqPower):
     
     def setParamNoSignal(self, param, value):
         if param == 'amplitude':
-            self.setPowerNoSignal(value)
+            self.setPowerNoSignal(WithUnit(value,'dBm'))
         elif param == 'frequency':
-            self.setFreqNoSignal(value)
+            self.setFreqNoSignal(WithUnit(value,'MHz'))
         elif param == 'state':
             self.setStateNoSignal(value)
         
@@ -223,9 +224,12 @@ class DDS_CONTROL(QtGui.QFrame):
     
     def followSignal(self, x, y):
         chan, param, val = y
-        if chan in self.widgets.keys():
-            #this check is neeed in case signal comes in about a channel that is not displayed
-            self.widgets[chan].setParamNoSignal(param, val)
+        try:
+            if chan in self.widgets.keys():
+                #this check is neeed in case signal comes in about a channel that is not displayed
+                self.widgets[chan].setParamNoSignal(param, val)
+        except Exception,e:
+            print e
 
     def closeEvent(self, x):
         self.reactor.stop()
