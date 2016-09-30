@@ -101,6 +101,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
             self.pw.removeItem(artist)
             #self.legend.removeItem(ident)
             self.tracelist.removeTrace(ident)
+            self.artists[ident].shown = False
             try:
                 del self.artists[ident]
             except KeyError:
@@ -123,10 +124,13 @@ class Graph_PyQtGraph(QtGui.QWidget):
 
     def checkboxChanged(self):
         for ident, item in self.tracelist.trace_dict.iteritems():
-            if item.checkState() and not self.artists[ident].shown:
-               self.display(ident, True)
-            if not item.checkState() and self.artists[ident].shown:
-                self.display(ident, False)
+            try:
+                if item.checkState() and not self.artists[ident].shown:
+                    self.display(ident, True)
+                if not item.checkState() and self.artists[ident].shown:
+                    self.display(ident, False)
+            except KeyError: # this means the artist has been deleted.
+                pass
 
     def rangeChanged(self):
 	
