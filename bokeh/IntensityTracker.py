@@ -10,7 +10,6 @@ import traceback
 import time
 import warnings
 import h5py
-import dsox
 from bokeh.plotting import figure, output_file, show, reset_output
 from bokeh.models import DatetimeTickFormatter, ColumnDataSource
 from bokeh.layouts import gridplot, widgetbox, row, column, layout
@@ -46,7 +45,7 @@ reference_date = [dt(2017,1,1,0,0, tzinfo=PT)]
 reference_offset = [(reference_date[0].utcoffset()-dt.now(PT).utcoffset()).total_seconds()]
 channel_names = ["Channel 1","Channel 2", "Channel 3", "Channel 4"]
 source_PC = ColumnDataSource(data=dict(x=[],y=[]))
-home_dir = "/home/max/Documents/scopestuff/ITdata/"
+home_dir = "/home/lattice/ITdata"
 
 channel_button = []
 source = []
@@ -73,7 +72,7 @@ scope.setWaveformFormat('ASCii')
 with warnings.catch_warnings(): #doesn't like having two wheel zooms
     warnings.simplefilter("ignore")
     single_plot[0] = figure(title="Channel 1:   Channel 1 ", x_axis_label='Time', y_axis_label='Volts', 
-                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom", 
+                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
                     active_scroll='ywheel_zoom')
 single_plot[0].xaxis.major_label_orientation = pi/4
 single_plot[0].line(x='x',y='y', source=source[0], legend=False, line_width=2)
@@ -83,7 +82,7 @@ single_plot[0].circle(x='x',y='y', source=source[0], size=5, color='black')
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     single_plot[1] = figure(title="Channel 2:    Channel 2", x_axis_label='Time', y_axis_label='Volts', 
-                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom", 
+                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
                     active_scroll='ywheel_zoom')
 single_plot[1].xaxis.major_label_orientation = pi/4
 single_plot[1].line(x='x',y='y', source=source[1], legend=False, line_width=2)
@@ -93,7 +92,7 @@ single_plot[1].circle(x='x',y='y', source=source[1], size=5, color='black')
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     single_plot[2] = figure(title="Channel 3:    Channel 3", x_axis_label='Time', y_axis_label='Volts', 
-                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom", 
+                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
                     active_scroll='ywheel_zoom')
 single_plot[2].line(x='x',y='y', source=source[2], legend=False, line_width=2)
 single_plot[2].circle(x='x',y='y', source=source[2], size=5, color='black')
@@ -102,7 +101,7 @@ single_plot[2].circle(x='x',y='y', source=source[2], size=5, color='black')
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     single_plot[3] = figure(title="Channel 4:    Channel 4", x_axis_label='Time', y_axis_label='Volts', 
-                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom", 
+                    x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
                     active_scroll='ywheel_zoom')
 single_plot[3].xaxis.major_label_orientation = pi/4
 single_plot[3].line(x='x',y='y', source=source[3], legend=False, line_width=2)
@@ -112,7 +111,7 @@ single_plot[3].circle(x='x',y='y', source=source[3], size=5, color='black')
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     multi_plot = figure(title="Multi-plot", x_axis_label="Time", y_axis_label="Volts", x_axis_type="datetime",
-                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom", active_scroll='ywheel_zoom')
+                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", active_scroll='ywheel_zoom')
 multi_plot.xaxis.major_label_orientation = pi/4
 multi[0] = multi_plot.line(x='x',y='y', source=source[0], legend="Channel 1", line_width=2, color='blue')
 multi_plot.circle(x='x',y='y', source=source[0], size=5, color='blue', line_width=.5, line_color='black')
@@ -129,7 +128,7 @@ multi_plot.title.align = "center"
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     pc_plot = figure(title="Pulse Capture", x_axis_label="Time (us)", y_axis_label="Volts",
-                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom", active_scroll='ywheel_zoom')
+                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", active_scroll='ywheel_zoom')
 pc_plot.circle(x='x',y='y', source=source_PC, size=5, line_color='black', fill_color='red', line_width=.5)
 pc_plot.xaxis.major_label_orientation = pi/4
 pc_plot.plot_width=1200
@@ -140,7 +139,7 @@ pc_plot.title.align = "center"
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     load_plot = figure(title="Loaded Data", x_axis_label="Time", y_axis_label="Volts", x_axis_type="datetime",
-                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom", active_scroll='ywheel_zoom')
+                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", active_scroll='ywheel_zoom')
 load_p_line_chan1= load_plot.line(x="x",y="y", source=source_load[0], legend="Channel 1", line_width=2, color="blue")
 load_p_circ_chan1 = load_plot.circle(x="x",y="y", source=source_load[0], size=5, color="blue", line_width=.5, 
                                 line_color='black')
@@ -246,7 +245,6 @@ def updateSave():
     if curr_day[0] == date.day:
         return
     else:
-        curr_day[0] = date.day
     
     save_filepath = save_filepath_input.value
     if not os.path.exists(save_filepath):
@@ -257,9 +255,10 @@ def updateSave():
     if save_filepath[-1] != "/":
         save_filepath += "/"
     
-    name = save_filepath + str(date.year) + "_" + str(date.month) + "_" + str(date.day) + ".h5"
+    name = save_filepath + str(curr_day[0].year) + "_" + str(curr_day[0].month) + "_" + str(curr_day[0].day) + ".h5"
     saveFiles(name)
-    
+
+    curr_day[0] = date.day    
     for i in range(4):
         source[i].data = dict(x=[],y=[])
 
@@ -587,25 +586,25 @@ save_filename_PC_input.on_change("value", forceSaveFilename_InputChange) #reusin
 doc.title = "Intensity Tracker"
 
 grid = gridplot([
-        [row(channel_button[0],channel_button[1],channel_button[2],channel_button[3])], 
+        [channel_button[0],channel_button[1],channel_button[2],channel_button[3]], 
         [all_on_button, all_off_button, reset_button, autoscale_button], 
         [channel_name_select1, channel_name_input, acq_period_select, num_avgs_select], 
         [single_plot[0], single_plot[1]],
         [single_plot[2], single_plot[3]],
         [multi_plot],
         [save_filepath_input, auto_save_button, force_save_button, force_save_filename_input],
-        [Div(text="_"*177, render_as_text=True, width=1205)], 
+        [Div(text="_"*242, render_as_text=True, width=1205)], 
         [Div(text=" ", render_as_text=True, width=1205)], 
         [channel_name_select2, trigger_level_input, time_range_input, number_points_select],
         [pulse_capture_button, save_filepath_PC_input, save_filename_PC_input, save_PC_button],
         [pc_plot],
-        [Div(text="_"*177, render_as_text=True, width=1205)],
+        [Div(text="_"*242, render_as_text=True, width=1205)],
         [Div(text=" ", render_as_text=True, width=1205)],
         [load_button, load_file_input, load_plot_type_select],
         [load_plot],
-        [Div(text="_"*177, render_as_text=True, width=1205)],
+        [Div(text="_"*242, render_as_text=True, width=1205)],
         [Div(text=" ", render_as_text=True, width=1205)]
-        ], merge_tools=False)
+        ], merge_tools=False, sizing_mode="scale_width")
 
 doc.add_root(grid)
 
