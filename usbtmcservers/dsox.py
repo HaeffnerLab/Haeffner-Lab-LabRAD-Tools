@@ -93,7 +93,7 @@ class DsoxServer(LabradServer):
         '''Asks device to identify itself.'''
         return self.ask(self.instr, '*IDN?')
 
-    @setting(3, 'clearStatus', returns='')
+    @setting(3, 'clear status', returns='')
     def clearStatus(self, c):
         ''' 
         Clear status data structures, the device-defined error queue, and the Request-for-OPC flag.
@@ -107,14 +107,14 @@ class DsoxServer(LabradServer):
         '''
         self.write(self.instr, "*RST")
 
-    @setting(5, 'autoScale', returns='')
+    @setting(5, 'auto scale', returns='')
     def autoScale(self, c):
         '''
         Autoscales scope display. 
         '''
         self.write(self.instr, ":AUToscale")
 
-    @setting(6, 'acquirePoints', returns='i')
+    @setting(6, 'acquire points', returns='i')
     def acquirePoints(self, c):
         '''
         Returns the number of data points that the hardware will acquire from the 
@@ -122,7 +122,7 @@ class DsoxServer(LabradServer):
         '''
         return int(self.ask(self.instr, ":ACQuire:POINts?"))
 
-    @setting(7, 'acquireSRate', returns='i')
+    @setting(7, 'acquire srate', returns='i')
     def acquireSRate(self, c):
         '''
         Returns the current oscilloscope acquisition sample rate. The sample rate 
@@ -130,7 +130,7 @@ class DsoxServer(LabradServer):
         '''
         return int(self.ask(self.instr, ":ACQuire:SRATe?"))
 
-    @setting(8, 'setAcquireType', type = 's', returns='s')
+    @setting(8, 'set acquire type', type = 's', returns='s')
     def setAcquireType(self, c, type):
         '''
         Selects the type of data acquisition that is to take place. The acquisition types are:
@@ -151,22 +151,22 @@ class DsoxServer(LabradServer):
         else:
             return 'Invalid type.'
 
-    @setting(9, 'acquireType', returns='s')
+    @setting(9, 'acquire type', returns='s')
     def acquireType(self, c):
         '''Queries the setting for data acquisition type.'''
         return self.ask(self.instr, ":ACQuire:TYPE?")
 
-    @setting(10, 'setWaveformPoints', n='i', returns='')
+    @setting(10, 'set waveform points', n='i', returns='')
     def setWaveformPoints(self, c, n):
         '''Sets the number of points actually transferred after acquisition.'''            
         self.write(self.instr, "WAVeform:POINts " + str(n))
     
-    @setting(11, 'getWaveformPoints', returns='i')
+    @setting(11, 'get waveform points', returns='i')
     def getWaveformPoints(self, c):
         '''Returns the number of points actually transferred after acquisition.'''
         return int(self.ask(self.instr, "WAVeform:POINts?"))
 
-    @setting(12, 'setWaveformFormat', type='s', returns='s')
+    @setting(12, 'set waveform format', type='s', returns='s')
     def setWaveformFormat(self, c, type):
         '''
         Sets the data transmission mode for waveform data points. This command 
@@ -188,12 +188,12 @@ class DsoxServer(LabradServer):
         else:
             return 'Invalid type.'
 
-    @setting(13, 'getWaveformFormat', returns='s')
+    @setting(13, 'get waveform format', returns='s')
     def getWaveformFormat(self, c):
         '''Returns the data transmission mode for waveform data points.'''
         return self.ask(self.instr, "WAVeform:FORMat?")
 
-    @setting(14, 'setWaveformSource', n='i', returns='s')
+    @setting(14, 'set waveform source', n='i', returns='s')
     def setWaveformSource(self, c, n):
         '''
         Takes as arg, the analog channel to be used as the source for the waveform commands.
@@ -204,7 +204,7 @@ class DsoxServer(LabradServer):
         else:
             return 'Channel out of range.'
 
-    @setting(15, 'getWaveformSource', returns='s')
+    @setting(15, 'get waveform source', returns='s')
     def getWaveformSource(self, c):
         '''
         Returns the analog channel being used as the source for waveform commands.
@@ -227,14 +227,14 @@ class DsoxServer(LabradServer):
         else:
             return 'Channel out of range.'
 
-    @setting(17, 'getWaveformData', returns='*v[]')
+    @setting(17, 'get waveform data', returns='*v[]')
     def getWaveformData(self, c):
         ''' Returns digitized waveform data as a list of floats.'''
         raw_data = self.ask(self.instr, "WAVeform:DATA?")
         data = [float(i) for i in self.instr.ask("WAVeform:DATA?")[11:].split(",")]
         return data
 
-    @setting(18, 'getWaveformPreamble', returns='*v[]')
+    @setting(18, 'get waveform preamble', returns='*v[]')
     def getWaveformPreamble(self, c):
         '''
         Returns a list of information about the most recently collected waveform data.
@@ -243,7 +243,7 @@ class DsoxServer(LabradServer):
         preamble = self.ask(self.instr, "WAVeform:PREamble?")
         return list(preamble.split(","))[4:]
 
-    @setting(19, 'setTimeScale', t = 'v[]', returns='s')
+    @setting(19, 'set time scale', t = 'v[]', returns='s')
     def setTimeScale(self, c, t):
         '''
         Set the time/div for all channels. Takes as argument the time in seconds.
@@ -254,7 +254,7 @@ class DsoxServer(LabradServer):
         else:
             return "Can't input negative values."
 
-    @setting(20, 'setScale', n='i', s='v', returns='s')
+    @setting(20, 'set scale', n='i', s='v', returns='s')
     def setScale(self, c, n, s):
         '''
         Sets the vertical scale/div. First argument is channel, second
@@ -266,7 +266,7 @@ class DsoxServer(LabradServer):
         else:
             return 'Invalid value for channel or volts/div.'
 
-    @setting(21, 'getSystemDate', returns='*i')
+    @setting(21, 'get system date', returns='*i')
     def getSystemDate(self, c):
         '''
         Returns current system date in format (year, month, day).
@@ -274,7 +274,7 @@ class DsoxServer(LabradServer):
         date = self.ask(self.instr, ":SYSTem:DATE?")
         return [int(i) for i in date.split(',')]
 
-    @setting(22, 'getSystemTime', returns='*i')
+    @setting(22, 'get system time', returns='*i')
     def getSystemTime(self, c):
         '''
         Returns current device time in format (hours, minutes, seconds).
@@ -282,7 +282,7 @@ class DsoxServer(LabradServer):
         t = self.ask(self.instr, "SYSTem:TIME?")
         return [int(i) for i in t.split(',')]
 
-    @setting(23, 'setSystemDate', ymd='(i,i,i)', returns='s')
+    @setting(23, 'set system date', ymd='(i,i,i)', returns='s')
     def setSystemDate(self, c, ymd):
         '''
         Sets device date according to year, month, day.
@@ -293,7 +293,7 @@ class DsoxServer(LabradServer):
         else:
             return 'Invalid date.'
 
-    @setting(24, 'setSystemTime', hms='(i,i,i)', returns='s')
+    @setting(24, 'set system time', hms='(i,i,i)', returns='s')
     def setSystemTime(self, c, hms):
         '''
         Sets device time according to year, month, day.
@@ -304,22 +304,22 @@ class DsoxServer(LabradServer):
         else:
             return 'Invalid time.' 
 
-    @setting(25, 'setTimeRange', t='v[]', returns='')
+    @setting(25, 'set time range', t='v[]', returns='')
     def setTimeRange(self, c, t):
         '''Sets time range in seconds.'''
         self.write(self.instr, ":TIMebase:RANGe " + str(t))
 
-    @setting(26, 'setTriggerSource', channel = 'i', returns='')
+    @setting(26, 'set trigger source', channel = 'i', returns='')
     def setTriggerSource(self, c, channel):
         '''Sets channel that scope triggers on.'''
         self.write(self.instr, ":TRIGger:SOURce CHANnel" + str(channel))
 
-    @setting(27, 'setTriggerLevel', level='v[]', returns='')
+    @setting(27, 'set trigger level', level='v[]', returns='')
     def setTriggerLevel(self, c, level):
         '''Sets the trigger level in volts.'''
         self.write(self.instr, ":TRIGger:LEVel " + str(level))
 
-    @setting(28, 'setTriggerReferenceLeft', returns='')
+    @setting(28, 'set trigger reference left', returns='')
     def setTriggerReferenceLeft(self, c):
         '''
         Sets the trigger reference to the left. Scope will display waveform one time div
@@ -327,7 +327,7 @@ class DsoxServer(LabradServer):
         '''
         self.write(self.instr, ":TIMebase:REFerence LEFT")
 
-    @setting(29, 'displayClear', returns='')
+    @setting(29, 'display clear', returns='')
     def displayClear(self, c):
         '''Clears scope display.'''
         self.write(self.instr, ":DISPlay:CLEar")
