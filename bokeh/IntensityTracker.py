@@ -604,7 +604,7 @@ grid = layout([
         [channel_name_select2, trigger_level_input, time_range_input, number_points_select],
         [pulse_capture_button, save_filepath_PC_input, save_filename_PC_input, save_PC_button],
         [pc_plot],
-        [Div(text="<center>" + "_"*242 + "</cener>", render_as_text=False)],
+        [Div(text="<center>" + "_"*242 + "</center>", render_as_text=False)],
         [Div(text=" ")],
         [load_button, load_file_input, load_plot_type_select],
         [load_plot],
