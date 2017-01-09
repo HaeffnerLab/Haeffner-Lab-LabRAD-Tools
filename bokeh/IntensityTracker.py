@@ -12,8 +12,8 @@ import warnings
 import h5py
 from bokeh.plotting import figure, output_file, show, reset_output
 from bokeh.models import DatetimeTickFormatter, ColumnDataSource
-from bokeh.layouts import gridplot, widgetbox, row, column, layout
-from bokeh.models.widgets import Toggle, TextInput, Select, Div
+from bokeh.layouts import gridplot, widgetbox, layout, row
+from bokeh.models.widgets import Toggle, TextInput, Select, Div, Panel, Tabs
 from bokeh.models.annotations import Legend
 from bokeh.io import curdoc, push_session, push
 from bokeh.document import without_document_lock
@@ -29,12 +29,13 @@ doc = curdoc()
 executor = ThreadPoolExecutor(max_workers=2)
 executor_pc = ThreadPoolExecutor(max_workers=2)
 
-channel_flag = [True, True, True, True]
+channel_flag = [False, False, False, False]
 PC_flag = [False] 
 res = [[], [], [], []]
 res_PC = [None]
 single_plot = [[], [], [], []]
 multi = [[], [], [], []]
+tab = [[], [], [], [], []]
 number_points_select_value = [100]
 channel_select_value = ["Channel 1", "Channel 1"]
 time_range_select_value = ["1000"]
@@ -45,13 +46,13 @@ reference_date = [dt(2017,1,1,0,0, tzinfo=PT)]
 reference_offset = [(reference_date[0].utcoffset()-dt.now(PT).utcoffset()).total_seconds()]
 channel_names = ["Channel 1","Channel 2", "Channel 3", "Channel 4"]
 source_PC = ColumnDataSource(data=dict(x=[],y=[]))
-home_dir = "/home/lattice/ITdata"
+home_dir = "/home/lattice/ITdata/"
 
 channel_button = []
 source = []
 source_load = []
 for i in range(4):
-    channel_button.append(Toggle(label="Channel" + str(i+1) + " On", button_type="success"))
+    channel_button.append(Toggle(label="Channel" + str(i+1) + " Off", button_type="success", active=True))
     source.append(ColumnDataSource(data=dict(x=[], y=[])))
     source_load.append(ColumnDataSource(data=dict(x=[], y=[])))
 
@@ -71,9 +72,9 @@ scope.setWaveformFormat('ASCii')
 #channel 1 plot
 with warnings.catch_warnings(): #doesn't like having two wheel zooms
     warnings.simplefilter("ignore")
-    single_plot[0] = figure(title="Channel 1:   Channel 1 ", x_axis_label='Time', y_axis_label='Volts', 
+    single_plot[0] = figure(title="Channel 1:    ", x_axis_label='Time', y_axis_label='Volts', 
                     x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
-                    active_scroll='ywheel_zoom')
+                    active_scroll='ywheel_zoom', toolbar_location="right")
 single_plot[0].xaxis.major_label_orientation = pi/4
 single_plot[0].line(x='x',y='y', source=source[0], legend=False, line_width=2)
 single_plot[0].circle(x='x',y='y', source=source[0], size=5, color='black')
@@ -81,9 +82,9 @@ single_plot[0].circle(x='x',y='y', source=source[0], size=5, color='black')
 #channel 2 plot
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    single_plot[1] = figure(title="Channel 2:    Channel 2", x_axis_label='Time', y_axis_label='Volts', 
+    single_plot[1] = figure(title="Channel 2:    ", x_axis_label='Time', y_axis_label='Volts', 
                     x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
-                    active_scroll='ywheel_zoom')
+                    active_scroll='ywheel_zoom', toolbar_location="right")
 single_plot[1].xaxis.major_label_orientation = pi/4
 single_plot[1].line(x='x',y='y', source=source[1], legend=False, line_width=2)
 single_plot[1].circle(x='x',y='y', source=source[1], size=5, color='black')
@@ -91,18 +92,18 @@ single_plot[1].circle(x='x',y='y', source=source[1], size=5, color='black')
 #channel 3 plot
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    single_plot[2] = figure(title="Channel 3:    Channel 3", x_axis_label='Time', y_axis_label='Volts', 
+    single_plot[2] = figure(title="Channel 3:    ", x_axis_label='Time', y_axis_label='Volts', 
                     x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
-                    active_scroll='ywheel_zoom')
+                    active_scroll='ywheel_zoom', toolbar_location="right")
 single_plot[2].line(x='x',y='y', source=source[2], legend=False, line_width=2)
 single_plot[2].circle(x='x',y='y', source=source[2], size=5, color='black')
 
 #channel 4 plot
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    single_plot[3] = figure(title="Channel 4:    Channel 4", x_axis_label='Time', y_axis_label='Volts', 
+    single_plot[3] = figure(title="Channel 4:    ", x_axis_label='Time', y_axis_label='Volts', 
                     x_axis_type="datetime", tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", 
-                    active_scroll='ywheel_zoom')
+                    active_scroll='ywheel_zoom', toolbar_location="right")
 single_plot[3].xaxis.major_label_orientation = pi/4
 single_plot[3].line(x='x',y='y', source=source[3], legend=False, line_width=2)
 single_plot[3].circle(x='x',y='y', source=source[3], size=5, color='black')
@@ -111,7 +112,7 @@ single_plot[3].circle(x='x',y='y', source=source[3], size=5, color='black')
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     multi_plot = figure(title="Multi-plot", x_axis_label="Time", y_axis_label="Volts", x_axis_type="datetime",
-                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", active_scroll='ywheel_zoom')
+                tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", active_scroll='ywheel_zoom', toolbar_location="right")
 multi_plot.xaxis.major_label_orientation = pi/4
 multi[0] = multi_plot.line(x='x',y='y', source=source[0], legend="Channel 1", line_width=2, color='blue')
 multi_plot.circle(x='x',y='y', source=source[0], size=5, color='blue', line_width=.5, line_color='black')
@@ -123,6 +124,8 @@ multi[3] = multi_plot.line(x='x',y='y', source=source[3], legend="Channel 4", li
 multi_plot.circle(x='x',y='y', source=source[3], size=5, color='orange', line_width=.5, line_color='black')
 multi_plot.plot_width=1200
 multi_plot.title.align = "center"
+l4 = layout([[multi_plot]], sizing_mode="scale_width")
+tab[4] = Panel(child=l4, title="Multi-Plot")
 
 #pulse capture plot
 with warnings.catch_warnings():
@@ -176,6 +179,9 @@ def updateChannels():
     if channel_flag != [False, False, False, False]:  
         scope.digitize(0)
     
+    else:
+        return
+
     for i in range(1,5):
         if channel_flag[i-1]:
             res[i-1] = yield executor.submit(updateChannel, i)
@@ -191,7 +197,8 @@ def updateChannel(channel):
     curr_data = np.mean(scope.getWaveformData()) 
     preamble = scope.getWaveformPreamble()
     now = dt.now(PT)
-    t = [now + td(seconds=i*float(preamble[0])) for i in range(int(num_avgs_select.value))]
+    t_temp = [now + td(seconds=i*float(preamble[0])) for i in range(int(num_avgs_select.value))]
+    t = [i - td(hours=8) for i in t_temp] #Bokeh axis_type=datetime ignores tzinfo and assumes utc, so we need this offset
     curr_time = t[len(t)/2]
     return [curr_time], [curr_data]
         
@@ -244,7 +251,6 @@ def updateSave():
     
     if curr_day[0] == date.day:
         return
-    else:
     
     save_filepath = save_filepath_input.value
     if not os.path.exists(save_filepath):
@@ -255,7 +261,7 @@ def updateSave():
     if save_filepath[-1] != "/":
         save_filepath += "/"
     
-    name = save_filepath + str(curr_day[0].year) + "_" + str(curr_day[0].month) + "_" + str(curr_day[0].day) + ".h5"
+    name = save_filepath + str(date.year) + "_" + str(date.month) + "_" + str(date.day) + ".h5"
     saveFiles(name)
 
     curr_day[0] = date.day    
@@ -306,9 +312,9 @@ def saveFiles(filename, PC_on=False):
         d = hf.create_group("data")
         cnames = hf.create_group("channel_names")
         if not PC_on:
-        	beg, end = 0,4
+            beg, end = 0,4
         else:
-        	beg, end = 0,1
+            beg, end = 0,1
 
         for i in range(beg, end):
             d.create_dataset("x"+str(i+1), data=source_xlist[i],
@@ -433,7 +439,7 @@ def updateLoad(PC=False):
                     load_p_line_chan1.visible = True          
                 else:
                     x = x_temp
-		    load_p_line_chan1.visible = False
+                    load_p_line_chan1.visible = False
 
                 y = list(d.get("y"+str(i)))
                 cname = str(c.get("c"+str(i))[()])
@@ -538,7 +544,7 @@ channel_name_select2 = Select(title='Channel Names:', value="Channel 1",
 number_points_select = Select(title="Number of Points", value="100",
                         options =["100", "200", "500", "1000", "5000", "10000", "100000", "1000000"])
 load_plot_type_select = Select(title="Plot Type:", value="Multi-plot",
-			options =["Multi-plot", "Pulse Capture Plot"])
+            options =["Multi-plot", "Pulse Capture Plot"])
 
 
 # Text inputs
@@ -585,7 +591,7 @@ save_filename_PC_input.on_change("value", forceSaveFilename_InputChange) #reusin
 #set up layout
 doc.title = "Intensity Tracker"
 
-grid = gridplot([
+grid = layout([
         [channel_button[0],channel_button[1],channel_button[2],channel_button[3]], 
         [all_on_button, all_off_button, reset_button, autoscale_button], 
         [channel_name_select1, channel_name_input, acq_period_select, num_avgs_select], 
@@ -593,18 +599,18 @@ grid = gridplot([
         [single_plot[2], single_plot[3]],
         [multi_plot],
         [save_filepath_input, auto_save_button, force_save_button, force_save_filename_input],
-        [Div(text="_"*242, render_as_text=True, width=1205)], 
-        [Div(text=" ", render_as_text=True, width=1205)], 
+        [Div(text="<center>" + "_"*242 + "</center>", render_as_text=False)], 
+        [Div(text=" ")], 
         [channel_name_select2, trigger_level_input, time_range_input, number_points_select],
         [pulse_capture_button, save_filepath_PC_input, save_filename_PC_input, save_PC_button],
         [pc_plot],
-        [Div(text="_"*242, render_as_text=True, width=1205)],
-        [Div(text=" ", render_as_text=True, width=1205)],
+        [Div(text="<center>" + "_"*242 + "</cener>", render_as_text=False)],
+        [Div(text=" ")],
         [load_button, load_file_input, load_plot_type_select],
         [load_plot],
-        [Div(text="_"*242, render_as_text=True, width=1205)],
-        [Div(text=" ", render_as_text=True, width=1205)]
-        ], merge_tools=False, sizing_mode="scale_width")
+        [Div(text="<center>" + "_"*242 + "</center>", render_as_text=False)],
+        [Div(text=" ")]
+        ], merge_tools=False,  sizing_mode="scale_width")
 
 doc.add_root(grid)
 
