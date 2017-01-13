@@ -44,7 +44,7 @@ PT = timezone("US/Pacific")
 curr_day = [dt.now(PT).day]
 reference_date = [dt(2017,1,1,0,0, tzinfo=PT)]
 reference_offset = [(reference_date[0].utcoffset()-dt.now(PT).utcoffset()).total_seconds()]
-channel_names = ["Channel 1","Channel 2", "Channel 3", "Channel 4"]
+channel_names = ["", "", "", ""]
 source_PC = ColumnDataSource(data=dict(x=[],y=[]))
 home_dir = "/home/lattice/ITdata/"
 
@@ -61,10 +61,10 @@ for i in range(4):
 #initialize scope
 scope.connect((0x0957,0x17a4, '')) #include S/N if more than one device
 scope.reset()
-scope.auto_scale()
-scope.set_acquire_type('hres')
-scope.set_waveform_points(100)
-scope.set_waveform_format('ASCii')
+scope.autoScale()
+scope.setAcquireType('hres')
+scope.setWaveformPoints(100)
+scope.setWaveformFormat('ASCii')
 
 
 
@@ -143,16 +143,16 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     load_plot = figure(title="Loaded Data", x_axis_label="Time", y_axis_label="Volts", x_axis_type="datetime",
                 tools="pan,ywheel_zoom,box_zoom,reset,save,xwheel_zoom,hover", active_scroll='ywheel_zoom')
-load_p_line_chan1= load_plot.line(x="x",y="y", source=source_load[0], legend="Channel 1", line_width=2, color="blue")
+load_p_line_chan1= load_plot.line(x="x",y="y", source=source_load[0], legend=" ", line_width=2, color="blue")
 load_p_circ_chan1 = load_plot.circle(x="x",y="y", source=source_load[0], size=5, color="blue", line_width=.5, 
                                 line_color='black')
-load_p_line_chan2= load_plot.line(x="x",y="y", source=source_load[1], legend="Channel 2", line_width=2, color="red")
+load_p_line_chan2= load_plot.line(x="x",y="y", source=source_load[1], legend=" ", line_width=2, color="red")
 load_p_circ_chan2 = load_plot.circle(x="x",y="y", source=source_load[1], size=5, color="red", line_width=.5, 
                                 line_color='black')
-load_p_line_chan3= load_plot.line(x="x",y="y", source=source_load[2], legend="Channel 3", line_width=2, color="green")
+load_p_line_chan3= load_plot.line(x="x",y="y", source=source_load[2], legend=" ", line_width=2, color="green")
 load_p_circ_chan3 = load_plot.circle(x="x",y="y", source=source_load[2], size=5, color="green", line_width=.5, 
                                 line_color='black')
-load_p_line_chan4= load_plot.line(x="x",y="y", source=source_load[3], legend="Channel 4", line_width=2, color="orange")
+load_p_line_chan4= load_plot.line(x="x",y="y", source=source_load[3], legend=" ", line_width=2, color="orange")
 load_p_circ_chan4 = load_plot.circle(x="x",y="y", source=source_load[3], size=5, color="orange", line_width=.5, 
                                 line_color='black')
 load_plot.plot_width=1200
@@ -192,10 +192,10 @@ def updateChannels():
 
 
 def updateChannel(channel):
-    scope.set_waveform_source(channel)
-    scope.set_waveform_points(int(num_avgs_select.value))
-    curr_data = np.mean(scope.get_waveform_data()) 
-    preamble = scope.get_waveform_preamble()
+    scope.setWaveformSource(channel)
+    scope.setWaveformPoints(int(num_avgs_select.value))
+    curr_data = np.mean(scope.getWaveformData()) 
+    preamble = scope.getWaveformPreamble()
     now = dt.now(PT)
     t_temp = [now + td(seconds=i*float(preamble[0])) for i in range(int(num_avgs_select.value))]
     t = [i - td(hours=8) for i in t_temp] #Bokeh axis_type=datetime ignores tzinfo and assumes utc, so we need this offset
@@ -216,12 +216,12 @@ def updateChannelsPC():
     if not PC_flag[0]:
         return
     curr_channel = int(channel_select_value[1][-1])
-    scope.set_trigger_source(curr_channel)
-    scope.set_trigger_level(trigger_level_input_value[0])
-    scope.set_trigger_reference_left()
-    scope.set_time_range(float(time_range_select_value[0])/1000000.)
-    scope.set_waveform_source(curr_channel)
-    scope.set_waveform_points(number_points_select_value[0])
+    scope.setTriggerSource(curr_channel)
+    scope.setTriggerLevel(trigger_level_input_value[0])
+    scope.setTriggerReferenceLeft()
+    scope.setTimeRange(float(time_range_select_value[0])/1000000.)
+    scope.setWaveformSource(curr_channel)
+    scope.setWaveformPoints(number_points_select_value[0])
     scope.digitize(curr_channel)
     result = yield executor_pc.submit(updateChannelPC, curr_channel)
     res_PC[0] = result
@@ -231,9 +231,9 @@ def updateChannelPC(channel):
     if not PC_flag[0]:
         return
     
-    preamble = scope.get_waveform_preamble()
-    curr_data_list = list(scope.get_waveform_data())
-    t_PC = [i*float(preamble[0])*1E6 for i in range(scope.get_waveform_points())]
+    preamble = scope.getWaveformPreamble()
+    curr_data_list = list(scope.getWaveformData())
+    t_PC = [i*float(preamble[0])*1E6 for i in range(scope.getWaveformPoints())]
     return t_PC, curr_data_list
 
 @gen.coroutine
@@ -261,10 +261,10 @@ def updateSave():
     if save_filepath[-1] != "/":
         save_filepath += "/"
     
-    name = save_filepath + str(date.year) + "_" + str(date.month) + "_" + str(date.day) + ".h5"
+    name = save_filepath + str(date.year) + "_" + str(date.month) + "_" + str(curr_day[0]) + ".h5"
     saveFiles(name)
 
-    curr_day[0] = date.day    
+    curr_day[0] = date.day   
     for i in range(4):
         source[i].data = dict(x=[],y=[])
 
@@ -288,17 +288,24 @@ def saveFiles(filename, PC_on=False):
         else:
             s_xdata = source_PC.data['x']
             s_ydata = source_PC.data['y']
-        for j in enumerate(s_xdata): #for some reason first element of s_xdata is a float sometimes, should figure out why
-            if type(j[1]) == float:
-                del s_xdata[j[0]]
-                del s_ydata[j[0]]
         
-        if s_xdata == [] or s_ydata == []: #got this situtation when testing with save period smaller than acquisition period
-           print "Can't save empty lists."
-           return
-    
+        #if s_xdata == [] or s_ydata == []: #got this situtation when testing with save period smaller than acquisition period
+        #   print "Can't save empty lists."
+        #   return
+
         x_temp = np.asarray(s_xdata)
         y = np.asarray(s_ydata)
+
+        for j in enumerate(x_temp): #for some reason first element of s_xdata is a float sometimes, should figure out why
+            if type(j[1]) == float:
+                np.delete(x_temp, j[0])
+                np.delete(y, j[0])
+        
+        for j in enumerate(y):     #similar issue
+        	if type(j[1]) == float:
+        		np.delete(x_temp, j[0])
+                np.delete(y, j[0])
+
         if not PC_on:
             x = [(i - reference_date[0]).total_seconds()-reference_offset[0] for i in x_temp] #convert datetime to float
         else:
@@ -362,7 +369,7 @@ def pulseCapture_ButtonClick():
         PC_flag[0] = True
         source_PC.data = dict(x=[],y=[])
         pc_plot.title.text = "Pulse Capture"
-        scope.set_acquire_type('normal')
+        scope.setAcquireType('normal')
         time_range_select_value[0] = time_range_input.value
         channel_select_value[1] = channel_name_select2.value
         number_points_select_value[0] = int(number_points_select.value)
@@ -378,8 +385,8 @@ def pulseCapture_ButtonClick():
         PC_flag[0] = False
         time.sleep(1) # See above
         scope.reset()
-        scope.auto_scale()
-        scope.set_acquire_type('hres')
+        scope.autoScale()
+        scope.setAcquireType('hres')
         time.sleep(1) # See above
 
 def reset_ButtonClick():
@@ -391,7 +398,7 @@ def reset_ButtonClick():
 
 def autoscale_ButtonClick():
     if channel_flag == [False, False, False, False] and not PC_flag[0]:
-        scope.auto_scale()
+        scope.autoScale()
         autoscale_button.active = False
     else:
         autoscale_button.active = False
@@ -445,8 +452,11 @@ def updateLoad(PC=False):
                 cname = str(c.get("c"+str(i))[()])
                 source_load[i-1].data['x'] = x
                 source_load[i-1].data['y'] = y
-                item = legend.items[i-1]
-                item.label['value'] = cname
+                try:
+                    item = legend.items[i-1]
+                    item.label['value'] = cname
+                except:
+                	pass
 
     except:
         for i in range(4):
