@@ -20,11 +20,13 @@ class SequencePlotter():
         return d
     
     def extractInfo(self):
-        times = np.array(self.seq.transpose()[0], dtype = np.float)
-        l =  self.seq.transpose()[1]
+        times = np.array(np.asarray(self.seq).transpose()[0], dtype = np.float)
+        l =  np.asarray(self.seq).transpose()[1]
+        print l.shape
         flatten = lambda x: [int(i) for i in x]
         switches = np.array( map(flatten, l) )
         switches = switches.transpose()
+        switches = l
         return times,switches
     
     def getCoords(self, times, switches):
