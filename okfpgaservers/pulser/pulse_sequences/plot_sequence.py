@@ -6,7 +6,7 @@ class SequencePlotter():
     def __init__(self, sequence, dds, channels):
         self.seq = sequence
         self.dds = dds
-        self.channels = channels
+        self.channels = np.array(channels)
         self.plot = pyplot.figure()
         self.offset = 0 #control the y coordinate where the lines are drawn
     
@@ -26,7 +26,6 @@ class SequencePlotter():
         flatten = lambda x: [int(i) for i in x]
         switches = np.array( map(flatten, l) )
         switches = switches.transpose()
-        switches = l
         return times,switches
     
     def getCoords(self, times, switches):
