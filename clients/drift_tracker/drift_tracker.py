@@ -518,9 +518,22 @@ class drift_tracker(QtGui.QWidget):
             self.spectral_lines.append(label)
         self.spec_canvas.draw()
 
-    def update_listing(self, lines):
+    def update_listing(self, lines): ##########################33
         listing = [(self.favorites.get(line, line), freq) for line,freq in lines]
+        zeeman = self.calc_zeeman(listing)
+        listing.append(zeeman)
         self.frequency_table.fill_out_widget(listing)
+        
+    def calc_zeeman(self, listing):
+    	line1 = 'S+1/2D+1/2'
+    	line2 = 'S-1/2D+1/2'
+    	for line,freq in listing:
+    		if line == line1:
+    			freq1 = freq['MHz']
+    		if line == line2:
+    			freq2 = freq['MHz']
+    	zeeman = ('Zeeman Splitting',self.WithUnit(-freq1+freq2, 'MHz'))
+    	return zeeman
     
     @inlineCallbacks
     def resize_spec_graph(self):

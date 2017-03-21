@@ -210,7 +210,7 @@ class DDS_CONTROL(QtGui.QFrame):
         layout = QtGui.QGridLayout()
         item = 0
         for chan, step_size in zip(self.display_channels, self.step_sizes):
-            print step_size
+            #print step_size
             widget = DDS_CHAN(chan, step_size, self.reactor, self.cxn, self.context)
             self.widgets[chan] = widget
             layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)
