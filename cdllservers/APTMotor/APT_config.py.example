@@ -4,3 +4,6 @@ class stageConfiguration(object):
     """
     #list of devices in the form [(stage_name, stage_serial), ...]
     devicenames = [('axial', 83825962),('Axial UD',83815664)]
+
+    def get_pitch(self, dummy):
+    	return 1
