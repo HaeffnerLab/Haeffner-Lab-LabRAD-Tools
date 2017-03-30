@@ -42,6 +42,7 @@ class RealSimpleGrapher(LabradServer):
         self.listeners = set()
         print 'trying to make gui'
         self.gui = GraphWindow(reactor)
+	self.gui.setWindowTitle('Real Simple Grapher')
         print 'done making gui'
         self.dv = yield self.client.data_vault
 
