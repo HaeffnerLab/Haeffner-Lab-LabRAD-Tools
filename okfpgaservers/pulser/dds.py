@@ -297,17 +297,19 @@ class DDS(LabradServer):
         for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 35,  13), 
                                    (profile,(0,7),2**32, 3) , (phase,channel.boardphaserange, 2 ** 48,  16)]:
             minim, maxim = r
-            resolution = (maxim - minim) / float(2**precision - 1)
+            #resolution = (maxim - minim) / float(2**precision - 1)
+            resolution = (maxim - minim) / float(2**precision)
             #seq = int((val['deg'] - minim)/resolution) #sequential representation
             #print maxim
             #print minim
-	    try:
-		hlp = val[val.unit]
-	    except:
-		hlp = val
-	    #print hlp
-	    seq = int((hlp - minim)/resolution) #sequential representation
-            #print val, r, m, precision, m*seq, seq, resolution
+        
+            try:
+                hlp = val[val.unit]
+            except:
+                hlp = val
+            
+            #seq = int((hlp - minim)/resolution) #sequential representation
+            seq = int((hlp - minim)/resolution + 0.5) #sequential representation
 
             ans += m*seq
         return ans
