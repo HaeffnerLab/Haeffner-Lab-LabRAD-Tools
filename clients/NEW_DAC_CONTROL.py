@@ -125,10 +125,10 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             if bool(hc.sma_dict):            
                 self.controls[s].setAutoFillBackground(True)
             if int(i)==0:
-                elecLayout.addWidget(self.controls[e],1,3)
+                elecLayout.addWidget(self.controls[e],1,4)
             if int(i)==1:
 #                elecLayout.addWidget(QtGui.QLabel(e),0,6)
-                elecLayout.addWidget(self.controls[e],0,2)
+                elecLayout.addWidget(self.controls[e],0,3)
             if int(i)==2:
 #                elecLayout.addWidget(QtGui.QLabel(e),0,2)
                 elecLayout.addWidget(self.controls[e],0,1)
@@ -137,25 +137,31 @@ class CHANNEL_CONTROL (QtGui.QWidget):
                 elecLayout.addWidget(self.controls[e],1,0)
             if int(i)==4:
 #                elecLayout.addWidget(QtGui.QLabel(e),5,0)
-                elecLayout.addWidget(self.controls[e],2,0)
+                elecLayout.addWidget(self.controls[e],3,0)
             if int(i)==5:
 #                elecLayout.addWidget(QtGui.QLabel(e),7,2)
-                elecLayout.addWidget(self.controls[e],3,1)
+                elecLayout.addWidget(self.controls[e],4,1)
             if int(i)==6:
 #                elecLayout.addWidget(QtGui.QLabel(e),7,6)
-                elecLayout.addWidget(self.controls[e],3,2)
+                elecLayout.addWidget(self.controls[e],4,3)
             if int(i)==7:
 #                elecLayout.addWidget(QtGui.QLabel(e),5,8)
-                elecLayout.addWidget(self.controls[e],2,3)
+                elecLayout.addWidget(self.controls[e],3,4)
+            if int(i)==8:
+#                elecLayout.addWidget(QtGui.QLabel(e),5,8)
+                elecLayout.addWidget(self.controls[e],2,1)
+                        
         #elecLayout.addItem(QtGui.QLayoutItem.spacerItem(),1,0,1,8)    
         elecLayout.setRowMinimumHeight(0,20)
         elecLayout.setRowMinimumHeight(1,20)
-        elecLayout.setRowMinimumHeight(2,20) 
+        elecLayout.setRowMinimumHeight(2,10) 
         elecLayout.setRowMinimumHeight(3,20)
+        elecLayout.setRowMinimumHeight(4,20)
         elecLayout.setColumnMinimumWidth(0,20)
         elecLayout.setColumnMinimumWidth(1,20)
         elecLayout.setColumnMinimumWidth(2,20)
         elecLayout.setColumnMinimumWidth(3,20)
+        elecLayout.setColumnMinimumWidth(4,20)
         
        
 
@@ -393,6 +399,9 @@ class CHANNEL_MONITOR(QtGui.QWidget):
             if int(i)==7:
                 elecLayout.addWidget(QtGui.QLabel(e),5,8)
                 elecLayout.addWidget(self.displays[e],5,7)
+            if int(i)==8:
+                elecLayout.addWidget(QtGui.QLabel(e),3,3)
+                elecLayout.addWidget(self.displays[e],3,4)
         #elecLayout.addItem(QtGui.QLayoutItem.spacerItem(),1,0,1,8)    
         elecLayout.setRowMinimumHeight(1,20)
         elecLayout.setRowMinimumHeight(3,20)

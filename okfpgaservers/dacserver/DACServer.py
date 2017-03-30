@@ -326,7 +326,7 @@ class DACServer(LabradServer):
         (portNum, newVolts)
         """
         for (port, av) in analog_voltages:
-            print (port,av)
+            #print (port,av)
             self.queue.insert(Voltage(self.dac_dict[port], analog_voltage=av))
             if self.dac_dict[port].smaOutNumber and self.control.Cfile_name:
                 yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'])

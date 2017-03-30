@@ -12,7 +12,7 @@ class TraceList(QtGui.QListWidget):
         self.windows = []
         self.config = traceListConfig()
         self.setStyleSheet("background-color:%s;" % self.config.background_color)
-	self.name = 'pmt'
+        self.name = 'pmt'
         self.initUI()
 
     def initUI(self):
