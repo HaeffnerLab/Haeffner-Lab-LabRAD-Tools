@@ -87,7 +87,7 @@ class experiment(experiment_info):
         for collection,parameter_name in params:
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
-                print value
+                #print value
             except Exception as e:
                 print e
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
