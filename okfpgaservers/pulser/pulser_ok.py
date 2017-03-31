@@ -36,7 +36,15 @@ class Pulser(DDS, LineTrigger, LabradServer):
     
     @inlineCallbacks
     def initServer(self):
-        self.api  = api()
+
+        self.simu_hardware = True
+
+        if not self.simu_hardware:            
+            self.api  = api()
+        else:
+            from api_simu import api_simu
+            self.api = api_simu()
+
         self.channelDict = hardwareConfiguration.channelDict
         self.collectionTime = hardwareConfiguration.collectionTime
         self.collectionMode = hardwareConfiguration.collectionMode
