@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<sequence name="ExampleSequence">
+  <params>
+    <!---
+	List of scannable parameters
+	in the form:
+	minimum, maximum, default_steps, unit
+    -->
+    <par name="RabiExcitation.frequency"> -50, 50, 3, kHz</par>
+    <par name="RabiExcitation.duration"> 1, 1000, 10, us</par>
+  </params>
+
+  <seq>
+    <!---
+	Ordered list of subsequences
+    -->
+  </seq>
+</sequence>
