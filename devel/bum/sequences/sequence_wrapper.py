@@ -15,13 +15,15 @@ as well as the current parameter vault downloaded as a TreeDict
 """
 import xml.etree.ElementTree as ET
 from treedict import TreeDict
-from common.okfpgaservers.pulser.pulse_sequences.pulse_sequence import pulse_sequence
+from labrad.units import WithUnit as U
+from pulse_sequence import pulse_sequence
 
 class pulse_sequence_wrapper(object):
     
     def __init__(self, path, pv_dict):  
         self.scannable_params = {}
         self.pv_dict = pv_dict
+        self.scan = None
         self.seq = pulse_sequence()
         tree = ET.parse(path)
         self.parse_scannable_parameters(tree)
@@ -40,19 +42,28 @@ class pulse_sequence_wrapper(object):
     def setup_data_vault(self):
         pass
 
-    def build_sequence(self):
+    def build_sequence(self, replace):
         """
-        Build  the pulse sequence for the current set of parameters
-        Build a parameter dictionary
+        Build  the pulse sequence for the current set of parameters.
+        First copy the parameter vault keys and then overwrite
+        the scanned parameters
         """
-        pass
+        new_dict = TreeDict()
+        for key in self.pv_dict.keys():
+            new_dict[key] = self.pv_dict[key]
+        
+        for key in replace.keys():
+            new_dict[key] = replace[key]
+        seq = pulse_sequence(new_dict)
 
+    def select_scan(self, scan_param, minim, maxim, steps):
+        self.scan = scan_param
+        
+        
     def run(self):
         seq = self.build_sequence()
 
 if __name__=='__main__':
-    from labrad.units import WithUnit as U
-    
     pv = TreeDict.fromdict({'DopplerCooling.duration':U(5, 'us')})
     psw = pulse_sequence_wrapper('example.xml', pv)
 
