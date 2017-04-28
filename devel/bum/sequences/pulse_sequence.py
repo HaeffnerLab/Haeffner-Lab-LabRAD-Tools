@@ -1,4 +1,5 @@
 from pulse_sequences_config import dds_name_dictionary as dds_config
+from subsequences import *
 from labrad.units import WithUnit
 from treedict import TreeDict
 
