@@ -4,9 +4,9 @@
     <!---
 	List of scannable parameters
 	in the form:
-	minimum, maximum, default_steps, unit
+	minimum, maximum, value_if_not_scanned, unit
     -->
-    <par name="RabiExcitation.frequency"> -50, 50, 3, kHz</par>
+    <par name="RabiExcitation.frequency"> -50, 50, 0, kHz</par>
     <par name="RabiExcitation.duration"> 1, 1000, 10, us</par>
   </params>
 
@@ -21,8 +21,7 @@
     <!---
 	Ordered list of subsequences
     -->
-    <s> self.seq.addSequence(exampleSequence) </s>
-    <s> self.seq.addSequence(exampleSequence2, TreeDict.fromdict({'DopplerCooling.duration':U(5,'us')})) </s>
+    <s> self.seq.addSequence(exampleSequence.example) </s>
   </seq>
 
   <settings>
