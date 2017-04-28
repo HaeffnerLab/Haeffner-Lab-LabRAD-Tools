@@ -27,7 +27,7 @@ class pulse_sequence_wrapper(object):
         self.seq = pulse_sequence()
         tree = ET.parse(path)
         self.parse_scannable_parameters(tree)
-
+        
     def parse_scannable_parameters(self, tree):
         params = tree.find('params')
         for child in params:
