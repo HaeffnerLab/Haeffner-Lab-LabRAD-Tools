@@ -12,11 +12,15 @@ as well as the current parameter vault downloaded as a TreeDict
 1. First parse which parameters are scannable out of the XML definition file
 2. GUI takes these parameters to show
 
+Generate sequence. First pass ENTIRE parameter vault parameters
+to the sequence object
+
 """
 import xml.etree.ElementTree as ET
 from treedict import TreeDict
 from labrad.units import WithUnit as U
 from pulse_sequence import pulse_sequence
+from subsequences import *
 
 class pulse_sequence_wrapper(object):
     
@@ -24,7 +28,9 @@ class pulse_sequence_wrapper(object):
         self.scannable_params = {}
         self.pv_dict = pv_dict
         self.scan = None
-        self.seq = pulse_sequence()
+        self.seq = pulse_sequence(self.pv_dict)
+        self.seq.addSequence(ExampleSubsequence.example,{'DopplerCooling.duration':U(15, 'us')})
+        self.seq.addSequence(ExampleSubsequence.example)
         tree = ET.parse(path)
         self.parse_scannable_parameters(tree)
         
@@ -33,11 +39,11 @@ class pulse_sequence_wrapper(object):
         for child in params:
             param_name = child.attrib['name']
             # remove all whitespace and split the items by commas
-            minim, maxim, steps, unit = ''.join(child.text.split()).split(',')
+            minim, maxim, value, unit = ''.join(child.text.split()).split(',')
             minim = float(minim)
             maxim = float(maxim)
-            steps = int(steps)
-            self.scannable_params[param_name] = (minim, maxim, steps, unit)
+            value = float(value)
+            self.scannable_params[param_name] = (minim, maxim, value, unit)
     
     def setup_data_vault(self):
         pass
@@ -66,4 +72,3 @@ class pulse_sequence_wrapper(object):
 if __name__=='__main__':
     pv = TreeDict.fromdict({'DopplerCooling.duration':U(5, 'us')})
     psw = pulse_sequence_wrapper('example.xml', pv)
-

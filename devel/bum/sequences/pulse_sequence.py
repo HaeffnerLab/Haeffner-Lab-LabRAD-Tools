@@ -1,5 +1,4 @@
 from pulse_sequences_config import dds_name_dictionary as dds_config
-from subsequences import *
 from labrad.units import WithUnit
 from treedict import TreeDict
 
@@ -59,13 +58,7 @@ class pulse_sequence(object):
 	
 	def addSequence(self, sequence, replacement_dict = TreeDict(), position = None):
 		'''insert a subsequence, position is either time or None to insert at the end'''
-		if sequence not in self.required_subsequences: raise Exception ("Adding subsequence {0} that is not listed in the required subequences".format(sequence.__class__.__name__))
-		if not type(replacement_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict")
-		for replacement_key in replacement_dict.keys():
-			parsed = tuple(replacement_key.split('.'))
-			key_list = self.replaced_parameters.get(sequence, [])
-			if not parsed in key_list:
-				raise Exception("Error in {0}: replacing the key {1} in the sequence {2} that is not listed among the replacement parameters".format(self, replacement_key, sequence))
+		#if not type(replacement_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict")
 		if position is None:
 			position = self.end
 		#replacement conists of global replacement and keyword arguments
