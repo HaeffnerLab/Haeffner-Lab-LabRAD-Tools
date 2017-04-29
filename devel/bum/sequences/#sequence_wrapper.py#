@@ -65,6 +65,7 @@ class pulse_sequence_wrapper(object):
         self.scan = scan_param
         
     def run(self):
+        for 
         new_params = self.update_params()
 
 if __name__=='__main__':
