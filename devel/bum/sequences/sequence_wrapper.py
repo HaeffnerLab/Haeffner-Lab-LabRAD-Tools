@@ -27,45 +27,41 @@ class pulse_sequence_wrapper(object):
     
     def __init__(self, module, pv_dict):  
         self.module = module
-        self.pv_dict = pv_dict
-        self.scannable_params = module.scannable_params
+
+        # copy the parameter vault dict by value
+        self.parameters_dict = TreeDict()
+        self.parameters_dict.update(pv_dict)
         self.show_params = module.show_params
         self.scan = None
         self.seq = module(self.pv_dict)
-        
-    def parse_scannable_parameters(self, tree):
-        params = tree.find('params')
-        for child in params:
-            param_name = child.attrib['name']
-            # remove all whitespace and split the items by commas
-            minim, maxim, value, unit = ''.join(child.text.split()).split(',')
-            minim = float(minim)
-            maxim = float(maxim)
-            value = float(value)
-            self.scannable_params[param_name] = (minim, maxim, value, unit)
     
     def setup_data_vault(self):
         pass
 
-    def build_sequence(self, replace):
-        """
-        Build  the pulse sequence for the current set of parameters.
-        First copy the parameter vault keys and then overwrite
-        the scanned parameters
-        """
-        new_dict = TreeDict()
-        for key in self.pv_dict.keys():
-            new_dict[key] = self.pv_dict[key]
-        
-        for key in replace.keys():
-            new_dict[key] = replace[key]
-        seq = pulse_sequence(new_dict)
+    def update_params(self, update):
+        # also update from the drift tracker here?
+        self.parameters_dict.update(update)
 
     def select_scan(self, scan_param, minim, maxim, steps):
-        self.scan = scan_param
+        self.parameter_to_scan = scan_param
+        m1, m2, default, unit = self.module.scannable_params[scan_param]
+        self.scan = np.linspace(minim, maxim, steps)
+        self.scan = [U(pt, unit) for pt in self.scan]
+
+    def set_scan_none(self):
+        """
+        Set the current scan to None,
+        allowing the pulse sequence to be run
+        with the selected parameters
+        """
+        self.scan = None
         
     def run(self):
-        new_params = self.update_params()
+        for x in self.scan:
+            update = {self.parameter_to_scan: x}
+            self.update_params(update)
+            seq = self.module(self.parameters_dict)
+            ### program pulser, get readouts
 
 if __name__=='__main__':
     from example import Example
