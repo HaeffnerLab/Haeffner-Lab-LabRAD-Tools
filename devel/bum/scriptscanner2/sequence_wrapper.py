@@ -17,7 +17,6 @@ Generate sequence. First pass ENTIRE parameter vault parameters
 to the sequence object
 
 """
-import xml.etree.ElementTree as ET
 from treedict import TreeDict
 from labrad.units import WithUnit as U
 from pulse_sequence import pulse_sequence
@@ -25,7 +24,7 @@ from subsequences import *
 
 class pulse_sequence_wrapper(object):
     
-    def __init__(self, module, pv_dict):  
+    def __init__(self, module, pv_dict, drift_tracker = None):  
         self.module = module
 
         # copy the parameter vault dict by value
@@ -33,6 +32,7 @@ class pulse_sequence_wrapper(object):
         self.parameters_dict.update(pv_dict)
         self.show_params = module.show_params
         self.scan = None
+        self.drift_tracker = drift_tracker
         self.seq = module(self.pv_dict)
     
     def setup_data_vault(self):
@@ -42,7 +42,7 @@ class pulse_sequence_wrapper(object):
         # also update from the drift tracker here?
         self.parameters_dict.update(update)
 
-    def select_scan(self, scan_param, minim, maxim, steps):
+    def set_scan(self, scan_param, minim, maxim, steps, unit):
         self.parameter_to_scan = scan_param
         m1, m2, default, unit = self.module.scannable_params[scan_param]
         self.scan = np.linspace(minim, maxim, steps)
