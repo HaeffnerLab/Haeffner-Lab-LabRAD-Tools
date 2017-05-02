@@ -224,6 +224,14 @@ class ParameterVault(LabradServer):
         else:
             return False
 
+    @setting(9, 'Get All Parameters', returns = ['?'])
+    def get_all_parameters(self, c):
+        '''
+        Return a list containing all parameters in the
+        parametervault.
+        '''
+        return self.parameters.items()
+
     @inlineCallbacks
     def stopServer(self):
         try:
