@@ -18,18 +18,24 @@ timeout = 20
 from labrad.server import LabradServer, setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
-from signals import Signal
+from signals import Signals
 from configuration import config
 import scan_methods
 from scheduler import scheduler
+from parameter_vault import ParameterVault
 from sequence_wrapper import pulse_sequence_wrapper as psw
 import sys
         
-class ScriptScanner(Signals, LabradServer):
+class ScriptScanner(ParameterVault, Signals, LabradServer):
     
     name = 'ScriptScanner'
     
     def initServer(self):
+        """Load all of the paramters from the registry."""
+        self.listeners = set()
+        self.parameters = {}  
+        yield self.load_parameters()
+
         self.sequences = {} # dict mapping sequence names to modules
         self.scheduler = scheduler(Signals)
         self.load_sequences()
