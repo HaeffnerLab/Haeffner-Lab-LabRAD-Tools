@@ -19,8 +19,7 @@ to the sequence object
 """
 from treedict import TreeDict
 from labrad.units import WithUnit as U
-from pulse_sequence import pulse_sequence
-from subsequences import *
+#from subsequences import *
 
 class pulse_sequence_wrapper(object):
     
