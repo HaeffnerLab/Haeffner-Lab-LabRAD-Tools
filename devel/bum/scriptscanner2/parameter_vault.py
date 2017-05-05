@@ -25,12 +25,12 @@ class ParameterVault(LabradServer):
     registryDirectory = ['','Servers', 'Parameter Vault']
     onParameterChange = Signal(612512, 'signal: parameter change', '(ss)')
 
-    @inlineCallbacks
-    def initServer(self):
-        """Load all of the paramters from the registry."""
-        self.listeners = set()
-        self.parameters = {}  
-        yield self.load_parameters()
+#    @inlineCallbacks
+#    def initServer(self):
+#        """Load all of the paramters from the registry."""
+#        self.listeners = set()
+#        self.parameters = {}  
+#        yield self.load_parameters()
     
     def initContext(self, c):
         """Initialize a new context object."""
@@ -57,7 +57,7 @@ class ParameterVault(LabradServer):
         Navigate to the registry directory folder structure and load
         all of the parameters in the self.parameters dictionary
         """
-        yield self.client.registry.cd(topPath + subPath)
+        yield self.client.registry.cd(topPath + subPath, True)
         directories,parameters = yield self.client.registry.dir()
         if subPath: #ignore parameters in the top level
             for parameter in parameters:
