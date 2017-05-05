@@ -17,22 +17,23 @@ Generate sequence. First pass ENTIRE parameter vault parameters
 to the sequence object
 
 """
+import numpy as np
 from treedict import TreeDict
 from labrad.units import WithUnit as U
 #from subsequences import *
 
 class pulse_sequence_wrapper(object):
     
-    def __init__(self, module, pv_dict, drift_tracker = None):  
+    def __init__(self, module, drift_tracker = None):  
         self.module = module
-
+        self.name = module.__name__
         # copy the parameter vault dict by value
         self.parameters_dict = TreeDict()
-        self.parameters_dict.update(pv_dict)
+        #self.parameters_dict.update(pv_dict)
         self.show_params = module.show_params
         self.scan = None
         self.drift_tracker = drift_tracker
-        self.seq = module(self.pv_dict)
+        #self.seq = module(self.pv_dict)
     
     def setup_data_vault(self):
         pass
@@ -46,6 +47,7 @@ class pulse_sequence_wrapper(object):
         m1, m2, default, unit = self.module.scannable_params[scan_param]
         self.scan = np.linspace(minim, maxim, steps)
         self.scan = [U(pt, unit) for pt in self.scan]
+        print self.scan
 
     def set_scan_none(self):
         """
@@ -54,12 +56,14 @@ class pulse_sequence_wrapper(object):
         with the selected parameters
         """
         self.scan = None
-        
-    def run(self):
+
+    def run(self, ident):
+        self.ident = ident
         for x in self.scan:
+            print x
             update = {self.parameter_to_scan: x}
             self.update_params(update)
-            seq = self.module(self.parameters_dict)
+            #seq = self.module(self.parameters_dict)
             ### program pulser, get readouts
 
 if __name__=='__main__':

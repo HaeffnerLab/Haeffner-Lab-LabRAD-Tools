@@ -68,8 +68,9 @@ class running_script(object):
 
 class scheduler(object):
     
-    def __init__(self, signals):
+    def __init__(self, signals, parent):
         self.signals = signals
+        self.parent = parent # reference to scriptscanner class
         self.running = {} #dictionary in the form identification : running_script_instance
         self.queue = priority_queue() #queue of tasks
         self._paused_by_script = []
@@ -149,15 +150,15 @@ class scheduler(object):
         returns a list of experiments that can run concurrently with currently running experiments
         '''
         non_conflicting = []
-        for running, script in self.running.iteritems():
-            cls_name = script.scan.script_cls.name
-            non_conf = config.allowed_concurrent.get(cls_name, None)
-            if non_conf is not None:
-                non_conflicting.append(set(non_conf))
-        if non_conflicting:
-            return set.intersection(*non_conflicting)
-        else:
-            return set()
+        #for running, script in self.running.iteritems():
+        #    cls_name = script.scan.script_cls.name
+        #    non_conf = config.allowed_concurrent.get(cls_name, None)
+        #    if non_conf is not None:
+        #        non_conflicting.append(set(non_conf))
+        #if non_conflicting:
+        #    return set.intersection(*non_conflicting)
+        #else:
+        #    return set()
         return non_conflicting
     
     def add_external_scan(self, scan):
@@ -211,6 +212,7 @@ class scheduler(object):
     def launch_scripts(self, result = None):
         try:
             ident, scan, priority = self.queue.peek_next()
+            print "ident = {}".format(ident)
         except IndexError:
             #queue is empty
             return
@@ -225,6 +227,7 @@ class scheduler(object):
                 should_launch = True
                 pause_running = True 
         if should_launch:
+            print "CLEARED FOR LAUNCH"
             self.queue.remove_object((ident,scan, priority))
             self.signals.on_queued_removed(ident)
             self.do_launch(ident, scan, priority, pause_running)
@@ -232,6 +235,7 @@ class scheduler(object):
                 
     def do_launch(self, ident, scan, priority, pause_running):
         d = Deferred()
+        scan.update_params(self.parent.parameters)
         status = script_semaphore(ident, self.signals)
         self._add_to_running(ident, scan, d, status, priority)
         if pause_running:
@@ -278,7 +282,7 @@ class scheduler(object):
         return unpaused_defers
     
     def launch_in_thread(self, result, scan, ident):
-#        print 'launching now', ident
+        print 'launching now', ident
         d = deferToThread(scan.run, ident)
         return d
     
