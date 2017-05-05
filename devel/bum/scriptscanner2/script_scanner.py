@@ -30,6 +30,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
     
     name = 'ScriptScanner'
     
+    @inlineCallbacks
     def initServer(self):
         """Load all of the paramters from the registry."""
         self.listeners = set()
