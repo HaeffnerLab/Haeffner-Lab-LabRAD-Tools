@@ -38,7 +38,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         yield self.load_parameters()
 
         self.sequences = {} # dict mapping sequence names to modules
-        self.scheduler = scheduler(Signals)
+        self.scheduler = scheduler(Signals, self)
         self.load_sequences()
     
     def load_sequences(self):
@@ -119,7 +119,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
 
         scan_param, m1, m2, steps, unit = settings
         cls = self.sequences[sequence_name]
-        wrapper = psw(cls, pv_dict)
+        wrapper = psw(cls)
         if scan_param == 'None':
             wrapper.set_scan_none()
         else:
