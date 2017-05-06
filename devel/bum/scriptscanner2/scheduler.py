@@ -282,7 +282,6 @@ class scheduler(object):
         return unpaused_defers
     
     def launch_in_thread(self, result, scan, ident):
-        print 'launching now', ident
         d = deferToThread(scan.run, ident)
         return d
     

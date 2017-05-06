@@ -19,6 +19,7 @@ class pulse_sequence(object):
 		#self.parameters = self.fill_parameters(self.required_parameters , self.replace)
 		self.parameters = parameter_dict
 		self.sequence()
+
 	def sequence(self):
 		'''
 		implemented by subclass
