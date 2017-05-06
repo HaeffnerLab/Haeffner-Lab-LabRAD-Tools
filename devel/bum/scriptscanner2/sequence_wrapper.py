@@ -59,12 +59,16 @@ class pulse_sequence_wrapper(object):
 
     def run(self, ident):
         self.ident = ident
-        for x in self.scan:
-            print x
-            update = {self.parameter_to_scan: x}
-            self.update_params(update)
-            #seq = self.module(self.parameters_dict)
-            ### program pulser, get readouts
+        try:
+            for x in self.scan:
+                update = {self.parameter_to_scan: x}
+                self.update_params(update)
+                seq = self.module(self.parameters_dict)
+                ### program pulser, get readouts
+        except Exception as e:
+            reason = traceback.format_exc()
+            print reason
+            
 
 if __name__=='__main__':
     from example import Example
