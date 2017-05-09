@@ -228,6 +228,13 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         status.error_finish_confirmed(error_message)
         self.scheduler.remove_if_external(sequence_ID)
 
+    @setting(37, "Get Sequence Scannables", sequence = 's', returns = '*(s(vvis))')
+    def get_sequence_scannables(self, c, sequence):
+        try:
+            return self.sequences[sequence].scannable_params.items()
+        except KeyError:
+            raise Exception('Sequence not found')
+
     @inlineCallbacks
     def stopServer(self):
         '''
