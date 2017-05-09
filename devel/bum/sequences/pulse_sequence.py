@@ -79,3 +79,15 @@ class pulse_sequence(object):
 		pulser.add_ttl_pulses(self._ttl_pulses)
 		pulser.add_dds_pulses(self._dds_pulses)
 		pulser.program_sequence()
+
+	@classmethod
+	def execute_external(cls, scan, fun = None):
+		'''
+		scan  = (scan_param, minim, maxim, seps, unit)
+		fun = function to evaluate on the result of the scan 
+		'''
+		from common.devel.bum.scriptscanner2.sequence_wrapper import pulse_sequence_wrapper
+		psw = pulse_sequence_wrapper(cls)
+		scan_param, minim, maxim, steps, unit = scan
+		psw.set_scan(scan_param, minim, maxim, steps, unit)
+		psw.run(0)

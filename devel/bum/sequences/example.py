@@ -16,6 +16,7 @@ class Sequence(pulse_sequence):
         self.addSequence(example)
 
 if __name__=='__main__':
-    pv = TreeDict.fromdict({'DopplerCooling.duration':U(5, 'us')})
-    ex = Sequence(pv)
+    #pv = TreeDict.fromdict({'DopplerCooling.duration':U(5, 'us')})
+    #ex = Sequence(pv)
     #psw = pulse_sequence_wrapper('example.xml', pv)
+    Sequence.execute_external(('RabiExcitation.duration', 0, 5, 5, 'ms'))
