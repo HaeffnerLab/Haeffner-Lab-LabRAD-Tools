@@ -28,6 +28,7 @@ class script_scanner_gui(QtGui.QWidget):
         if self.cxn is None:
             self.cxn = connection()
             yield self.cxn.connect()
+
         self.context = yield self.cxn.context()
         try:
             yield self.populateExperiments()
@@ -72,7 +73,8 @@ class script_scanner_gui(QtGui.QWidget):
         scheduled = yield sc.get_scheduled(context = self.context)
         for experiment in available:
             self.scripting_widget.addExperiment(experiment)
-            scannable_params = sc.get_sequence_scannables(experiment)
+            scannable_params = yield sc.get_sequence_scannables(experiment)
+            self.scan_widget.buildSequenceWidget(experiment, scannable_params)
             
         for ident,name,order in queued:
             self.scripting_widget.addQueued(ident, name, order)
@@ -343,7 +345,9 @@ class script_scanner_gui(QtGui.QWidget):
         tab = QtGui.QTabWidget()
         control = QtGui.QWidget()
         layout = QtGui.QHBoxLayout()
+        
         layout.addWidget(self.scripting_widget)
+        layout.addWidget(self.scan_widget)
         #layout.addWidget(self.ParametersEditor)
         control.setLayout(layout)
         self.script_explorer = script_explorer_widget(self)
@@ -353,7 +357,6 @@ class script_scanner_gui(QtGui.QWidget):
 
         topLevelLayout.addWidget(tab)
         self.setLayout(topLevelLayout)
-
         self.setWindowTitle('Script Scanner Gui')
     
     def displayError(self, text):
