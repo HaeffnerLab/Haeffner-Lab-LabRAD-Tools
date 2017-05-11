@@ -89,10 +89,12 @@ class script_scanner_gui(QtGui.QWidget):
         collections = yield pv.get_collections(context = self.context)
         for collection in collections:
             self.ParametersEditor.add_collection_node(collection)
+            self.scan_widget.PreferredParameters.add_collection_node(collection)
             parameters = yield pv.get_parameter_names(collection)
             for param_name in parameters:
                 value = yield pv.get_parameter(collection, param_name, False)
                 self.ParametersEditor.add_parameter(collection, param_name, value)
+                self.scan_widget.PreferredParameters.add_parameter(collection, param_name, value)
 
     @inlineCallbacks
     def populateUndefinedParameters(self, script):
@@ -148,6 +150,7 @@ class script_scanner_gui(QtGui.QWidget):
         pv = yield self.cxn.get_server('ScriptScanner')
         full_info = yield pv.get_parameter(collection, name, False, context = self.context)
         self.ParametersEditor.set_parameter(collection, name, full_info)
+        self.scan_widget.PreferredParameters.set_parameter(collection, name, full_info)
     
     def get_scannable_parameters(self):
         return self.ParametersEditor.get_scannable_parameters()
@@ -200,6 +203,7 @@ class script_scanner_gui(QtGui.QWidget):
         self.scripting_widget.on_scan.connect(self.scan_script)
         #parameter widget
         self.ParametersEditor.on_parameter_change.connect(self.on_new_parameter)
+        self.scan_widget.PreferredParameters.on_parameter_change.connect(self.on_new_parameter)
     
     @inlineCallbacks
     def scan_script(self, scan_script, measure_script, parameter, minim, maxim, steps, units):
@@ -225,6 +229,7 @@ class script_scanner_gui(QtGui.QWidget):
         sc = yield self.cxn.get_server('ScriptScanner')
         selected_experiment = str(selected_experiment)
         self.ParametersEditor.show_all()
+        self.scan_widget.select(selected_experiment)
         #    try:
         #        parameters = yield sc.get_sequence_parameters(selected_experiment)
         #        yield self.populateUndefinedParameters(selected_experiment)

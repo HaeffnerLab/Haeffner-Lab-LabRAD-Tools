@@ -51,8 +51,9 @@ class scan_widget(QtGui.QStackedWidget):
         self.parent = parent
         self.setupLayout()
         self.reactor = reactor
-        self.ParametersEditor = ParametersEditor(self.reactor)
+        self.PreferredParameters = ParametersEditor(self.reactor)
         self.widgets = {} # dictionary of widgets to show
+        
 
     def setupLayout(self):
         pass
@@ -61,10 +62,27 @@ class scan_widget(QtGui.QStackedWidget):
         '''
         params = [par, ( min, max, steps, unit)]
         '''
-        sw = sequence_widget(params, self.ParametersEditor)
+        sw = sequence_widget(params, self.PreferredParameters)
         self.addWidget(sw)
         self.widgets[experiment] = sw
-        self.setCurrentWidget(sw)
+        self.show_none()
+        #self.setCurrentWidget(sw)
+
+    def select(self, experiment):
+        '''
+        Select experiment to show
+        '''
+        try:
+            self.widgets[experiment].setVisible(True)
+            self.setCurrentWidget(self.widgets[experiment])
+            self.PreferredParameters.show_only([('DopplerCooling','duration')])
+        except KeyError: # no experiment selected
+            self.show_none()
+
+    def show_none(self):
+        for exp in self.widgets.keys():
+            self.widgets[exp].setVisible(False)
+
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
