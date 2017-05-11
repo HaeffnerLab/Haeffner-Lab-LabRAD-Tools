@@ -9,7 +9,7 @@ class Sequence(pulse_sequence):
         'RabiExcitation.duration': (1, 1000., 10, 'us')
         }
 
-    show_params= []
+    show_params= ['DopplerCooling.duration']
 
     def sequence(self):
         from subsequences.ExampleSubsequence import example
