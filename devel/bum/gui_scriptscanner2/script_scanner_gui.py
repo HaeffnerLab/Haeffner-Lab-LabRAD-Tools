@@ -138,10 +138,18 @@ class script_scanner_gui(QtGui.QWidget):
 
     @inlineCallbacks
     def setupListenersParameterVault(self):
+        # removed the context = self.context
+        # so that the parameter editors get notified
+        # even on their own changes to parametervault.
+        # This is so that the "preferred parameters"
+        # and the "all parameters" windows are in sync,
+        # but may cause bugs.
         pv = yield self.cxn.get_server('ScriptScanner')
-        yield pv.signal__parameter_change(self.SIGNALID + 10, context = self.context)
+        #yield pv.signal__parameter_change(self.SIGNALID + 10, context = self.context)
+        yield pv.signal__parameter_change(self.SIGNALID + 10)
         if not self.subscribedParametersVault:
-            yield pv.addListener(listener = self.on_pv_parameter_change, source = None, ID = self.SIGNALID + 10, context = self.context) 
+            #yield pv.addListener(listener = self.on_pv_parameter_change, source = None, ID = self.SIGNALID + 10, context = self.context)
+            yield pv.addListener(listener = self.on_pv_parameter_change, source = None, ID = self.SIGNALID + 10)
             self.subscribedParametersVault = True
         
     @inlineCallbacks

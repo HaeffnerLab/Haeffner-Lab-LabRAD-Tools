@@ -2,10 +2,7 @@ from common.devel.bum.sequences.pulse_sequence import pulse_sequence
 from labrad.units import WithUnit as U
 
 class example(pulse_sequence):
-    
-    required_parameters = [
-                           ]
-    
+
     def sequence(self):
         #print self.parameters['DopplerCooling.duration']
         print self.parameters['RabiExcitation.duration']
