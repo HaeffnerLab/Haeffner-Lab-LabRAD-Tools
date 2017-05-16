@@ -80,20 +80,33 @@ class pulse_sequence(object):
 		pulser.add_dds_pulses(self._dds_pulses)
 		pulser.program_sequence()
 
-	def Calc_freq(self,Carrier='-1/2-1/2', SideBand='None',order=0):
-		'''calculates the frquency of the 729 AOM DP drive from the carriers and side band dictionaries in the parameter vault'''
+	def Calc_freq(self,Carrier='S-1/2D-1/2', SideBands='None',orders=0):
+		'''calculates the frquency of the 729 AOM DP drive from the carriers and side band dictionaries in the parameter vault
+		Carrier is a dictionary of all the 10 carriers
+		SideBand is a dictionary of all the different 
+		
+		'''
 		
 		try: 
 			freq=self.parameters.Excitation_729.Carrire[Carrier]
 		except:
 			print('transition is not the dictionary') 
 		
-			
-		if SideBand is not None:
+				# enable choosing a multiple orders
+		if SideBands is not None:
 			try: 
-				freq= +1.0*self.parameters.Excitation_729.SideBands[SideBand]*order
+				freq =freq+ 1.0*self.parameters.TrapFrequencies[SideBands]*orders
 			except:
 				print('Side band not in the dictionary') 
+						
+		
+		## enable choosing a multiple orders
+		#if SideBands is not None:
+		#	for sb,order in zip(SideBands,orders):
+		#		try: 
+		#			freq =freq+ 1.0*self.parameters.TrapFrequencies[sb]*order
+		#		except:
+		#			print('Side band not in the dictionary') 
 						
 		return freq
 	
