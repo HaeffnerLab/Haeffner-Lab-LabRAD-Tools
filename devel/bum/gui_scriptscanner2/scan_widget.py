@@ -4,11 +4,13 @@ from PyQt4 import QtCore, QtGui, uic
 
 class ScanItem(QtGui.QWidget):
     """ Item for parameter scanning """
-    def __init__(self, p, parent = None):
+    def __init__(self, p, parent):
         super(ScanItem, self).__init__(parent)
+        self.parent = parent
         parameter, minim, maxim, steps, unit = p
         self.parameter = parameter
         self.makeLayout(p)
+        self.connect_layout()
 
     def makeLayout(self, p):
         parameter, minim, maxim, steps, unit = p
@@ -27,7 +29,28 @@ class ScanItem(QtGui.QWidget):
         unitLabel = QtGui.QLabel(unit)
         layout.addWidget(unitLabel)
         self.setLayout(layout)
-        
+
+    def connect_layout(self):
+        self.select.stateChanged.connect(self.checkbox_changed)
+    
+    def checkbox_changed(self):
+        selection = self.select.isChecked()
+        if selection: # this parameter is selected to scan
+            self.parent.set_scan_parameter(self.parameter)
+        else:
+            self.parent.set_scan_none()
+
+    def uncheck_no_signal(self):
+        """
+        We need to block signals from the checkbox
+        so that when we uncheck a box it does not
+        set the scan parameter to None via the
+        connection to checkbox_changed()
+        """
+        self.select.blockSignals(True)
+        self.select.setChecked(False)
+        self.select.blockSignals(False)
+
 class sequence_widget(QtGui.QWidget):
     def __init__(self, params, editor):
         super(sequence_widget, self).__init__()
@@ -39,10 +62,23 @@ class sequence_widget(QtGui.QWidget):
         for par, x in params:
             minim, maxim, steps, unit = x
             p = (par, minim, maxim, steps, unit)
-            self.parameters[par] = ScanItem(p)
+            self.parameters[par] = ScanItem(p, self)
             layout.addWidget(self.parameters[par])
         layout.addWidget(editor)
         self.setLayout(layout)
+
+    def set_scan_parameter(self, parameter):
+        """
+        Set the scan parameter and uncheck
+        all of the other options in the GUI
+        """
+        self.scan_parameter = parameter
+        for par in self.parameters.keys():
+            if par != parameter:
+                self.parameters[par].uncheck_no_signal()
+
+    def set_scan_none(self):
+        self.scan_parameter = None
         
 class scan_widget(QtGui.QStackedWidget):
 
