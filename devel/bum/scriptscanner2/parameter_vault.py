@@ -121,6 +121,18 @@ class ParameterVault(LabradServer):
             return (t, value)
             #raise Exception("Can't save, not one of checkable types") #TODO FIXME ??????????
 
+    def all_parameters(self):
+        """
+        Return a dictionary with the settings of all current parameters
+        with the key formatted as collection.parameter_name
+        """
+        d = {}
+        for key in self.parameters.keys():
+            collection, parameter_name = key
+            k = '{}.{}'.format(collection, parameter_name)
+            d[k] = self.check_parameter(key, self.parameters[key])
+        return d
+
     def check_parameter(self, name, value):
         """
         Perform bound checking on the parameter

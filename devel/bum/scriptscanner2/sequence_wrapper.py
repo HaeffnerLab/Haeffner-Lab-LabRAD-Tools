@@ -47,7 +47,6 @@ class pulse_sequence_wrapper(object):
         m1, m2, default, unit = self.module.scannable_params[scan_param]
         self.scan = np.linspace(minim, maxim, steps)
         self.scan = [U(pt, unit) for pt in self.scan]
-        print self.scan
 
     def set_scan_none(self):
         """

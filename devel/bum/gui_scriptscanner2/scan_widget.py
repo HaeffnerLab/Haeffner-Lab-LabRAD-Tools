@@ -14,6 +14,7 @@ class ScanItem(QtGui.QWidget):
 
     def makeLayout(self, p):
         parameter, minim, maxim, steps, unit = p
+        self.unit = unit
         layout = QtGui.QHBoxLayout()
 
         self.select = QtGui.QCheckBox()
@@ -51,11 +52,22 @@ class ScanItem(QtGui.QWidget):
         self.select.setChecked(False)
         self.select.blockSignals(False)
 
+    def get_scan_settings(self):
+        """
+        Get the scan settings (min, max, steps, unit)
+        from this ScanItem
+        """
+        mn = self.minim.value()
+        mx = self.maxim.value()
+        steps = int(self.steps.value())
+        return (mn, mx, steps, self.unit)
+
 class sequence_widget(QtGui.QWidget):
     def __init__(self, params, editor):
         super(sequence_widget, self).__init__()
         self.parameters = {}
         self.makeLayout(params, editor)
+        self.scan_parameter = None
 
     def makeLayout(self, params, editor):
         layout = QtGui.QVBoxLayout()
@@ -79,6 +91,9 @@ class sequence_widget(QtGui.QWidget):
 
     def set_scan_none(self):
         self.scan_parameter = None
+
+    def get_scan_parameter(self):
+        return self.scan_parameter
         
 class scan_widget(QtGui.QStackedWidget):
 
@@ -104,6 +119,20 @@ class scan_widget(QtGui.QStackedWidget):
         self.show_none()
         #self.setCurrentWidget(sw)
 
+    def get_scan_settings(self, experiment):
+        """
+        Return the scan settings (parameter to scan, min, max, steps, unit)
+        or None for the requested sequence
+        """
+        scan_parameter = self.widgets[experiment].get_scan_parameter()
+    
+        if scan_parameter is None:
+            return None
+        else:
+            mn, mx, steps, unit = self.widgets[experiment].parameters[scan_parameter].get_scan_settings()
+            return (scan_parameter, mn, mx, steps, unit)
+        
+
     def select(self, experiment):
         '''
         Select experiment to show
@@ -114,6 +143,7 @@ class scan_widget(QtGui.QStackedWidget):
             self.PreferredParameters.show_only([('DopplerCooling','duration')])
         except KeyError: # no experiment selected
             self.show_none()
+
 
     def show_none(self):
         for exp in self.widgets.keys():
