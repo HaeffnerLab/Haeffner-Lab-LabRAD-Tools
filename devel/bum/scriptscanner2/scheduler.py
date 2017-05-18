@@ -227,7 +227,6 @@ class scheduler(object):
                 should_launch = True
                 pause_running = True 
         if should_launch:
-            print "CLEARED FOR LAUNCH"
             self.queue.remove_object((ident,scan, priority))
             self.signals.on_queued_removed(ident)
             self.do_launch(ident, scan, priority, pause_running)
@@ -235,7 +234,7 @@ class scheduler(object):
                 
     def do_launch(self, ident, scan, priority, pause_running):
         d = Deferred()
-        scan.update_params(self.parent.parameters)
+        scan.update_params(self.parent.all_parameters())
         status = script_semaphore(ident, self.signals)
         self._add_to_running(ident, scan, d, status, priority)
         if pause_running:
