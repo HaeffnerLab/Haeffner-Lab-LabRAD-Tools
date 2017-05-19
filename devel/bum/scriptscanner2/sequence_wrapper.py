@@ -24,7 +24,7 @@ from labrad.units import WithUnit as U
 
 class pulse_sequence_wrapper(object):
     
-    def __init__(self, module, drift_tracker = None):  
+    def __init__(self, module, sc, drift_tracker = None):  
         self.module = module
         self.name = module.__name__
         # copy the parameter vault dict by value
@@ -32,6 +32,7 @@ class pulse_sequence_wrapper(object):
         #self.parameters_dict.update(pv_dict)
         self.show_params = module.show_params
         self.scan = None
+        self.sc = sc # reference to scriptscanner class, not through the labrad connection
         self.drift_tracker = drift_tracker
         #self.seq = module(self.pv_dict)
     
@@ -58,16 +59,20 @@ class pulse_sequence_wrapper(object):
 
     def run(self, ident):
         self.ident = ident
+        import time
         try:
             for x in self.scan:
                 update = {self.parameter_to_scan: x}
                 self.update_params(update)
                 seq = self.module(self.parameters_dict)
                 ### program pulser, get readouts
+            self._finalize()
         except Exception as e:
             reason = traceback.format_exc()
             print reason
-            
+        
+    def _finalize(self):
+        self.sc._finish_confirmed(self.ident)
 
 if __name__=='__main__':
     from example import Example
