@@ -119,7 +119,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
 
         scan_param, m1, m2, steps, unit = settings
         cls = self.sequences[sequence_name]
-        wrapper = psw(cls)
+        wrapper = psw(cls, self)
         if scan_param == 'None':
             wrapper.set_scan_none()
         else:
@@ -196,6 +196,9 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
     
     @setting(33, "Finish Confirmed", sequence_ID = 'w')
     def finish_confirmed(self, c, sequence_ID):
+        self._finish_confirmed(sequence_ID)
+
+    def _finish_confirmed(self, sequence_ID):
         status = self.scheduler.get_running_status(sequence_ID)
         if status is None:
             raise Exception ("Trying to confirm Finish of sequence with ID {0} but it was not running".format(sequence_ID))
