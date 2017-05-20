@@ -20,7 +20,8 @@ to the sequence object
 import numpy as np
 from treedict import TreeDict
 from labrad.units import WithUnit as U
-#from subsequences import *
+#from twisted.internet import defer
+from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue, Deferred
 
 class pulse_sequence_wrapper(object):
     
@@ -57,19 +58,39 @@ class pulse_sequence_wrapper(object):
         """
         self.scan = None
 
+    def pause_or_stop(self):
+        '''
+        allows to pause and to stop the experiment
+        '''
+        self.should_stop = self.sc.client.scriptscanner.pause_or_stop(self.ident)
+        if self.should_stop:
+            self.sc.client.scriptscanner.stop_confirmed(self.ident)
+        return self.should_stop
+
+    #@inlineCallbacks
     def run(self, ident):
         self.ident = ident
         import time
-        try:
-            for x in self.scan:
-                update = {self.parameter_to_scan: x}
-                self.update_params(update)
-                seq = self.module(self.parameters_dict)
+        for x in self.scan:
+            time.sleep(0.5)
+            d = Deferred()
+            
+            #self.sc.client.scriptscanner.pause_or_stop(self.ident)
+            #d.addCallback(self.sc._pause_or_stop)
+            #d.callback(self.ident)
+            #if self.pause_or_stop(): break
+            #self.sc._pause_or_stop(self.ident)
+            #yield self.sc._pause_or_stop(self.ident)
+            #self.pause_or_stop()
+            update = {self.parameter_to_scan: x}
+            self.update_params(update)
+            seq = self.module(self.parameters_dict)
                 ### program pulser, get readouts
-            self._finalize()
-        except Exception as e:
-            reason = traceback.format_exc()
-            print reason
+        #self.sc.scheduler.remove_from_running(None, ident)
+        #yield None
+        self._finalize()
+        #return None
+        #returnValue(None)
         
     def _finalize(self):
         self.sc._finish_confirmed(self.ident)

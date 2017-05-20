@@ -198,7 +198,9 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
     def finish_confirmed(self, c, sequence_ID):
         self._finish_confirmed(sequence_ID)
 
+    #@inlineCallbacks
     def _finish_confirmed(self, sequence_ID):
+        print "finishing up"
         status = self.scheduler.get_running_status(sequence_ID)
         if status is None:
             raise Exception ("Trying to confirm Finish of sequence with ID {0} but it was not running".format(sequence_ID))
@@ -206,7 +208,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         self.scheduler.remove_if_external(sequence_ID)
     
     @setting(34, "Stop Confirmed", sequence_ID = 'w')
-    def stop_confiromed(self, c, sequence_ID):
+    def stop_confirmed(self, c, sequence_ID):
         status = self.scheduler.get_running_status(sequence_ID)
         if status is None:
             raise Exception ("Trying to confirm Stop of sequence with ID {0} but it was not running".format(sequence_ID))
@@ -218,10 +220,24 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         Returns the boolean whether or not the sequence should be stopped. This request blocks while the sequence is to be paused.
         '''
         status = self.scheduler.get_running_status(sequence_ID)
+        print "gettin the status!!!!!!!!!!"
         if status is None:
             raise Exception ("Trying to confirm Pause/Stop of sequence with ID {0} but it was not running".format(sequence_ID))
         yield status.pause()
         returnValue(status.should_stop)
+
+    #@inlineCallbacks
+    def _pause_or_stop(self, sequence_ID):
+        '''
+        Returns the boolean whether or not the sequence should be stopped. This request blocks while the sequence is to be paused.
+        '''
+        status = self.scheduler.get_running_status(sequence_ID)
+        if status is None:
+            raise Exception ("Trying to confirm Pause/Stop of sequence with ID {0} but it was not running".format(sequence_ID))
+        print "checking the pause stuff"
+        status.pause()
+        print "pause stuff checked"
+        #returnValue(status.should_stop)
     
     @setting(36, "Error Finish Confirmed", sequence_ID = 'w', error_message = 's')
     def error_finish_confirmed(self, c, sequence_ID, error_message):

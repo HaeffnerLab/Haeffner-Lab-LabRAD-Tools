@@ -38,12 +38,12 @@ class script_semaphore(object):
             #call back all pause requests
             while self.pause_requests:
                 request = self.pause_requests.pop()
-#                print 'called back pause requests', request
+                print 'called back pause requests', request
                 request.callback(True)
-#        print 'script checking on whether should pause'
+        print 'script checking on whether should pause'
         yield self.pause_lock.acquire()
         self.pause_lock.release()
-#        print 'script proceeding'
+        print 'script proceeding'
         if self.status == 'Paused':
             self.status = 'Running'
             self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
@@ -62,7 +62,7 @@ class script_semaphore(object):
             self.pause_lock.release()
     
     def set_pausing(self, should_pause):
-        '''if asking to pause, returns a deferred which is fired when sciprt actually paused'''
+        '''if asking to pause, returns a deferred which is fired when script actually paused'''
         if should_pause:
             request = Deferred()
             print 'made request', request
