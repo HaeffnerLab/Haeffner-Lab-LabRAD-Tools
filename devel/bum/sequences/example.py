@@ -5,7 +5,7 @@ from treedict import TreeDict
 class Sequence(pulse_sequence):
 
     scannable_params = {
-        'RabiExcitation.frequency': (-50, 50, 0, 'kHz'),
+        'RabiExcitation.frequency': (-50, 50, 10, 'kHz'),
         'RabiExcitation.duration': (1, 1000., 10, 'us')
         }
 

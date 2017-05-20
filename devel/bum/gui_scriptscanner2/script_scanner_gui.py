@@ -275,7 +275,7 @@ class script_scanner_gui(QtGui.QWidget):
         sc = yield self.cxn.get_server('ScriptScanner')
         ident = int(ident)
         try:
-            yield sc.pause_script(ident, should_pause)
+            yield sc.pause_sequence(ident, should_pause)
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
@@ -331,7 +331,7 @@ class script_scanner_gui(QtGui.QWidget):
         sc = yield self.cxn.get_server('ScriptScanner')
         ident = int(ident)
         try:
-            yield sc.remove_queued_script(ident, context = self.context)
+            yield sc.remove_queued_sequence(ident, context = self.context)
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
