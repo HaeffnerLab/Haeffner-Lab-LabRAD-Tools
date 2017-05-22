@@ -233,6 +233,7 @@ class scheduler(object):
             self.launch_scripts()
                 
     def do_launch(self, ident, scan, priority, pause_running):
+        print "pause_running: {}",pause_running
         d = Deferred()
         scan.update_params(self.parent.all_parameters())
         status = script_semaphore(ident, self.signals)

@@ -22,6 +22,7 @@ from treedict import TreeDict
 from labrad.units import WithUnit as U
 #from twisted.internet import defer
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue, Deferred
+from twisted.internet.threads import blockingCallFromThread
 
 class pulse_sequence_wrapper(object):
     
@@ -67,27 +68,23 @@ class pulse_sequence_wrapper(object):
             self.sc.client.scriptscanner.stop_confirmed(self.ident)
         return self.should_stop
 
+    def p(self, result):
+        print result
+
     #@inlineCallbacks
     def run(self, ident):
         self.ident = ident
         import time
         for x in self.scan:
             time.sleep(0.5)
-            d = Deferred()
-            
-            #self.sc.client.scriptscanner.pause_or_stop(self.ident)
-            #d.addCallback(self.sc._pause_or_stop)
-            #d.callback(self.ident)
-            #if self.pause_or_stop(): break
-            #self.sc._pause_or_stop(self.ident)
-            #yield self.sc._pause_or_stop(self.ident)
-            #self.pause_or_stop()
+            should_stop = self.sc._pause_or_stop(ident)
+            print "should_stop: {}".format(should_stop)
+            #self.sc_should_pause(ident)
+            if should_stop: break
             update = {self.parameter_to_scan: x}
             self.update_params(update)
             seq = self.module(self.parameters_dict)
                 ### program pulser, get readouts
-        #self.sc.scheduler.remove_from_running(None, ident)
-        #yield None
         self._finalize()
         #return None
         #returnValue(None)

@@ -264,7 +264,7 @@ class script_scanner_gui(QtGui.QWidget):
         sc = yield self.cxn.get_server('ScriptScanner')
         ident = int(ident)
         try:
-            yield sc.stop_script(ident)
+            yield sc.stop_sequence(ident)
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
