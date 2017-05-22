@@ -161,7 +161,8 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         status = self.scheduler.get_running_status(sequence_ID)
         if status is None:
             raise Exception ("Trying to pause sequence with ID {0} but it was not running".format(sequence_ID))
-        status.set_pausing(should_pause)
+        status.status = 'Pausing'
+        #status.set_pausing(should_pause)
         
     @setting(21, "Stop Sequence", sequence_ID = 'w')
     def stop_sequence(self, c, sequence_ID):
@@ -220,7 +221,6 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         Returns the boolean whether or not the sequence should be stopped. This request blocks while the sequence is to be paused.
         '''
         status = self.scheduler.get_running_status(sequence_ID)
-        print "gettin the status!!!!!!!!!!"
         if status is None:
             raise Exception ("Trying to confirm Pause/Stop of sequence with ID {0} but it was not running".format(sequence_ID))
         yield status.pause()
@@ -231,13 +231,18 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         '''
         Returns the boolean whether or not the sequence should be stopped. This request blocks while the sequence is to be paused.
         '''
+        print "pause or stop"
         status = self.scheduler.get_running_status(sequence_ID)
+        print "status.status: {}".format(status.status)
         if status is None:
             raise Exception ("Trying to confirm Pause/Stop of sequence with ID {0} but it was not running".format(sequence_ID))
-        print "checking the pause stuff"
         status.pause()
-        print "pause stuff checked"
-        #returnValue(status.should_stop)
+        return status.should_stop
+
+    def _should_pause(self, sequence_ID):
+        pass
+        status = self.scheduler.get_running_status(sequence_ID)
+        #print status.status
     
     @setting(36, "Error Finish Confirmed", sequence_ID = 'w', error_message = 's')
     def error_finish_confirmed(self, c, sequence_ID, error_message):

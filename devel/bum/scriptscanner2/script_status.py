@@ -25,9 +25,35 @@ class script_semaphore(object):
     def launch_confirmed(self):
         self.status = 'Running'
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
+
+    def pause(self):
+        '''
+        gets called by the script to pause.
+        '''
+        if self.pause_lock.locked:
+            self.status = 'Paused'
+            self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
+            self.signals.on_running_script_paused((self.ident, True))
+            #call back all pause requests
+            while self.pause_requests:
+                request = self.pause_requests.pop()
+                print 'called back pause requests', request
+                request.callback(True)
+        print 'script checking on whether should pause'
+        self.pause_lock.acquire()
+        self.pause_lock.release()
+        print 'script proceeding'
+        if self.status == 'Paused':
+            self.status = 'Running'
+            self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
+            self.signals.on_running_script_paused((self.ident, False))
+            #call back all continue requests
+            while self.continue_requests:
+                request = self.continue_requests.pop()
+                request.callback(True)
         
     @inlineCallbacks
-    def pause(self):
+    def pause_inline(self):
         '''
         gets called by the script to pause.
         '''
