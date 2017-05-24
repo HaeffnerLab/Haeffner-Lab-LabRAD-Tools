@@ -119,7 +119,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
 
         scan_param, m1, m2, steps, unit = settings
         cls = self.sequences[sequence_name]
-        wrapper = psw(cls, self)
+        wrapper = psw(cls, self, self.client)
         if scan_param == 'None':
             wrapper.set_scan_none()
         else:
