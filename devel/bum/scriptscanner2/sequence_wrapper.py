@@ -23,10 +23,11 @@ from labrad.units import WithUnit as U
 #from twisted.internet import defer
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue, Deferred
 from twisted.internet.threads import blockingCallFromThread
+from analysis import readouts
 
 class pulse_sequence_wrapper(object):
     
-    def __init__(self, module, sc, drift_tracker = None):  
+    def __init__(self, module, sc, cxn, drift_tracker = None):
         self.module = module
         self.name = module.__name__
         # copy the parameter vault dict by value
@@ -36,6 +37,7 @@ class pulse_sequence_wrapper(object):
         self.scan = None
         self.sc = sc # reference to scriptscanner class, not through the labrad connection
         self.drift_tracker = drift_tracker
+        self.cxn = cxn
         #self.seq = module(self.pv_dict)
     
     def setup_data_vault(self):
@@ -59,35 +61,56 @@ class pulse_sequence_wrapper(object):
         """
         self.scan = None
 
-    def pause_or_stop(self):
-        '''
-        allows to pause and to stop the experiment
-        '''
-        self.should_stop = self.sc.client.scriptscanner.pause_or_stop(self.ident)
-        if self.should_stop:
-            self.sc.client.scriptscanner.stop_confirmed(self.ident)
-        return self.should_stop
+    def initialize_camera(self):
+        camera = self.cxn.andor_server
+        self.total_camera_confidences = []
+        self.camera_initially_live_display = self.camera.is_live_display_running()
+        camera.abort_acquisition()
+        self.initial_exposure = camera.get_exposure_time()
+        p = self.parameters_dict
+        exposure = p.StateReadout.state_readout_duration
+        camera.set_exposure_time(exposure)
+        self.initial_region = self.camera.get_image_region()
+        self.image_region = [
+                             int(p.horizontal_bin),
+                             int(p.vertical_bin),
+                             int(p.horizontal_min),
+                             int(p.horizontal_max),
+                             int(p.vertical_min),
+                             int(p.vertical_max),
+                             ]
 
-    def p(self, result):
-        print result
-
-    #@inlineCallbacks
+        camera.set_image_region(*self.image_region)
+        camera.set_acquisition_mode('Kinetics')
+        self.initial_trigger_mode = camera.get_trigger_mode()
+        camera.set_trigger_mode('External')
+        
     def run(self, ident):
         self.ident = ident
         import time
+
+        # first, get the current parameters from scriptscanner
+
+        
+        self.run_initial()
         for x in self.scan:
             time.sleep(0.5)
             should_stop = self.sc._pause_or_stop(ident)
-            print "should_stop: {}".format(should_stop)
-            #self.sc_should_pause(ident)
             if should_stop: break
             update = {self.parameter_to_scan: x}
             self.update_params(update)
+            self.run_in_loop()
             seq = self.module(self.parameters_dict)
                 ### program pulser, get readouts
+        self.run_finally()
         self._finalize()
-        #return None
-        #returnValue(None)
+
+    def run_initial(self):
+        pass
+    def run_in_loop(self):
+        pass
+    def run_finally(self):
+        pass
         
     def _finalize(self):
         self.sc._finish_confirmed(self.ident)
