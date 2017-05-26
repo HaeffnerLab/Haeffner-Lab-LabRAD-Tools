@@ -1,6 +1,6 @@
 import numpy as np
 import lmfit
-from equilbrium_positions import position_dict
+from equilibrium_positions import position_dict
 import peakutils
 
 from multiprocessing import Process
