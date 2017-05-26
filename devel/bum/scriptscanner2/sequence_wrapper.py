@@ -27,7 +27,7 @@ from analysis import readouts
 
 class pulse_sequence_wrapper(object):
     
-    def __init__(self, module, sc, cxn, drift_tracker = None):
+    def __init__(self, module, sc, cxn):
         self.module = module
         self.name = module.__name__
         # copy the parameter vault dict by value
@@ -36,12 +36,19 @@ class pulse_sequence_wrapper(object):
         self.show_params = module.show_params
         self.scan = None
         self.sc = sc # reference to scriptscanner class, not through the labrad connection
-        self.drift_tracker = drift_tracker
         self.cxn = cxn
         #self.seq = module(self.pv_dict)
     
     def setup_data_vault(self):
-        pass
+        import time
+        localtime = time.localtime()
+        self.dv = self.cxn.datavault
+        self.timetag = time.strftime('%H%M_%S', localtime)
+        directory = ['', 'Experiments', time.strftime('%Y%m%d', locatime), self.timetag]
+        self.data_save_context = self.cxn.context()
+        self.dv.cd(directory, True, context = self.data_save_context)
+        dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
+        self.ds = self.dv.new(self.timetag, [('','')], dependents, context = self.data_save_context)
 
     def update_params(self, update):
         # also update from the drift tracker here?
@@ -84,14 +91,22 @@ class pulse_sequence_wrapper(object):
         camera.set_acquisition_mode('Kinetics')
         self.initial_trigger_mode = camera.get_trigger_mode()
         camera.set_trigger_mode('External')
+
+    def output_size(self):
+        mode = self.parameters_dict.StateReadout.readout_mode
+        if mode == 'pmt':
+            return 1
+        if mode == 'camera':
+            return int(self.parameters_dict.IonsOnCamera.ion_number)
         
     def run(self, ident):
         self.ident = ident
         import time
 
         # first, get the current parameters from scriptscanner
+        self.update_params(self.sc._get_all_parameters())
 
-        
+        self.setup_data_vault()
         self.run_initial()
         for x in self.scan:
             time.sleep(0.5)

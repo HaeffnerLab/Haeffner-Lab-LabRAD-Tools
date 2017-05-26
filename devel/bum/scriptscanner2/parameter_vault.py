@@ -243,6 +243,12 @@ class ParameterVault(LabradServer):
         '''
         return self.parameters.items()
 
+    def _get_all_parameters(self):
+        '''
+        Return the parameters dictionary
+        '''
+        return self.parameters
+
     @inlineCallbacks
     def stopServer(self):
         try:
