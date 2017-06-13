@@ -3,6 +3,7 @@ class config(object):
     #list in the format (import_path, class_name)
     sequences = [
         ('common.devel.bum.sequences.example', 'Sequence'),
+        #('lattice.PulseSequences2.carrierspectrum', 'CarrierSpectrum')
         ]
 
     allowed_concurrent = {
