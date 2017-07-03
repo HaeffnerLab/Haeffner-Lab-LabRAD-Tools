@@ -19,8 +19,10 @@ to the sequence object
 """
 import numpy as np
 from treedict import TreeDict
+import labrad
 from labrad.units import WithUnit as U
 #from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue, Deferred
 from twisted.internet.threads import blockingCallFromThread
 from analysis import readouts
@@ -102,22 +104,27 @@ class pulse_sequence_wrapper(object):
     def run(self, ident):
         self.ident = ident
         import time
-
+        cxn = labrad.connect()
+        t = cxn.testserver
         # first, get the current parameters from scriptscanner
-        self.update_params(self.sc._get_all_parameters())
+        #self.update_params(self.sc._get_all_parameters())
 
-        self.setup_data_vault()
-        self.run_initial()
+        #self.setup_data_vault()
+        #self.run_initial()
         for x in self.scan:
             time.sleep(0.5)
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
-            update = {self.parameter_to_scan: x}
-            self.update_params(update)
-            self.run_in_loop()
-            seq = self.module(self.parameters_dict)
+            #update = {self.parameter_to_scan: x}
+            #self.update_params(update)
+            #self.run_in_loop()
+            #seq = self.module(self.parameters_dict)
+            print "waiting"
+            #t.wait_sequence_done()
+            t.wait_sequence_done()
+            print "done waiting"
                 ### program pulser, get readouts
-        self.run_finally()
+        #self.run_finally()
         self._finalize()
 
     def run_initial(self):
