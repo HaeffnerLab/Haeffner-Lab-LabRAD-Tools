@@ -1,4 +1,4 @@
-class FPGA_Simu(object):
+class fpga_simu(object):
     '''class containing all commands for interfacing with the fpga'''
     def __init__(self):
         
