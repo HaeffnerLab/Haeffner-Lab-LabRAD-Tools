@@ -48,7 +48,7 @@ class script_scanner_gui(QtGui.QWidget):
     def reinitialize_scriptscanner(self):
         self.scripting_widget.clear_all()
         self.ParametersEditor.clear_all()
-        #self.scan_widget.clear_all()
+        self.scan_widget.PreferredParameters.clear_all()
         yield self.populateExperiments()
         yield self.populateParameters()
         yield self.setupListenersScriptScanner()
