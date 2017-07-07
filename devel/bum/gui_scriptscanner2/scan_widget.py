@@ -109,7 +109,7 @@ class scan_widget(QtGui.QStackedWidget):
         self.reactor = reactor
         self.PreferredParameters = ParametersEditor(self.reactor)
         self.widgets = {} # dictionary of widgets to show
-        
+        self.preferreds = {}
 
     def setupLayout(self):
         pass
@@ -122,7 +122,13 @@ class scan_widget(QtGui.QStackedWidget):
         self.addWidget(sw)
         self.widgets[experiment] = sw
         self.show_none()
+
+        self.preferreds[experiment] = [x[0].split('.') for x in params]
+
         #self.setCurrentWidget(sw)
+
+    def set_preferred_parameters(self, experiment, params):
+        self.preferreds[experiment].extend([x.split('.') for x in params])
 
     def get_scan_settings(self, experiment):
         """
@@ -145,7 +151,8 @@ class scan_widget(QtGui.QStackedWidget):
         try:
             self.widgets[experiment].setVisible(True)
             self.setCurrentWidget(self.widgets[experiment])
-            self.PreferredParameters.show_only([('DopplerCooling','duration')])
+            #elf.PreferredParameters.show_only(self.preferreds[experiment])
+            #elf.PreferredParameters.show_only([('DopplerCooling','duration'), ('DopplerCooling', 'duration')])
         except KeyError: # no experiment selected
             self.show_none()
 

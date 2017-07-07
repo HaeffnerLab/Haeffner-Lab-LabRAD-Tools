@@ -13,6 +13,7 @@ class Sequence(pulse_sequence):
 
     def sequence(self):
         from subsequences.ExampleSubsequence import example
+        #print "reimported!!"
         self.addSequence(example)
 
 if __name__=='__main__':

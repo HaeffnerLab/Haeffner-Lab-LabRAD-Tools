@@ -49,11 +49,13 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         the sequence folder, then just import all the sequences
         in that folder
         '''
+        self.modules = [] # collection of modules for reloading
         for import_path, class_name in config.sequences:
             #print import_path, class_name
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
+                self.modules.append(module)
                 cls = getattr(module, class_name)
             except ImportError as e:
                 print 'Script Control Error importing: ', e
@@ -258,6 +260,22 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             return self.sequences[sequence].scannable_params.items()
         except KeyError:
             raise Exception('Sequence not found')
+
+    @setting(38, "Get Preferred Parameters", sequence = 's', returns = '*s')
+    def get_preferred_parameters(self, c, sequence):
+        try:
+            return self.sequences[sequence].show_params
+        except KeyError:
+            raise Exception('Sequence not found')
+
+    @setting(39, 'Reload sequences', returns = '')
+    def reload_sequences(self, c):
+        '''
+        Reload all sequences so that sequence changes are reflected
+        in the script scanner
+        '''
+        for m in self.modules: reload(m)
+        self.load_sequences()
 
     @inlineCallbacks
     def stopServer(self):

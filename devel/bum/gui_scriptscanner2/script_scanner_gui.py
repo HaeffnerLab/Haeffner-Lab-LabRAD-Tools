@@ -77,7 +77,8 @@ class script_scanner_gui(QtGui.QWidget):
             self.scripting_widget.addExperiment(experiment)
             scannable_params = yield sc.get_sequence_scannables(experiment)
             self.scan_widget.buildSequenceWidget(experiment, scannable_params)
-            
+            preferred_params = yield sc.get_preferred_parameters(experiment)
+            self.scan_widget.set_preferred_parameters(experiment, preferred_params)
         for ident,name,order in queued:
             self.scripting_widget.addQueued(ident, name, order)
         for ident,name,duration in scheduled:
