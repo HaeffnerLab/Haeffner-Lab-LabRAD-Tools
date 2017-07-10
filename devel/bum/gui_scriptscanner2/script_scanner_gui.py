@@ -211,29 +211,10 @@ class script_scanner_gui(QtGui.QWidget):
         self.scripting_widget.on_running_stop.connect(self.running_stop)
         self.scripting_widget.on_running_pause.connect(self.running_pause)
         self.scripting_widget.on_experiment_selected.connect(self.on_experiment_selected)
-        self.scripting_widget.on_scan.connect(self.scan_script)
+        #self.scripting_widget.on_scan.connect(self.scan_script)
         #parameter widget
         self.ParametersEditor.on_parameter_change.connect(self.on_new_parameter)
         self.scan_widget.PreferredParameters.on_parameter_change.connect(self.on_new_parameter)
-    
-    @inlineCallbacks
-    def scan_script(self, scan_script, measure_script, parameter, minim, maxim, steps, units):
-        scan_script = str(scan_script)
-        measure_script = str(measure_script)
-        collection, parameter_name = parameter
-        steps = int(steps)
-        units = str(units)
-        #maxim = float(maxim)
-        #minim = float(minim)
-        #maxim=U.Value(maxim,units)
-        #minim=U.Value(minim,units)
-        #steps=U.Value(steps,units)
-
-        sc = yield self.cxn.get_server('ScriptScanner')
-        try:
-            yield sc.new_script_scan(scan_script, measure_script, collection, parameter_name, minim, maxim, steps, units)
-        except self.Error as e:
-            self.displayError(e.msg)
     
     @inlineCallbacks
     def on_experiment_selected(self, selected_experiment):
