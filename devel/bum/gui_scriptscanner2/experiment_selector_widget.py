@@ -224,7 +224,7 @@ class experiment_selector_widget(QtGui.QWidget):
     on_repeat = QtCore.pyqtSignal(str, int, bool)
     on_schedule = QtCore.pyqtSignal(str, float, str, bool)
     on_experiment_selected = QtCore.pyqtSignal(str)
-    on_scan = QtCore.pyqtSignal(str, str, tuple, float, float, int, str)
+    #on_scan = QtCore.pyqtSignal(str, str, tuple, float, float, int, str)
     
     def __init__(self, reactor, parent, font = None):
         self.font = font
@@ -251,14 +251,14 @@ class experiment_selector_widget(QtGui.QWidget):
         self.dropdown.setModel(sorting_model)
         self.run_button = QtGui.QPushButton("Run")
         self.repeat_button = QtGui.QPushButton("Repeat")
-        self.scan_button = QtGui.QPushButton("Scan")
+        #self.scan_button = QtGui.QPushButton("Scan")
         self.schedule_button = QtGui.QPushButton("Schedule")
         layout.addWidget(label, 0, 0, 1 , 1)
         layout.addWidget(self.dropdown, 0, 1, 1, 3)
         layout.addWidget(self.run_button, 1, 0, 1, 1)
         layout.addWidget(self.repeat_button, 1, 1, 1, 1)
-        layout.addWidget(self.scan_button, 1, 2, 1, 1,)
-        layout.addWidget(self.schedule_button, 1, 3, 1, 1)
+        #layout.addWidget(self.scan_button, 1, 2, 1, 1,)
+        layout.addWidget(self.schedule_button, 1, 2, 1, 1)
         self.setLayout(layout)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         self.check_button_disable(self.dropdown.currentText())
@@ -272,16 +272,15 @@ class experiment_selector_widget(QtGui.QWidget):
         self.run_button.pressed.connect(self.run_emit_selected)
         self.repeat_button.pressed.connect(self.on_repeat_button)
         self.schedule_button.pressed.connect(self.on_schedule_button)
-        self.scan_button.pressed.connect(self.on_scan_button)
         self.dropdown.currentIndexChanged[QtCore.QString].connect(self.on_experiment_selected)
         self.dropdown.currentIndexChanged[QtCore.QString].connect(self.check_button_disable)
     
     def check_button_disable(self, selection):
         if not selection:
-            for button in [self.run_button, self.repeat_button, self.schedule_button, self.scan_button]:
+            for button in [self.run_button, self.repeat_button, self.schedule_button]:
                 button.setDisabled(True)
         else:
-            for button in [self.run_button, self.repeat_button, self.schedule_button, self.scan_button]:
+            for button in [self.run_button, self.repeat_button, self.schedule_button]:
                 button.setDisabled(False)
         
     def on_schedule_button(self):
@@ -300,21 +299,7 @@ class experiment_selector_widget(QtGui.QWidget):
             name = self.dropdown.currentText()
             should_save = dialog.should_save.isChecked()
             self.on_repeat.emit(name, duration, should_save)
-    
-    def on_scan_button(self):
-        experiment = self.dropdown.currentText()
-        parameter_info = self.parent.get_scannable_parameters()
-        dialog = scan_dialog(experiment, self.experiments, parameter_info)
-        if dialog.exec_():
-            scan = dialog.scan.text()
-            measure = dialog.measure.currentText()
-            parameter = dialog.get_parameter()
-            start = dialog.uiStart.value()
-            stop = dialog.uiStop.value()
-            steps = dialog.uiSteps.value()
-            units = dialog.uiStart.suffix()
-            self.on_scan.emit(scan, measure, parameter, start, stop, steps, units)
-    
+
     def run_emit_selected(self):
         self.on_run.emit(self.dropdown.currentText())
     

@@ -8,7 +8,7 @@ class scripting_widget(QtGui.QWidget):
     
     on_run = QtCore.pyqtSignal(str)
     on_repeat = QtCore.pyqtSignal((str, int, bool))
-    on_scan = QtCore.pyqtSignal(str, str, tuple, float, float, int, str)
+    #on_scan = QtCore.pyqtSignal(str, str, tuple, float, float, int, str)
     on_cancel_queued = QtCore.pyqtSignal(int)
     on_cancel_scheduled = QtCore.pyqtSignal(int)
     on_schedule = QtCore.pyqtSignal(str,float, str, bool)
@@ -85,7 +85,7 @@ class scripting_widget(QtGui.QWidget):
         self.selector.on_repeat.connect(self.on_repeat)
         self.selector.on_schedule.connect(self.on_schedule)
         self.selector.on_experiment_selected.connect(self.on_experiment_selected.emit)
-        self.selector.on_scan.connect(self.on_scan.emit)
+        #self.selector.on_scan.connect(self.on_scan.emit)
         self.queued.ql.on_cancel.connect(self.on_cancel_queued.emit)
         self.scheduled.sl.on_cancel.connect(self.on_cancel_scheduled.emit)
         self.scheduled.sl.on_new_duration.connect(self.on_schedule_duration.emit)
