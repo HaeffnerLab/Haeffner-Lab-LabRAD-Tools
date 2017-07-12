@@ -23,7 +23,7 @@ def pmt_simple(readouts, threshold):
     else:
         # got no readouts
         perc_excited = -1.0
-    return perc_excited
+    return [perc_excited]
 
 def camera_ion_probabilities(images, repetitions, p):
     """
