@@ -41,15 +41,16 @@ class pulse_sequence_wrapper(object):
         self.cxn = cxn
         #self.seq = module(self.pv_dict)
     
-    def setup_data_vault(self):
+    def setup_data_vault(self, cxn):
         import time
         localtime = time.localtime()
-        self.dv = self.cxn.datavault
+        self.dv = cxn.data_vault
         self.timetag = time.strftime('%H%M_%S', localtime)
-        directory = ['', 'Experiments', time.strftime('%Y%m%d', locatime), self.timetag]
-        self.data_save_context = self.cxn.context()
+        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.timetag]
+        self.data_save_context = cxn.context()
         self.dv.cd(directory, True, context = self.data_save_context)
         dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
+        print dependents
         self.ds = self.dv.new(self.timetag, [('','')], dependents, context = self.data_save_context)
 
     def update_params(self, update):
@@ -59,6 +60,7 @@ class pulse_sequence_wrapper(object):
     def set_scan(self, scan_param, minim, maxim, steps, unit):
         self.parameter_to_scan = scan_param
         m1, m2, default, unit = self.module.scannable_params[scan_param]
+        self.scan_unit = unit
         self.scan = np.linspace(minim, maxim, steps)
         self.scan = [U(pt, unit) for pt in self.scan]
 
@@ -110,7 +112,12 @@ class pulse_sequence_wrapper(object):
         # first, get the current parameters from scriptscanner
         #self.update_params(self.sc._get_all_parameters())
 
-        #self.setup_data_vault()
+        self.setup_data_vault(cxn)
+        #localtime = time.localtime()
+        #self.dv = cxn.data_vault
+        #self.timetag = time.strftime('%H%M_%S', localtime)
+        #directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.timetag]
+
         self.run_initial()
         for x in self.scan:
             time.sleep(0.5)
@@ -124,12 +131,16 @@ class pulse_sequence_wrapper(object):
             #pulser.start_number(repetitions)
             #pulser.wait_sequence_done()
             #pulser.stop_sequence()
-
-            
+            rds = np.random.randint(0, 50, 100)
+            threshold = int(self.parameters_dict.StateReadout.threshold)
+            ion_state = readouts.pmt_simple(rds, threshold)
+            submission = [x[self.scan_unit]]
+            submission.extend(ion_state)
+            self.dv.add(submission, context = self.data_save_context)
             #print "done waiting"
                 ### program pulser, get readouts
-        #self.run_finally()
-        self._finalize()
+        self.run_finally()
+        self._finalize(cxn)
 
     def run_initial(self):
         pass
@@ -138,8 +149,9 @@ class pulse_sequence_wrapper(object):
     def run_finally(self):
         pass
         
-    def _finalize(self):
+    def _finalize(self, cxn):
         self.sc._finish_confirmed(self.ident)
+        cxn.disconnect()
 
 if __name__=='__main__':
     from example import Example
