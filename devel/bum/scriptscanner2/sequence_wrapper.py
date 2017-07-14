@@ -25,6 +25,7 @@ from labrad.units import WithUnit as U
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue, Deferred
 from twisted.internet.threads import blockingCallFromThread
+import dvParameters
 from analysis import readouts
 
 class pulse_sequence_wrapper(object):
@@ -46,12 +47,12 @@ class pulse_sequence_wrapper(object):
         localtime = time.localtime()
         self.dv = cxn.data_vault
         self.timetag = time.strftime('%H%M_%S', localtime)
-        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.timetag]
+        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.name, self.timetag]
         self.data_save_context = cxn.context()
         self.dv.cd(directory, True, context = self.data_save_context)
         dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         print dependents
-        self.ds = self.dv.new(self.timetag, [('','')], dependents, context = self.data_save_context)
+        self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
 
     def update_params(self, update):
         # also update from the drift tracker here?
@@ -71,6 +72,8 @@ class pulse_sequence_wrapper(object):
         with the selected parameters
         """
         self.scan = None
+        self.parameter_to_scan = 'None'
+        self.scan_unit = 'None'
 
     def initialize_camera(self):
         camera = self.cxn.andor_server
@@ -150,6 +153,7 @@ class pulse_sequence_wrapper(object):
         pass
         
     def _finalize(self, cxn):
+        dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         self.sc._finish_confirmed(self.ident)
         cxn.disconnect()
 
