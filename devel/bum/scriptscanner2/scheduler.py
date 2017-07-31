@@ -245,9 +245,16 @@ class scheduler(object):
             d.addCallback(self.unpause_on_finish) 
         d.addCallback(self.remove_from_running, running_id = ident)
         d.addCallback(self.launch_scripts)
+        d.addErrback(self.failure)
         d.callback(True)
         self.signals.on_running_new_script((ident, scan.name))
-    
+        
+    def failure(self, f):
+        print "errback"
+        #print "Exception: %s"
+        print "Exception: %s" % (f.getTraceback(),)
+        f.trap(RuntimeError)
+        
     def pause_running(self, result, scan, current_ident):
         paused_idents = []
         paused_deferred = []
