@@ -27,6 +27,7 @@ from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue, D
 from twisted.internet.threads import blockingCallFromThread
 import dvParameters
 from analysis import readouts
+import sys
 
 class pulse_sequence_wrapper(object):
     
@@ -46,13 +47,14 @@ class pulse_sequence_wrapper(object):
         import time
         localtime = time.localtime()
         self.dv = cxn.data_vault
+        print "data vault connected"
         self.timetag = time.strftime('%H%M_%S', localtime)
         directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.name, self.timetag]
         self.data_save_context = cxn.context()
         self.dv.cd(directory, True, context = self.data_save_context)
         dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         print dependents
-        self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
+        #self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
 
     def update_params(self, update):
         # also update from the drift tracker here?
@@ -110,12 +112,19 @@ class pulse_sequence_wrapper(object):
         self.ident = ident
         import time
         cxn = labrad.connect()
-        #pulser = cxn.pulser
+        pulser = cxn.pulser
         #t = cxn.testserver
         # first, get the current parameters from scriptscanner
-        #self.update_params(self.sc._get_all_parameters())
+        #print self.sc._get_all_parameters()
+        self.update_params(self.sc._get_all_parameters())
+        #try:
+        #    self.update_params(self.sc._get_all_parameters())
+        #except Exception as e:
+        #    #e = sys.exc_info()[0]
+        #    print e
+        
 
-        self.setup_data_vault(cxn)
+        #self.setup_data_vault(cxn)
         #localtime = time.localtime()
         #self.dv = cxn.data_vault
         #self.timetag = time.strftime('%H%M_%S', localtime)
@@ -129,17 +138,17 @@ class pulse_sequence_wrapper(object):
             update = {self.parameter_to_scan: x}
             self.update_params(update)
             self.run_in_loop()
-            seq = self.module(self.parameters_dict)
+            #eq = self.module(self.parameters_dict)
             #seq.programSequence(pulser)
             #pulser.start_number(repetitions)
             #pulser.wait_sequence_done()
             #pulser.stop_sequence()
-            rds = np.random.randint(0, 50, 100)
-            threshold = int(self.parameters_dict.StateReadout.threshold)
-            ion_state = readouts.pmt_simple(rds, threshold)
-            submission = [x[self.scan_unit]]
-            submission.extend(ion_state)
-            self.dv.add(submission, context = self.data_save_context)
+            #rds = np.random.randint(0, 50, 100)
+            #threshold = int(self.parameters_dict.StateReadout.threshold)
+            #ion_state = readouts.pmt_simple(rds, threshold)
+            #submission = [x[self.scan_unit]]
+            #submission.extend(ion_state)
+            #self.dv.add(submission, context = self.data_save_context)
             #print "done waiting"
                 ### program pulser, get readouts
         self.run_finally()
@@ -153,7 +162,7 @@ class pulse_sequence_wrapper(object):
         pass
         
     def _finalize(self, cxn):
-        dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
+        #dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         self.sc._finish_confirmed(self.ident)
         cxn.disconnect()
 
