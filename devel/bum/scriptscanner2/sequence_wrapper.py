@@ -58,7 +58,15 @@ class pulse_sequence_wrapper(object):
 
     def update_params(self, update):
         # also update from the drift tracker here?
-        self.parameters_dict.update(update)
+        print "UPDATING"
+        update_dict = {}
+        for key in update.keys():
+            if type(key) == tuple:
+                update_dict['.'.join(key)] = update[key]
+            else:
+                update_dict[key] = update[key]
+        #print update_dict
+        self.parameters_dict.update(update_dict)
 
     def set_scan(self, scan_param, minim, maxim, steps, unit):
         self.parameter_to_scan = scan_param
