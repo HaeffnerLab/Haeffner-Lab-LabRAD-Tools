@@ -111,6 +111,7 @@ class pulse_sequence_wrapper(object):
 
     def output_size(self):
         mode = self.parameters_dict.StateReadout.readout_mode
+        print mode
         if mode == 'pmt':
             return 1
         if mode == 'camera':
@@ -125,13 +126,8 @@ class pulse_sequence_wrapper(object):
         # first, get the current parameters from scriptscanner
         #print self.sc._get_all_parameters()
         self.update_params(self.sc._get_all_parameters())
-        #try:
-        #    self.update_params(self.sc._get_all_parameters())
-        #except Exception as e:
-        #    #e = sys.exc_info()[0]
-        #    print e
         
-
+        print self.output_size()
         #self.setup_data_vault(cxn)
         #localtime = time.localtime()
         #self.dv = cxn.data_vault
