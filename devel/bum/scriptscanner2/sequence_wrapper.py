@@ -41,6 +41,10 @@ class pulse_sequence_wrapper(object):
         self.scan = None
         self.sc = sc # reference to scriptscanner class, not through the labrad connection
         self.cxn = cxn
+        try:
+            self.dt = self.cxn.sd_tracker
+        except:
+            self.dt = None
         #self.seq = module(self.pv_dict)
     
     def setup_data_vault(self, cxn):
@@ -55,18 +59,39 @@ class pulse_sequence_wrapper(object):
         dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         print dependents
         #self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
-
+        
+        
+    @inlineCallbacks
     def update_params(self, update):
         # also update from the drift tracker here?
         print "UPDATING"
+        
+        carrier_translation = {'S+1/2D-3/2':'Carriers.c0',
+                               'S-1/2D-5/2':'Carriers.c1',
+                               'S+1/2D-1/2':'Carriers.c2',
+                               'S-1/2D-3/2':'Carriers.c3',
+                               'S+1/2D+1/2':'Carriers.c4',
+                               'S-1/2D-1/2':'Carriers.c5',
+                               'S+1/2D+3/2':'Carriers.c6',
+                               'S-1/2D+1/2':'Carriers.c7',
+                               'S+1/2D+5/2':'Carriers.c8',
+                               'S-1/2D+3/2':'Carriers.c9',
+                               }
+        
         update_dict = {}
+        carriers_dict = {}
         for key in update.keys():
             if type(key) == tuple:
+                print key
                 update_dict['.'.join(key)] = update[key]
             else:
                 update_dict[key] = update[key]
-        #print update_dict
+        if self.dt is not None:
+            carriers = yield self.dt.get_current_lines()
+            for c, f in carriers:
+                carriers_dict[carrier_translation[c]] = f
         self.parameters_dict.update(update_dict)
+        self.parameters_dict.update(carriers_dict)
 
     def set_scan(self, scan_param, minim, maxim, steps, unit):
         self.parameter_to_scan = scan_param
@@ -117,6 +142,7 @@ class pulse_sequence_wrapper(object):
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)
         
+    #@inlineCallbacks    
     def run(self, ident):
         self.ident = ident
         import time
@@ -125,14 +151,10 @@ class pulse_sequence_wrapper(object):
         #t = cxn.testserver
         # first, get the current parameters from scriptscanner
         #print self.sc._get_all_parameters()
-        self.update_params(self.sc._get_all_parameters())
-        
-        print self.output_size()
-        #self.setup_data_vault(cxn)
-        #localtime = time.localtime()
-        #self.dv = cxn.data_vault
-        #self.timetag = time.strftime('%H%M_%S', localtime)
-        #directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.timetag]
+        self.update_params(self.sc.all_parameters())
+        #print self.parameters_dict.items()
+        self.setup_data_vault(cxn)
+        self.dv = cxn.data_vault
 
         self.run_initial()
         for x in self.scan:
@@ -142,11 +164,11 @@ class pulse_sequence_wrapper(object):
             update = {self.parameter_to_scan: x}
             self.update_params(update)
             self.run_in_loop()
-            #eq = self.module(self.parameters_dict)
-            #seq.programSequence(pulser)
-            #pulser.start_number(repetitions)
-            #pulser.wait_sequence_done()
-            #pulser.stop_sequence()
+            seq = self.module(self.parameters_dict)
+            seq.programSequence(pulser)
+            pulser.start_number(100)
+            pulser.wait_sequence_done()
+            pulser.stop_sequence()
             #rds = np.random.randint(0, 50, 100)
             #threshold = int(self.parameters_dict.StateReadout.threshold)
             #ion_state = readouts.pmt_simple(rds, threshold)

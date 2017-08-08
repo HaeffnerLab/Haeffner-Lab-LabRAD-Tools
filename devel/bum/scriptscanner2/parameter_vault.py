@@ -241,13 +241,7 @@ class ParameterVault(LabradServer):
         Return a list containing all parameters in the
         parametervault.
         '''
-        return self.parameters.items()
-
-    def _get_all_parameters(self):
-        '''
-        Return the parameters dictionary
-        '''
-        return self.parameters
+        return self.all_parameters().items()
 
     @inlineCallbacks
     def stopServer(self):
