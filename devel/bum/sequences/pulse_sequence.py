@@ -84,9 +84,20 @@ class pulse_sequence(object):
 		'''calculates the frequency of the 729 DP drive from the carriers and sidebands
 		in the parameter vault
 		'''
-		
+		carrier_translation = {'S+1/2D-3/2':'c0',
+							   'S-1/2D-5/2':'c1',
+							   'S+1/2D-1/2':'c2',
+							   'S-1/2D-3/2':'c3',
+							   'S+1/2D+1/2':'c4',
+							   'S-1/2D-1/2':'c5',
+							   'S+1/2D+3/2':'c6',
+							   'S-1/2D+1/2':'c7',
+							   'S+1/2D+5/2':'c8',
+							   'S-1/2D+3/2':'c9',
+							   }
+		freq=self.parameters.Carriers[carrier_translation[carrier]]
 		try: 
-			freq=self.parameters.Carriers[carrier]
+			freq=self.parameters.Carriers[carrier_translation[carrier]]
 		except:
 			raise Exception('carrier not found') 
 		if sideband is not None:
