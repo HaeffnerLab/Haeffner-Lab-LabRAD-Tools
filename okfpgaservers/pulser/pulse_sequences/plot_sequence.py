@@ -45,14 +45,16 @@ class SequencePlotter():
             prev = switch
         x.append(times[-2])
         y.append(switches[-2])
-        return np.array(x),np.array(y)
+        return np.array(x)*1e3,np.array(y)
                  
     def makePlot(self):
         advance,reset = self.drawTTL()
         self.drawDDS(advance,reset)
-        pyplot.xlabel('Time (sec)')
-        pyplot.show()
-
+        pyplot.xlabel('Time (ms)')
+        ax=pyplot.gca()
+        ax.yaxis.set_visible(False)
+        #pyplot.show()
+        
 # making a pdf version of the pulsesequence 
     def makePDF(self):
         with PdfPages('PulseSequence.pdf') as pdf:
@@ -77,7 +79,7 @@ class SequencePlotter():
                     resetDDS = x,y
                 label = 'TTL ' + label
                 pyplot.plot(x, y)
-                pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right')
+                pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right',fontsize=6)
                 self.offset += 4
         return advanceDDS,resetDDS
     
@@ -116,15 +118,15 @@ class SequencePlotter():
         #each x coordiante appears twice except for the first one and last one
         x, y = self.getDDSCoordinates(advance, ampls)
         y = (np.array(y)  + 63.0) / 20.0 + self.offset #normalizes the amplitude -63 to -3 to height between 0 and 3
-        label =  'DDS: ' + channel + ' Amplitude '
+        label =  'DDS: ' + channel + ' Amp '
         pyplot.plot(x, y)
-        pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right')
+        pyplot.annotate(label, xy = (0.5,  self.offset + 1.5), horizontalalignment = 'right',fontsize=6)
         self.offset += 4
-        x, y = self.getDDSCoordinates(advance, freqs)
-        y = np.array(y) / 250.0 + self.offset #normalizes the amplitude 0 to 250 to height between 0 and 3
-        pyplot.plot(x, y, label = 'DDS Freq' + channel )
-        label =  'DDS: ' + channel + ' Frequency '
-        pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right')
+        #x, y = self.getDDSCoordinates(advance, freqs)
+        #y = np.array(y) / 250.0 + self.offset #normalizes the amplitude 0 to 250 to height between 0 and 3
+        #pyplot.plot(x, y, label = 'DDS Freq' + channel )
+        #label =  'DDS: ' + channel + ' Frequency '
+        #pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right')
         self.offset += 4
     
     def getDDSCoordinates(self, advance, ampls):
