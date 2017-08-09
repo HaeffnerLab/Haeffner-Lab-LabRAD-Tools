@@ -192,6 +192,16 @@ class pulse_sequence_wrapper(object):
         self.sc._finish_confirmed(self.ident)
         cxn.disconnect()
 
+    def plot_current_sequence(self):
+        from common.okfpgaservers.pulser.pulse_sequences.plot_sequence import SequencePlotter
+        dds = self.cxn.pulser.human_readable_dds()
+        ttl = self.cxn.pulser.human_readable_ttl()
+        channels = self.cxn.pulser.get_channels()
+        #sp = SequencePlotter(ttl, dds.aslist, channels)
+        sp = SequencePlotter(ttl, dds, channels)
+        sp.makePDF()
+
+
 if __name__=='__main__':
     from example import Example
     pv = TreeDict.fromdict({'DopplerCooling.duration':U(5, 'us')})

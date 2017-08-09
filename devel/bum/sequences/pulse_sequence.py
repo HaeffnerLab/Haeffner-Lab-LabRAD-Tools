@@ -106,7 +106,7 @@ class pulse_sequence(object):
 			except:
 				raise Exception('sideband not found') 
 		return freq
-	
+
 	@classmethod
 	def execute_external(cls, scan, fun = None):
 		'''
@@ -118,3 +118,5 @@ class pulse_sequence(object):
 		scan_param, minim, maxim, steps, unit = scan
 		psw.set_scan(scan_param, minim, maxim, steps, unit)
 		psw.run(0)
+
+    

@@ -1,4 +1,5 @@
 from matplotlib import pyplot
+from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 
 class SequencePlotter():
@@ -50,6 +51,14 @@ class SequencePlotter():
         self.drawDDS(advance,reset)
         pyplot.xlabel('Time (sec)')
         pyplot.show()
+
+# making a pdf version of the pulsesequence 
+    def makePDF(self):
+        with PdfPages('PulseSequence.pdf') as pdf:
+            self.makePlot()
+            pdf.savefig()
+            pyplot.close()
+
         
     def drawTTL(self):
         advanceDDS = []
