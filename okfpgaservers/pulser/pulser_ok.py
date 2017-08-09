@@ -37,7 +37,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
     @inlineCallbacks
     def initServer(self):
 
-        self.simu_hardware = True
+        self.simu_hardware = False
 
         if not self.simu_hardware:            
             self.api  = api()

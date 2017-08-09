@@ -74,6 +74,7 @@ class pulse_sequence(object):
 		self.end = max(self.end, seq.end)
 	
 	def programSequence(self, pulser):
+		print "PROGRAM SEQUENCE"
 		pulser.new_sequence()
 		#print self._ttl_pulses
 		pulser.add_ttl_pulses(self._ttl_pulses)

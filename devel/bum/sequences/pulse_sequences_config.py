@@ -23,12 +23,14 @@ class dds_channel(object):
         return phase
         
 class double_pass_729(dds_channel):
-    def __init__(self, name):
-        super(double_pass_729, self).__init__(name)
+    # f_shift is the shift applied to the single pass AOMs (relative to 80 MHz)
     
+    def __init__(self, name, f_shift = WithUnit(0.0, 'MHz')):
+        super(double_pass_729, self).__init__(name)
+        self.f_shift = f_shift
     def freq_conversion(self, freq):
         #converting real frequency to double pass frequency
-        freq =  - 0.5 * freq + WithUnit(220.0, 'MHz')
+        freq =  - 0.5 * freq + WithUnit(220.0, 'MHz') - 0.5*self.f_shift
         return freq
     
     def phase_conversion(self, phase):
@@ -40,9 +42,18 @@ class double_pass_729(dds_channel):
         return phase
         
 #defining available dds channels
-dds729DP = double_pass_729('729DP')
-dds729DP_1 = double_pass_729('729DP_1')
-dds110DP = dds_channel('110DP')
+#dds729DP = double_pass_729('729DP')
+#dds729DP_1 = double_pass_729('729DP_1')
+
+dds729global = double_pass_729('729global', f_shift = WithUnit(0.15, 'MHz'))
+dds729local = double_pass_729('729local', f_shift = WithUnit(-0.2, 'MHz'))
+
+#dds729global = double_pass_729('729global', f_shift = WithUnit(0.0, 'MHz'))
+#dds729local = double_pass_729('729local', f_shift = WithUnit(0.0, 'MHz'))
+
+dds729DP_aux = double_pass_729('729DP_aux')
+dds729DP_aux_1 = double_pass_729('729DP_aux_1')
+global397 = dds_channel('global397')
 dds866DP = dds_channel('866DP')
 dds854DP = dds_channel('854DP')
 
@@ -53,12 +64,17 @@ There can be multiple keys for the same value.
 '''
     
 dds_name_dictionary = {
-                        '729':dds729DP,
-                        '729DP':dds729DP,
-                        '729_1':dds729DP_1,
-                        '729DP_1':dds729DP_1,
-                        '397':dds110DP,
-                        '110DP':dds110DP,
+                        '729':dds729global,
+                        '729DP':dds729global,
+                        '729_1':dds729local,
+                        '729DP_1':dds729local,
+                        '729global':dds729global,
+                        '729local':dds729local,
+                        '729_aux':dds729DP_aux,
+                        '729DP_aux':dds729DP_aux,
+                        '729_aux_1':dds729DP_aux_1,
+                        '729DP_aux_1':dds729DP_aux_1,
+                        '397':global397,
                         '866':dds866DP,
                         '866DP':dds866DP,
                         '854':dds854DP,

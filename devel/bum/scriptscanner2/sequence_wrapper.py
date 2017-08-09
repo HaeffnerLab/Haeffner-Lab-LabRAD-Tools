@@ -45,8 +45,24 @@ class pulse_sequence_wrapper(object):
             self.dt = self.cxn.sd_tracker
         except:
             self.dt = None
+        self.grapher = cxn.grapher
+        self.total_readouts = []
         #self.seq = module(self.pv_dict)
-    
+
+    def save_data(self, readouts):
+        #save the current readouts
+        iters = np.ones_like(readouts) * self.readout_save_iteration
+        self.dv.add(np.vstack((iters, readouts)).transpose(), context = self.readout_save_context)
+        self.readout_save_iteration += 1
+        self.total_readouts.extend(readouts)
+        if (len(self.total_readouts) >= 500):
+            hist, bins = np.histogram(self.total_readouts, 50)
+            self.dv.cd(self.readout_save_directory ,True, context = self.histogram_save_context)
+            self.dv.new('Histogram',[('Counts', 'Arb')],[('Occurence','Arb','Arb')], context = self.histogram_save_context )
+            self.dv.add(np.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
+            self.dv.add_parameter('Histogram729', True, context = self.histogram_save_context )
+            self.total_readouts = []
+
     def setup_data_vault(self, cxn):
         import time
         localtime = time.localtime()
@@ -55,11 +71,16 @@ class pulse_sequence_wrapper(object):
         self.timetag = time.strftime('%H%M_%S', localtime)
         directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.name, self.timetag]
         self.data_save_context = cxn.context()
+        self.readout_save_context = cxn.context()
+        self.histogram_save_context = cxn.context()
         self.dv.cd(directory, True, context = self.data_save_context)
         dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
-        print dependents
-        #self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
-        
+        self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
+        self.grapher.plot(self.ds, 'rabi')
+        self.readout_save_directory = directory
+        # save the readouts
+        self.dv.cd(directory, True, context = self.readout_save_context)
+        self.dv.new('Readouts',[('Iteration', 'Arb')],[('Readout Counts','Arb','Arb')], context = self.readout_save_context)    
         
     @inlineCallbacks
     def update_params(self, update):
@@ -148,17 +169,14 @@ class pulse_sequence_wrapper(object):
         import time
         cxn = labrad.connect()
         pulser = cxn.pulser
-        #t = cxn.testserver
         # first, get the current parameters from scriptscanner
-        #print self.sc._get_all_parameters()
         self.update_params(self.sc.all_parameters())
-        #print self.parameters_dict.items()
         self.setup_data_vault(cxn)
-        self.dv = cxn.data_vault
 
         self.run_initial()
+        self.readout_save_iteration = 0
         for x in self.scan:
-            time.sleep(0.5)
+            #time.sleep(0.5)
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
             update = {self.parameter_to_scan: x}
@@ -166,15 +184,19 @@ class pulse_sequence_wrapper(object):
             self.run_in_loop()
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
-            #pulser.start_number(100)
-            #pulser.wait_sequence_done()
-            #pulser.stop_sequence()
-            #rds = np.random.randint(0, 50, 100)
-            #threshold = int(self.parameters_dict.StateReadout.threshold)
-            #ion_state = readouts.pmt_simple(rds, threshold)
-            #submission = [x[self.scan_unit]]
-            #submission.extend(ion_state)
-            #self.dv.add(submission, context = self.data_save_context)
+            print "programmed pulser"
+            pulser.start_number(100)
+            print "started 10 sequences"
+            pulser.wait_sequence_done()
+            print "done"
+            
+            rds = pulser.get_readout_counts()
+            threshold = int(self.parameters_dict.StateReadout.state_readout_threshold)
+            ion_state = readouts.pmt_simple(rds, threshold)
+            submission = [x[self.scan_unit]]
+            submission.extend(ion_state)
+            self.dv.add(submission, context = self.data_save_context)
+            self.save_data(rds)
             #print "done waiting"
                 ### program pulser, get readouts
         self.run_finally()
