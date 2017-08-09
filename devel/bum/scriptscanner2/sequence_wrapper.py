@@ -177,6 +177,7 @@ class pulse_sequence_wrapper(object):
         self.readout_save_iteration = 0
         for x in self.scan:
             #time.sleep(0.5)
+            print " scan param.{}".format(x)
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
             update = {self.parameter_to_scan: x}
@@ -185,7 +186,7 @@ class pulse_sequence_wrapper(object):
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
             print "programmed pulser"
-            self.plot_current_sequence()
+            self.plot_current_sequence(cxn)
             pulser.start_number(100)
             print "started 10 sequences"
             pulser.wait_sequence_done()
@@ -215,11 +216,11 @@ class pulse_sequence_wrapper(object):
         self.sc._finish_confirmed(self.ident)
         cxn.disconnect()
 
-    def plot_current_sequence(self):
+    def plot_current_sequence(self, cxn):
         from common.okfpgaservers.pulser.pulse_sequences.plot_sequence import SequencePlotter
-        dds = self.cxn.pulser.human_readable_dds()
-        ttl = self.cxn.pulser.human_readable_ttl()
-        channels = self.cxn.pulser.get_channels()
+        dds = cxn.pulser.human_readable_dds()
+        ttl = cxn.pulser.human_readable_ttl()
+        channels = cxn.pulser.get_channels()
         #sp = SequencePlotter(ttl, dds.aslist, channels)
         sp = SequencePlotter(ttl, dds, channels)
         sp.makePDF()
