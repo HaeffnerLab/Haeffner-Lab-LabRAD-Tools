@@ -10,6 +10,7 @@ class SequencePlotter():
         self.channels = np.array(channels)
         self.plot = pyplot.figure()
         self.offset = 0 #control the y coordinate where the lines are drawn
+        
     
     def makeNameDict(self):
         #swapping names of channels first

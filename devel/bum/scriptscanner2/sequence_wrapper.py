@@ -185,6 +185,7 @@ class pulse_sequence_wrapper(object):
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
             print "programmed pulser"
+            self.plot_current_sequence()
             pulser.start_number(100)
             print "started 10 sequences"
             pulser.wait_sequence_done()
