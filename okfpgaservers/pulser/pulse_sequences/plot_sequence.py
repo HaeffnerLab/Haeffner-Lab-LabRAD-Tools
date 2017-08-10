@@ -47,13 +47,14 @@ class SequencePlotter():
         y.append(switches[-2])
         return np.array(x)*1e3,np.array(y)
                  
-    def makePlot(self):
+    def makePlot(self,visible=False):
         advance,reset = self.drawTTL()
         self.drawDDS(advance,reset)
         pyplot.xlabel('Time (ms)')
         ax=pyplot.gca()
         ax.yaxis.set_visible(False)
-        #pyplot.show()
+        if visible: 
+            pyplot.show()
         
 # making a pdf version of the pulsesequence 
     def makePDF(self):
