@@ -74,7 +74,9 @@ class pulse_sequence_wrapper(object):
         self.readout_save_context = cxn.context()
         self.histogram_save_context = cxn.context()
         self.dv.cd(directory, True, context = self.data_save_context)
-        dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
+        # creating the col names in the output file
+        #dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
+        dependents = self.col_names()
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
         self.grapher.plot(self.ds, 'rabi')
         self.readout_save_directory = directory
@@ -159,9 +161,24 @@ class pulse_sequence_wrapper(object):
         mode = self.parameters_dict.StateReadout.readout_mode
         print mode
         if mode == 'pmt':
-            return 1
+            return len(self.parameters_dict.StateReadout.threshold_list.split(','))
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)
+        
+    def col_names(self):
+        mode = self.parameters_dict.StateReadout.readout_mode
+        names = np.array(range(self.output_size())[::-1])+1
+        
+        if mode == 'pmt':
+            if self.output_size==1:
+                dependents = [('', 'prob dark ', '')]
+            else:
+                dependents = [('', 'num dark {}'.format(x), '') for x in names ]
+        if mode == 'camera':
+            dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
+        
+        return  dependents
+        
         
     #@inlineCallbacks    
     def run(self, ident):
@@ -190,24 +207,26 @@ class pulse_sequence_wrapper(object):
             seq.programSequence(pulser)
             print "programmed pulser"
             self.plot_current_sequence(cxn)
-            pulser.start_number(100)
-            print "started 100 sequences"
+            pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
             print "done"
             pulser.stop_sequence()
             
             rds = pulser.get_readout_counts()
-            threshold = int(self.parameters_dict.StateReadout.state_readout_threshold)
-            ion_state = readouts.pmt_simple(rds, threshold)
+            
+            
+            ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
             submission = [x[self.scan_unit]]
             submission.extend(ion_state)
+            print submission
             self.dv.add(submission, context = self.data_save_context)
             self.save_data(rds)
             #print "done waiting"
                 ### program pulser, get readouts
         self.run_finally()
-        self._finalize(cxn)
-
+        self._finalize(cxn) 
+    
     def run_initial(self):
         pass
     def run_in_loop(self):

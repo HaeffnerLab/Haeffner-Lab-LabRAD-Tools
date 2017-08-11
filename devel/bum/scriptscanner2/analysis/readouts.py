@@ -19,11 +19,29 @@ def pmt_simple(readouts, threshold):
     """
 
     if len(readouts):
-        perc_excited = np.count_nonzero(readouts <= threshold) / float(len(readouts))
+        
+        threshold_list=[int(x) for x in threshold.split(',')]
+        
+        if len(threshold_list) == 1:
+            # regular pmt stuff
+            perc_excited = [np.count_nonzero(readouts <= threshold) / float(len(readouts))]
+        
+        else:
+            threshold_list = sorted(threshold_list)
+            #print np.array(readouts)
+            num_ions = len(threshold_list)
+            #print threshold_list
+            binned = np.histogram(readouts, bins=[0]+threshold_list)[0]
+            #IPython.embed()
+            #print binned
+            N = float(len(readouts))
+            perc_excited = binned/N
+            #mean = numpy.dot(binned, range(num_ions+1)) # avg number of ions dark
+
     else:
         # got no readouts
-        perc_excited = -1.0
-    return [perc_excited]
+        perc_excited = [-1.0]
+    return perc_excited
 
 def camera_ion_probabilities(images, repetitions, p):
     """
