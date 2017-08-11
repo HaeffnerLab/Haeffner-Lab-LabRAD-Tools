@@ -114,6 +114,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
         if dds is not None: yield self._programDDSSequence(dds)
         self.inCommunication.release()
         self.isProgrammed = True
+        #print "Pulser programed"
     
     @setting(2, "Start Infinite", returns = '')
     def startInfinite(self,c):
