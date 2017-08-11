@@ -55,6 +55,14 @@ class SequencePlotter():
         ax.yaxis.set_visible(False)
         if visible: 
             pyplot.show()
+
+# making a pdf version of the pulsesequence 
+    def makePDF(self):
+        with PdfPages('PulseSequence.pdf') as pdf:
+            self.makePlot()
+            pdf.savefig()
+            pyplot.close()
+
         
 # making a pdf version of the pulsesequence 
     def makePDF(self):

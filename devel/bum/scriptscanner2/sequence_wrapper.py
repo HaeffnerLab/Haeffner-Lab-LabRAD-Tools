@@ -152,7 +152,7 @@ class pulse_sequence_wrapper(object):
 
         camera.set_image_region(*self.image_region)
         camera.set_acquisition_mode('Kinetics')
-        self.initial_trigger_mode = camera.get_triggeupdater_mode()
+        self.initial_trigger_mode = camera.get_trigger_mode()
         camera.set_trigger_mode('External')
 
     def output_size(self):
@@ -169,8 +169,11 @@ class pulse_sequence_wrapper(object):
         import time
         cxn = labrad.connect()
         pulser = cxn.pulser
+        #t = cxn.testserver
         # first, get the current parameters from scriptscanner
+        #print self.sc._get_all_parameters()
         self.update_params(self.sc.all_parameters())
+        #print self.parameters_dict.items()
         self.setup_data_vault(cxn)
 
         self.run_initial()
