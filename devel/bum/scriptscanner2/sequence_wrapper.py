@@ -152,7 +152,7 @@ class pulse_sequence_wrapper(object):
 
         camera.set_image_region(*self.image_region)
         camera.set_acquisition_mode('Kinetics')
-        self.initial_trigger_mode = camera.get_trigger_mode()
+        self.initial_trigger_mode = camera.get_triggeupdater_mode()
         camera.set_trigger_mode('External')
 
     def output_size(self):
@@ -188,9 +188,10 @@ class pulse_sequence_wrapper(object):
             print "programmed pulser"
             self.plot_current_sequence(cxn)
             pulser.start_number(100)
-            print "started 10 sequences"
+            print "started 100 sequences"
             pulser.wait_sequence_done()
             print "done"
+            pulser.stop_sequence()
             
             rds = pulser.get_readout_counts()
             threshold = int(self.parameters_dict.StateReadout.state_readout_threshold)
