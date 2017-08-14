@@ -280,7 +280,7 @@ class script_scanner_gui(QtGui.QWidget):
         ident = int(ident)
         sc = yield self.cxn.get_server('ScriptScanner')
         try:
-            yield sc.cancel_scheduled_script(ident)
+            yield sc.cancel_scheduled_sequence(ident)
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
@@ -290,10 +290,11 @@ class script_scanner_gui(QtGui.QWidget):
     def schedule_script(self, name, duration, priority, start_now):
         sc = yield self.cxn.get_server('ScriptScanner')
         name = str(name)
+        p = self.scan_widget.get_scan_settings(name)
         priority = str(priority)
         duration = self.WithUnit(duration, 's')
         try:
-            yield sc.new_script_schedule(name, duration, priority, start_now)
+            yield sc.new_sequence_schedule(name, p, duration, priority, start_now)
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:

@@ -45,7 +45,10 @@ class pulse_sequence_wrapper(object):
             self.dt = self.cxn.sd_tracker
         except:
             self.dt = None
-        self.grapher = cxn.grapher
+        try:
+            self.grapher = cxn.grapher
+        except:
+            self.grapher = None
         self.total_readouts = []
         #self.seq = module(self.pv_dict)
 
@@ -78,7 +81,8 @@ class pulse_sequence_wrapper(object):
         #dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         dependents = self.col_names()
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
-        self.grapher.plot(self.ds, 'rabi')
+        if self.grapher is not None:
+            self.grapher.plot(self.ds, 'rabi')
         self.readout_save_directory = directory
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
@@ -179,24 +183,20 @@ class pulse_sequence_wrapper(object):
         
         return  dependents
         
-        
-    #@inlineCallbacks    
     def run(self, ident):
         self.ident = ident
         import time
         cxn = labrad.connect()
-        pulser = cxn.pulser
-        #t = cxn.testserver
-        # first, get the current parameters from scriptscanner
-        #print self.sc._get_all_parameters()
+        #pulser = cxn.pulser
         self.update_params(self.sc.all_parameters())
-        #print self.parameters_dict.items()
-        self.setup_data_vault(cxn)
+        #self.setup_data_vault(cxn)
 
         self.run_initial()
         self.readout_save_iteration = 0
+        print "SCAN:"
+        print self.scan
         for x in self.scan:
-            #time.sleep(0.5)
+            time.sleep(0.5)
             print " scan param.{}".format(x)
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
@@ -204,24 +204,22 @@ class pulse_sequence_wrapper(object):
             self.update_params(update)
             self.run_in_loop()
             seq = self.module(self.parameters_dict)
-            seq.programSequence(pulser)
+            #seq.programSequence(pulser)
             print "programmed pulser"
-            self.plot_current_sequence(cxn)
-            pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
-            print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
-            pulser.wait_sequence_done()
+            #self.plot_current_sequence(cxn)
+            #pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            #print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            #pulser.wait_sequence_done()
             print "done"
-            pulser.stop_sequence()
+            #pulser.stop_sequence()
             
-            rds = pulser.get_readout_counts()
-            
-            
-            ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
+            #rds = pulser.get_readout_counts()
+            #ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
             submission = [x[self.scan_unit]]
-            submission.extend(ion_state)
-            print submission
-            self.dv.add(submission, context = self.data_save_context)
-            self.save_data(rds)
+            submission.extend([0.5])
+            #submission.extend(ion_state)
+            #self.dv.add(submission, context = self.data_save_context)
+            #self.save_data(rds)
             #print "done waiting"
                 ### program pulser, get readouts
         self.run_finally()
