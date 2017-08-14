@@ -151,8 +151,7 @@ class scan_widget(QtGui.QStackedWidget):
         try:
             self.widgets[experiment].setVisible(True)
             self.setCurrentWidget(self.widgets[experiment])
-            #elf.PreferredParameters.show_only(self.preferreds[experiment])
-            #elf.PreferredParameters.show_only([('DopplerCooling','duration'), ('DopplerCooling', 'duration')])
+            self.PreferredParameters.show_only(self.preferreds[experiment])
         except KeyError: # no experiment selected
             self.show_none()
 
