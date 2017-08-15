@@ -185,18 +185,18 @@ class pulse_sequence_wrapper(object):
         
     def run(self, ident):
         self.ident = ident
-        import time
+        #import time
         cxn = labrad.connect()
-        #pulser = cxn.pulser
+        pulser = cxn.pulser
         self.update_params(self.sc.all_parameters())
-        #self.setup_data_vault(cxn)
+        self.setup_data_vault(cxn)
 
         self.run_initial()
         self.readout_save_iteration = 0
         print "SCAN:"
         print self.scan
         for x in self.scan:
-            time.sleep(0.5)
+            #time.sleep(0.5)
             print " scan param.{}".format(x)
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
@@ -204,23 +204,22 @@ class pulse_sequence_wrapper(object):
             self.update_params(update)
             self.run_in_loop()
             seq = self.module(self.parameters_dict)
-            #seq.programSequence(pulser)
+            seq.programSequence(pulser)
             print "programmed pulser"
-            #self.plot_current_sequence(cxn)
-            #pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
-            #print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
-            #pulser.wait_sequence_done()
+            self.plot_current_sequence(cxn)
+            pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            pulser.wait_sequence_done()
             print "done"
-            #pulser.stop_sequence()
+            pulser.stop_sequence()
             
-            #rds = pulser.get_readout_counts()
-            #ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
+            rds = pulser.get_readout_counts()
+            ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
             submission = [x[self.scan_unit]]
-            submission.extend([0.5])
-            #submission.extend(ion_state)
-            #self.dv.add(submission, context = self.data_save_context)
-            #self.save_data(rds)
-            #print "done waiting"
+            submission.extend(ion_state)
+            self.dv.add(submission, context = self.data_save_context)
+            self.save_data(rds)
+            print "done waiting"
                 ### program pulser, get readouts
         self.run_finally()
         self._finalize(cxn) 
