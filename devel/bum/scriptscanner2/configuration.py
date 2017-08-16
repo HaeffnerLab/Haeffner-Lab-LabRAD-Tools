@@ -4,7 +4,7 @@ class config(object):
     sequences = [
         #('common.devel.bum.sequences.example', 'Sequence'),
         ('lattice.PulseSequences2.RabiFlopping', 'RabiFlopping'),
-        ('lattice.PulseSequences2.RabiFloppingManual', 'RabiFlopping')
+        #('lattice.PulseSequences2.RabiFloppingManual', 'RabiFlopping')
         ]
 
     allowed_concurrent = {
