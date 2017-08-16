@@ -68,20 +68,20 @@ class ScanItem(QtGui.QWidget):
         return (mn, mx, steps, self.unit)
 
 class sequence_widget(QtGui.QWidget):
-    def __init__(self, params, editor):
+    def __init__(self, params):
         super(sequence_widget, self).__init__()
         self.parameters = {}
-        self.makeLayout(params, editor)
+        self.makeLayout(params)
         self.scan_parameter = None
 
-    def makeLayout(self, params, editor):
+    def makeLayout(self, params):
         layout = QtGui.QVBoxLayout()
         for par, x in params:
             minim, maxim, steps, unit = x
             p = (par, minim, maxim, steps, unit)
             self.parameters[par] = ScanItem(p, self)
             layout.addWidget(self.parameters[par])
-        layout.addWidget(editor)
+        #layout.addWidget(editor)
         self.setLayout(layout)
 
     def set_scan_parameter(self, parameter):
@@ -99,27 +99,35 @@ class sequence_widget(QtGui.QWidget):
 
     def get_scan_parameter(self):
         return self.scan_parameter
+    
+class scan_box(QtGui.QStackedWidget):
+    def __init__(self):
+        super(scan_box, self).__init__()
         
-class scan_widget(QtGui.QStackedWidget):
+class scan_widget(QtGui.QWidget):
 
     def __init__(self, reactor, parent):
         super(scan_widget, self).__init__()
         self.parent = parent
-        self.setupLayout()
+        self.scan_box = scan_box()
         self.reactor = reactor
         self.PreferredParameters = ParametersEditor(self.reactor)
+        self.setupLayout()
         self.widgets = {} # dictionary of widgets to show
         self.preferreds = {}
 
     def setupLayout(self):
-        pass
-
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.scan_box)
+        layout.addWidget(self.PreferredParameters)
+        self.setLayout(layout)
+        
     def buildSequenceWidget(self, experiment, params):
         '''
         params = [par, ( min, max, steps, unit)]
         '''
-        sw = sequence_widget(params, self.PreferredParameters)
-        self.addWidget(sw)
+        sw = sequence_widget(params)
+        self.scan_box.addWidget(sw)
         self.widgets[experiment] = sw
         self.show_none()
 
@@ -150,7 +158,7 @@ class scan_widget(QtGui.QStackedWidget):
         '''
         try:
             self.widgets[experiment].setVisible(True)
-            self.setCurrentWidget(self.widgets[experiment])
+            self.scan_box.setCurrentWidget(self.widgets[experiment])
             self.PreferredParameters.show_only(self.preferreds[experiment])
         except KeyError: # no experiment selected
             self.show_none()
@@ -159,7 +167,6 @@ class scan_widget(QtGui.QStackedWidget):
     def show_none(self):
         for exp in self.widgets.keys():
             self.widgets[exp].setVisible(False)
-
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
