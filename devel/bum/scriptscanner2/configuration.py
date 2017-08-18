@@ -2,9 +2,10 @@ class config(object):
 
     #list in the format (import_path, class_name)
     sequences = [
-        ('common.devel.bum.sequences.example', 'Sequence'),
+        #('common.devel.bum.sequences.example', 'Sequence'),
         ('lattice.PulseSequences2.RabiFlopping', 'RabiFlopping'),
-        ('lattice.PulseSequences2.RabiFloppingManual', 'RabiFloppingManual')
+        ('lattice.PulseSequences2.RabiFloppingManual', 'RabiFloppingManual'),
+        #('lattice.PulseSequences2.SpectrumManual', 'SpectrumManual')
         ]
 
     allowed_concurrent = {
