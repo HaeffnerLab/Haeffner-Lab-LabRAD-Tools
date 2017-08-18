@@ -217,7 +217,6 @@ class pulse_sequence_wrapper(object):
             ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
             submission = [x[self.scan_unit]]
             submission.extend(ion_state)
-            print ion_state
             self.dv.add(submission, context = self.data_save_context)
             self.save_data(rds)
             print "done waiting"

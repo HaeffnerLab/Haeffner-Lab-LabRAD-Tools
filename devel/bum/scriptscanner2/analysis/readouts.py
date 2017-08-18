@@ -24,7 +24,7 @@ def pmt_simple(readouts, threshold):
         
         if len(threshold_list) == 1:
             # regular pmt stuff
-            perc_excited = [np.count_nonzero(readouts <= threshold) / float(len(readouts))]
+            perc_excited = [np.count_nonzero(readouts <= threshold_list[0]) / float(len(readouts))]
         
         else:
             threshold_list = sorted(threshold_list)
