@@ -24,10 +24,15 @@ class ScanItem(QtGui.QWidget):
         self.minim = QtGui.QDoubleSpinBox()
         self.maxim = QtGui.QDoubleSpinBox()
         self.steps = QtGui.QSpinBox()
-
+        
+        self.minim.setRange(-1e6, 1e6)
+        self.maxim.setRange(-1e6, 1e6)
+        self.steps.setRange(-1e6, 1e6)
+        
         self.minim.setValue(minim)
         self.maxim.setValue(maxim)
-        self.steps.setValue(steps)
+        self.steps.setValue(steps) 
+    
 
         layout.addWidget(self.minim)
         layout.addWidget(self.maxim)
