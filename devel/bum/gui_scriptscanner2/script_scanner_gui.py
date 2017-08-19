@@ -3,7 +3,7 @@ from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
 from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
-from parameter_importer.script_explorer_widget import script_explorer_widget
+#from parameter_importer.script_explorer_widget import script_explorer_widget
 from scan_widget import scan_widget
 
 class script_scanner_gui(QtGui.QWidget):

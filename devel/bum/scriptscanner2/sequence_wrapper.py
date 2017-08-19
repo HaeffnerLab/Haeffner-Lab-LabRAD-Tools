@@ -82,7 +82,7 @@ class pulse_sequence_wrapper(object):
         dependents = self.col_names()
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
         if self.grapher is not None:
-            self.grapher.plot(self.ds, 'rabi')
+            self.grapher.plot(self.ds, self.window)
         self.readout_save_directory = directory
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
@@ -122,10 +122,15 @@ class pulse_sequence_wrapper(object):
 
     def set_scan(self, scan_param, minim, maxim, steps, unit):
         self.parameter_to_scan = scan_param
-        m1, m2, default, unit = self.module.scannable_params[scan_param]
+        m1, m2, default, unit = self.module.scannable_params[scan_param][0]
         self.scan_unit = unit
         self.scan = np.linspace(minim, maxim, steps)
         self.scan = [U(pt, unit) for pt in self.scan]
+        
+        try:
+            self.window = self.module.scannable_params[scan_param][1]
+        except:
+            self.window = 'current' # no window defined
 
     def set_scan_none(self):
         """
@@ -136,6 +141,7 @@ class pulse_sequence_wrapper(object):
         self.scan = None
         self.parameter_to_scan = 'None'
         self.scan_unit = 'None'
+        self.window = 'current'
 
     def initialize_camera(self):
         camera = self.cxn.andor_server

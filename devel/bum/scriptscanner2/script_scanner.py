@@ -279,7 +279,12 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
     @setting(37, "Get Sequence Scannables", sequence = 's', returns = '*(s(vvis))')
     def get_sequence_scannables(self, c, sequence):
         try:
-            return self.sequences[sequence].scannable_params.items()
+            scan = self.sequences[sequence].scannable_params.items()
+            li = []
+            for item in scan:
+                li.append((item[0], item[1][0]))
+            return li
+            #return self.sequences[sequence].scannable_params.items()
         except KeyError:
             raise Exception('Sequence not found')
 
@@ -317,7 +322,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             #wait for all deferred to finish
             running = DeferredList(self.scheduler.running_deferred_list())
             yield running
-            yield self.save_parameters()
+            #yield self.save_parameters()
         except AttributeError:
             #if dictionary doesn't exist yet (i.e bad identification error), do nothing
             pass
