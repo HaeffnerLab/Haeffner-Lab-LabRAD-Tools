@@ -171,7 +171,7 @@ class pulse_sequence_wrapper(object):
         mode = self.parameters_dict.StateReadout.readout_mode
         print mode
         if mode == 'pmt':
-            return len(self.parameters_dict.StateReadout.threshold_list.split(','))
+	    return len(self.parameters_dict.StateReadout.threshold_list.split(','))
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)
         
