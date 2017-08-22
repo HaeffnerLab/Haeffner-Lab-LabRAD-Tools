@@ -9,6 +9,8 @@ class pulse_sequence(object):
 	Version 2 -- made for new script scanner project
 	'''
 	
+	is_composite = False
+	
 	def __init__(self, parameter_dict, start = WithUnit(0, 's')):
 		if not type(parameter_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
 		self.start = start
@@ -119,5 +121,16 @@ class pulse_sequence(object):
 		scan_param, minim, maxim, steps, unit = scan
 		psw.set_scan(scan_param, minim, maxim, steps, unit)
 		psw.run(0)
+	
+	@classmethod
+	def run_initial(cls, cxn, parameters_dict):
+		pass
+	@classmethod
+	def run_in_loop(cls, cxn, parameters_dict, data_so_far):
+		pass
+	@classmethod
+	def run_finally(cls, cxn, parameters_dict, all_data):
+		pass
+		
 
     

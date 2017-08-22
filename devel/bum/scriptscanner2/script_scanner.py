@@ -24,6 +24,7 @@ import scan_methods
 from scheduler import scheduler
 from parameter_vault import ParameterVault
 from sequence_wrapper import pulse_sequence_wrapper as psw
+from multi_sequence_wrapper import multi_sequence_wrapper
 import sys
         
 class ScriptScanner(ParameterVault, Signals, LabradServer):
@@ -110,7 +111,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             raise Exception ("Trying to get progress of sequence with ID {0} but it was not running".format(sequence_ID))
         return status.get_progress()
 
-    @setting(10, 'New Sequence', sequence_name = 's', settings = '(svvis)', returns = 'w')
+    @setting(10, 'New Sequence', sequence_name = 's', settings = '*(svvis)', returns = 'w')
     def new_sequence(self, c, sequence_name, settings):
         '''
         Launch a new sequence. Returns ID of the queued scan.
@@ -120,13 +121,22 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         if sequence_name not in self.sequences.keys():
             raise Exception ("Sequence {} Not Found".format(sequence_name))
 
-        scan_param, m1, m2, steps, unit = settings
         cls = self.sequences[sequence_name]
-        wrapper = psw(cls, self, self.client)
-        if scan_param == 'None':
-            wrapper.set_scan_none()
-        else:
-            wrapper.set_scan(scan_param, m1, m2, steps, unit)
+        
+        if not cls.is_composite:
+            print "running a single scan"
+            scan_param, m1, m2, steps, unit = settings[0]
+            wrapper = psw(cls, self, self.client)
+            if scan_param == 'None':
+                wrapper.set_scan_none()
+            else:
+                wrapper.set_scan(scan_param, m1, m2, steps, unit)
+                
+        else: # this is for composite sequences
+            print "running a composite scan"
+            wrapper = multi_sequence_wrapper(cls, self, self.client)
+            wrapper.set_scan(settings)
+            
         scan_id = self.scheduler.add_scan_to_queue(wrapper)
         print scan_id
         return scan_id
@@ -322,7 +332,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             #wait for all deferred to finish
             running = DeferredList(self.scheduler.running_deferred_list())
             yield running
-            yield self.save_parameters()
+            #yield self.save_parameters()
         except AttributeError:
             #if dictionary doesn't exist yet (i.e bad identification error), do nothing
             pass

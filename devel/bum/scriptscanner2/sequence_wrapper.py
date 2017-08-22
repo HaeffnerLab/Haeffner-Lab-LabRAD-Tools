@@ -32,11 +32,10 @@ import sys
 class pulse_sequence_wrapper(object):
     
     def __init__(self, module, sc, cxn):
-        self.module = module
+        self.module = module # pulse sequence module
         self.name = module.__name__
         # copy the parameter vault dict by value
         self.parameters_dict = TreeDict()
-        #self.parameters_dict.update(pv_dict)
         self.show_params = module.show_params
         self.scan = None
         self.sc = sc # reference to scriptscanner class, not through the labrad connection
@@ -50,7 +49,6 @@ class pulse_sequence_wrapper(object):
         except:
             self.grapher = None
         self.total_readouts = []
-        #self.seq = module(self.pv_dict)
 
     def save_data(self, readouts):
         #save the current readouts
@@ -124,8 +122,14 @@ class pulse_sequence_wrapper(object):
         self.parameter_to_scan = scan_param
         m1, m2, default, unit = self.module.scannable_params[scan_param][0]
         self.scan_unit = unit
-        self.scan = np.linspace(minim, maxim, steps)
+        ## list with step # steps
+        #self.scan = np.linspace(minim, maxim, steps)
+        
+        # list with step size
+        self.scan = np.arange(minim, maxim, steps)
         self.scan = [U(pt, unit) for pt in self.scan]
+        
+        print "setting up the scan params"
         
         try:
             self.window = self.module.scannable_params[scan_param][1]
@@ -197,18 +201,21 @@ class pulse_sequence_wrapper(object):
         self.update_params(self.sc.all_parameters())
         self.setup_data_vault(cxn)
 
-        self.run_initial()
+        
+        self.module.run_initial(cxn, self.parameters_dict)
+        
         self.readout_save_iteration = 0
         print "SCAN:"
         print self.scan
+        all_data = [] # 2d numpy array
         for x in self.scan:
             #time.sleep(0.5)
-            print " scan param.{}".format(x)
+            
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
             update = {self.parameter_to_scan: x}
             self.update_params(update)
-            self.run_in_loop()
+            
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
             print "programmed pulser"
@@ -221,24 +228,21 @@ class pulse_sequence_wrapper(object):
             
             rds = pulser.get_readout_counts()
             ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
+            
             submission = [x[self.scan_unit]]
             submission.extend(ion_state)
+            
+            self.module.run_in_loop(cxn, self.parameters_dict, all_data)
+            
             self.dv.add(submission, context = self.data_save_context)
             self.save_data(rds)
             print "done waiting"
                 ### program pulser, get readouts
-        self.run_finally()
+        self.module.run_finally(cxn, self.parameters_dict, all_data)
         self._finalize(cxn) 
     
-    def run_initial(self):
-        pass
-    def run_in_loop(self):
-        pass
-    def run_finally(self):
-        pass
-        
     def _finalize(self, cxn):
-        #dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
+        dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         self.sc._finish_confirmed(self.ident)
         cxn.disconnect()
 

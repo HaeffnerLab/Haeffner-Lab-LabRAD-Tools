@@ -5,8 +5,9 @@ class config(object):
         #('common.devel.bum.sequences.example', 'Sequence'),
         ('lattice.PulseSequences2.RabiFlopping', 'RabiFlopping'),
         ('lattice.PulseSequences2.RabiFloppingManual', 'RabiFloppingManual'),
-        #('lattice.PulseSequences2.SpectrumManual', 'SpectrumManual')
-        ]
+        ('lattice.PulseSequences2.Spectrum', 'Spectrum'),
+        ('lattice.PulseSequences2.multispectrum', 'MultiSpectrum'),
+            ]
 
     allowed_concurrent = {
 #        'fft_spectrum': ['non_conflicting_experiment'],

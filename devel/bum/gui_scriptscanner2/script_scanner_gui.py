@@ -328,7 +328,7 @@ class script_scanner_gui(QtGui.QWidget):
         seq = str(seq)
         p = self.scan_widget.get_scan_settings(seq)
         if p is not None:
-            scan_id = yield sc.new_sequence(seq, p, context=self.context)
+            scan_id = yield sc.new_sequence(seq, [p], context=self.context)
             print scan_id
         #try:
         #    yield sc.new_experiment(script, context = self.context)
