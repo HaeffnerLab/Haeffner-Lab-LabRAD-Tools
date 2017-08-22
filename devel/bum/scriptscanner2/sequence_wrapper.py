@@ -175,7 +175,7 @@ class pulse_sequence_wrapper(object):
         mode = self.parameters_dict.StateReadout.readout_mode
         print mode
         if mode == 'pmt':
-	    return len(self.parameters_dict.StateReadout.threshold_list.split(','))
+            return len(self.parameters_dict.StateReadout.threshold_list.split(','))
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)
         
@@ -229,6 +229,10 @@ class pulse_sequence_wrapper(object):
             rds = pulser.get_readout_counts()
             ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
             
+            # changing the units to be compatible for time or freq experiments 
+            #if x.isCompatible('s'): x=x['us']
+            #if x.isCompatible('kHz'): x=x['MHz']
+
             submission = [x[self.scan_unit]]
             submission.extend(ion_state)
             
@@ -242,6 +246,7 @@ class pulse_sequence_wrapper(object):
         self._finalize(cxn) 
     
     def _finalize(self, cxn):
+        # Add finalize the camera when needed 
         dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         self.sc._finish_confirmed(self.ident)
         cxn.disconnect()

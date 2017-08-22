@@ -111,11 +111,11 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             raise Exception ("Trying to get progress of sequence with ID {0} but it was not running".format(sequence_ID))
         return status.get_progress()
 
-    @setting(10, 'New Sequence', sequence_name = 's', settings = '*(svvis)', returns = 'w')
+    @setting(10, 'New Sequence', sequence_name = 's', settings = '*(s(svvvs))', returns = 'w')
     def new_sequence(self, c, sequence_name, settings):
         '''
         Launch a new sequence. Returns ID of the queued scan.
-        settings = [scan param, minim, maxim, steps, unit]
+        settings = [(sequence_name, [scan param, minim, maxim, steps, unit])]
         '''
         print "LAUNCHING A NEW SEQUENCE"
         if sequence_name not in self.sequences.keys():
@@ -125,7 +125,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         
         if not cls.is_composite:
             print "running a single scan"
-            scan_param, m1, m2, steps, unit = settings[0]
+            scan_param, m1, m2, steps, unit = settings[0][1]
             wrapper = psw(cls, self, self.client)
             if scan_param == 'None':
                 wrapper.set_scan_none()
@@ -286,15 +286,10 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         status.error_finish_confirmed(error_message)
         self.scheduler.remove_if_external(sequence_ID)
 
-    @setting(37, "Get Sequence Scannables", sequence = 's', returns = '*(s(vvis))')
+    @setting(37, "Get Sequence Scannables", sequence = 's', returns = '*(s(vvvs)s)')
     def get_sequence_scannables(self, c, sequence):
         try:
-            scan = self.sequences[sequence].scannable_params.items()
-            li = []
-            for item in scan:
-                li.append((item[0], item[1][0]))
-            return li
-            #return self.sequences[sequence].scannable_params.items()
+            return self.sequences[sequence].get_scannable_parameters()
         except KeyError:
             raise Exception('Sequence not found')
 

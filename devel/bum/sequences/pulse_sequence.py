@@ -120,7 +120,28 @@ class pulse_sequence(object):
 		psw = pulse_sequence_wrapper(cls)
 		scan_param, minim, maxim, steps, unit = scan
 		psw.set_scan(scan_param, minim, maxim, steps, unit)
-		psw.run(0)
+		psw.run(0)	
+		
+	@classmethod
+	def get_scannable_parameters(cls):
+		
+		if not cls.is_composite:
+			scan = cls.scannable_params.items()
+			li = []
+			for item in scan:
+				s = item[1][0]
+				s = (float(s[0]), float(s[1]), float(s[2]), s[3]) # this fixes a weird labrad bug
+				li.append((item[0], s, cls.__name__))
+			return li
+		else:
+			li = []
+			for subcls in cls.sequences:
+				scan = subcls.scannable_params.items()
+				for item in scan:
+					s = item[1][0]
+					s = (float(s[0]), float(s[1]), float(s[2]), s[3])
+					li.append((item[0], s, subcls.__name__))
+			return li
 	
 	@classmethod
 	def run_initial(cls, cxn, parameters_dict):

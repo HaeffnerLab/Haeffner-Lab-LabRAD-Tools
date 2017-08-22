@@ -4,15 +4,15 @@ from PyQt4 import QtCore, QtGui, uic
 
 class ScanItem(QtGui.QWidget):
     """ Item for parameter scanning """
-    def __init__(self, p, parent):
+    def __init__(self, p, sequence_name, parent):
         super(ScanItem, self).__init__(parent)
         self.parent = parent
         parameter, minim, maxim, steps, unit = p
         self.parameter = parameter
-        self.makeLayout(p)
+        self.makeLayout(p, sequence_name)
         self.connect_layout()
 
-    def makeLayout(self, p):
+    def makeLayout(self, p, sequence_name):
         parameter, minim, maxim, steps, unit = p
         self.unit = unit
         layout = QtGui.QHBoxLayout()
@@ -39,6 +39,7 @@ class ScanItem(QtGui.QWidget):
         layout.addWidget(self.steps)
         unitLabel = QtGui.QLabel(unit)
         layout.addWidget(unitLabel)
+        layout.addWidget( QtGui.QLabel(sequence_name))
         self.setLayout(layout)
 
     def connect_layout(self):
@@ -73,18 +74,19 @@ class ScanItem(QtGui.QWidget):
         return (mn, mx, steps, self.unit)
 
 class sequence_widget(QtGui.QWidget):
-    def __init__(self, params):
+    def __init__(self, params, seq):
         super(sequence_widget, self).__init__()
         self.parameters = {}
         self.makeLayout(params)
         self.scan_parameter = None
+        self.sequence_name = seq # name of the sequence this sequence widget refers to
 
     def makeLayout(self, params):
         layout = QtGui.QVBoxLayout()
-        for par, x in params:
+        for par, x, sequence_name in params:
             minim, maxim, steps, unit = x
             p = (par, minim, maxim, steps, unit)
-            self.parameters[par] = ScanItem(p, self)
+            self.parameters[par] = ScanItem(p, sequence_name, self)
             layout.addWidget(self.parameters[par])
         #layout.addWidget(editor)
         self.setLayout(layout)
@@ -104,6 +106,31 @@ class sequence_widget(QtGui.QWidget):
 
     def get_scan_parameter(self):
         return self.scan_parameter
+    
+    def get_sequence_name(self):
+        return self.sequence_name
+    
+    def get_scan_settings(self, scan):
+        return self.parameters[scan].get_scan_settings()
+    
+class multi_sequence_widget(QtGui.QWidget):
+    def __init__(self, widgets):
+        super(multi_sequence_widget, self).__init__()
+        layout = QtGui.QVBoxLayout()
+        self.widgets = widgets
+        for widget in widgets:
+            layout.addWidget(widget)
+        self.setLayout(layout)
+        
+    def get_scan_parameter(self):
+        return [(w.get_sequence_name(), w.get_scan_parameter()) for w in self.widgets]
+    
+    def get_scan_settings(self, sequence_name, scan_parameter):
+        for w in self.widgets:
+            if w.sequence_name == sequence_name:
+                return w.get_scan_settings(scan_parameter)
+        raise Exception('sequence name not found')
+        
     
 class scan_box(QtGui.QStackedWidget):
     def __init__(self):
@@ -129,11 +156,21 @@ class scan_widget(QtGui.QWidget):
         
     def buildSequenceWidget(self, experiment, params):
         '''
-        params = [par, ( min, max, steps, unit)]
+        params = [(par, ( min, max, steps, unit), sequence)]
         '''
-        sw = sequence_widget(params)
-        self.scan_box.addWidget(sw)
-        self.widgets[experiment] = sw
+        
+        sequences = list(set([p[2] for p in params])) # individual sequences
+        sequences_dict = {}
+        for seq in sequences:
+            sequence_params = [x for x in params if x[2] == seq]
+            sequences_dict[seq] = sequence_widget(sequence_params, seq)
+        
+        multi = multi_sequence_widget(sequences_dict.values())
+        
+        #self.scan_box.addWidget(sw)
+        #self.widgets[experiment] = sw
+        self.scan_box.addWidget(multi)
+        self.widgets[experiment] = multi
         self.show_none()
 
         self.preferreds[experiment] = [x[0].split('.') for x in params]
@@ -148,13 +185,17 @@ class scan_widget(QtGui.QWidget):
         Return the scan settings (parameter to scan, min, max, steps, unit)
         or None for the requested sequence
         """
-        scan_parameter = self.widgets[experiment].get_scan_parameter()
-    
-        if scan_parameter is None:
-            return None
-        else:
-            mn, mx, steps, unit = self.widgets[experiment].parameters[scan_parameter].get_scan_settings()
-            return (scan_parameter, mn, mx, steps, unit)
+        scan_parameter_list = self.widgets[experiment].get_scan_parameter() # [(seq name, scan parameter)]
+        
+        settings_list = []
+        for sequence_name, scan_parameter in scan_parameter_list:
+            if scan_parameter is None:
+                settings_list.append((sequence_name, None))
+            else:
+                #mn, mx, steps, unit = self.widgets[experiment].parameters[scan_parameter].get_scan_settings()
+                mn, mx, steps, unit = self.widgets[experiment].get_scan_settings(sequence_name, scan_parameter)
+                settings_list.append(( sequence_name, (scan_parameter, mn, mx, float(steps), unit) ))
+        return settings_list # settings_list = [(seq name, ( param,  min, max, steps, unit)]
         
 
     def select(self, experiment):
