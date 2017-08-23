@@ -63,7 +63,20 @@ class pulse_sequence_wrapper(object):
             self.dv.add(np.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
             self.dv.add_parameter('Histogram729', True, context = self.histogram_save_context )
             self.total_readouts = []
-
+    
+    def save_confidences(self, confidences):
+        '''
+        saves confidences readings for the camera state detection
+        '''
+        self.total_camera_confidences.extend(confidences)
+        if (len(self.total_camera_confidences) >= 300):
+            hist, bins = numpy.histogram(self.total_camera_confidences, 30)
+            self.dv.cd(self.save_directory ,True, context = self.histogram_save_context)
+            self.dv.new('Histogram Camera {}'.format(self.datasetNameAppend),[('Counts', 'Arb')],[('Occurence','Arb','Arb')], context = self.histogram_save_context )
+            self.dv.add(numpy.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
+            self.dv.add_parameter('HistogramCameraConfidence', True, context = self.histogram_save_context )
+            self.total_camera_confidences = []
+            
     def setup_data_vault(self, cxn, name):
         import time
         localtime = time.localtime()
@@ -165,7 +178,7 @@ class pulse_sequence_wrapper(object):
                              int(p.vertical_min),
                              int(p.vertical_max),
                              ]
-
+        ## comparing to the base excitation there are a few lines missing???
         camera.set_image_region(*self.image_region)
         camera.set_acquisition_mode('Kinetics')
         self.initial_trigger_mode = camera.get_trigger_mode()
@@ -200,8 +213,15 @@ class pulse_sequence_wrapper(object):
         pulser = cxn.pulser
         self.update_params(self.sc.all_parameters())
         self.setup_data_vault(cxn, self.name)
-
         
+        ## camera
+        self.use_camera = self.parameters.StateReadout.use_camera_for_readout
+        #if use_camera_override != None:
+        #    self.use_camera=use_camera_override
+        if self.use_camera:
+            self.initialize_camera(cxn)
+        print "Using Camera? {}".format(self.use_camera)   
+            
         self.module.run_initial(cxn, self.parameters_dict)
         
         self.readout_save_iteration = 0
@@ -220,15 +240,40 @@ class pulse_sequence_wrapper(object):
             seq.programSequence(pulser)
             print "programmed pulser"
             self.plot_current_sequence(cxn)
-            pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            
+            if self.use_camera:
+                #print 'starting acquisition'
+                self.camera.set_number_kinetics(repetitions)
+                self.camera.start_acquisition()
+                
+            repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
+            pulser.start_number(repetitions)
             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
             print "done"
             pulser.stop_sequence()
             
-            rds = pulser.get_readout_counts()
-            ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
-            
+            if not self.use_camera:
+                #print "not using camera!"
+                rds = pulser.get_readout_counts()
+                ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
+            else:
+                 #get the percentage of excitation using the camera state readout
+                 proceed = self.camera.wait_for_kinetic()
+                 if not proceed:
+                     self.camera.abort_acquisition()
+                
+                     self._finalize(cxn)
+                     raise Exception ("Did not get all kinetic images from camera")
+                 images = self.camera.get_acquired_data(repetitions)
+                 self.camera.abort_acquisition()
+                 
+                 p = self.parameters.IonsOnCamera
+                 ion_state, readouts, confidences = readouts.camera_ion_probabilities(images, repetitions, p)
+                 self.save_confidences(confidences)
+                 #useful for debugging, saving the images
+                 #numpy.save('readout {}'.format(int(time.time())), images)
+
             # changing the units to be compatible for time or freq experiments 
             #if x.isCompatible('s'): x=x['us']
             #if x.isCompatible('kHz'): x=x['MHz']
@@ -249,6 +294,15 @@ class pulse_sequence_wrapper(object):
         # Add finalize the camera when needed 
         dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         self.sc._finish_confirmed(self.ident)
+        
+        if self.use_camera:
+            #if used the camera, return it to the original settings
+            self.camera.set_trigger_mode(self.initial_trigger_mode)
+            self.camera.set_exposure_time(self.initial_exposure)
+            self.camera.set_image_region(self.initial_region)
+            if self.camera_initially_live_display:
+                self.camera.start_live_display()
+                
         cxn.disconnect()
 
     def plot_current_sequence(self, cxn):
