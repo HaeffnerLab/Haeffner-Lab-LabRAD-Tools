@@ -70,10 +70,10 @@ class pulse_sequence_wrapper(object):
         '''
         self.total_camera_confidences.extend(confidences)
         if (len(self.total_camera_confidences) >= 300):
-            hist, bins = numpy.histogram(self.total_camera_confidences, 30)
+            hist, bins = np.histogram(self.total_camera_confidences, 30)
             self.dv.cd(self.save_directory ,True, context = self.histogram_save_context)
             self.dv.new('Histogram Camera {}'.format(self.datasetNameAppend),[('Counts', 'Arb')],[('Occurence','Arb','Arb')], context = self.histogram_save_context )
-            self.dv.add(numpy.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
+            self.dv.add(np.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
             self.dv.add_parameter('HistogramCameraConfidence', True, context = self.histogram_save_context )
             self.total_camera_confidences = []
             
@@ -241,12 +241,13 @@ class pulse_sequence_wrapper(object):
             print "programmed pulser"
             self.plot_current_sequence(cxn)
             
+            repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
             if self.use_camera:
                 #print 'starting acquisition'
                 self.camera.set_number_kinetics(repetitions)
                 self.camera.start_acquisition()
                 
-            repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
+            
             pulser.start_number(repetitions)
             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
@@ -258,21 +259,20 @@ class pulse_sequence_wrapper(object):
                 rds = pulser.get_readout_counts()
                 ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
             else:
-                 #get the percentage of excitation using the camera state readout
-                 proceed = self.camera.wait_for_kinetic()
-                 if not proceed:
-                     self.camera.abort_acquisition()
+                #get the percentage of excitation using the camera state readout
+                proceed = self.camera.wait_for_kinetic()
+                if not proceed:
+                    self.camera.abort_acquisition()
+                    self._finalize(cxn)
+                    raise Exception ("Did not get all kinetic images from camera")
+                images = self.camera.get_acquired_data(repetitions)
+                self.camera.abort_acquisition()
                 
-                     self._finalize(cxn)
-                     raise Exception ("Did not get all kinetic images from camera")
-                 images = self.camera.get_acquired_data(repetitions)
-                 self.camera.abort_acquisition()
-                 
-                 p = self.parameters.IonsOnCamera
-                 ion_state, readouts, confidences = readouts.camera_ion_probabilities(images, repetitions, p)
-                 self.save_confidences(confidences)
-                 #useful for debugging, saving the images
-                 #numpy.save('readout {}'.format(int(time.time())), images)
+                p = self.parameters.IonsOnCamera
+                ion_state, readouts, confidences = readouts.camera_ion_probabilities(images, repetitions, p)
+                self.save_confidences(confidences)
+                #useful for debugging, saving the images
+                #numpy.save('readout {}'.format(int(time.time())), images)
 
             # changing the units to be compatible for time or freq experiments 
             #if x.isCompatible('s'): x=x['us']
