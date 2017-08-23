@@ -64,13 +64,13 @@ class pulse_sequence_wrapper(object):
             self.dv.add_parameter('Histogram729', True, context = self.histogram_save_context )
             self.total_readouts = []
 
-    def setup_data_vault(self, cxn):
+    def setup_data_vault(self, cxn, name):
         import time
         localtime = time.localtime()
         self.dv = cxn.data_vault
         print "data vault connected"
         self.timetag = time.strftime('%H%M_%S', localtime)
-        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.name, self.timetag]
+        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), name, self.timetag]
         self.data_save_context = cxn.context()
         self.readout_save_context = cxn.context()
         self.histogram_save_context = cxn.context()
@@ -80,7 +80,7 @@ class pulse_sequence_wrapper(object):
         dependents = self.col_names()
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
         if self.grapher is not None:
-            self.grapher.plot(self.ds, self.window)
+            self.grapher.plot_with_axis(self.ds, self.window, self.scan) # -> plot_with_axis
         self.readout_save_directory = directory
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
@@ -199,7 +199,7 @@ class pulse_sequence_wrapper(object):
         cxn = labrad.connect()
         pulser = cxn.pulser
         self.update_params(self.sc.all_parameters())
-        self.setup_data_vault(cxn)
+        self.setup_data_vault(cxn, self.name)
 
         
         self.module.run_initial(cxn, self.parameters_dict)

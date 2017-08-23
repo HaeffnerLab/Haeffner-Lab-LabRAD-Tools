@@ -141,7 +141,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         print scan_id
         return scan_id
 
-    @setting(12, 'New Sequence Schedule', sequence_name = 's', settings = '(svvis)', duration = 'v[s]', priority = 's', start_now = 'b', returns = 'w')
+    @setting(12, 'New Sequence Schedule', sequence_name = 's', settings = '*(s(svvvs))', duration = 'v[s]', priority = 's', start_now = 'b', returns = 'w')
     def new_sequence_schedule(self, c, sequence_name, settings,  duration, priority, start_now):
         '''
         Schedule the script to run every spcified duration of seconds.
@@ -151,12 +151,32 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             raise Exception ("Sequence {} Not Found".format(sequence_name))
         if priority not in ['Normal','First in Queue','Pause All Others']:
             raise Exception ("Priority not recognized")
-        scan_param, m1, m2, steps, unit = settings
+        
         cls = self.sequences[sequence_name]
-        wrapper = psw(cls, self, self.client)
-        if scan_param == 'None':
-            raise Exception ('Scheduled sequences must have a scan parameter')
-        wrapper.set_scan(scan_param, m1, m2, steps, unit)
+        
+        if not cls.is_composite:
+            print "running a single scan"
+            scan_param, m1, m2, steps, unit = settings[0][1]
+            wrapper = psw(cls, self, self.client)
+            if scan_param == 'None':
+                wrapper.set_scan_none()
+                raise Exception ('Scheduled sequences must have a scan parameter')
+            else:
+                wrapper.set_scan(scan_param, m1, m2, steps, unit)
+                
+        else: # this is for composite sequences
+            print "running a composite scan"
+            wrapper = multi_sequence_wrapper(cls, self, self.client)
+            wrapper.set_scan(settings)
+        
+        
+        
+        #scan_param, m1, m2, steps, unit = settings
+        #cls = self.sequences[sequence_name]
+        #wrapper = psw(cls, self, self.client)
+        #if scan_param == 'None':
+        #    raise Exception ('Scheduled sequences must have a scan parameter')
+        #wrapper.set_scan(scan_param, m1, m2, steps, unit)
         schedule_id = self.scheduler.new_scheduled_scan(wrapper, duration['s'], priority, start_now)
         print schedule_id
         return schedule_id
