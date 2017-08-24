@@ -71,8 +71,9 @@ class pulse_sequence_wrapper(object):
         self.total_camera_confidences.extend(confidences)
         if (len(self.total_camera_confidences) >= 300):
             hist, bins = np.histogram(self.total_camera_confidences, 30)
-            self.dv.cd(self.save_directory ,True, context = self.histogram_save_context)
-            self.dv.new('Histogram Camera {}'.format(self.datasetNameAppend),[('Counts', 'Arb')],[('Occurence','Arb','Arb')], context = self.histogram_save_context )
+            self.dv.cd(self.readout_save_directory ,True, context = self.histogram_save_context)
+            #self.dv.new('Histogram Camera {}'.format(self.datasetNameAppend),[('Counts', 'Arb')],[('Occurence','Arb','Arb')], context = self.histogram_save_context )
+            self.dv.new('Histogram Camera',[('Counts', 'Arb')],[('Occurence','Arb','Arb')], context = self.histogram_save_context )
             self.dv.add(np.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
             self.dv.add_parameter('HistogramCameraConfidence', True, context = self.histogram_save_context )
             self.total_camera_confidences = []
@@ -142,6 +143,15 @@ class pulse_sequence_wrapper(object):
         self.scan = np.arange(minim, maxim, steps)
         self.scan = [U(pt, unit) for pt in self.scan]
         
+        x=self.scan[0]
+        if x.isCompatible('s'): 
+            self.submit_unit='us'
+        elif x.isCompatible('Hz'):
+            self.submit_unit='MHz'
+            print "compatible with freq"
+        else:
+            self.submit_unit=self.scan_unit
+        
         print "setting up the scan params"
         
         try:
@@ -163,13 +173,14 @@ class pulse_sequence_wrapper(object):
     def initialize_camera(self):
         camera = self.cxn.andor_server
         self.total_camera_confidences = []
-        self.camera_initially_live_display = self.camera.is_live_display_running()
+        self.camera_initially_live_display = camera.is_live_display_running()
         camera.abort_acquisition()
         self.initial_exposure = camera.get_exposure_time()
-        p = self.parameters_dict
-        exposure = p.StateReadout.state_readout_duration
+      
+        exposure = self.parameters_dict.StateReadout.state_readout_duration
+        p = self.parameters_dict.IonsOnCamera
         camera.set_exposure_time(exposure)
-        self.initial_region = self.camera.get_image_region()
+        self.initial_region = camera.get_image_region()
         self.image_region = [
                              int(p.horizontal_bin),
                              int(p.vertical_bin),
@@ -178,6 +189,8 @@ class pulse_sequence_wrapper(object):
                              int(p.vertical_min),
                              int(p.vertical_max),
                              ]
+        
+        print "Image regoin{}".format(self.image_region)
         ## comparing to the base excitation there are a few lines missing???
         camera.set_image_region(*self.image_region)
         camera.set_acquisition_mode('Kinetics')
@@ -211,23 +224,29 @@ class pulse_sequence_wrapper(object):
         #import time
         cxn = labrad.connect()
         pulser = cxn.pulser
+        camera = cxn.andor_server
+        ### camera debug
+        #cxn.scriptscanner.set_parameter(['StateReadout','use_camera_for_readout', True])
+
+        
+        
         self.update_params(self.sc.all_parameters())
         self.setup_data_vault(cxn, self.name)
         
         ## camera
-        self.use_camera = self.parameters.StateReadout.use_camera_for_readout
+        self.use_camera = self.parameters_dict.StateReadout.use_camera_for_readout
         #if use_camera_override != None:
         #    self.use_camera=use_camera_override
         if self.use_camera:
-            self.initialize_camera(cxn)
-        print "Using Camera? {}".format(self.use_camera)   
+            self.initialize_camera()
+        print "Using Camera {}".format(self.use_camera)   
             
         self.module.run_initial(cxn, self.parameters_dict)
         
         self.readout_save_iteration = 0
         print "SCAN:"
         print self.scan
-        all_data = [] # 2d numpy array
+        data = [] # 2d numpy array
         for x in self.scan:
             #time.sleep(0.5)
             
@@ -243,9 +262,10 @@ class pulse_sequence_wrapper(object):
             
             repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
             if self.use_camera:
+                exposures = repetitions # int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
                 #print 'starting acquisition'
-                self.camera.set_number_kinetics(repetitions)
-                self.camera.start_acquisition()
+                camera.set_number_kinetics(exposures)
+                camera.start_acquisition()
                 
             
             pulser.start_number(repetitions)
@@ -258,50 +278,57 @@ class pulse_sequence_wrapper(object):
                 #print "not using camera!"
                 rds = pulser.get_readout_counts()
                 ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
+                self.save_data(rds)
+                
             else:
                 #get the percentage of excitation using the camera state readout
-                proceed = self.camera.wait_for_kinetic()
+                proceed = camera.wait_for_kinetic()
                 if not proceed:
-                    self.camera.abort_acquisition()
+                    camera.abort_acquisition()
                     self._finalize(cxn)
                     raise Exception ("Did not get all kinetic images from camera")
-                images = self.camera.get_acquired_data(repetitions)
-                self.camera.abort_acquisition()
-                
-                p = self.parameters.IonsOnCamera
-                ion_state, readouts, confidences = readouts.camera_ion_probabilities(images, repetitions, p)
+                images = camera.get_acquired_data(exposures)
+                camera.abort_acquisition()
+                                
+                ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera)
                 self.save_confidences(confidences)
+                
                 #useful for debugging, saving the images
                 #numpy.save('readout {}'.format(int(time.time())), images)
 
-            # changing the units to be compatible for time or freq experiments 
-            #if x.isCompatible('s'): x=x['us']
-            #if x.isCompatible('kHz'): x=x['MHz']
-
-            submission = [x[self.scan_unit]]
+   
+       
+            #print "this is x in submission units {}".format(x[self.submit_unit])
+            
+            submission = [x[self.submit_unit]]
             submission.extend(ion_state)
+          
             
-            self.module.run_in_loop(cxn, self.parameters_dict, all_data)
-            
+            data.append(submission)
+            #print "data {}".format(data)
+            # run in the loop to calculate something
+            self.module.run_in_loop(cxn, self.parameters_dict, np.array(data))
+            #submit the results to the data vault
             self.dv.add(submission, context = self.data_save_context)
-            self.save_data(rds)
+                
             print "done waiting"
-                ### program pulser, get readouts
-        self.module.run_finally(cxn, self.parameters_dict, all_data)
+                
+        self.module.run_finally(cxn, self.parameters_dict, np.array(data))
         self._finalize(cxn) 
     
     def _finalize(self, cxn):
         # Add finalize the camera when needed 
         dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         self.sc._finish_confirmed(self.ident)
+        camera = cxn.andor_server
         
         if self.use_camera:
             #if used the camera, return it to the original settings
-            self.camera.set_trigger_mode(self.initial_trigger_mode)
-            self.camera.set_exposure_time(self.initial_exposure)
-            self.camera.set_image_region(self.initial_region)
+            camera.set_trigger_mode(self.initial_trigger_mode)
+            camera.set_exposure_time(self.initial_exposure)
+            camera.set_image_region(self.initial_region)
             if self.camera_initially_live_display:
-                self.camera.start_live_display()
+                camera.start_live_display()
                 
         cxn.disconnect()
 
