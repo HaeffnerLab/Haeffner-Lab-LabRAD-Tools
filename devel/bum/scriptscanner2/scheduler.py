@@ -1,5 +1,5 @@
 from twisted.internet.threads import deferToThread
-from twisted.internet.defer import Deferred, DeferredList
+from twisted.internet.defer import Deferred, DeferredList, DeferredLock
 from configuration import config 
 from twisted.internet.task import LoopingCall
 from script_status import script_semaphore
@@ -77,6 +77,7 @@ class scheduler(object):
         self.scheduled = {}
         self.scheduled_ID_counter = 0
         self.scan_ID_counter = 0
+        self.running_locks = {}
     
     def running_deferred_list(self):
         return [script.defer_on_done for script in self.running.itervalues() if not script.externally_launched]
@@ -133,6 +134,9 @@ class scheduler(object):
         else: 
             raise Exception ("Unrecognized priority type")
         self.signals.on_queued_new_script((scan_id, scan.name, order))
+        d = DeferredLock()
+        d.acquire()
+        self.running_locks[scan_id] = d
         self.launch_scripts()
         return scan_id
     

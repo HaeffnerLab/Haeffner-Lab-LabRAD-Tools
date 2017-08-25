@@ -92,13 +92,15 @@ class pulse_sequence_wrapper(object):
         # creating the col names in the output file
         #dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         dependents = self.col_names()
-        self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.scan_unit)], dependents, context = self.data_save_context)
+        #print dependents
+        self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.submit_unit)], dependents, context = self.data_save_context)
         if self.grapher is not None:
-            self.grapher.plot_with_axis(self.ds, self.window, self.scan) # -> plot_with_axis
+            self.grapher.plot_with_axis(self.ds, self.window, self.scan_submit) # -> plot_with_axis
         self.readout_save_directory = directory
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
-        self.dv.new('Readouts',[('Iteration', 'Arb')],[('Readout Counts','Arb','Arb')], context = self.readout_save_context)    
+        self.dv.new('Readouts',[('Iteration', 'Arb')],[('Readout Counts','Arb','Arb')], context = self.readout_save_context)
+        self.sc.datasets[self.ident].append(self.ds)
         
     @inlineCallbacks
     def update_params(self, update):
@@ -131,6 +133,7 @@ class pulse_sequence_wrapper(object):
                 carriers_dict[carrier_translation[c]] = f
         self.parameters_dict.update(update_dict)
         self.parameters_dict.update(carriers_dict)
+        self.parameters_dict.update(self.module.fixed_params)
 
     def set_scan(self, scan_param, minim, maxim, steps, unit):
         self.parameter_to_scan = scan_param
@@ -147,12 +150,17 @@ class pulse_sequence_wrapper(object):
         if x.isCompatible('s'): 
             self.submit_unit='us'
         elif x.isCompatible('Hz'):
-            self.submit_unit='MHz'
-            print "compatible with freq"
+            self.submit_unit='MHz' 
+        #    print "compatible with freq"
         else:
             self.submit_unit=self.scan_unit
         
-        print "setting up the scan params"
+        self.scan_submit = [pt[self.submit_unit] for pt in self.scan]
+        self.scan_submit = [U(pt, self.submit_unit) for pt in self.scan_submit]
+        print self.scan_submit
+        print self.scan
+        
+        #print "setting up the scan params"
         
         try:
             self.window = self.module.scannable_params[scan_param][1]
@@ -170,8 +178,8 @@ class pulse_sequence_wrapper(object):
         self.scan_unit = 'None'
         self.window = 'current'
 
-    def initialize_camera(self):
-        camera = self.cxn.andor_server
+    def initialize_camera(self, cxn):
+        camera = cxn.andor_server
         self.total_camera_confidences = []
         self.camera_initially_live_display = camera.is_live_display_running()
         camera.abort_acquisition()
@@ -190,7 +198,7 @@ class pulse_sequence_wrapper(object):
                              int(p.vertical_max),
                              ]
         
-        print "Image regoin{}".format(self.image_region)
+        print "Image region{}".format(self.image_region)
         ## comparing to the base excitation there are a few lines missing???
         camera.set_image_region(*self.image_region)
         camera.set_acquisition_mode('Kinetics')
@@ -224,7 +232,6 @@ class pulse_sequence_wrapper(object):
         #import time
         cxn = labrad.connect()
         pulser = cxn.pulser
-        camera = cxn.andor_server
         ### camera debug
         #cxn.scriptscanner.set_parameter(['StateReadout','use_camera_for_readout', True])
 
@@ -233,13 +240,18 @@ class pulse_sequence_wrapper(object):
         self.update_params(self.sc.all_parameters())
         self.setup_data_vault(cxn, self.name)
         
+        self.use_camera = False
+        if self.parameters_dict.StateReadout.readout_mode == 'camera': self.use_camera = True
+        
         ## camera
-        self.use_camera = self.parameters_dict.StateReadout.use_camera_for_readout
+        #self.use_camera = self.parameters_dict.StateReadout.use_camera_for_readout
         #if use_camera_override != None:
         #    self.use_camera=use_camera_override
         if self.use_camera:
-            self.initialize_camera()
-        print "Using Camera {}".format(self.use_camera)   
+            self.initialize_camera(cxn)
+            camera = cxn.andor_server
+            print "Using Camera"
+            print self.name
             
         self.module.run_initial(cxn, self.parameters_dict)
         
@@ -279,6 +291,7 @@ class pulse_sequence_wrapper(object):
                 rds = pulser.get_readout_counts()
                 ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
                 self.save_data(rds)
+                #data=data.append(ion_state)
                 
             else:
                 #get the percentage of excitation using the camera state readout
@@ -289,9 +302,14 @@ class pulse_sequence_wrapper(object):
                     raise Exception ("Did not get all kinetic images from camera")
                 images = camera.get_acquired_data(exposures)
                 camera.abort_acquisition()
-                                
-                ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera)
-                self.save_confidences(confidences)
+                if self.name == 'ReferenceImage':
+                    #print "Sending the images to data"
+                    data=images
+                    ion_state=np.ones(self.parameters_dict.IonsOnCamera.ion_number)
+                else:
+                    ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera)
+                    self.save_confidences(confidences)
+                    #data=data.append(ion_state)
                 
                 #useful for debugging, saving the images
                 #numpy.save('readout {}'.format(int(time.time())), images)
@@ -304,7 +322,7 @@ class pulse_sequence_wrapper(object):
             submission.extend(ion_state)
           
             
-            data.append(submission)
+            #data.append(submission)
             #print "data {}".format(data)
             # run in the loop to calculate something
             self.module.run_in_loop(cxn, self.parameters_dict, np.array(data))
@@ -313,17 +331,18 @@ class pulse_sequence_wrapper(object):
                 
             print "done waiting"
                 
-        self.module.run_finally(cxn, self.parameters_dict, np.array(data))
+        self.module.run_finally(cxn, self.parameters_dict,data)
         self._finalize(cxn) 
     
     def _finalize(self, cxn):
         # Add finalize the camera when needed 
         dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         self.sc._finish_confirmed(self.ident)
-        camera = cxn.andor_server
+        
         
         if self.use_camera:
             #if used the camera, return it to the original settings
+            camera = cxn.andor_server
             camera.set_trigger_mode(self.initial_trigger_mode)
             camera.set_exposure_time(self.initial_exposure)
             camera.set_image_region(self.initial_region)

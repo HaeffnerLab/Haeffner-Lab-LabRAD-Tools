@@ -7,6 +7,7 @@ class config(object):
         ('lattice.PulseSequences2.RabiFloppingManual', 'RabiFloppingManual'),
         ('lattice.PulseSequences2.Spectrum', 'Spectrum'),
         ('lattice.PulseSequences2.multispectrum', 'MultiSpectrum'),
+        ('lattice.PulseSequences2.ReferenceImage', 'ReferenceImage'),
             ]
 
     allowed_concurrent = {

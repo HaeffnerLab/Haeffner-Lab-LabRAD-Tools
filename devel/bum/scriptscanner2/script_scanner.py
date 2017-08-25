@@ -39,6 +39,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         yield self.load_parameters()
 
         self.sequences = {} # dict mapping sequence names to modules
+        self.datasets = {} # dictionary mapping sequences to dataset objects
         self.scheduler = scheduler(Signals, self)
         self.load_sequences()
     
@@ -138,6 +139,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             wrapper.set_scan(settings)
             
         scan_id = self.scheduler.add_scan_to_queue(wrapper)
+        self.datasets[scan_id] = [] # empty list
         print scan_id
         return scan_id
 
@@ -169,6 +171,49 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             wrapper = multi_sequence_wrapper(cls, self, self.client)
             wrapper.set_scan(settings)
         
+    def failure(self, f):
+        print "errback"
+        #print "Exception: %s"
+        print "Exception: %s" % (f.getTraceback(),)
+        f.trap(RuntimeError)
+        
+    def pause_running(self, result, scan, current_ident):
+        paused_idents = []
+        paused_deferred = []
+        for ident, script in self.running.iteritems():
+            non_conf = config.allowed_concurrent.get(script.name, [])
+            if not scan.script_cls.name in non_conf and not script.status.status == 'Paused':
+                #don't pause unless it's a conflicting experiment and it's not already paused
+                if not ident == current_ident:
+                    paused_idents.append(ident)
+#                    print 'waiting to pause on', ident
+                    d = script.status.set_pausing(True)
+                    paused_deferred.append(d)
+        paused_deferred = DeferredList(paused_deferred)
+        self._paused_by_script = paused_idents
+        return paused_deferred
+    
+    def unpause_on_finish(self, result):
+        unpaused_defers = []
+        for ident in self._paused_by_script:
+            if not ident in self.running.keys():
+                #if the previously paused experiment is no longer running
+                self._paused_by_script.remove(ident)
+                break
+            if not self.running[ident].status.status == 'Running':
+                #if not already running, unpause
+#                print 'waiting to unfinish', ident
+                d = self.running[ident].status.set_pausing(False)
+                unpaused_defers.append(d)
+        
+        unpaused_defers = DeferredList(unpaused_defers)
+        self._paused_by_script = []
+        return unpaused_defers
+    
+    def launch_in_thread(self, result, scan, ident):
+        print "launch in thread"
+        d = deferToThread(scan.run, ident)
+    
         
         
         #scan_param, m1, m2, steps, unit = settings
@@ -260,6 +305,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         if status is None:
             raise Exception ("Trying to confirm Finish of sequence with ID {0} but it was not running".format(sequence_ID))
         status.finish_confirmed()
+        self.scheduler.running_locks[sequence_ID].release() # release the running lock
         self.scheduler.remove_if_external(sequence_ID)
     
     @setting(34, "Stop Confirmed", sequence_ID = 'w')
@@ -267,6 +313,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         status = self.scheduler.get_running_status(sequence_ID)
         if status is None:
             raise Exception ("Trying to confirm Stop of sequence with ID {0} but it was not running".format(sequence_ID))
+        self.scheduler.running_locks[sequence_ID].release()
         status.stop_confirmed()
 
     @setting(35,"Pause Or Stop", sequence_ID = 'w', returns = 'b')
@@ -279,7 +326,27 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             raise Exception ("Trying to confirm Pause/Stop of sequence with ID {0} but it was not running".format(sequence_ID))
         yield status.pause()
         returnValue(status.should_stop)
+        
+    @setting(40,"Sequence completed", sequence_ID = 'w')
+    def sequence_completed(self, c, sequence_ID):
+        '''
+        Blocks until sequence is completed
+        '''
+        def dummy():
+            pass
+        try:
+            yield self.scheduler.running_locks[sequence_ID].run(dummy)
+        except KeyError:
+            raise Exception("Sequence with ID {0} not found".format(sequence_ID))
+        
+    @setting(41, 'Get Dataset', sequence_ID = 'w', returns = '?')
+    def get_dataset(self, c, sequence_ID):
+        '''
+        Return the dataset from the datavault
+        '''
+        return self.datasets[sequence_ID]
 
+        
     #@inlineCallbacks
     def _pause_or_stop(self, sequence_ID):
         '''
