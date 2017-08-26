@@ -18,6 +18,7 @@ to the sequence object
 
 """
 import numpy as np
+from time import sleep
 from treedict import TreeDict
 import labrad
 from labrad.units import WithUnit as U
@@ -106,7 +107,6 @@ class pulse_sequence_wrapper(object):
     def update_params(self, update):
         # also update from the drift tracker here?
         print "UPDATING"
-        
         carrier_translation = {'S+1/2D-3/2':'Carriers.c0',
                                'S-1/2D-5/2':'Carriers.c1',
                                'S+1/2D-1/2':'Carriers.c2',
@@ -134,6 +134,17 @@ class pulse_sequence_wrapper(object):
         self.parameters_dict.update(update_dict)
         self.parameters_dict.update(carriers_dict)
         self.parameters_dict.update(self.module.fixed_params)
+        
+    def update_scan_param(self, update):
+        update_dict = {}
+        for key in update.keys():
+            if type(key) == tuple:
+                print key
+                update_dict['.'.join(key)] = update[key]
+            else:
+                update_dict[key] = update[key]
+        self.parameters_dict.update(update)
+            
 
     def set_scan(self, scan_param, minim, maxim, steps, unit):
         self.parameter_to_scan = scan_param
@@ -259,16 +270,25 @@ class pulse_sequence_wrapper(object):
         print "SCAN:"
         print self.scan
         data = [] # 2d numpy array
-        for x in self.scan:
+        for it,x in enumerate(self.scan):
             #time.sleep(0.5)
+            
+           # if it == 0:
+           #     self.run_single_point(cxn,0)
+                
+            print " currently scanning point {}".format(x)
             
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
             update = {self.parameter_to_scan: x}
+            ## needs the two lines of update to ensure the proper updating!!!
             self.update_params(update)
-            
+            self.update_scan_param(update)
+            #self.parameters_dict.update(update)
+            print "PARAMETER {}".format(self.parameters_dict.RabiFlopping.duration)
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
+            sleep(0.1)
             print "programmed pulser"
             self.plot_current_sequence(cxn)
             
@@ -333,6 +353,24 @@ class pulse_sequence_wrapper(object):
                 
         self.module.run_finally(cxn, self.parameters_dict,data)
         self._finalize(cxn) 
+    
+    def run_single_point(self,cxn,x=0):
+        print x
+        cxn = labrad.connect()
+        pulser = cxn.pulser
+        seq = self.module(self.parameters_dict)
+        seq.programSequence(pulser)
+        sleep(0.1)
+        print "programmed pulser for a single point"
+        repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
+        pulser.start_number(repetitions)
+        print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+        pulser.wait_sequence_done()
+        print "done"
+        pulser.stop_sequence()
+            
+            
+        
     
     def _finalize(self, cxn):
         # Add finalize the camera when needed 
