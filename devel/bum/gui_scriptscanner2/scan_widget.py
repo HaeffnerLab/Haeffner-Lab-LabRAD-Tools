@@ -74,15 +74,20 @@ class ScanItem(QtGui.QWidget):
         return (mn, mx, steps, self.unit)
 
 class sequence_widget(QtGui.QWidget):
-    def __init__(self, params, seq):
+    def __init__(self, params, seq, single_seq = True):
         super(sequence_widget, self).__init__()
         self.parameters = {}
-        self.makeLayout(params)
+        self.makeLayout(params, single_seq)
         self.scan_parameter = None
         self.sequence_name = seq # name of the sequence this sequence widget refers to
 
-    def makeLayout(self, params):
+    def makeLayout(self, params, single_seq = True):
         layout = QtGui.QVBoxLayout()
+        
+        # Run until stopped checkbox
+        if single_seq:
+            layout.addWidget(QtGui.QCheckBox("run until stopped"))
+        
         for par, x, sequence_name in params:
             minim, maxim, steps, unit = x
             p = (par, minim, maxim, steps, unit)
@@ -161,9 +166,16 @@ class scan_widget(QtGui.QWidget):
         
         sequences = list(set([p[2] for p in params])) # individual sequences
         sequences_dict = {}
-        for seq in sequences:
+        
+        if len(sequences) == 1:
+            seq = sequences[0]
             sequence_params = [x for x in params if x[2] == seq]
-            sequences_dict[seq] = sequence_widget(sequence_params, seq)
+            sequences_dict[seq] = sequence_widget(sequence_params, seq, single_seq=True)
+        
+        else:
+            for seq in sequences[::-1]:
+                sequence_params = [x for x in params if x[2] == seq]
+                sequences_dict[seq] = sequence_widget(sequence_params, seq, single_seq=False)
         
         multi = multi_sequence_widget(sequences_dict.values())
         
