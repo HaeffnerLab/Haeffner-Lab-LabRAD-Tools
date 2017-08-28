@@ -19,7 +19,7 @@ class ScanItem(QtGui.QWidget):
 
         self.select = QtGui.QCheckBox()
         layout.addWidget(self.select)
-        label = QtGui.QLabel(parameter)
+        label = QtGui.QLabel(parameter.split(".")[-1])
         layout.addWidget(label)
         self.minim = QtGui.QDoubleSpinBox()
         self.maxim = QtGui.QDoubleSpinBox()
