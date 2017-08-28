@@ -8,7 +8,9 @@ class config(object):
         ('lattice.PulseSequences2.Spectrum', 'Spectrum'),
         ('lattice.PulseSequences2.multispectrum', 'MultiSpectrum'),
         ('lattice.PulseSequences2.ReferenceImage', 'ReferenceImage'),
-            ]
+        ('lattice.PulseSequences2.CalibAllLines', 'CalibAllLines'),
+        ('lattice.PulseSequences2.SidebandOptimization', 'SidebandOptimization')]
+
 
     allowed_concurrent = {
 #        'fft_spectrum': ['non_conflicting_experiment'],

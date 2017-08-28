@@ -79,7 +79,9 @@ class pulse_sequence_wrapper(object):
             self.dv.add_parameter('HistogramCameraConfidence', True, context = self.histogram_save_context )
             self.total_camera_confidences = []
             
+
     def setup_data_vault(self, cxn, name):
+        
         import time
         localtime = time.localtime()
         self.dv = cxn.data_vault
@@ -94,9 +96,37 @@ class pulse_sequence_wrapper(object):
         #dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         dependents = self.col_names()
         #print dependents
-        self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan,self.submit_unit)], dependents, context = self.data_save_context)
+
+        self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan, self.submit_unit)], dependents, context = self.data_save_context)
+        
+        if not self.parameters_dict.Display.relative_frequencies:
+            
+            if self.window == "car1":
+                line = self.parameters_dict.DriftTracker.line_selection_1
+                center_frequency = cxn.sd_tracker.get_current_line(line)
+                
+            elif self.window == "car2":
+                line = self.parameters_dict.DriftTracker.line_selection_2
+                center_frequency = cxn.sd_tracker.get_current_line(line)
+                
+            elif self.window == "spectrum" and self.parameters_dict.Spectrum.scan_selection == "auto":
+                line = self.parameters_dict.Spectrum.line_selection
+                center_frequency = cxn.sd_tracker.get_current_line(line)
+                sideband_selection = self.parameters_dict.Spectrum.sideband_selection
+                trap = self.parameters_dict.TrapFrequencies
+                 
+                center_frequency = self.add_sidebands(center_frequency, sideband_selection, trap)
+
+                
+            else:
+                center_frequency = U(0., "MHz")    
+        
+        else:
+            center_frequency = U(0., "MHz")        
+        
         if self.grapher is not None:
-            self.grapher.plot_with_axis(self.ds, self.window, self.scan_submit) # -> plot_with_axis
+            self.grapher.plot_with_axis(self.ds, self.window, [center_frequency + x for x in self.scan_submit]) # -> plot_with_axis
+        
         self.readout_save_directory = directory
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
@@ -154,7 +184,17 @@ class pulse_sequence_wrapper(object):
         #self.scan = np.linspace(minim, maxim, steps)
         
         # list with step size
-        self.scan = np.arange(minim, maxim, steps)
+        # maxim+steps is a hack to get plotted data to correspond to usr input range.
+        # actually an additional point is being taken
+        if U(minim,unit).isCompatible("dBm"):
+            self.scan = np.arange(minim, maxim+0.01, steps)
+        else:
+#             print maxim
+#             print minim
+#             print steps
+            self.scan = np.arange(minim, maxim+steps+1, steps)
+        
+
         self.scan = [U(pt, unit) for pt in self.scan]
         
         x=self.scan[0]
@@ -168,13 +208,15 @@ class pulse_sequence_wrapper(object):
         
         self.scan_submit = [pt[self.submit_unit] for pt in self.scan]
         self.scan_submit = [U(pt, self.submit_unit) for pt in self.scan_submit]
-        print self.scan_submit
-        print self.scan
-        
+
+#         print self.scan_submit
+#         print self.scan
+#         
         #print "setting up the scan params"
         
         try:
-            self.window = self.module.scannable_params[scan_param][1]
+            self.window = self.module.scannable_params[scan_param][1]                   
+
         except:
             self.window = 'current' # no window defined
 
@@ -246,14 +288,38 @@ class pulse_sequence_wrapper(object):
         ### camera debug
         #cxn.scriptscanner.set_parameter(['StateReadout','use_camera_for_readout', True])
 
-        
+        if not self.parameters_dict.Display.relative_frequencies:
+            
+            if self.window == "car1":
+                line = self.parameters_dict.DriftTracker.line_selection_1
+                center_frequency = cxn.sd_tracker.get_current_line(line)
+                    
+            elif self.window == "car2":
+                line = self.parameters_dict.DriftTracker.line_selection_2
+                center_frequency = cxn.sd_tracker.get_current_line(line)
+                    
+            elif self.window == "spectrum" and self.parameters_dict.Spectrum.scan_selection == "auto":
+                line = self.parameters_dict.Spectrum.line_selection
+                center_frequency = cxn.sd_tracker.get_current_line(line)
+                sideband_selection = self.parameters_dict.Spectrum.sideband_selection
+                trap = self.parameters_dict.TrapFrequencies
+                     
+                center_frequency = self.add_sidebands(center_frequency, sideband_selection, trap)
+     
+            else:
+                center_frequency = U(0., "MHz")    
+            
+        else:
+            center_frequency = U(0., "MHz")
         
         self.update_params(self.sc.all_parameters())
         self.setup_data_vault(cxn, self.name)
         
         self.use_camera = False
-        if self.parameters_dict.StateReadout.readout_mode == 'camera': self.use_camera = True
-        
+
+        if self.parameters_dict.StateReadout.readout_mode == 'camera': 
+            self.use_camera = True
+
         ## camera
         #self.use_camera = self.parameters_dict.StateReadout.use_camera_for_readout
         #if use_camera_override != None:
@@ -270,12 +336,10 @@ class pulse_sequence_wrapper(object):
         print "SCAN:"
         print self.scan
         data = [] # 2d numpy array
+
+        freq_data = []
         for it,x in enumerate(self.scan):
-            #time.sleep(0.5)
-            
-           # if it == 0:
-           #     self.run_single_point(cxn,0)
-                
+           
             print " currently scanning point {}".format(x)
             
             should_stop = self.sc._pause_or_stop(ident)
@@ -306,12 +370,14 @@ class pulse_sequence_wrapper(object):
             print "done"
             pulser.stop_sequence()
             
+            print "not using camera!"
             if not self.use_camera:
-                #print "not using camera!"
+                print "not using camera!"
                 rds = pulser.get_readout_counts()
                 ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
+                #print "646884:  ", ion_state
                 self.save_data(rds)
-                #data=data.append(ion_state)
+                data.append(ion_state)
                 
             else:
                 #get the percentage of excitation using the camera state readout
@@ -338,7 +404,7 @@ class pulse_sequence_wrapper(object):
        
             #print "this is x in submission units {}".format(x[self.submit_unit])
             
-            submission = [x[self.submit_unit]]
+            submission = [x[self.submit_unit] + center_frequency[self.submit_unit]]
             submission.extend(ion_state)
           
             
@@ -351,7 +417,8 @@ class pulse_sequence_wrapper(object):
                 
             print "done waiting"
                 
-        self.module.run_finally(cxn, self.parameters_dict,data)
+        self.module.run_finally(cxn, self.parameters_dict, np.array(data), np.array(freq_data))
+
         self._finalize(cxn) 
     
     def run_single_point(self,cxn,x=0):
@@ -398,7 +465,14 @@ class pulse_sequence_wrapper(object):
         sp = SequencePlotter(ttl, dds, channels)
         sp.makePDF()
 
-
+    @classmethod
+    def add_sidebands(cls, freq, sideband_selection, trap):
+        sideband_frequencies = [trap.radial_frequency_1, trap.radial_frequency_2, trap.axial_frequency, trap.rf_drive_frequency]
+        for order,sideband_frequency in zip(sideband_selection, sideband_frequencies):
+            freq += order * sideband_frequency
+        return freq
+    
+    
 if __name__=='__main__':
     from example import Example
     pv = TreeDict.fromdict({'DopplerCooling.duration':U(5, 'us')})
