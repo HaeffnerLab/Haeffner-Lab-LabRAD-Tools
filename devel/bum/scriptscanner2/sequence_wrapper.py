@@ -183,6 +183,10 @@ class pulse_sequence_wrapper(object):
         # list with step size
         # maxim+steps is a hack to get plotted data to correspond to usr input range.
         # actually an additional point is being taken
+        print "1234"
+        print m1, m2, default, unit 
+        print steps
+        print np.arange(minim, maxim+0.01, steps)
         
         if U(minim,unit).isCompatible("dBm"):
             self.scan = np.arange(minim, maxim+0.01, steps)

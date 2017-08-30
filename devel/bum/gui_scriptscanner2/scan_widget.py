@@ -21,13 +21,20 @@ class ScanItem(QtGui.QWidget):
         layout.addWidget(self.select)
         label = QtGui.QLabel(parameter.split(".")[-1])
         layout.addWidget(label)
+        
         self.minim = QtGui.QDoubleSpinBox()
         self.maxim = QtGui.QDoubleSpinBox()
         self.steps = QtGui.QDoubleSpinBox()
         
+        # adding resolution to the params
+        self.minim.setDecimals(4)
+        self.maxim.setDecimals(4)
+        self.steps.setDecimals(4)
+        
         self.minim.setRange(-1e6, 1e6)
         self.maxim.setRange(-1e6, 1e6)
         self.steps.setRange(-1e6, 1e6)
+        
         
         self.minim.setValue(minim)
         self.maxim.setValue(maxim)
@@ -70,7 +77,8 @@ class ScanItem(QtGui.QWidget):
         """
         mn = self.minim.value()
         mx = self.maxim.value()
-        steps = int(self.steps.value())
+        #steps = int(self.steps.value())
+        steps = float(self.steps.value())
         return (mn, mx, steps, self.unit)
 
 class sequence_widget(QtGui.QWidget):
