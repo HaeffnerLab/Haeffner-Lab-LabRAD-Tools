@@ -211,7 +211,7 @@ class SDTracker(LabradServer):
         #print d.makeReport()
         try:
             #return d[name]
-            return Value(d[name])
+            returnValue(d[name])
         except KeyError:
             raise Exception ("Requested line not found")
         

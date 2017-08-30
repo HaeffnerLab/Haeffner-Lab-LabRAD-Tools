@@ -2,6 +2,7 @@ import numpy as np
 from pulse_sequences_config import dds_name_dictionary as dds_config
 from labrad.units import WithUnit
 from treedict import TreeDict
+from scipy.optimize import curve_fit
 
 class pulse_sequence(object):
     '''
@@ -107,7 +108,7 @@ class pulse_sequence(object):
             freq=self.parameters.Carriers[carrier_translation[carrier]]
         except:
             raise Exception('carrier not found') 
-        if sideband is not None:
+        if order != 0 :
             try: 
                 freq = freq+ 1.0*self.parameters.TrapFrequencies[sideband]*order
             except:
@@ -141,12 +142,15 @@ class pulse_sequence(object):
             force_guess = True
         if init_guess is None:
             guess = cls.peak_guess(f, p, force_guess)
-            
-            if not guess:
+            print guess
+            if guess is None:
                 return None
                     
         else:
             guess = init_guess
+        #print "1234"
+        #print f,p, guess
+        
         popt, copt = curve_fit(model, f, p, p0=guess)
         if return_all_params:
             return popt[0], popt[1], popt[2] # center value, amplitude, width
@@ -194,12 +198,12 @@ class pulse_sequence(object):
     
     
     @classmethod
-    def run_in_loop(cls, cxn, parameters_dict, data_so_far):
+    def run_in_loop(cls, cxn, parameters_dict, data_so_far,data_x):
         pass
     
     
     @classmethod
-    def run_finally(cls, cxn, parameters_dict, all_data, freq_data):
+    def run_finally(cls, cxn, parameters_dict, all_data, data_x):
         pass
         #print "646884:  This is the data we want", all_data
     

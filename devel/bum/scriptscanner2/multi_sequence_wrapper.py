@@ -91,10 +91,10 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
                     center_frequency = self.add_sidebands(center_frequency, sideband_selection, trap)
      
                 else:
-                    center_frequency = U(0., "MHz")    
+                    center_frequency = U(0., self.submit_unit)    
             
             else:
-                center_frequency = U(0., "MHz")
+                center_frequency = U(0., self.submit_unit)
             
             self.center_frequency = center_frequency
             self.run_single(seq)
@@ -116,7 +116,7 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         print "SCAN:"
         print self.scan
         all_data = [] # 2d numpy array
-        freq_data = []
+        x_data = []
 
         for x in self.scan:
             #time.sleep(0.5)
@@ -125,6 +125,7 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             if should_stop: break
             update = {self.parameter_to_scan: x}
             self.update_params(update)
+            self.update_scan_param(update)
             seq = module(self.parameters_dict)
             seq.programSequence(pulser)
             print "programmed pulser"
@@ -139,10 +140,13 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
 
             submission = [x[self.submit_unit] + self.center_frequency[self.submit_unit]]
+            x_data.append(x[self.submit_unit] + self.center_frequency[self.submit_unit])
+            print x_data
             submission.extend(ion_state)
-            freq_data.append(submission)
+            
+           
 
-            module.run_in_loop(cxn, self.parameters_dict, submission)
+            module.run_in_loop(cxn, self.parameters_dict, submission ,np.array(x_data))
             
             self.dv.add(submission, context = self.data_save_context)
             self.save_data(rds)
@@ -150,7 +154,8 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             
             print "done waiting"
                 ### program pulser, get readouts
-        module.run_finally(cxn, self.parameters_dict, np.array(all_data), np.array(freq_data))
+                
+        module.run_finally(cxn, self.parameters_dict, np.array(all_data), np.array(x_data))
         self._finalize_single(cxn)
         
     def _finalize_single(self, cxn):
