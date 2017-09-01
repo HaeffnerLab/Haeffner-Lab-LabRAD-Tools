@@ -183,16 +183,19 @@ class pulse_sequence_wrapper(object):
         # list with step size
         # maxim+steps is a hack to get plotted data to correspond to usr input range.
         # actually an additional point is being taken
-        print "1234"
-        print m1, m2, default, unit 
-        print steps
-        print np.arange(minim, maxim+0.01, steps)
+        #print "1234"
+        #print m1, m2, default, unit 
+        #print steps
+        #print np.arange(minim, maxim+0.01, steps)
         
-        if U(minim,unit).isCompatible("dBm"):
-            self.scan = np.arange(minim, maxim+0.01, steps)
-        else:
-            self.scan = np.arange(minim, maxim+steps+1, steps)
+        #if U(minim,unit).isCompatible("dBm"):
+        #    self.scan = np.arange(minim, maxim+0.01, steps)
+        #else:
+        #    self.scan = np.arange(minim, maxim+steps+1, steps)
         
+        # adding the last element to the scan
+        self.scan = np.arange(minim, maxim, steps)
+        self.scan = np.append(self.scan,maxim)
 
         self.scan = [U(pt, unit) for pt in self.scan]
         
@@ -288,7 +291,7 @@ class pulse_sequence_wrapper(object):
                              int(p.vertical_max),
                              ]
         
-        print "Image region{}".format(self.image_region)
+        #print "Image region{}".format(self.image_region)
         ## comparing to the base excitation there are a few lines missing???
         camera.set_image_region(*self.image_region)
         camera.set_acquisition_mode('Kinetics')
@@ -368,8 +371,8 @@ class pulse_sequence_wrapper(object):
         self.module.run_initial(cxn, self.parameters_dict)
         
         self.readout_save_iteration = 0
-        #print "SCAN:"
-        #print self.scan
+        print "SCAN:"
+        print self.scan
         
         data = [] 
         data_x = []

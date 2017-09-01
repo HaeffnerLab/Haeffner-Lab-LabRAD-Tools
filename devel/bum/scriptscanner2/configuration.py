@@ -9,7 +9,8 @@ class config(object):
         ('lattice.PulseSequences2.multispectrum', 'MultiSpectrum'),
         ('lattice.PulseSequences2.ReferenceImage', 'ReferenceImage'),
         ('lattice.PulseSequences2.CalibAllLines', 'CalibAllLines'),
-        ('lattice.PulseSequences2.SidebandOptimization', 'SidebandOptimization')]
+        ('lattice.PulseSequences2.SidebandOptimization', 'SidebandOptimization'),
+        ('lattice.PulseSequences2.Ramsey', 'Ramsey')]
 
 
     allowed_concurrent = {
