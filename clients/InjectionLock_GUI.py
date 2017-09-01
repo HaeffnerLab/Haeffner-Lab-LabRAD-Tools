@@ -1,14 +1,10 @@
-import sys
 from PyQt4 import QtGui
 import labrad
-import time
 import thread
-import threading
 
 class Widget(QtGui.QDialog):
 
     def __init__(self, parent=None):
-
         self.cxn_laserroom = labrad.connect('192.168.169.49', password='lab', tls_mode='off')
         self.inj = self.cxn_laserroom.injectionlock
 
@@ -20,7 +16,7 @@ class Widget(QtGui.QDialog):
 
         self.q2Edit = QtGui.QDoubleSpinBox()
         self.q2Edit.setSingleStep(0.01)
-        self.q2Edit.setValue(2.9)
+        self.q2Edit.setValue(4.0)
 
         self.q3Edit = QtGui.QDoubleSpinBox()
         self.q3Edit.setSingleStep(0.01)
@@ -28,7 +24,7 @@ class Widget(QtGui.QDialog):
 
         self.q4Edit = QtGui.QDoubleSpinBox()
         self.q4Edit.setSingleStep(0.01)
-        self.q4Edit.setValue(5.1)
+        self.q4Edit.setValue(5.0)
 
         grid = QtGui.QGridLayout()
         grid.setSpacing(20)
