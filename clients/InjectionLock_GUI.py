@@ -73,17 +73,15 @@ class Widget(QtGui.QDialog):
 
     def getback1(self,name,num):
         self.applyBtn.setEnabled(False)
-        print float(self.q1Edit.text())*float(self.q2Edit.text())
-        time.sleep(3)
+        self.inj.relock_supervisor(float(self.q1Edit.text()),float(self.q2Edit.text()))
         self.applyBtn.setEnabled(True)
-        #self.inj.relock_supervisor(float(self.q1Edit.text()),float(self.q2Edit.text()))
+
 
     def getback2(self,name,num):
         self.applyBtn2.setEnabled(False)
-        print float(self.q3Edit.text())*float(self.q4Edit.text())
-        time.sleep(3)
+        self.inj.relock_slave(float(self.q3Edit.text()), float(self.q4Edit.text()))
         self.applyBtn2.setEnabled(True)
-        #self.inj.relock_slave(float(self.q3Edit.text()),float(self.q4Edit.text()))
+
 
 def main():
     app = QtGui.QApplication([])
