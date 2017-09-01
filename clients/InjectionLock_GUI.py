@@ -71,12 +71,14 @@ class Widget(QtGui.QDialog):
         self.applyBtn.setEnabled(False)
         self.inj.relock_supervisor(float(self.q1Edit.text()),float(self.q2Edit.text()))
         self.applyBtn.setEnabled(True)
+        thread.exit()
 
 
     def getback2(self,name,num):
         self.applyBtn2.setEnabled(False)
         self.inj.relock_slave(float(self.q3Edit.text()), float(self.q4Edit.text()))
         self.applyBtn2.setEnabled(True)
+        thread.exit()
 
 
 def main():
