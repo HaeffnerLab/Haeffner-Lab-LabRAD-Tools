@@ -1,38 +1,44 @@
 from PyQt4 import QtGui
-import labrad
-import thread
+from twisted.internet.defer import inlineCallbacks
 
-class Widget(QtGui.QDialog):
 
-    def __init__(self, parent=None):
-        self.cxn_laserroom = labrad.connect('192.168.169.49', password='lab', tls_mode='off')
-        self.inj = self.cxn_laserroom.injectionlock
+class InjectionLock_Control(QtGui.QFrame):
+    def __init__(self, reactor, parent=None):
 
-        super(Widget, self).__init__(parent)
+        self.reactor = reactor
+
+        self.connect()
+
+        super(InjectionLock_Control, self).__init__(parent)
+
+        grid = QtGui.QGridLayout()
+        self.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Sunken)
+        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
 
         self.q1Edit = QtGui.QDoubleSpinBox()
         self.q1Edit.setSingleStep(0.01)
         self.q1Edit.setValue(0.1)
+        self.q1Edit.setSuffix(' V')
 
         self.q2Edit = QtGui.QDoubleSpinBox()
         self.q2Edit.setSingleStep(0.01)
         self.q2Edit.setValue(4.0)
+        self.q2Edit.setSuffix(' V')
 
         self.q3Edit = QtGui.QDoubleSpinBox()
         self.q3Edit.setSingleStep(0.01)
         self.q3Edit.setValue(0.1)
+        self.q3Edit.setSuffix(' V')
 
         self.q4Edit = QtGui.QDoubleSpinBox()
         self.q4Edit.setSingleStep(0.01)
         self.q4Edit.setValue(5.0)
+        self.q4Edit.setSuffix(' V')
 
-        grid = QtGui.QGridLayout()
-        grid.setSpacing(20)
-
-        grid.addWidget(QtGui.QLabel('Supervisor Scan Range:'), 1, 0)
+        grid.addWidget(QtGui.QLabel('729super  Scan Range:'), 1, 0)
         grid.addWidget(self.q1Edit, 1, 1)
 
-        grid.addWidget(QtGui.QLabel('        Slave Scan Range:'), 2, 0)
+        grid.addWidget(QtGui.QLabel('729inject  Scan Range:'), 2, 0)
         grid.addWidget(self.q2Edit, 1, 2)
 
         grid.addWidget(self.q3Edit, 2, 1)
@@ -40,52 +46,77 @@ class Widget(QtGui.QDialog):
         grid.addWidget(self.q4Edit, 2, 2)
 
         self.applyBtn = QtGui.QPushButton('Relock', self)
-        self.applyBtn.clicked.connect(self.startthread1)
+        self.applyBtn.clicked.connect(self.getback1)
 
-        grid.addWidget(self.applyBtn,1,3)
-
+        grid.addWidget(self.applyBtn, 1, 3)
 
         self.applyBtn2 = QtGui.QPushButton('Relock', self)
-        self.applyBtn2.clicked.connect(self.startthread2)
+        self.applyBtn2.clicked.connect(self.getback2)
 
-        grid.addWidget(self.applyBtn2,2,3)
+        grid.addWidget(self.applyBtn2, 2, 3)
 
         self.setLayout(grid)
-        self.setGeometry(300, 300, 550, 150)
+        self.setGeometry(500, 500, 1000, 300)
+        self.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=10))
 
+    @inlineCallbacks
+    def connect(self):
+        from labrad.wrappers import connectAsync
+        from labrad.types import Error
+        try:
+            self.cxn = yield connectAsync('192.168.169.49', password='lab', tls_mode='off')
+        except:
+            self.cxn = yield connectAsync('192.168.169.49', password='lab')
+        yield self.setupListeners()
 
+    @inlineCallbacks
+    def setupListeners(self):
 
-    @staticmethod
-    def getData(parent=None):
-        dialog = Widget(parent)
-        dialog.setWindowTitle('Injection Lock')
-        dialog.exec_()
+        self.inj = yield self.cxn['injectionlock']
+        self.initialized = True
+        self.setEnabled(True)
 
-    def startthread1(self):
-        thread.start_new_thread(self.getback1, ("Thread-supervisor", 1, ))
-
-    def startthread2(self):
-        thread.start_new_thread(self.getback2, ("Thread-slave", 2, ))
-
-    def getback1(self,name,num):
+    def getback1(self):
         self.applyBtn.setEnabled(False)
-        self.inj.relock_supervisor(float(self.q1Edit.text()),float(self.q2Edit.text()))
+        count1 = 0
+        for text in self.q1Edit.text():
+            if (text == ' '):
+                break;
+            count1 += 1
+        count2 = 0
+        for text in self.q2Edit.text():
+            if (text == ' '):
+                break;
+            count2 += 1
+        self.inj.relock_supervisor(float(self.q1Edit.text()[0:count1]), float(self.q2Edit.text()[0:count2]))
         self.applyBtn.setEnabled(True)
-        thread.exit()
 
-
-    def getback2(self,name,num):
+    def getback2(self):
         self.applyBtn2.setEnabled(False)
-        self.inj.relock_slave(float(self.q3Edit.text()), float(self.q4Edit.text()))
+        count3 = 0
+        for text in self.q3Edit.text():
+            if (text == ' '):
+                break;
+            count3 += 1
+        count4 = 0
+        for text in self.q4Edit.text():
+            if (text == ' '):
+                break;
+            count4 += 1
+        self.inj.relock_slave(float(self.q3Edit.text()[0:count3]), float(self.q4Edit.text()[0:count4]))
         self.applyBtn2.setEnabled(True)
-        thread.exit()
 
-
-def main():
-    app = QtGui.QApplication([])
-    window = Widget()
-    data = window.getData()
+    def closeEvent(self, x):
+        self.reactor.stop()
 
 
 if __name__ == '__main__':
-    main()
+    a = QtGui.QApplication([])
+    import qt4reactor
+
+    qt4reactor.install()
+    from twisted.internet import reactor
+
+    injectionlock_control = InjectionLock_Control(reactor)
+    injectionlock_control.show()
+    reactor.run()
