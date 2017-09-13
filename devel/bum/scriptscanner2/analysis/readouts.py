@@ -49,6 +49,11 @@ def pmt_simple(readouts, threshold):
     
     return perc_excited
 
+def get_states_PMT(readouts):
+    pass
+def calc_parity_PMT():
+    pass
+
 def camera_ion_probabilities(images, repetitions, p):
     """
     Method for analyzing camera images. For an
@@ -94,8 +99,29 @@ def camera_ion_probabilities(images, repetitions, p):
     
     images = np.reshape(images, (repetitions, y_pixels, x_pixels))
     readouts, confidences = fitter.state_detection(images)
-
+    
     ion_state = 1 - readouts.mean(axis = 0)
     np.save('temp_camera', ion_state)
     print "saved ion data"
     return ion_state, readouts, confidences
+
+def get_states(readouts):
+    # function that calculates from the camera readout the two ion states 
+    SS = numpy.array([1, 1])
+    SD = numpy.array([1, 0])
+    DS = numpy.array([0, 1])
+    DD = numpy.array([0, 0])
+        
+    numSS = 0
+    numSD = 0
+    numDS = 0
+    numDD = 0
+    for readout in readouts:
+        if numpy.array_equal(readout, SS): numSS += 1
+        elif numpy.array_equal(readout, SD): numSD += 1
+        elif numpy.array_equal(readout, DS): numDS += 1
+        elif numpy.array_equal(readout, DD): numDD += 1
+    N = float(len(readouts))
+    return [numSS/N, numSD/N, numDS/N, numDD/N ]
+
+

@@ -299,12 +299,37 @@ class pulse_sequence_wrapper(object):
         camera.set_trigger_mode('External')
 
     def output_size(self):
+        # function that gives the number of output cols in the readout file
         mode = self.parameters_dict.StateReadout.readout_mode
         print mode
+        
         if mode == 'pmt':
             return len(self.parameters_dict.StateReadout.threshold_list.split(','))
+        if mode == 'pmt states':
+            return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 1
+        if mode == 'pmt parity':
+            # cols for the states and plus one for the parity calculation 
+            return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 2
+        
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)
+        if mode == 'camera states':
+            num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
+            return 2**num_of_ions
+        if mode == 'camera parity':
+            num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
+            return 2**num_of_ions+1
+        
+        
+    def binary_to_state(self,name):
+        state = ''
+        for j in name:
+            if j=='0':
+                state=state+'S'
+            else:
+                state=state+'D'
+    return state    
+        
         
     def col_names(self):
         mode = self.parameters_dict.StateReadout.readout_mode
@@ -315,10 +340,49 @@ class pulse_sequence_wrapper(object):
                 dependents = [('', 'prob dark ', '')]
             else:
                 dependents = [('', 'num dark {}'.format(x), '') for x in names ]
+                
+        if mode == 'pmt states':
+            if self.output_size==1:
+                dependents = [('', 'prob dark ', '')]
+            else:
+                dependents = [('', ' {} dark ions'.format(x+1), '') for x in names ]
+                
+        if mode == 'pmt parity':
+            if self.output_size==1:
+                dependents = [('', 'prob dark ', '')]
+            else:
+                dependents = [('', ' {} dark ions'.format(x+1), '') for x in names ]
+                
+            dependents.append(('', 'Parity', ''))        
+                
         if mode == 'camera':
-            dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
+            dependents = [('', ' prob ion {}'.format(x), '') for x in range(self.output_size())]
+            
+        if mode == 'camera states':
+            num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
+            names = range(2**num_of_ions)
+            dependents=[]
+            for name in names:
+                temp= np.binary_repr(name,width=num_of_ions)
+                temp = self.binary_to_state(temp)
+                temp=('', 'Col {}'.format(temp), '')
+                dependents.append(temp)
         
+        if mode == 'camera parity':
+            num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
+            names = range(2**num_of_ions)
+            dependents=[]
+            for name in names:
+                temp= np.binary_repr(name,width=num_of_ions)
+                temp = self.binary_to_state(temp)
+                temp=('', 'Col {}'.format(temp), '')
+                dependents.append(temp)
+            dependents.append(('', 'Parity', ''))
+            
+    
         return  dependents
+    
+    
         
     def run(self, ident):
         self.ident = ident
