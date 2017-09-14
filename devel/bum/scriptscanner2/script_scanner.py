@@ -414,6 +414,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             #wait for all deferred to finish
             running = DeferredList(self.scheduler.running_deferred_list())
             yield running
+            # uncomment this for saving the params when the server stops
             #yield self.save_parameters()
         except AttributeError:
             #if dictionary doesn't exist yet (i.e bad identification error), do nothing

@@ -323,7 +323,8 @@ class pulse_sequence_wrapper(object):
         
     def binary_to_state(self,name):
         state = ''
-        for j in name:
+        rev_name=name[::-1]
+        for j in rev_name:
             if j=='0':
                 state=state+'S'
             else:
@@ -378,11 +379,12 @@ class pulse_sequence_wrapper(object):
                 temp=('', 'Col {}'.format(temp), '')
                 dependents.append(temp)
             dependents.append(('', 'Parity', ''))
-            
+#             
 #         print "1333"
 #         print "names: " , names
 #         print "readout_mode", mode
 #         print dependents
+        
         return  dependents
     
     
@@ -425,7 +427,7 @@ class pulse_sequence_wrapper(object):
         #    self.use_camera=use_camera_override
         
 
-        if self.parameters_dict.StateReadout.readout_mode == 'camera': 
+        if 'camera' in self.parameters_dict.StateReadout.readout_mode: 
             self.use_camera = True
             self.initialize_camera(cxn)
             camera = cxn.andor_server
@@ -438,8 +440,8 @@ class pulse_sequence_wrapper(object):
         self.module.run_initial(cxn, self.parameters_dict)
         
         self.readout_save_iteration = 0
-        print "SCAN:"
-        print self.scan
+        #print "SCAN:"
+        #print self.scan
         
         data = [] 
         data_x = []
@@ -501,7 +503,7 @@ class pulse_sequence_wrapper(object):
                     data=images
                     ion_state=np.ones(self.parameters_dict.IonsOnCamera.ion_number)
                 else:
-                    ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera)
+                    ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera,self.parameters_dict.StateReadout.readout_mode)
                     self.save_confidences(confidences)
                     data.append(ion_state)
                 

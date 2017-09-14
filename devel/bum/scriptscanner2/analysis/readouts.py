@@ -31,7 +31,7 @@ def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
             threshold_list = sorted(threshold_list)
             #print np.array(readouts)
             num_ions = len(threshold_list)
-            print "working with {}  ions".format(num_ions)
+            #print "working with {}  ions".format(num_ions)
             #print threshold_list
             binned = np.histogram(readouts, bins=[0]+threshold_list)[0]
             #IPython.embed()
@@ -53,8 +53,13 @@ def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
         
     if readout_mode == 'pmt_parity': 
         ## add the calculation for the parity
+        num_ions=len(perc_excited)
+        # adding the zero prob.
         perc_excited=np.append(perc_excited,[prob_0])
-        parity= [(-1.0)**i*perc_excited[i] for i in range(len(perc_excited))]
+        
+        # parity id defined to be Poevev-Podd (even number of S ions SSS-> negative parity )
+        ## inconsistent with the parity 
+        parity= [(-1.0)**(num_ions-i)*perc_excited[i] for i in range(len(perc_excited))]
         parity=np.sum(np.array(parity))
         # calculate the parity
         perc_excited=np.append(perc_excited,[parity])
@@ -70,7 +75,7 @@ def get_states_PMT(readouts):
 def calc_parity_PMT():
     pass
 
-def camera_ion_probabilities(images, repetitions, p):
+def camera_ion_probabilities(images, repetitions, p, readout_mode = 'camera'):
     """
     Method for analyzing camera images. For an
     N-ion chain, returns an N element list
@@ -117,26 +122,64 @@ def camera_ion_probabilities(images, repetitions, p):
     readouts, confidences = fitter.state_detection(images)
     
     ion_state = 1 - readouts.mean(axis = 0)
-    np.save('temp_camera', ion_state)
-    print "saved ion data"
+    #np.save('temp_camera_ion_state', ion_state)
+    #np.save('temp_camera_readout', readouts)
+    
+    
+    if readout_mode == 'camera_states':
+        ion_state=get_states_camera(readouts,int(p.ion_number))
+        
+    if readout_mode == 'camera_parity':
+        ion_state=get_states_camera(readouts,int(p.ion_number))
+        parity= Calc_parity(ion_state)
+        ion_state=np.append(ion_state,[parity])
+    
+#     print "555"
+#     print "readout_mode", readout_mode
+#     print "ion_stste", ion_state
+#         
     return ion_state, readouts, confidences
+
+def bool2int(x):
+    y = 0
+    for i,j in enumerate(x):
+        y += j<<i
+    return y
+
+def get_states_camera(readouts,num_of_ions):
+    # number of experiments
+    N = float(len(readouts))
+    counts= np.zeros(2**num_of_ions)
+    for readout in readouts:
+        index= bool2int(1-readout)
+        counts[index]  +=1
+    counts_in_states=1.0*counts/N
+    return counts_in_states
+        
+def Calc_parity(Probs):
+    Parity=0.0
+    for i, prob in enumerate(Probs):
+        s=np.binary_repr(i)
+        Parity += 1.0*prob*(-1)**s.count('1')
+    return Parity
+
 
 def get_states(readouts):
     # function that calculates from the camera readout the two ion states 
-    SS = numpy.array([1, 1])
-    SD = numpy.array([1, 0])
-    DS = numpy.array([0, 1])
-    DD = numpy.array([0, 0])
+    SS = np.array([1, 1])
+    SD = np.array([1, 0])
+    DS = np.array([0, 1])
+    DD = np.array([0, 0])
         
     numSS = 0
     numSD = 0
     numDS = 0
     numDD = 0
     for readout in readouts:
-        if numpy.array_equal(readout, SS): numSS += 1
-        elif numpy.array_equal(readout, SD): numSD += 1
-        elif numpy.array_equal(readout, DS): numDS += 1
-        elif numpy.array_equal(readout, DD): numDD += 1
+        if np.array_equal(readout, SS): numSS += 1
+        elif np.array_equal(readout, SD): numSD += 1
+        elif np.array_equal(readout, DS): numDS += 1
+        elif np.array_equal(readout, DD): numDD += 1
     N = float(len(readouts))
     return [numSS/N, numSD/N, numDS/N, numDD/N ]
 
