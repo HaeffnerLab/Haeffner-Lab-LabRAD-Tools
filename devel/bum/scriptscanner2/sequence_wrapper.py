@@ -305,18 +305,18 @@ class pulse_sequence_wrapper(object):
         
         if mode == 'pmt':
             return len(self.parameters_dict.StateReadout.threshold_list.split(','))
-        if mode == 'pmt states':
+        if mode == 'pmt_states':
             return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 1
-        if mode == 'pmt parity':
+        if mode == 'pmt_parity':
             # cols for the states and plus one for the parity calculation 
             return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 2
         
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)
-        if mode == 'camera states':
+        if mode == 'camera_states':
             num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
             return 2**num_of_ions
-        if mode == 'camera parity':
+        if mode == 'camera_parity':
             num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
             return 2**num_of_ions+1
         
@@ -328,37 +328,37 @@ class pulse_sequence_wrapper(object):
                 state=state+'S'
             else:
                 state=state+'D'
-    return state    
+        return state    
         
         
     def col_names(self):
         mode = self.parameters_dict.StateReadout.readout_mode
         names = np.array(range(self.output_size())[::-1])+1
-        
+         
         if mode == 'pmt':
             if self.output_size==1:
                 dependents = [('', 'prob dark ', '')]
             else:
                 dependents = [('', 'num dark {}'.format(x), '') for x in names ]
                 
-        if mode == 'pmt states':
+        if mode == 'pmt_states':
             if self.output_size==1:
                 dependents = [('', 'prob dark ', '')]
             else:
-                dependents = [('', ' {} dark ions'.format(x+1), '') for x in names ]
+                dependents = [('', ' {} dark ions'.format(x-1), '') for x in names ]
                 
-        if mode == 'pmt parity':
+        if mode == 'pmt_parity':
             if self.output_size==1:
                 dependents = [('', 'prob dark ', '')]
             else:
-                dependents = [('', ' {} dark ions'.format(x+1), '') for x in names ]
+                dependents = [('', ' {} dark ions'.format(x-1), '') for x in names[1:] ]
                 
             dependents.append(('', 'Parity', ''))        
                 
         if mode == 'camera':
             dependents = [('', ' prob ion {}'.format(x), '') for x in range(self.output_size())]
             
-        if mode == 'camera states':
+        if mode == 'camera_states':
             num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
             names = range(2**num_of_ions)
             dependents=[]
@@ -368,7 +368,7 @@ class pulse_sequence_wrapper(object):
                 temp=('', 'Col {}'.format(temp), '')
                 dependents.append(temp)
         
-        if mode == 'camera parity':
+        if mode == 'camera_parity':
             num_of_ions=int(self.parameters_dict.IonsOnCamera.ion_number)
             names = range(2**num_of_ions)
             dependents=[]
@@ -379,7 +379,10 @@ class pulse_sequence_wrapper(object):
                 dependents.append(temp)
             dependents.append(('', 'Parity', ''))
             
-    
+#         print "1333"
+#         print "names: " , names
+#         print "readout_mode", mode
+#         print dependents
         return  dependents
     
     
@@ -474,9 +477,10 @@ class pulse_sequence_wrapper(object):
             #print "done waiting"
             
             if not self.use_camera:
-                print "Using the PMT!"
+                readout_mode=self.parameters_dict.StateReadout.readout_mode 
+                print "Using the PMT! in redout_mode:",readout_mode
                 rds = pulser.get_readout_counts()
-                ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
+                ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list,readout_mode)
                 #print "646884:  ", ion_state
                 self.save_data(rds)
                 data.append(ion_state)
@@ -520,7 +524,7 @@ class pulse_sequence_wrapper(object):
                 
            
                 
-        self.module.run_finally(cxn, self.parameters_dict, np.array(data), np.array(data_x))
+        self.module.run_finally(cxn, self.parameters_dict, data, np.array(data_x))
 
         self._finalize(cxn) 
     

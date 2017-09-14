@@ -11,7 +11,7 @@ from equilibrium_positions import position_dict
 from ion_state_detector import ion_state_detector
 import peakutils
 
-def pmt_simple(readouts, threshold):
+def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
     """
     Method for analyzing pmt data with a single threshold value.
     Takes the readouts from the pulser as well as the parameters
@@ -44,10 +44,26 @@ def pmt_simple(readouts, threshold):
         # got no readouts
         perc_excited = [-1.0]
     
-    np.save('temp_PMT', perc_excited)
-    print "saved ion data"
+    # calculating the probability of zero dark ions
+    prob_0= 1.0 - np.sum(np.array(perc_excited))
     
-    return perc_excited
+    
+    if readout_mode == 'pmt_states': 
+        perc_excited=np.append(perc_excited,[prob_0])
+        
+    if readout_mode == 'pmt_parity': 
+        ## add the calculation for the parity
+        perc_excited=np.append(perc_excited,[prob_0])
+        parity= [(-1.0)**i*perc_excited[i] for i in range(len(perc_excited))]
+        parity=np.sum(np.array(parity))
+        # calculate the parity
+        perc_excited=np.append(perc_excited,[parity])
+ 
+       
+   
+    return perc_excited 
+    
+
 
 def get_states_PMT(readouts):
     pass

@@ -141,7 +141,7 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
 
             submission = [x[self.submit_unit] + self.center_frequency[self.submit_unit]]
             x_data.append(x[self.submit_unit] + self.center_frequency[self.submit_unit])
-            print x_data
+            #print x_data
             submission.extend(ion_state)
             
            
