@@ -112,7 +112,23 @@ class pulse_sequence_wrapper(object):
                 print "scanning the Spectrum in a false relative freq"
                 line = self.parameters_dict.Spectrum.line_selection 
                 shift = cxn.sd_tracker.get_current_line(line) 
-                print line
+                # adding the shift for the sideband
+                order = int(self.parameters_dict.Spectrum.order)  
+                if  order != 0 :
+                    sideband= self.parameters_dict.Spectrum.selection_sideband
+                    shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+        else:
+            # when we scan the sideband in spectrum we want to have thier offset from the carrier
+            if self.name == "Spectrum":
+                order = int(self.parameters_dict.Spectrum.order)
+                if  order != 0 :
+                    sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
+                    shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                    print "4321"  
+                    print "this is the shift for the sideband in relative mode" , shift
+        
+                    
+                
            
    
         if self.grapher is not None:
@@ -226,6 +242,9 @@ class pulse_sequence_wrapper(object):
     
     def Scan_shift(self):
         line=None
+        sideband= None
+        order = 0
+        
         carrier_translation = {'S+1/2D-3/2':'c0',
                                'S-1/2D-5/2':'c1',
                                'S+1/2D-1/2':'c2',
@@ -237,24 +256,49 @@ class pulse_sequence_wrapper(object):
                                'S+1/2D+5/2':'c8',
                                'S-1/2D+3/2':'c9',
                                }
-        #print "switching to relative units"
+        print "switching to relative units"
+        print self.parameters_dict.Display.relative_frequencies
+        print self.name
+        
         #line='none'
+        ## running in abs frequency mode
         if not self.parameters_dict.Display.relative_frequencies:
             if self.window == "car1":
                 line = self.parameters_dict.DriftTracker.line_selection_1
             elif self.window == "car2":
                 line = self.parameters_dict.DriftTracker.line_selection_2
             elif self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                #print "scanning the Spectrum in a false relative freq"
-                line = self.parameters_dict.Spectrum.line_selection  
-                #print line  
+                print "scanning the Spectrum in a false relative freq"
+                line = self.parameters_dict.Spectrum.line_selection
+                order = int(self.parameters_dict.Spectrum.order)  
+                if  order != 0 :
+                    sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
+                    
+        else:
+            # when we scan the sideband in spectrum we want to have thier offset from the carrier
+            if self.name == "Spectrum":
+                order = int(self.parameters_dict.Spectrum.order)
+                if  order != 0 :
+                    sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
+                    shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                    print "1234"  
+                    print "this is the shift for the sideband in relative mode" , shift
+                    return shift
+               
+        print "1234"        
+        print line 
+        print order
+        print sideband 
         
         if line != None:
-            center_frequency = self.parameters_dict.Carriers[carrier_translation[line]]
+            center_frequency = self.parameters_dict.Carriers[carrier_translation[line]] 
+            if sideband != None:
+                center_frequency += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                
             shift=center_frequency
         else:
             shift = U(0, self.scan_unit) 
-        #print "this is the shift in the scan {}".format(shift)
+        print "this is the shift in the scan {}".format(shift)
         
         return shift
             #self.scan_submit=[center_frequency + x for x in self.scan_submit]
@@ -509,10 +553,14 @@ class pulse_sequence_wrapper(object):
                 
                 #useful for debugging, saving the images
                 #numpy.save('readout {}'.format(int(time.time())), images)
-            #print "this is x in submission units {}".format(x[self.submit_unit])
-            x_shift=self.Scan_shift()
+               
             
-            submission = [x[self.submit_unit]+x_shift[self.submit_unit]] # + center_frequency[self.submit_unit]]
+            x_shift=self.Scan_shift()
+            print "this is x_shift {}".format(x_shift)
+            print "this is x in submission units {}".format(x[self.submit_unit])
+            
+            submission = [x[self.submit_unit]+x_shift[self.submit_unit]]  # + center_frequency[self.submit_unit]]
+            print "the x submission", submission
             submission.extend(ion_state)
             
             #data.append(submission)
