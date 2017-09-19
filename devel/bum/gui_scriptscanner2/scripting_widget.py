@@ -7,6 +7,7 @@ from experiment_selector_widget import experiment_selector_widget
 class scripting_widget(QtGui.QWidget):
     
     on_run = QtCore.pyqtSignal(str)
+    on_run_cont = QtCore.pyqtSignal(str)
     on_repeat = QtCore.pyqtSignal((str, int, bool))
     #on_scan = QtCore.pyqtSignal(str, str, tuple, float, float, int, str)
     on_cancel_queued = QtCore.pyqtSignal(int)
@@ -82,6 +83,7 @@ class scripting_widget(QtGui.QWidget):
      
     def connect_layout(self):
         self.selector.on_run.connect(self.on_run.emit)
+        self.selector.on_run_cont.connect(self.on_run_cont.emit)
         self.selector.on_repeat.connect(self.on_repeat)
         self.selector.on_schedule.connect(self.on_schedule)
         self.selector.on_experiment_selected.connect(self.on_experiment_selected.emit)

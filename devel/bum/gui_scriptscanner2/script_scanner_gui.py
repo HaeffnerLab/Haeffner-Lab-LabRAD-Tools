@@ -203,6 +203,7 @@ class script_scanner_gui(QtGui.QWidget):
         #scripting widget
         self.scripting_widget.connect_layout()
         self.scripting_widget.on_run.connect(self.run_script)
+        self.scripting_widget.on_run_cont.connect(self.run_script_cont)
         self.scripting_widget.on_cancel_queued.connect(self.on_cancel_queued)
         self.scripting_widget.on_repeat.connect(self.repeat_script)
         self.scripting_widget.on_schedule.connect(self.schedule_script)
@@ -327,9 +328,36 @@ class script_scanner_gui(QtGui.QWidget):
         sc = yield self.cxn.get_server('ScriptScanner')
         seq = str(seq)
         p = self.scan_widget.get_scan_settings(seq)
-        #print p
+#         print "453"
+#         print "parameters to scan"
+#         print p
         scan_id = yield sc.new_sequence(seq, p, context=self.context)
         print scan_id
+        #if p is not None:
+        #    scan_id = yield sc.new_sequence(seq, [p], context=self.context)
+        #    print scan_id
+        #try:
+        #    yield sc.new_experiment(script, context = self.context)
+        #except self.Error as e:
+        #    self.displayError(e.msg)
+        #except Exception as e:
+        #    print e
+        
+        
+    @inlineCallbacks
+    def run_script_cont(self, seq):
+        sc = yield self.cxn.get_server('ScriptScanner')
+        seq = str(seq)
+        #print 
+        #p = self.scan_widget.get_scan_settings(seq)
+        p=[('Dummy', ('Dummy.Dummy_detuning', 0.0, 200.0, 1.0, 'MHz'))]
+        #print "453"
+        #print "parameters to scan"
+        #print p
+        #print "Need to impliment a scanning a dummy iterarion"
+        scan_id = yield sc.new_sequence(seq, p, context=self.context)
+        print scan_id
+        
         #if p is not None:
         #    scan_id = yield sc.new_sequence(seq, [p], context=self.context)
         #    print scan_id

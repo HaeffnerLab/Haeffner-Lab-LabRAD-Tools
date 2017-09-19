@@ -192,22 +192,11 @@ class pulse_sequence_wrapper(object):
 
         except:
             self.window = 'current' # no window defined
-            
-        m1, m2, default, unit = self.module.scannable_params[scan_param][0]
-        self.scan_unit = unit
-
-        # list with step size
-        # maxim+steps is a hack to get plotted data to correspond to usr input range.
-        # actually an additional point is being taken
-        #print "1234"
-        #print m1, m2, default, unit 
-        #print steps
-        #print np.arange(minim, maxim+0.01, steps)
-        
-        #if U(minim,unit).isCompatible("dBm"):
-        #    self.scan = np.arange(minim, maxim+0.01, steps)
-        #else:
-        #    self.scan = np.arange(minim, maxim+steps+1, steps)
+        print "1234"
+        print scan_param   
+         
+        #m1, m2, default, unit = self.module.scannable_params[scan_param][0]
+        self.scan_unit = unit      
         
         # adding the last element to the scan
         self.scan = np.arange(minim, maxim, steps)
