@@ -13,6 +13,39 @@ class config(object):
         ('lattice.PulseSequences2.MolmerSorensenGate', 'MolmerSorensenGate'),
         ('lattice.PulseSequences2.Parity', 'Parity'),
         ('lattice.PulseSequences2.Ramsey', 'Ramsey')]
+    
+    global_show_params= ['DopplerCooling.doppler_cooling_amplitude_397',
+                         'DopplerCooling.doppler_cooling_frequency_397',
+                         'DopplerCooling.duration',
+                         
+                         'Excitation_729.channel_729',
+                         'Excitation_729.bichro',
+                         
+                         'SidebandCooling.selection_sideband',
+                         'SidebandCooling.order',
+                         
+                         'SequentialSBCooling.channel_729',
+                         'SequentialSBCooling.selection_sideband',
+                         'SequentialSBCooling.order',
+                         
+                         'StatePreparation.channel_729',
+                         'StatePreparation.optical_pumping_enable',
+                         'StatePreparation.sideband_cooling_enable',
+
+                         'StateReadout.readout_mode',
+                         'StateReadout.state_readout_amplitude_397',
+                         'StateReadout.state_readout_frequency_397',
+                         'StateReadout.threshold_list',
+                         'StateReadout.use_camera_for_readout',
+                         
+                         'TrapFrequencies.aux_axial',
+                         'TrapFrequencies.aux_radial',
+                         'TrapFrequencies.axial_frequency',
+                         'TrapFrequencies.radial_frequency_1',
+                         'TrapFrequencies.radial_frequency_2',
+                         'TrapFrequencies.rf_drive_frequency'
+                                                  
+                       ]
 
 
     allowed_concurrent = {

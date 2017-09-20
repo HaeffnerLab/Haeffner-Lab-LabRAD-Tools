@@ -92,9 +92,9 @@ class sequence_widget(QtGui.QWidget):
     def makeLayout(self, params, single_seq = True):
         layout = QtGui.QVBoxLayout()
         
-        # Run until stopped checkbox
-        if single_seq:
-            layout.addWidget(QtGui.QCheckBox("run until stopped"))
+        ## Run until stopped checkbox
+        #if single_seq:
+        #    layout.addWidget(QtGui.QCheckBox("run until stopped"))
         
         for par, x, sequence_name in params:
             minim, maxim, steps, unit = x
@@ -197,8 +197,19 @@ class scan_widget(QtGui.QWidget):
 
         #self.setCurrentWidget(sw)
 
-    def set_preferred_parameters(self, experiment, params):
+    def set_preferred_parameters(self, experiment, params,global_params):
+        
+        
         self.preferreds[experiment].extend([x.split('.') for x in params])
+        self.preferreds[experiment].extend([x.split('.') for x in global_params])
+        #self.preferreds[experiment].extend(['AO_calibration','delay_time'])
+        print "666"
+        print "preffred params"
+        print experiment
+        print params
+        print "global params"
+        print global_params
+        
 
     def get_scan_settings(self, experiment):
         """

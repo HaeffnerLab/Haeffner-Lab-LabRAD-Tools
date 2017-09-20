@@ -194,7 +194,8 @@ class pulse_sequence_wrapper(object):
             self.window = 'current' # no window defined
         print "1234"
         print scan_param   
-         
+        
+        # Enable scan only from the scannable params 
         #m1, m2, default, unit = self.module.scannable_params[scan_param][0]
         self.scan_unit = unit      
         

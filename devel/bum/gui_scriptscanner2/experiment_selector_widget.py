@@ -253,8 +253,6 @@ class experiment_selector_widget(QtGui.QWidget):
         self.run_button = QtGui.QPushButton("Run")
         self.repeat_button = QtGui.QPushButton("Repeat")
         #self.scan_button = QtGui.QPushButton("Scan")
-        print "212121"
-        print " adding button cont"
         self.run_cont_button = QtGui.QPushButton("Run cont.")
         self.schedule_button = QtGui.QPushButton("Schedule")
         layout.addWidget(label, 0, 0, 1 , 1)
@@ -275,7 +273,6 @@ class experiment_selector_widget(QtGui.QWidget):
     
     def connect_layout(self):
         self.run_button.pressed.connect(self.run_emit_selected)
-        print "debuging"
         self.run_cont_button.pressed.connect(self.run_cont_emit_selected)
         self.repeat_button.pressed.connect(self.on_repeat_button)
         self.schedule_button.pressed.connect(self.on_schedule_button)

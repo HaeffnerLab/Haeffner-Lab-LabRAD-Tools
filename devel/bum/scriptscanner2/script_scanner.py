@@ -386,6 +386,13 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             return self.sequences[sequence].show_params
         except KeyError:
             raise Exception('Sequence not found')
+    
+    @setting(45, "Get Global Parameters",  returns = '*s')
+    def get_global_parameters(self, c):
+        try:
+            return config.global_show_params
+        except KeyError:
+            raise Exception('Sequence not found')
 
     @setting(39, 'Reload sequences', returns = '')
     def reload_sequences(self, c):
