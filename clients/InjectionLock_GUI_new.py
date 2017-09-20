@@ -2,56 +2,7 @@ from PyQt4 import QtGui,QtCore
 from twisted.internet.defer import inlineCallbacks
 import time
 import sys
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
 
-
-class thread(QtCore.QThread):
-
-    def __init__(self, x, y, *args, **keywords):
-        QtCore.QThread.__init__(self, *args, **keywords)
-        self.killed = False
-        self.x = x
-        self.y = y
-
-
-    def start(self, QThread_Priority_priority=None):
-        self.__run_backup = self.run
-        #print '__run_backup finish'
-        self.run = self.__run
-        #print '__run'
-        QtCore.QThread.start(self)
-
-    def __run(self):
-        """Hacked run function, which installs the trace."""
-        sys.settrace(self.globaltrace)
-        self.__run_backup()
-        self.run = self.__run_backup
-
-    def globaltrace(self, frame, why, arg):
-        if why == 'call':
-            #print 'global why==call true'
-            return self.localtrace
-        else:
-            #print 'global why==call false'
-            return None
-
-    def localtrace(self, frame, why, arg):
-        if self.killed:
-            if why == 'line':
-                print 'lobal why==line true'
-                raise SystemExit()
-        return self.localtrace
-
-    def kill(self):
-        self.killed = True
-        print 'kill true'
-
-    def run(self):
-        if(self.y == 1):
-            self.x.getback1()
-        else:
-            self.x.getback2()
 
 
 class InjectionLock_Control(QtGui.QFrame):
@@ -107,14 +58,20 @@ class InjectionLock_Control(QtGui.QFrame):
 
         self.applyBtn = QtGui.QPushButton('Relock', self)
         self.applyBtn.clicked.connect(self.start_thread_supervisor)
+        #self.applyBtn.clicked.connect(self.getback1)
         grid.addWidget(self.applyBtn, 1, 3)
 
         self.stopBtn = QtGui.QPushButton('Stop', self)
         self.stopBtn.clicked.connect(self.stop_thread_supervisor)
         grid.addWidget(self.stopBtn, 1, 4)
+        
+        self.statusBtn = QtGui.QPushButton('Status', self)
+        self.statusBtn.clicked.connect(self.get_status_supervisor)
+        grid.addWidget(self.statusBtn, 1, 5)
 
         self.applyBtn2 = QtGui.QPushButton('Relock', self)
         self.applyBtn2.clicked.connect(self.start_thread_slave)
+        #self.applyBtn2.clicked.connect(self.getback2)
 
         grid.addWidget(self.applyBtn2, 2, 3)
 
@@ -122,15 +79,17 @@ class InjectionLock_Control(QtGui.QFrame):
         self.stopBtn2.clicked.connect(self.stop_thread_slave)
 
         grid.addWidget(self.stopBtn2, 2, 4)
+        
+        self.statusBtn2 = QtGui.QPushButton('Status', self)
+        self.statusBtn2.clicked.connect(self.get_status_slave)
+        grid.addWidget(self.statusBtn2, 2, 5)
 
         self.setLayout(grid)
         self.setGeometry(500, 500, 1000, 300)
         self.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=10))
-        self.thread_supervisor = thread(self,1)
-        self.thread_slave = thread(self,2)
 
-        self.stopBtn.setEnabled(False)
-        self.stopBtn2.setEnabled(False)
+        #self.stopBtn.setEnabled(False)
+        #self.stopBtn2.setEnabled(False)
 
 
 
@@ -151,49 +110,102 @@ class InjectionLock_Control(QtGui.QFrame):
         self.initialized = True
         self.setEnabled(True)
 
-    def start_thread_supervisor(self):
+    @inlineCallbacks
+    def get_status_supervisor(self, c):
+        relock_supervisor_alive = yield self.inj.get_supervisor_status()
+        if(relock_supervisor_alive == True):
+            msg_box1 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Still scanning!")
+            msg_box1.exec_()
+        elif(relock_supervisor_alive == False):
+            msg_box2 = QtGui.QMessageBox(QtGui.QMessageBox.NoIcon, "Finish", "Not scanning!")
+            msg_box2.exec_()
+            
+    
+    @inlineCallbacks
+    def get_status_slave(self, c):
+        relock_slave_alive = yield self.inj.get_slave_status()
+        if(relock_slave_alive == True):
+            msg_box3 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Still scanning!")
+            msg_box3.exec_()
+        elif(relock_slave_alive == False):
+            msg_box4 = QtGui.QMessageBox(QtGui.QMessageBox.NoIcon, "Finish", "Not scanning!")
+            msg_box4.exec_()
+
+    @inlineCallbacks
+    def start_thread_supervisor(self, c):
 
         #self.connect(self.th, SIGNAL('loop()'), lambda x=2: self.loopfunction(x), Qt.AutoConnection)
-        if(self.inj.get_supervisor_status() == False):
-
-            self.thread_supervisor.start()
-            self.stopBtn.setEnabled(True)
+        relock_supervisor_alive = yield self.inj.get_supervisor_status()
+        relock_slave_alive = yield self.inj.get_slave_status()
+        if(relock_supervisor_alive == False and relock_slave_alive== False):
+            self.getback1()
+            #self.stopBtn.setEnabled(True)
             print 'supervisor start'
-        else:
-            app = QApplication(sys.argv)
-            msg_box = QMessageBox(QMessageBox.Warning, "Alert", "Others are relocking supervisor now!")
-            msg_box.show()
-            app.exec_()
+        elif(relock_supervisor_alive == False and relock_slave_alive== True):            
+            msg_box5 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Slave is relocking now!")
+            msg_box5.exec_()
+        elif(relock_supervisor_alive == True and relock_slave_alive== False):
+            msg_box6 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Supervisor is relocking")
+            msg_box6.exec_()
 
-    def stop_thread_supervisor(self):
-        #self.inj.stop_supervisor()
-        print 'supervisor stop'
-        self.applyBtn.setEnabled(True)
-        self.stopBtn.setEnabled(False)
-
-    def start_thread_slave(self):
-
+    @inlineCallbacks
+    def stop_thread_supervisor(self, c):
+        relock_supervisor_alive = yield self.inj.get_supervisor_status()
+        relock_slave_alive = yield self.inj.get_slave_status()
+        if(relock_supervisor_alive == True and relock_slave_alive== False):
+            self.inj.stop_supervisor()
+            print 'supervisor stop'
+            
+        elif(relock_supervisor_alive == False and relock_slave_alive == True):
+            msg_box7 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Supervisor is not relocking")
+            msg_box7.exec_()
+        
+        elif(relock_supervisor_alive == False and relock_slave_alive == False):
+            msg_box8 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Nothing is relocking now!")
+            msg_box8.exec_()
+        #self.applyBtn.setEnabled(True)
+        #self.stopBtn.setEnabled(False)
+        
+    @inlineCallbacks   
+    def start_thread_slave(self, c):
+        
         #self.connect(self.th, SIGNAL('loop()'), lambda x=2: self.loopfunction(x), Qt.AutoConnection)
-        if(self.inj.get_slave_status() == False):
-
-            self.thread_slave.start()
-            self.stopBtn2.setEnabled(True)
+        relock_supervisor_alive = yield self.inj.get_supervisor_status()
+        relock_slave_alive = yield self.inj.get_slave_status()
+        if(relock_supervisor_alive == False and relock_slave_alive== False):
+            self.getback2()
+            #self.stopBtn.setEnabled(True)
             print 'slave start'
-        else:
-            app = QApplication(sys.argv)
-            msg_box = QMessageBox(QMessageBox.Warning, "Alert", "Others are relocking slave now!")
-            msg_box.show()
-            app.exec_()
+        elif(relock_supervisor_alive == False and relock_slave_alive== True):            
+            msg_box9 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Slave is relocking now!")
+            msg_box9.exec_()
+        elif(relock_supervisor_alive == True and relock_slave_alive== False):
+            msg_box10 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Supervisor is relocking now!")
+            msg_box10.exec_()
+             
 
-    def stop_thread_slave(self):
-        #self.inj.stop_slave()
-        print 'slave stop'
-        self.applyBtn2.setEnabled(True)
-        self.stopBtn2.setEnabled(False)
+    @inlineCallbacks 
+    def stop_thread_slave(self, c):
+        relock_supervisor_alive = yield self.inj.get_supervisor_status()
+        relock_slave_alive = yield self.inj.get_slave_status()
+        if(relock_supervisor_alive == False and relock_slave_alive== True):
+            self.inj.stop_slave()
+            print 'supervisor stop'
+            
+        elif(relock_supervisor_alive == True and relock_slave_alive == False):
+            msg_box11 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Slave is not relocking")
+            msg_box11.exec_()
+        
+        elif(relock_supervisor_alive == False and relock_slave_alive == False):
+            msg_box12 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Nothing is relocking now!")
+            msg_box12.exec_()
+
 
 
     def getback1(self):
-        self.applyBtn.setEnabled(False)
+
+        #self.stopBtn.setEnabled(True)
+        #self.applyBtn.setEnabled(False)
         count1 = 0
         for text in self.q1Edit.text():
             if (text == ' '):
@@ -204,16 +216,14 @@ class InjectionLock_Control(QtGui.QFrame):
             if (text == ' '):
                 break;
             count2 += 1
+
         self.inj.relock_supervisor(float(self.q1Edit.text()[0:count1]), float(self.q2Edit.text()[0:count2]))
-        self.applyBtn.setEnabled(True)
-        self.stopBtn.setEnabled(False)
-        app = QApplication(sys.argv)
-        msg_box = QMessageBox(QMessageBox.NoIcon, "Finish", "Supervisor is locked!")
-        msg_box.show()
-        app.exec_()
+        
+
 
     def getback2(self):
-        self.applyBtn2.setEnabled(False)
+        #self.stopBtn2.setEnabled(True)
+        #self.applyBtn2.setEnabled(False)
         count3 = 0
         for text in self.q3Edit.text():
             if (text == ' '):
@@ -226,12 +236,8 @@ class InjectionLock_Control(QtGui.QFrame):
             count4 += 1
 
         self.inj.relock_slave(float(self.q3Edit.text()[0:count3]), float(self.q4Edit.text()[0:count4]))
-        self.applyBtn2.setEnabled(True)
-        self.stopBtn2.setEnabled(False)
-        app = QApplication(sys.argv)
-        msg_box = QMessageBox(QMessageBox.NoIcon, "Finish", "Slave is locked!")
-        msg_box.show()
-        app.exec_()
+        
+        
 
     def closeEvent(self, x):
         self.reactor.stop()
