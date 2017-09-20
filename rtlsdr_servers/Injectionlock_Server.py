@@ -3,13 +3,57 @@ import model
 import config
 import numpy as np
 import time
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from rtlsdr import RtlSdr
-
+import threading
+import sys
 
 SERVERNAME = 'InjectionLock'
 
-class InjectionLock_Server(LabradServer):
 
+class KThread(threading.Thread):
+    """A subclass of threading.Thread, with a kill()method."""
+
+    def __init__(self, *args, **keywords):
+        threading.Thread.__init__(self, *args, **keywords)
+        self.killed = False
+
+    def start(self):
+        """Start the thread."""
+        self.__run_backup = self.run
+        # print '__run_backup finish'
+        self.run = self.__run
+        # print '__run'
+        threading.Thread.start(self)
+
+    def __run(self):
+        """Hacked run function, which installs the trace."""
+        sys.settrace(self.globaltrace)
+        self.__run_backup()
+        self.run = self.__run_backup
+
+    def globaltrace(self, frame, why, arg):
+        if why == 'call':
+            # print 'global why==call true'
+            return self.localtrace
+        else:
+            # print 'global why==call false'
+            return None
+
+    def localtrace(self, frame, why, arg):
+        if self.killed:
+            if why == 'line':
+                # print 'lobal why==line true'
+                raise SystemExit()
+        return self.localtrace
+
+    def kill(self):
+        self.killed = True
+        # print 'kill true'
+
+
+class InjectionLock_Server(LabradServer):
     name = SERVERNAME
 
     def initServer(self):
@@ -17,19 +61,34 @@ class InjectionLock_Server(LabradServer):
         # first plug in slave dongle and then plug in supervisor dongle!!!!!!!!!!!
         sdr1 = RtlSdr(device_index=0)
         sdr2 = RtlSdr(device_index=1)
-        self.supervisormodel = model.FreqShowModel(config.first,config.second,sdr1)
-        self.slavemodel = model.FreqShowModel(config.first,config.second,sdr2)
+        self.supervisormodel = model.FreqShowModel(config.first, config.second, sdr1)
+        self.slavemodel = model.FreqShowModel(config.first, config.second, sdr2)
+        self.thread_supervisor = KThread(target=self.supervisor)
+        self.thread_slave = KThread(target=self.slave)
 
-    @setting(1, min = 'v', max = 'v')
-    def relock_supervisor(self,c,min = config.v_min_supervisor,max = config.v_max_supervisor):
+    @setting(1, min='v', max='v')
+    def relock_supervisor(self, c, min, max):
+
+        if (self.thread_supervisor.isAlive() == False and self.thread_slave.isAlive() == False):
+
+            config.v_min_supervisor = min
+            config.v_max_supervisor = max
+
+            self.thread_supervisor.start()
+        else:
+            print "Supervisor is relocking now!"
+
+    @setting(3)
+    def stop_supervisor(self, c):
+        if (self.thread_supervisor.isAlive()):
+            self.thread_supervisor.kill()
+            self.thread_supervisor = KThread(target=self.supervisor)
+        else:
+            print "Supervisor is not relocking now!"
+
+    def supervisor(self):
 
         fsmodel = self.supervisormodel
-
-        before_min = config.v_min_supervisor
-        before_max = config.v_max_supervisor
-
-        config.v_min_supervisor = min
-        config.v_max_supervisor = max
 
         # Not use first 100 datas, let program run for a while
         for m in range(1000):
@@ -52,11 +111,8 @@ class InjectionLock_Server(LabradServer):
         temp = [[0 for l in range(config.first)] for l in range(data_time)]
         temp_data = np.array(temp, dtype=np.float64)
 
-
-
-
         for v in scan1:
-            yield self.dac.set_individual_analog_voltages([('05', v)])
+            self.dac.set_individual_analog_voltages([('05', v)])
             # generate random array --> save somehow
             # get FFT from beatnote
             # save FFT for each voltage setting
@@ -81,7 +137,6 @@ class InjectionLock_Server(LabradServer):
             up_signal_integration.append(self.get_signal_integration
                                          (self.linearize(up_data[k])))
 
-
         up_vol = self.get_up_vol_supervisor()
         up_aver_signal = self.get_moving_ave(up_signal_integration)
         locking_point = self.get_supervisor_locking_point(up_signal_integration)
@@ -89,7 +144,7 @@ class InjectionLock_Server(LabradServer):
         print 'supervisor current is relocked to: ', int(locking_point * 1000) / 1000.0
         print
 
-        signal  =[]
+        signal = []
         for length in range(len(up_vol)):
             list = []
             list.append(up_vol[length])
@@ -97,27 +152,45 @@ class InjectionLock_Server(LabradServer):
             signal.append(list)
 
         # transform and send up_signal_integration and up_scan
-        name = time.strftime('%Y-%m-%d %H:%M:%S_', time.localtime(time.time())) \
-               + "_" + str(int(locking_point*100)/100.0)+"_signal"
+        name = time.strftime('%Y-%m-%d_%H:%M:%S_', time.localtime(time.time())) + str(
+            int(locking_point * 100) / 100.0) + "_signal"
         np.savetxt("/home/pi/Desktop/InjectionLockingData/supervisor/"
-                   +name+".csv", signal, delimiter=',')
+                   + name + ".csv", signal, delimiter=',')
+        self.thread_supervisor = KThread(target=self.supervisor)
 
-        config.v_min_supervisor = before_min
-        config.v_max_supervisor = before_max
+    @setting(2, min='v', max='v')
+    def relock_slave(self, c, min, max):
+        if (self.thread_slave.isAlive() == False and self.thread_supervisor.isAlive() == False):
 
-    @setting(2,min = 'v', max = 'v')
-    def relock_slave(self,c,min = config.v_min_slave,max = config.v_max_slave):
+            config.v_min_slave = min
+            config.v_max_slave = max
+            self.thread_slave.start()
+
+        else:
+            print "Slave is relcoking now!"
+
+    @setting(4)
+    def stop_slave(self, c):
+        if (self.thread_slave.isAlive()):
+            self.thread_slave.kill()
+            self.thread_slave = KThread(target=self.slave)
+        else:
+            print "Slave is not relocking now!"
+
+    @setting(6)
+    def get_supervisor_status(self, c):
+        return self.thread_supervisor.isAlive()
+
+    @setting(7)
+    def get_slave_status(self, c):
+        return self.thread_slave.isAlive()
+
+    def slave(self):
 
         fsmodel = self.slavemodel
         # Not use first 100 datas, let program run for a while
         for m in range(1000):
             fsmodel.get_data()
-
-        before_min = config.v_min_slave
-        before_max = config.v_max_slave
-
-        config.v_min_slave = min
-        config.v_max_slave = max
 
         # scan range
         v_min = config.v_min_slave
@@ -138,7 +211,7 @@ class InjectionLock_Server(LabradServer):
         temp_data = np.array(temp, dtype=np.float64)
 
         for v in scan1:
-            yield self.dac.set_individual_analog_voltages([('06', int(v*1000)/1000.0)])
+            self.dac.set_individual_analog_voltages([('06', int(v * 1000) / 1000.0)])
             # generate random array --> save somehow
             # get FFT from beatnote
             # save FFT for each voltage setting
@@ -171,8 +244,7 @@ class InjectionLock_Server(LabradServer):
         print 'slave current is relocked to: ', int(locking_point * 1000) / 1000.0
         print
 
-
-        signal  =[]
+        signal = []
         for length in range(len(up_vol)):
             list = []
             list.append(up_vol[length])
@@ -180,21 +252,37 @@ class InjectionLock_Server(LabradServer):
             signal.append(list)
 
         # transform and send up_signal_integration and up_scan
-        name = time.strftime('%Y-%m-%d %H:%M:%S_', time.localtime(time.time())) \
-               + "_" + str(int(locking_point*100)/100.0)+"_signal"
+        name = time.strftime('%Y-%m-%d_%H:%M:%S_', time.localtime(time.time())) + str(
+            int(locking_point * 100) / 100.0) + "_signal"
         np.savetxt("/home/pi/Desktop/InjectionLockingData/slave/"
-                   +name+".csv", signal, delimiter=',')
+                   + name + ".csv", signal, delimiter=',')
+        self.thread_slave = KThread(target=self.slave)
 
-        config.v_min_slave = before_min
-        config.v_max_slave = before_max
+    @setting(5)
+    def test(self, c):
+        print 'test'
 
-    def set_supervisor_current(self,first_current):
+    def set_supervisor_current(self, first_current):
         self.dac.set_individual_analog_voltages([('05', first_current)])
-        print 'supervisor is set to:',first_current
+        print 'supervisor is set to:', first_current
 
-    def set_slave_current(self,second_current):
+    def set_slave_current(self, second_current):
         self.dac.set_individual_analog_voltages([('06', second_current)])
-        print 'slave is set to:',second_current
+        print 'slave is set to:', second_current
+
+    def get_supervisor_current(self):
+        voltages = yield self.dac.get_analog_voltages()
+        for t in voltages:
+            if t[0] == '05':
+                first_current = t[1]
+                # need to return
+
+    def get_slave_current(self):
+        voltages = yield self.dac.get_analog_voltages()
+        for t in voltages:
+            if t[0] == '06':
+                second_current = t[1]
+                # need to return
 
     def get_freq(self):
         # get freq
@@ -240,15 +328,14 @@ class InjectionLock_Server(LabradServer):
         modified_up_vol = self.get_up_vol_slave()[(aver_point - 1) / 2:scan_steps - (aver_point - 1) / 2]
         return modified_up_vol
 
-
     # self is fsmodel.get_data(), 1-d ndarray
-    def linearize(self,dbm):
+    def linearize(self, dbm):
         data = []
         for i in range(len(dbm)):
             data.append(10 ** (dbm[i] / 20.0))
         return data
 
-    def get_signal_integration(self,data):
+    def get_signal_integration(self, data):
         freq = self.get_freq()
         integral_ref = 0
         # integral width
@@ -280,12 +367,12 @@ class InjectionLock_Server(LabradServer):
         leftpoint = startpoint
 
         signal = 0
-        for i in range(leftpoint, rightpoint+1, 1):
+        for i in range(leftpoint, rightpoint + 1, 1):
             signal += (data[i] - integral_ref) * width
 
         return signal
 
-    def get_moving_ave(self,signal_integration):
+    def get_moving_ave(self, signal_integration):
         aver_point = config.aver_point
         up_aver_signal = []
         for i in range(len(signal_integration) - aver_point + 1):
@@ -296,7 +383,7 @@ class InjectionLock_Server(LabradServer):
 
         return up_aver_signal
 
-    def get_supervisor_locking_point(self,signal_integration):  # pure signal integration
+    def get_supervisor_locking_point(self, signal_integration):  # pure signal integration
         aver_line = self.get_moving_ave(signal_integration)
         modified_up_vol = self.get_modified_supervisor_up_current()
 
@@ -331,7 +418,7 @@ class InjectionLock_Server(LabradServer):
         print 'Supervisor right:', modified_up_vol[right_point]
         return setting_point
 
-    def get_slave_locking_point(self,signal_integration):  # pure signal integration
+    def get_slave_locking_point(self, signal_integration):  # pure signal integration
         aver_line = self.get_moving_ave(signal_integration)
         modified_up_vol = self.get_modified_slave_up_current()
 
@@ -366,8 +453,10 @@ class InjectionLock_Server(LabradServer):
         print 'Slave right:', modified_up_vol[right_point]
         return setting_point
 
+
 if __name__ == "__main__":
     from labrad import util
+
     server = InjectionLock_Server()
-    util.runServer( server )
+    util.runServer(server)
 
