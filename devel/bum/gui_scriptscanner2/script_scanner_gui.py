@@ -329,20 +329,20 @@ class script_scanner_gui(QtGui.QWidget):
         sc = yield self.cxn.get_server('ScriptScanner')
         seq = str(seq)
         p = self.scan_widget.get_scan_settings(seq)
-#         print "453"
-#         print "parameters to scan"
-#         print p
-        scan_id = yield sc.new_sequence(seq, p, context=self.context)
-        print scan_id
-        #if p is not None:
-        #    scan_id = yield sc.new_sequence(seq, [p], context=self.context)
-        #    print scan_id
-        #try:
-        #    yield sc.new_experiment(script, context = self.context)
-        #except self.Error as e:
-        #    self.displayError(e.msg)
-        #except Exception as e:
-        #    print e
+
+#         scan_id = yield sc.new_sequence(seq, p, context=self.context)
+#         print scan_id
+
+        scan_params = p[0][1]
+        if scan_params is not None:
+            scan_id = yield sc.new_sequence(seq, p, context=self.context)
+            print scan_id
+#         try:
+#             yield sc.new_experiment(script, context = self.context)
+#         except self.Error as e:
+#             self.displayError(e.msg)
+#         except Exception as e:
+#             print e
         
         
     @inlineCallbacks
