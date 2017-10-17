@@ -383,6 +383,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
     @setting(38, "Get Preferred Parameters", sequence = 's', returns = '*s')
     def get_preferred_parameters(self, c, sequence):
         try:
+            
             return self.sequences[sequence].show_params
         except KeyError:
             raise Exception('Sequence not found')

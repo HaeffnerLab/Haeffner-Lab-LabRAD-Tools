@@ -10,9 +10,11 @@ class config(object):
         ('lattice.PulseSequences2.ReferenceImage', 'ReferenceImage'),
         ('lattice.PulseSequences2.CalibAllLines', 'CalibAllLines'),
         ('lattice.PulseSequences2.SidebandOptimization', 'SidebandOptimization'),
+        ('lattice.PulseSequences2.AuxOpticalPumpingOptimization', 'AuxOpticalPumpingOptimization'),
         ('lattice.PulseSequences2.MolmerSorensenGate', 'MolmerSorensenGate'),
         ('lattice.PulseSequences2.Parity', 'Parity'),
-        ('lattice.PulseSequences2.Ramsey', 'Ramsey')]
+        ('lattice.PulseSequences2.Ramsey', 'Ramsey'),
+        ('lattice.PulseSequences2.LLI_StatePreparation', 'LLI_StatePreparation')]
     
     global_show_params= ['DopplerCooling.doppler_cooling_amplitude_397',
                          'DopplerCooling.doppler_cooling_frequency_397',
@@ -27,8 +29,10 @@ class config(object):
                          'SequentialSBCooling.channel_729',
                          'SequentialSBCooling.selection_sideband',
                          'SequentialSBCooling.order',
+                         'SequentialSBCooling.enable',
                          
                          'StatePreparation.channel_729',
+                         'StatePreparation.aux_optical_pumping_enable',
                          'StatePreparation.optical_pumping_enable',
                          'StatePreparation.sideband_cooling_enable',
 

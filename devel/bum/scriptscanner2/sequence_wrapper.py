@@ -367,7 +367,7 @@ class pulse_sequence_wrapper(object):
         
         
     def col_names(self):
-        mode = self.parameters_dict.StateReadout.readout_mode
+        mode = self.parameters_dict.StateReadout.readout_mode     
         names = np.array(range(self.output_size())[::-1])+1
          
         if mode == 'pmt':
@@ -413,11 +413,7 @@ class pulse_sequence_wrapper(object):
                 temp=('', 'Col {}'.format(temp), '')
                 dependents.append(temp)
             dependents.append(('', 'Parity', ''))
-#             
-#         print "1333"
-#         print "names: " , names
-#         print "readout_mode", mode
-#         print dependents
+
         
         return  dependents
     
