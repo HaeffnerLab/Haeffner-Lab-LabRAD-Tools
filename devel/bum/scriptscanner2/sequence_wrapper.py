@@ -101,6 +101,8 @@ class pulse_sequence_wrapper(object):
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan, self.submit_unit)], dependents, context = self.data_save_context)
         
         shift=U(0,self.submit_unit)
+        
+        #print "4321 display relative" , self.parameters_dict.Display.relative_frequencies
         if not self.parameters_dict.Display.relative_frequencies:
             if self.window == "car1":
                 line = self.parameters_dict.DriftTracker.line_selection_1
@@ -109,14 +111,16 @@ class pulse_sequence_wrapper(object):
                 line = self.parameters_dict.DriftTracker.line_selection_2
                 shift = cxn.sd_tracker.get_current_line(line)
             elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                print "scanning the Spectrum in a false relative freq"
-                line = self.parameters_dict.Spectrum.line_selection 
-                shift = cxn.sd_tracker.get_current_line(line) 
-                # adding the shift for the sideband
-                order = int(self.parameters_dict.Spectrum.order)  
-                if  order != 0 :
-                    sideband= self.parameters_dict.Spectrum.selection_sideband
-                    shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                #print "name of theseq", self.name 
+                if self.name != 'RabiFloppingManual' :
+                    print "scanning the Spectrum in a false relative freq"
+                    line = self.parameters_dict.Spectrum.line_selection 
+                    shift = cxn.sd_tracker.get_current_line(line) 
+                    # adding the shift for the sideband
+                    order = int(self.parameters_dict.Spectrum.order)  
+                    if  order != 0 :
+                        sideband= self.parameters_dict.Spectrum.selection_sideband
+                        shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
         else:
             # when we scan the sideband in spectrum we want to have thier offset from the carrier
             if self.name == "Spectrum":
@@ -132,6 +136,12 @@ class pulse_sequence_wrapper(object):
            
    
         if self.grapher is not None:
+            
+            
+            print "this is the scan_submit"
+            print self.scan_submit
+            print "this is the shift", shift
+            
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
         
         self.readout_save_directory = directory
