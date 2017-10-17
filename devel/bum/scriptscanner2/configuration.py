@@ -40,7 +40,7 @@ class config(object):
                          'StateReadout.state_readout_amplitude_397',
                          'StateReadout.state_readout_frequency_397',
                          'StateReadout.threshold_list',
-                         'StateReadout.use_camera_for_readout',
+                         #'StateReadout.use_camera_for_readout',
                          
                          'TrapFrequencies.aux_axial',
                          'TrapFrequencies.aux_radial',

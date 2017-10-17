@@ -450,21 +450,26 @@ class pulse_sequence_wrapper(object):
         #print self.window
         #print self.name
         
+       
         self.use_camera = False
+        
+        
         ## camera
         #self.use_camera = self.parameters_dict.StateReadout.use_camera_for_readout
         #if use_camera_override != None:
         #    self.use_camera=use_camera_override
         
-
+        
         if 'camera' in self.parameters_dict.StateReadout.readout_mode: 
             self.use_camera = True
             self.initialize_camera(cxn)
             camera = cxn.andor_server
             print "Using Camera"
             print self.name
+        else:
+            self.use_camera = False
 
-     
+        
                     
         # sequence initializing hardware (dds_cw or mirrors?)    
         self.module.run_initial(cxn, self.parameters_dict)
@@ -491,11 +496,17 @@ class pulse_sequence_wrapper(object):
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
             #sleep(0.1)
+            
             print "programmed pulser"
             self.plot_current_sequence(cxn)
             
+                        
             repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
             if self.use_camera:
+                print " setting up kineticks"
+                print "repetitions",repetitions 
+                print "corrected repetitions", int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
+                
                 exposures = repetitions # int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
                 camera.set_number_kinetics(exposures)
                 camera.start_acquisition()
