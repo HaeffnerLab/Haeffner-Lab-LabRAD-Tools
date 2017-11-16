@@ -150,12 +150,17 @@ class pulse_sequence(object):
             guess = init_guess
         #print "1234"
         #print f,p, guess
+        try:
+            popt, copt = curve_fit(model, f, p, p0=guess)
+            if return_all_params:
+                return popt[0], popt[1], popt[2] # center value, amplitude, width
+            else:
+                return popt[0] # return only the center value
+        except:
+            print "problem with the fit"
+            return None
         
-        popt, copt = curve_fit(model, f, p, p0=guess)
-        if return_all_params:
-            return popt[0], popt[1], popt[2] # center value, amplitude, width
-        else:
-            return popt[0] # return only the center value
+        
     
     
     @classmethod
