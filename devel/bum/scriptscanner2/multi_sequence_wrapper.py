@@ -97,7 +97,16 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
                 center_frequency = U(0., self.submit_unit)
             
             self.center_frequency = center_frequency
+            
+            
+            # run the single scan 
+            should_stop = self.sc._pause_or_stop(self.ident)
+            if should_stop: 
+                print " stoping the scan and not proceeding to the next "
+                break
+            
             self.run_single(seq)
+        
             
         cxn.disconnect()    
 

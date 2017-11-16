@@ -20,7 +20,7 @@ def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
 
     if len(readouts):
         
-        threshold_list=[int(x) for x in threshold.split(',')]
+        threshold_list=[int(float(x)) for x in threshold.split(',')]
         
         if len(threshold_list) == 1:
             # regular pmt stuff

@@ -14,6 +14,8 @@ class config(object):
         ('lattice.PulseSequences2.MolmerSorensenGate', 'MolmerSorensenGate'),
         ('lattice.PulseSequences2.Parity', 'Parity'),
         ('lattice.PulseSequences2.Ramsey', 'Ramsey'),
+        ('lattice.PulseSequences2.RamseyLocal', 'RamseyLocal'),
+        ('lattice.PulseSequences2.RamseyLocalHanEcho', 'RamseyLocalHanEcho'),
         ('lattice.PulseSequences2.LLI_StatePreparation', 'LLI_StatePreparation')]
     
     global_show_params= ['DopplerCooling.doppler_cooling_amplitude_397',
