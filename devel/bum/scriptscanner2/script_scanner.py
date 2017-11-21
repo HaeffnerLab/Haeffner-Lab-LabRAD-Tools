@@ -169,7 +169,16 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         else: # this is for composite sequences
             print "running a composite scan"
             wrapper = multi_sequence_wrapper(cls, self, self.client)
-            wrapper.set_scan(settings)
+            wrapper.set_scan(settings)    
+       
+                
+        schedule_id = self.scheduler.new_scheduled_scan(wrapper, duration['s'], priority, start_now)
+        print " debuging scheduler 4321"
+        print schedule_id
+        
+        self.datasets[schedule_id] = [] # empty list
+        print schedule_id
+        return schedule_id
         
     def failure(self, f):
         print "errback"

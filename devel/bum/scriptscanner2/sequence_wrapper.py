@@ -128,8 +128,7 @@ class pulse_sequence_wrapper(object):
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-                    print "4321"  
-                    print "this is the shift for the sideband in relative mode" , shift
+                    
         
                     
                 
@@ -138,9 +137,9 @@ class pulse_sequence_wrapper(object):
         if self.grapher is not None:
             
             
-            print "this is the scan_submit"
-            print self.scan_submit
-            print "this is the shift", shift
+            #print "this is the scan_submit"
+            #print self.scan_submit
+            #print "this is the shift", shift
             
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
         
@@ -148,7 +147,21 @@ class pulse_sequence_wrapper(object):
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
         self.dv.new('Readouts',[('Iteration', 'Arb')],[('Readout Counts','Arb','Arb')], context = self.readout_save_context)
-        self.sc.datasets[self.ident].append(self.ds)
+        
+        print "1212 scheduler debuging"
+        print self.ident
+        print self.ds
+        #print self.sc.datasets[self.ident]
+        
+        # for the scheduled scan this is no creating the dataset for some reason?
+        try:
+            self.sc.datasets[self.ident].append(self.ds)
+        except KeyError:
+            self.sc.datasets[self.ident]=[self.ds] # empty list
+            #self.sc.datasets[self.ident].append()
+            #self.sc.datasets[self.ident]= self.ds
+        
+        
         
     @inlineCallbacks
     def update_params(self, update):
