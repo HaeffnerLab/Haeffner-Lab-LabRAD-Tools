@@ -17,7 +17,10 @@ class config(object):
         ('lattice.PulseSequences2.RamseyLocal', 'RamseyLocal'),
         ('lattice.PulseSequences2.RamseyLocalHanEcho', 'RamseyLocalHanEcho'),
         ('lattice.PulseSequences2.LLI_StatePreparation', 'LLI_StatePreparation'),
-        ('lattice.PulseSequences2.CalibAxialLines', 'CalibAxialLines'),
+        #('lattice.PulseSequences2.CalibAxialLines', 'CalibAxialLines'),
+        ('lattice.PulseSequences2.DriftTrackerRamsey', 'DriftTrackerRamsey'),
+        ('lattice.PulseSequences2.CalibRotation', 'CalibRotation'),
+        
         ]
     
     global_show_params= ['DopplerCooling.doppler_cooling_amplitude_397',

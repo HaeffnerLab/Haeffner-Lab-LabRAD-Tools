@@ -96,7 +96,7 @@ class pulse_sequence_wrapper(object):
         # creating the col names in the output file
         #dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         dependents = self.col_names()
-        
+        print "number of depe"
        
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan, self.submit_unit)], dependents, context = self.data_save_context)
         
@@ -137,9 +137,9 @@ class pulse_sequence_wrapper(object):
         if self.grapher is not None:
             
             
-            #print "this is the scan_submit"
-            #print self.scan_submit
-            #print "this is the shift", shift
+            print "this is the scan_submit"
+            print self.scan_submit
+            print "this is the shift", shift
             
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
         
@@ -148,9 +148,7 @@ class pulse_sequence_wrapper(object):
         self.dv.cd(directory, True, context = self.readout_save_context)
         self.dv.new('Readouts',[('Iteration', 'Arb')],[('Readout Counts','Arb','Arb')], context = self.readout_save_context)
         
-        print "1212 scheduler debuging"
-        print self.ident
-        print self.ds
+        
         #print self.sc.datasets[self.ident]
         
         # for the scheduled scan this is no creating the dataset for some reason?
@@ -196,6 +194,7 @@ class pulse_sequence_wrapper(object):
         self.parameters_dict.update(carriers_dict)
         self.parameters_dict.update(self.module.fixed_params)
         
+        
     def update_scan_param(self, update):
         update_dict = {}
         for key in update.keys():
@@ -215,8 +214,6 @@ class pulse_sequence_wrapper(object):
 
         except:
             self.window = 'current' # no window defined
-        print "1234"
-        print scan_param   
         
         # Enable scan only from the scannable params 
         #m1, m2, default, unit = self.module.scannable_params[scan_param][0]
@@ -392,6 +389,11 @@ class pulse_sequence_wrapper(object):
     def col_names(self):
         mode = self.parameters_dict.StateReadout.readout_mode     
         names = np.array(range(self.output_size())[::-1])+1
+#         
+#         print "555"
+#         print "this is the readout mode", mode
+#         print "this is the readout names", names
+#         
          
         if mode == 'pmt':
             if self.output_size==1:
@@ -437,7 +439,7 @@ class pulse_sequence_wrapper(object):
                 dependents.append(temp)
             dependents.append(('', 'Parity', ''))
 
-        
+#         print "this is the readout dependents", dependents
         return  dependents
     
     

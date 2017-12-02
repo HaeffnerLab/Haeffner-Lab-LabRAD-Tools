@@ -264,7 +264,13 @@ class scheduler(object):
         paused_deferred = []
         for ident, script in self.running.iteritems():
             non_conf = config.allowed_concurrent.get(script.name, [])
-            if not scan.script_cls.name in non_conf and not script.status.status == 'Paused':
+            print "454545"
+            print "debuging schedular"
+            print scan.name
+            print non_conf
+            
+#             if not scan.script_cls.name in non_conf and not script.status.status == 'Paused':
+            if not scan.name in non_conf and not script.status.status == 'Paused':
                 #don't pause unless it's a conflicting experiment and it's not already paused
                 if not ident == current_ident:
                     paused_idents.append(ident)

@@ -28,7 +28,10 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             
             # maxim+steps is a hack to get plotted data to correspond to usr input range.
             # actually an additional point is being taken
-            scan = np.arange(minim, maxim+steps+1, steps)
+            #scan = np.arange(minim, maxim+steps+1, steps)
+            # adding the last element to the scan
+            scan = np.arange(minim, maxim, steps)
+            scan = np.append(scan,maxim)
             
             scan = [U(pt, unit) for pt in scan]
             
@@ -40,6 +43,9 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             elif x.isCompatible('Hz'):
                 submit_unit = 'MHz' 
     
+            elif x.isCompatible('deg'):
+                submit_unit = 'deg' 
+                
             else:
                 #submit_unit = self.scan_unit
                 print "Need to figure out what to do here"
@@ -48,7 +54,8 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             scan_submit = [U(pt, submit_unit) for pt in scan_submit]
             
             self.scans[sequence_name] = (param, unit, scan, submit_unit, scan_submit)
-        
+            print " this is the submit_unit "
+            print submit_unit
         #try:
         #    self.window = self.module.scannable_params[scan_param][1]
         #except:
@@ -124,6 +131,8 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         print "THIS IS THE MOUDLE RUNNING {}".format(module.__name__)
         print "SCAN:"
         print self.scan
+        
+        
         all_data = [] # 2d numpy array
         x_data = []
 
