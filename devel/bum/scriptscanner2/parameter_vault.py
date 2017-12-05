@@ -109,12 +109,30 @@ class ParameterVault(LabradServer):
         If passes, returns the updated parameter
         """
         t,item = self.parameters[key]
+        
         if t == 'parameter':
             assert item[0] <= value <= item[1], "Parameter {} Out of Bound".format(key[1])
             item[2] = value
             return (t, item)
         if t == 'string':
-            return (t, item)
+            # making sure that value is a string
+            
+            return (t, str(value))
+            #return (t, item)
+        if t == 'line_selection':
+            # first check if the value is in the allowed dict
+            if value in dict(item[1]).keys():
+                return (t, (value, item[1]))
+            else:
+                raise NameError('Not allowed parameter did not update')
+            
+        if t == 'selection_simple':
+            # first check if the value is in the allowed dict
+            if value in item[1]:
+                return (t, (value, item[1]))
+            else:
+                raise NameError('Not allowed parameter did not update')
+            
         else:
             # Should we really do this and circumvent the exception here?? Philipp
             # In script scanner a boolean is set via the full_info. Does not wotk from a shell (The content is missing?)
@@ -168,7 +186,10 @@ class ParameterVault(LabradServer):
         if full_info:
             self.parameters[key] = value
         else:
+            
             self.parameters[key] = self._save_full(key, value)
+            
+            
         notified = self.getOtherListeners(c)
         self.onParameterChange((key[0], key[1]), notified)
 
@@ -176,11 +197,14 @@ class ParameterVault(LabradServer):
     def getParameter(self, c, collection, parameter_name, checked = True):
         """Get Parameter Value"""
         key = (collection, parameter_name)
+               
         if key not in self.parameters.keys():
             raise Exception ("Parameter Not Found")
         result = self.parameters[key]
         if checked:
             result = self.check_parameter(key, result)
+            
+        t,item = self.parameters[key]
         return result
 
     @setting(52, 'New Parameter', collection = 's', parameter_name = 's', value = '?', returns = '')

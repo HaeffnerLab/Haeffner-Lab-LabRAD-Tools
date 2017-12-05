@@ -20,6 +20,7 @@ class config(object):
         #('lattice.PulseSequences2.CalibAxialLines', 'CalibAxialLines'),
         ('lattice.PulseSequences2.DriftTrackerRamsey', 'DriftTrackerRamsey'),
         ('lattice.PulseSequences2.CalibRotation', 'CalibRotation'),
+        ('lattice.PulseSequences2.NotSureYet', 'NotSureYet'),
         
         ]
     
@@ -30,13 +31,22 @@ class config(object):
                          'Excitation_729.channel_729',
                          'Excitation_729.bichro',
                          
+                         'OpticalPumping.line_selection',
+                         
+                         'OpticalPumpingAux.aux_op_line_selection',
+                         
+                         'Heating.background_heating_time',
+                         
                          'SidebandCooling.selection_sideband',
                          'SidebandCooling.order',
+                         'SidebandCooling.line_selection',
+                         'SidebandCooling.sideband_cooling_amplitude_854',
                          
                          'SequentialSBCooling.channel_729',
-                         'SequentialSBCooling.selection_sideband',
+                         'SequentialSBCooling.selection_sideband',                       
                          'SequentialSBCooling.order',
                          'SequentialSBCooling.enable',
+                         
                          
                          'StatePreparation.channel_729',
                          'StatePreparation.aux_optical_pumping_enable',
