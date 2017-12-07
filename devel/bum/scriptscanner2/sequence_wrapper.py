@@ -128,7 +128,7 @@ class pulse_sequence_wrapper(object):
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-                    
+                          
         
                     
                 
@@ -158,6 +158,7 @@ class pulse_sequence_wrapper(object):
             self.sc.datasets[self.ident]=[self.ds] # empty list
             #self.sc.datasets[self.ident].append()
             #self.sc.datasets[self.ident]= self.ds
+        print "SETUP datavalut succeeded" 
         
         
         
@@ -445,6 +446,8 @@ class pulse_sequence_wrapper(object):
     
         
     def run(self, ident):
+        
+        print " started running"
         self.ident = ident
         #import time
         cxn = labrad.connect()

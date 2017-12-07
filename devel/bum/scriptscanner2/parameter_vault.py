@@ -125,14 +125,14 @@ class ParameterVault(LabradServer):
                 return (t, (value, item[1]))
             else:
                 raise NameError('Not allowed parameter did not update')
-            
+             
         if t == 'selection_simple':
             # first check if the value is in the allowed dict
             if value in item[1]:
                 return (t, (value, item[1]))
             else:
                 raise NameError('Not allowed parameter did not update')
-            
+             
         else:
             # Should we really do this and circumvent the exception here?? Philipp
             # In script scanner a boolean is set via the full_info. Does not wotk from a shell (The content is missing?)

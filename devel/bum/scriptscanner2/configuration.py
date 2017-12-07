@@ -20,7 +20,8 @@ class config(object):
         #('lattice.PulseSequences2.CalibAxialLines', 'CalibAxialLines'),
         ('lattice.PulseSequences2.DriftTrackerRamsey', 'DriftTrackerRamsey'),
         ('lattice.PulseSequences2.CalibRotation', 'CalibRotation'),
-        ('lattice.PulseSequences2.NotSureYet', 'NotSureYet'),
+#         ('lattice.PulseSequences2.NotSureYet', 'NotSureYet'),
+        ('lattice.PulseSequences2.LLI_TrackPhase', 'LLI_TrackPhase'),
         
         ]
     

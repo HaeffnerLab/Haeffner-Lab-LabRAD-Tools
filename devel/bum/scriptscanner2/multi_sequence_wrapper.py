@@ -123,8 +123,22 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         #import time
         cxn = labrad.connect()
         pulser = cxn.pulser
+        
         self.update_params(self.sc.all_parameters())
         self.setup_data_vault(cxn, module.__name__)
+
+       
+               
+        if 'camera' in self.parameters_dict.StateReadout.readout_mode: 
+            self.use_camera = True
+            self.initialize_camera(cxn)
+            camera = cxn.andor_server
+            print "Using Camera"
+            print self.name
+        else:
+            self.use_camera = False
+
+
 
         module.run_initial(cxn, self.parameters_dict)
         self.readout_save_iteration = 0
@@ -134,7 +148,10 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         
         
         all_data = [] # 2d numpy array
-        x_data = []
+        data_x = []
+        data = [] 
+        
+        
 
         for x in self.scan:
             #time.sleep(0.5)
@@ -146,39 +163,98 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             self.update_scan_param(update)
             seq = module(self.parameters_dict)
             seq.programSequence(pulser)
-            print "programmed pulser"
+            print "programmed pulser"          
             self.plot_current_sequence(cxn)
+            
+            repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
+            if self.use_camera:
+                print " setting up kineticks"
+                print "repetitions",repetitions 
+                print "corrected repetitions", int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
+                
+                exposures = repetitions # int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
+                camera.set_number_kinetics(exposures)
+                camera.start_acquisition()
+                
+            
             pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
             print "done"
             pulser.stop_sequence()
             
-            rds = pulser.get_readout_counts()
-            ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list)
-
-            submission = [x[self.submit_unit] + self.center_frequency[self.submit_unit]]
-            x_data.append(x[self.submit_unit] + self.center_frequency[self.submit_unit])
-            #print x_data
-            submission.extend(ion_state)
-            
-           
-
-            module.run_in_loop(cxn, self.parameters_dict, submission ,np.array(x_data))
-            
-            self.dv.add(submission, context = self.data_save_context)
-            self.save_data(rds)
-            all_data.append(ion_state)
-            
-            print "done waiting"
-                ### program pulser, get readouts
+            if not self.use_camera:
+                readout_mode=self.parameters_dict.StateReadout.readout_mode 
+                print "Using the PMT! in redout_mode:",readout_mode
+                rds = pulser.get_readout_counts()
+                ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list,readout_mode)
+                #print "646884:  ", ion_state
+                self.save_data(rds)
+                data.append(ion_state)
                 
-        module.run_finally(cxn, self.parameters_dict, np.array(all_data), np.array(x_data))
+            else:
+                #get the percentage of excitation using the camera state readout
+                proceed = camera.wait_for_kinetic()
+                
+                if not proceed:
+                    camera.abort_acquisition()
+                    self._finalize_single(cxn)
+                    raise Exception ("Did not get all kinetic images from camera")
+                
+                images = camera.get_acquired_data(exposures)
+                camera.abort_acquisition()
+                
+                if self.name == 'ReferenceImage':
+                    data=images
+                    ion_state=np.ones(self.parameters_dict.IonsOnCamera.ion_number)
+                else:
+                    ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera,self.parameters_dict.StateReadout.readout_mode)
+                    self.save_confidences(confidences)
+                    data.append(ion_state)
+                
+                #useful for debugging, saving the images
+                #numpy.save('readout {}'.format(int(time.time())), images)
+            x_shift=self.Scan_shift()
+            print "this is x_shift {}".format(x_shift)
+            print "this is x in submission units {}".format(x[self.submit_unit])
+            
+            submission = [x[self.submit_unit]+x_shift[self.submit_unit]]  # + center_frequency[self.submit_unit]]
+            print "the x submission", submission
+            submission.extend(ion_state)
+            print   "the final submission", submission   
+            #data.append(submission)
+            #print "data {}".format(data)
+            # run in the loop to calculate something
+            data_x.append(x[self.submit_unit] + x_shift[self.submit_unit])
+            
+            module.run_in_loop(cxn, self.parameters_dict, np.array(data),np.array(data_x))
+            #submit the results to the data vault
+            self.dv.add(submission, context = self.data_save_context)
+                
+           
+               
+                        
+        module.run_finally(cxn, self.parameters_dict, np.array(data), np.array(data_x))
         self._finalize_single(cxn)
         
     def _finalize_single(self, cxn):
         # Add finalize the camera when needed 
         dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
+        
+        
+        # Add finalize the camera when needed 
+#         self.sc._finish_confirmed(self.ident)
+        
+        
+        if self.use_camera:
+            #if used the camera, return it to the original settings
+            camera = cxn.andor_server
+            camera.set_trigger_mode(self.initial_trigger_mode)
+            camera.set_exposure_time(self.initial_exposure)
+            camera.set_image_region(self.initial_region)
+            if self.camera_initially_live_display:
+                camera.start_live_display()
+                
         cxn.disconnect()
 
         
