@@ -1,6 +1,7 @@
 # wrapper for composite pulse sequences
 
 import numpy as np
+import cPickle as pickle
 from treedict import TreeDict
 import labrad
 from labrad.units import WithUnit as U
@@ -239,8 +240,26 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         
     def _finalize_single(self, cxn):
         # Add finalize the camera when needed 
-        dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
         
+        
+#        import time
+        # Bypass configParser and save parameters as a pickled dict
+        if self.parameters_dict.global_scan_options.quick_finish:
+#           t0 = time.time()
+            d = self.readout_save_directory
+            loc = "/home/lattice/data/" + ".dir/".join(d[1:]) + ".dir/00001 - %s.pickle" %d[-1] 
+            pickle_out = open(loc, "wb")
+            pickle.dump(dict(self.parameters_dict), pickle_out)
+            pickle_out.close()
+#            t1 = time.time()
+#            print "TIME", t1-t0
+            
+        
+        else:
+#            t0 = time.time()
+            dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
+#            t1 = time.time()
+#            print "TIME", t1-t0
         
         # Add finalize the camera when needed 
 #         self.sc._finish_confirmed(self.ident)

@@ -18,6 +18,7 @@ to the sequence object
 
 """
 import numpy as np
+import cPickle as pickle
 from time import sleep
 from treedict import TreeDict
 import labrad
@@ -623,8 +624,28 @@ class pulse_sequence_wrapper(object):
     
     def _finalize(self, cxn):
         # Add finalize the camera when needed 
-        dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
+        
+        
+#        import time
+        # Bypass configParser and save parameters as a pickled dict
+        if self.parameters_dict.global_scan_options.quick_finish:
+#            t0 = time.time()
+            d = self.readout_save_directory
+            loc = "/home/lattice/data/" + ".dir/".join(d[1:]) + ".dir/00001 - %s.pickle" %d[-1] 
+            pickle_out = open(loc, "wb")
+            pickle.dump(dict(self.parameters_dict), pickle_out)
+            pickle_out.close()
+#            t1 = time.time()
+#            print "TIME", t1-t0
+        
+        else:    
+#            t0 = time.time()
+            dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
+#            t1 = time.time()
+#            print "TIME", t1-t0
+        
         self.sc._finish_confirmed(self.ident)
+        
         
         
         if self.use_camera:
@@ -639,6 +660,13 @@ class pulse_sequence_wrapper(object):
         cxn.disconnect()
 
     def plot_current_sequence(self, cxn):
+        
+        # Bypass creating pulse sequence plot
+        if self.parameters_dict.global_scan_options.quick_finish:
+            return
+        
+        #import time
+        #t0 = time.time()
         from common.okfpgaservers.pulser.pulse_sequences.plot_sequence import SequencePlotter
         dds = cxn.pulser.human_readable_dds()
         ttl = cxn.pulser.human_readable_ttl()
@@ -646,6 +674,8 @@ class pulse_sequence_wrapper(object):
         #sp = SequencePlotter(ttl, dds.aslist, channels)
         sp = SequencePlotter(ttl, dds, channels)
         sp.makePDF()
+        #t1 = time.time()
+        #print "TIME", t1-t0
 
     @classmethod
     def add_sidebands(cls, freq, sideband_selection, trap):
