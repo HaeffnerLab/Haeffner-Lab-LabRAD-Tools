@@ -1,4 +1,5 @@
-import sys
+import os
+import cPickle as pickle
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 
@@ -17,6 +18,16 @@ class ParameterList(QtGui.QWidget):
 
     @inlineCallbacks
     def populate(self):
-        parameters = yield self.dataset.getParameters()
+        dsn = self.dataset.dataset_location
+        folder = "/home/lattice/data/" + ".dir/".join(dsn[0][1:]) + ".dir/"
+        file =  dsn[1] + ".pickle"
+        
+        if file in os.listdir(folder):
+            pkl_file = open(folder + file, "rb")
+            d = pickle.load(pkl_file)
+            parameters = sorted(d.items())
+        else:
+            parameters = yield self.dataset.getParameters()
+        
         self.parameterListWidget.clear()
         self.parameterListWidget.addItems([str(x) for x in sorted(parameters)])
