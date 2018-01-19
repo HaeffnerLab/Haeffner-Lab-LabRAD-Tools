@@ -42,16 +42,19 @@ class TraceList(QtGui.QListWidget):
         menu = QtGui.QMenu()
         item = self.itemAt(pos)
         if (item == None): 
-	    dataaddAction = menu.addAction('Add Data Set')
-	    
-	    action = menu.exec_(self.mapToGlobal(pos))
-	    if action == dataaddAction:
-		dvlist = DataVaultList(self.parent.name)
-		self.windows.append(dvlist)
-		dvlist.show()
-
+            dataaddAction = menu.addAction('Add Data Set')
+            uncheckallAction = menu.addAction('Uncheck All')
+            action = menu.exec_(self.mapToGlobal(pos))
+            if action == dataaddAction:
+                dvlist = DataVaultList(self.parent.name)
+                self.windows.append(dvlist)
+                dvlist.show()
+            if action == uncheckallAction:
+                pass
+                for item in self.trace_dict.values():
+                    item.setCheckState(QtCore.Qt.Unchecked)
         else:
-	    ident = str(item.text())
+            ident = str(item.text())
             parametersAction = menu.addAction('Parameters')
             togglecolorsAction = menu.addAction('Toggle colors')
             fitAction = menu.addAction('Fit')
