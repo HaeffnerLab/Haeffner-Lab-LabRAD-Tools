@@ -1,3 +1,4 @@
+import pyperclip
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 from analysis.fitting import FitWrapper
@@ -54,8 +55,11 @@ class FitWindow(QtGui.QWidget):
 
         self.setupParameterTable()
         self.setLayout(mainLayout)
+        self.resize(500,100)
+        res = QtGui.QDesktopWidget().screenGeometry()
+        
         self.show()
-
+        self.move( (res.width()/2.) - 250, 0 )
     def setupParameterTable(self):
 
         self.parameterTable.clear()
@@ -113,9 +117,14 @@ class FitWindow(QtGui.QWidget):
         fields to the fit values
         '''
         params = self.fw.getParameters()
+        first = True
         for p in params:
             row = self.row_info_dict[p]
             fitted_value = self.fw.getFittedValue(p)
+#           copy first fitted value to clipboard
+            if first:
+                pyperclip.copy( str(fitted_value) )
+                first = False
             row.fitted_value.setText( str(fitted_value) )
             row.manual_value.setValue( fitted_value )
             

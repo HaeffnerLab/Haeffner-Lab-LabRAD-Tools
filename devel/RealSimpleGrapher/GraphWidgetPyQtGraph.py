@@ -36,7 +36,9 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
 
-        colors = ['r', 'g', 'y', 'c', 'm', 'w']
+    
+        colors = [(47,126,243), (250,138,39), (96,233,128), (255,77,77), (255,51,153), (128,255,0), (255,241,102)]
+        #colors = ['r', 'g', 'y', 'c', 'm', 'w']
         self.colorChooser = itertools.cycle(colors)
         self.initUI()
 

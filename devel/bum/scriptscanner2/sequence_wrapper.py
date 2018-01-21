@@ -134,9 +134,9 @@ class pulse_sequence_wrapper(object):
         if self.grapher is not None:
             
             
-            print "this is the scan_submit"
-            print self.scan_submit
-            print "this is the shift", shift
+#             print "this is the scan_submit"
+#             print self.scan_submit
+#             print "this is the shift", shift
             
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
         
@@ -155,7 +155,7 @@ class pulse_sequence_wrapper(object):
             self.sc.datasets[self.ident]=[self.ds] # empty list
             #self.sc.datasets[self.ident].append()
             #self.sc.datasets[self.ident]= self.ds
-        print "SETUP datavalut succeeded" 
+#         print "SETUP datavalut succeeded" 
         
         
         
@@ -234,7 +234,7 @@ class pulse_sequence_wrapper(object):
         
         self.scan_submit = [pt[self.submit_unit] for pt in self.scan]
         self.scan_submit = [U(pt, self.submit_unit) for pt in self.scan_submit]
-        print self.scan_submit
+#         print self.scan_submit
         
         #if not self.parameters_dict.Display.relative_frequencies:
         #    self.relative_freq()
@@ -264,9 +264,9 @@ class pulse_sequence_wrapper(object):
                                'S+1/2D+5/2':'c8',
                                'S-1/2D+3/2':'c9',
                                }
-        print "switching to relative units"
-        print self.parameters_dict.Display.relative_frequencies
-        print self.name
+#         print "switching to relative units"
+#         print self.parameters_dict.Display.relative_frequencies
+#         print self.name
         
         #line='none'
         ## running in abs frequency mode
@@ -276,7 +276,7 @@ class pulse_sequence_wrapper(object):
             elif self.window == "car2":
                 line = self.parameters_dict.DriftTracker.line_selection_2
             elif self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                print "scanning the Spectrum in a false relative freq"
+#                 print "scanning the Spectrum in a false relative freq"
                 line = self.parameters_dict.Spectrum.line_selection
                 order = int(self.parameters_dict.Spectrum.order)  
                 if  order != 0 :
@@ -289,14 +289,14 @@ class pulse_sequence_wrapper(object):
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-                    print "1234"  
-                    print "this is the shift for the sideband in relative mode" , shift
-                    return shift
+#                     print "1234"  
+#                     print "this is the shift for the sideband in relative mode" , shift
+#                     return shift
                
-        print "1234"        
-        print line 
-        print order
-        print sideband 
+#         print "1234"        
+#         print line 
+#         print order
+#         print sideband 
         
         if line != None:
             center_frequency = self.parameters_dict.Carriers[carrier_translation[line]] 
@@ -306,7 +306,7 @@ class pulse_sequence_wrapper(object):
             shift=center_frequency
         else:
             shift = U(0, self.scan_unit) 
-        print "this is the shift in the scan {}".format(shift)
+#         print "this is the shift in the scan {}".format(shift)
         
         return shift
             #self.scan_submit=[center_frequency + x for x in self.scan_submit]
@@ -499,7 +499,7 @@ class pulse_sequence_wrapper(object):
                 
             
             pulser.start_number(repetitions)
-            print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+#             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
             pulser.stop_sequence()
             #print "done waiting"
@@ -562,7 +562,7 @@ class pulse_sequence_wrapper(object):
         print "programmed pulser for a single point"
         repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
         pulser.start_number(repetitions)
-        print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+#         print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
         pulser.wait_sequence_done()
         pulser.stop_sequence()
             

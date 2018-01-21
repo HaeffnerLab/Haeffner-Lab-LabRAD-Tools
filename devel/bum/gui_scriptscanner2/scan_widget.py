@@ -40,7 +40,6 @@ class ScanItem(QtGui.QWidget):
         self.maxim.setValue(maxim)
         self.steps.setValue(steps) 
     
-
         layout.addWidget(self.minim)
         layout.addWidget(self.maxim)
         layout.addWidget(self.steps)
@@ -91,18 +90,30 @@ class sequence_widget(QtGui.QWidget):
 
     def makeLayout(self, params, single_seq = True):
         layout = QtGui.QVBoxLayout()
+        self.setLayout(layout)
         
-#         # Run until stopped checkbox
-#         if single_seq:
-#             layout.addWidget(QtGui.QCheckBox("run until stopped"))
-#         
+        scroll = QtGui.QScrollArea(self)
+        layout.addWidget(scroll)
+        scroll.setWidgetResizable(True)
+        scrollContent = QtGui.QWidget(scroll)
+        
+        scrollLayout = QtGui.QVBoxLayout(scrollContent)
+        scrollContent.setLayout(scrollLayout)
         for par, x, sequence_name in params:
             minim, maxim, steps, unit = x
             p = (par, minim, maxim, steps, unit)
             self.parameters[par] = ScanItem(p, sequence_name, self)
-            layout.addWidget(self.parameters[par])
-        #layout.addWidget(editor)
-        self.setLayout(layout)
+            scrollLayout.addWidget(self.parameters[par])
+        scroll.setWidget(scrollContent)
+        
+        
+#         layout = QtGui.QVBoxLayout()      
+#         for par, x, sequence_name in params:
+#             minim, maxim, steps, unit = x
+#             p = (par, minim, maxim, steps, unit)
+#             self.parameters[par] = ScanItem(p, sequence_name, self)
+#             layout.addWidget(self.parameters[par])
+#         self.setLayout(layout)
 
     def set_scan_parameter(self, parameter):
         """
@@ -243,7 +254,7 @@ if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
     params = [(0, 6, 2, 'kHz'), ('p2', 0, 8, 2, 'us')]
     #icon = sequence_widget(params)
-    icon = scan_widget(None)
+    icon = scan_widget(None, None)
     icon.buildSequenceWidget('exp', params)
     icon.show()
     app.exec_()
