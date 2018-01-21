@@ -30,6 +30,8 @@ from twisted.internet.threads import blockingCallFromThread
 import dvParameters
 from analysis import readouts
 import sys
+import time
+
 
 class pulse_sequence_wrapper(object):
     
@@ -83,10 +85,8 @@ class pulse_sequence_wrapper(object):
 
     def setup_data_vault(self, cxn, name):
         
-        import time
         localtime = time.localtime()
         self.dv = cxn.data_vault
-        print "data vault connected"
         self.timetag = time.strftime('%H%M_%S', localtime)
         directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), name, self.timetag]
         self.data_save_context = cxn.context()
@@ -97,13 +97,11 @@ class pulse_sequence_wrapper(object):
         # creating the col names in the output file
         #dependents = [('', 'Col {}'.format(x), '') for x in range(self.output_size())]
         dependents = self.col_names()
-        print "number of depe"
        
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan, self.submit_unit)], dependents, context = self.data_save_context)
         
         shift=U(0,self.submit_unit)
         
-        #print "4321 display relative" , self.parameters_dict.Display.relative_frequencies
         if not self.parameters_dict.Display.relative_frequencies:
             if self.window == "car1":
                 line = self.parameters_dict.DriftTracker.line_selection_1
@@ -112,9 +110,7 @@ class pulse_sequence_wrapper(object):
                 line = self.parameters_dict.DriftTracker.line_selection_2
                 shift = cxn.sd_tracker.get_current_line(line)
             elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                #print "name of theseq", self.name 
                 if self.name != 'RabiFloppingManual' :
-                    print "scanning the Spectrum in a false relative freq"
                     line = self.parameters_dict.Spectrum.line_selection 
                     shift = cxn.sd_tracker.get_current_line(line) 
                     # adding the shift for the sideband
@@ -127,7 +123,7 @@ class pulse_sequence_wrapper(object):
             if self.name == "Spectrum":
                 order = int(self.parameters_dict.Spectrum.order)
                 if  order != 0 :
-                    sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
+                    sideband= self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
                           
         
@@ -166,7 +162,7 @@ class pulse_sequence_wrapper(object):
     @inlineCallbacks
     def update_params(self, update):
         # also update from the drift tracker here?
-        print "UPDATING"
+#        print "UPDATING"
         carrier_translation = {'S+1/2D-3/2':'Carriers.c0',
                                'S-1/2D-5/2':'Carriers.c1',
                                'S+1/2D-1/2':'Carriers.c2',
@@ -357,7 +353,6 @@ class pulse_sequence_wrapper(object):
     def output_size(self):
         # function that gives the number of output cols in the readout file
         mode = self.parameters_dict.StateReadout.readout_mode
-        print mode
         
         if mode == 'pmt':
             return len(self.parameters_dict.StateReadout.threshold_list.split(','))
@@ -391,11 +386,6 @@ class pulse_sequence_wrapper(object):
     def col_names(self):
         mode = self.parameters_dict.StateReadout.readout_mode     
         names = np.array(range(self.output_size())[::-1])+1
-#         
-#         print "555"
-#         print "this is the readout mode", mode
-#         print "this is the readout names", names
-#         
          
         if mode == 'pmt':
             if self.output_size==1:
@@ -441,7 +431,6 @@ class pulse_sequence_wrapper(object):
                 dependents.append(temp)
             dependents.append(('', 'Parity', ''))
 
-#         print "this is the readout dependents", dependents
         return  dependents
     
     
@@ -450,11 +439,8 @@ class pulse_sequence_wrapper(object):
         
         print " started running"
         self.ident = ident
-        #import time
         cxn = labrad.connect()
         pulser = cxn.pulser
-        ### camera debug
-        #cxn.scriptscanner.set_parameter(['StateReadout','use_camera_for_readout', True])
 
         carrier_translation = {'S+1/2D-3/2':'c0',
                                'S-1/2D-5/2':'c1',
@@ -470,49 +456,27 @@ class pulse_sequence_wrapper(object):
               
         self.update_params(self.sc.all_parameters())
         line=self.parameters_dict.Spectrum.line_selection   
-        #print "Spectrum scan line:"
-        #print line
-        #print "729 freq {}".format(self.parameters_dict.Carriers[carrier_translation[line]])  
-        #print "This is the scan Shift {}".format( self.Scan_shift())
-        
         self.setup_data_vault(cxn, self.name)
-        #print self.window
-        #print self.name
-        
-       
         self.use_camera = False
-        
-        
-        ## camera
-        #self.use_camera = self.parameters_dict.StateReadout.use_camera_for_readout
-        #if use_camera_override != None:
-        #    self.use_camera=use_camera_override
         
         
         if 'camera' in self.parameters_dict.StateReadout.readout_mode: 
             self.use_camera = True
             self.initialize_camera(cxn)
             camera = cxn.andor_server
-            print "Using Camera"
-            print self.name
         else:
             self.use_camera = False
 
-        
                     
         # sequence initializing hardware (dds_cw or mirrors?)    
         self.module.run_initial(cxn, self.parameters_dict)
         
         self.readout_save_iteration = 0
-        #print "SCAN:"
-        #print self.scan
         
         data = [] 
         data_x = []
         
         for it,x in enumerate(self.scan):
-           
-            print " currently scanning point {}".format(x)
             
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
@@ -520,23 +484,16 @@ class pulse_sequence_wrapper(object):
             ## needs the two lines of update to ensure the proper updating!!!
             self.update_params(update)
             self.update_scan_param(update)
-            #self.parameters_dict.update(update)
-            #print "PARAMETER {}".format(self.parameters_dict.RabiFlopping.duration)
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
-            #sleep(0.1)
-            
             print "programmed pulser"
             self.plot_current_sequence(cxn)
             
                         
             repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
             if self.use_camera:
-                print " setting up kineticks"
-                print "repetitions",repetitions 
-                print "corrected repetitions", int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
                 
-                exposures = repetitions # int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
+                exposures = repetitions 
                 camera.set_number_kinetics(exposures)
                 camera.start_acquisition()
                 
@@ -544,16 +501,13 @@ class pulse_sequence_wrapper(object):
             pulser.start_number(repetitions)
             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
-            print "done"
             pulser.stop_sequence()
             #print "done waiting"
             
             if not self.use_camera:
                 readout_mode=self.parameters_dict.StateReadout.readout_mode 
-                print "Using the PMT! in redout_mode:",readout_mode
                 rds = pulser.get_readout_counts()
                 ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list,readout_mode)
-                #print "646884:  ", ion_state
                 self.save_data(rds)
                 data.append(ion_state)
                 
@@ -582,15 +536,10 @@ class pulse_sequence_wrapper(object):
                
             
             x_shift=self.Scan_shift()
-            print "this is x_shift {}".format(x_shift)
-            print "this is x in submission units {}".format(x[self.submit_unit])
             
             submission = [x[self.submit_unit]+x_shift[self.submit_unit]]  # + center_frequency[self.submit_unit]]
-            print "the x submission", submission
             submission.extend(ion_state)
             
-            #data.append(submission)
-            #print "data {}".format(data)
             # run in the loop to calculate something
             data_x.append(x[self.submit_unit] + x_shift[self.submit_unit])
             
@@ -605,7 +554,6 @@ class pulse_sequence_wrapper(object):
         self._finalize(cxn) 
     
     def run_single_point(self,cxn,x=0):
-        print x
         cxn = labrad.connect()
         pulser = cxn.pulser
         seq = self.module(self.parameters_dict)
@@ -616,7 +564,6 @@ class pulse_sequence_wrapper(object):
         pulser.start_number(repetitions)
         print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
         pulser.wait_sequence_done()
-        print "done"
         pulser.stop_sequence()
             
             
@@ -626,7 +573,6 @@ class pulse_sequence_wrapper(object):
         # Add finalize the camera when needed 
         
         
-#        import time
         # Bypass configParser and save parameters as a pickled dict
         if self.parameters_dict.global_scan_options.quick_finish:
 #            t0 = time.time()
@@ -665,7 +611,6 @@ class pulse_sequence_wrapper(object):
         if self.parameters_dict.global_scan_options.quick_finish:
             return
         
-        #import time
         #t0 = time.time()
         from common.okfpgaservers.pulser.pulse_sequences.plot_sequence import SequencePlotter
         dds = cxn.pulser.human_readable_dds()

@@ -226,28 +226,28 @@ class scheduler(object):
             if not self.running:
                 #no running scripts or current one has no conflicts
                 should_launch = True
-                pause_running = False
+                pause_running_not_a_function = False
             elif self.is_higher_priority_than_running(priority):
                 should_launch = True
-                pause_running = True 
+                pause_running_not_a_function = True 
         if should_launch:
             self.queue.remove_object((ident,scan, priority))
             self.signals.on_queued_removed(ident)
-            self.do_launch(ident, scan, priority, pause_running)
+            self.do_launch(ident, scan, priority, pause_running_not_a_function)
             self.launch_scripts()
                 
-    def do_launch(self, ident, scan, priority, pause_running):
+    def do_launch(self, ident, scan, priority, pause_running_not_a_function):
                
-        print "pause_running: {}",pause_running, "for scan ident:",ident
+        print "pause_running: {}",pause_running_not_a_function, "for scan ident:",ident
         
         d = Deferred()    
         scan.update_params(self.parent.all_parameters())
         status = script_semaphore(ident, self.signals)
         self._add_to_running(ident, scan, d, status, priority)
-        if pause_running:
+        if pause_running_not_a_function:
             d.addCallback(self.pause_running, scan, ident)
         d.addCallback(self.launch_in_thread, scan, ident)
-        if pause_running:
+        if pause_running_not_a_function:
             d.addCallback(self.unpause_on_finish) 
         d.addCallback(self.remove_from_running, running_id = ident)
         d.addCallback(self.launch_scripts)

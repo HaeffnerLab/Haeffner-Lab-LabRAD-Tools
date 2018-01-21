@@ -425,7 +425,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
                 self.scheduler.cancel_scheduled_script(scheduled)
             for ident, scan, priority in self.scheduler.get_queue():
                 self.scheduler.remove_queued_script(ident)
-            #stop all running sequences
+            #stop all running sequencess
             for ident, name in self.scheduler.get_running():
                 self.scheduler.stop_running(ident)
             #wait for all deferred to finish

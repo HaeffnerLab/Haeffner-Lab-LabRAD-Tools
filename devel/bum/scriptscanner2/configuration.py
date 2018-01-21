@@ -21,7 +21,9 @@ class config(object):
         ('lattice.PulseSequences2.DriftTrackerRamsey', 'DriftTrackerRamsey'),
         ('lattice.PulseSequences2.CalibRotation', 'CalibRotation'),
 #         ('lattice.PulseSequences2.NotSureYet', 'NotSureYet'),
-        ('lattice.PulseSequences2.LLI_TrackPhase', 'LLI_TrackPhase'),
+        ('lattice.PulseSequences2.LLI_PhaseMeasurement', 'LLI_PhaseMeasurement'),
+        ('lattice.PulseSequences2.CompositeRabiFlopping', 'CompositeRabiFlopping'),
+        
         
         ]
     

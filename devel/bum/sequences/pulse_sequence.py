@@ -22,6 +22,7 @@ class pulse_sequence(object):
         self.replace = parameter_dict
         #self.parameters = self.fill_parameters(self.required_parameters , self.replace)
         self.parameters = parameter_dict
+        pulse_sequence.parameters = parameter_dict
         self.sequence()
         
         
@@ -115,6 +116,9 @@ class pulse_sequence(object):
                 raise Exception('sideband not found') 
         return freq
 
+    def get_params(self):
+        return self.parameters    
+    
     
     @classmethod
     def peak_guess(cls, f, p, force_guess = False):
@@ -126,7 +130,6 @@ class pulse_sequence(object):
         if (p.max() <= 0.15 and not force_guess):
             
             #raise Exception("Peak not found") Need to know how to implement this with the GUI
-            print "Peak not found!"
             return None
             
         else:
@@ -142,7 +145,6 @@ class pulse_sequence(object):
             force_guess = True
         if init_guess is None:
             guess = cls.peak_guess(f, p, force_guess)
-            print guess
             if guess is None:
                 return None
                     
@@ -189,6 +191,9 @@ class pulse_sequence(object):
         else:
             li = []
             for subcls in cls.sequences:
+                if type(subcls) == tuple:
+                    subcls = subcls[0]
+            
                 scan = subcls.scannable_params.items()
                 for item in scan:
                     s = item[1][0]
