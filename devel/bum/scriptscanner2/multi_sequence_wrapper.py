@@ -70,16 +70,25 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         cxn = labrad.connect()
         
         for seq in sequences:
-            self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[seq.__name__]
-            #self.name = seq.__name__
+            if type(seq) == tuple:
+                multisequence_params = seq[1]
+                self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[seq[0].__name__]          
+            else:
+                multisequence_params = None
+                self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[seq.__name__]
                 
             try:
-                self.window = seq.scannable_params[self.parameter_to_scan][1]
+                if type(seq) == tuple:
+                    self.window = seq[0].scannable_params[self.parameter_to_scan][1]
+                else:
+                    self.window = seq.scannable_params[self.parameter_to_scan][1]
             except:
                 self.window = 'current'    
 
             self.update_params(self.sc.all_parameters())
-            
+            if not multisequence_params is None:
+                self.set_multisequence_params(multisequence_params)
+          
             if not self.parameters_dict.Display.relative_frequencies:
             
                 if self.window == "car1":
@@ -121,11 +130,16 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         self.sc._finish_confirmed(self.ident)
             
     def run_single(self, module):
-        #import time
+        
         cxn = labrad.connect()
         pulser = cxn.pulser
         
         self.update_params(self.sc.all_parameters())
+        if type(module) == tuple:
+            multisequence_params = module[1]
+            self.set_multisequence_params(multisequence_params)
+            module = module[0]
+            
         self.setup_data_vault(cxn, module.__name__)
 
        
@@ -134,8 +148,6 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             self.use_camera = True
             self.initialize_camera(cxn)
             camera = cxn.andor_server
-            print "Using Camera"
-            print self.name
         else:
             self.use_camera = False
 
@@ -143,10 +155,6 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
 
         module.run_initial(cxn, self.parameters_dict)
         self.readout_save_iteration = 0
-        print "THIS IS THE MOUDLE RUNNING {}".format(module.__name__)
-        print "SCAN:"
-        print self.scan
-        
         
         all_data = [] # 2d numpy array
         data_x = []
@@ -155,7 +163,6 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         
 
         for x in self.scan:
-            #time.sleep(0.5)
             print " scan param.{}".format(x)
             should_stop = self.sc._pause_or_stop(self.ident)
             if should_stop: break
@@ -169,11 +176,8 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             
             repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
             if self.use_camera:
-                print " setting up kineticks"
-                print "repetitions",repetitions 
-                print "corrected repetitions", int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
                 
-                exposures = repetitions # int(self.parameters_dict.IonsOnCamera.reference_exposure_factor) * repetitions
+                exposures = repetitions 
                 camera.set_number_kinetics(exposures)
                 camera.start_acquisition()
                 
@@ -181,15 +185,12 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
             pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
-            print "done"
             pulser.stop_sequence()
             
             if not self.use_camera:
                 readout_mode=self.parameters_dict.StateReadout.readout_mode 
-                print "Using the PMT! in redout_mode:",readout_mode
                 rds = pulser.get_readout_counts()
                 ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list,readout_mode)
-                #print "646884:  ", ion_state
                 self.save_data(rds)
                 data.append(ion_state)
                 
@@ -216,16 +217,9 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
                 #useful for debugging, saving the images
                 #numpy.save('readout {}'.format(int(time.time())), images)
             x_shift=self.Scan_shift()
-            print "this is x_shift {}".format(x_shift)
-            print "this is x in submission units {}".format(x[self.submit_unit])
             
             submission = [x[self.submit_unit]+x_shift[self.submit_unit]]  # + center_frequency[self.submit_unit]]
-            print "the x submission", submission
             submission.extend(ion_state)
-            print   "the final submission", submission   
-            #data.append(submission)
-            #print "data {}".format(data)
-            # run in the loop to calculate something
             data_x.append(x[self.submit_unit] + x_shift[self.submit_unit])
             
             module.run_in_loop(cxn, self.parameters_dict, np.array(data),np.array(data_x))
@@ -276,4 +270,16 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
                 
         cxn.disconnect()
 
+
+    def set_multisequence_params(self, params):
+        for key, val in params.items():
+            d = {}
+            if "." in val:
+                d[key] = self.parameters_dict[val]
+                self.update_params(d)
+            else:
+                d[key] = val
+                self.update_params(d)
+
+            
         
