@@ -1,3 +1,5 @@
+import pyperclip
+import datetime
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from ParameterListWidget import ParameterList
@@ -58,6 +60,7 @@ class TraceList(QtGui.QListWidget):
             parametersAction = menu.addAction('Parameters')
             togglecolorsAction = menu.addAction('Toggle colors')
             fitAction = menu.addAction('Fit')
+            copy2clipboardAction = menu.addAction('copy2cliboard')
 
             action = menu.exec_(self.mapToGlobal(pos))
             
@@ -85,3 +88,18 @@ class TraceList(QtGui.QListWidget):
                 fw.show()
                 
                
+            if action == copy2clipboardAction:
+                dataset = self.parent.artists[ident].dataset.dataset_name
+                today = datetime.date.today()
+                year = str(today.year)
+                if today.month < 10:
+                    month = "0" + str(today.month)
+                else:
+                    month = str(today.month)
+                if today.day < 10:
+                    day = "0" + str(today.day)
+                else:
+                    day = str(today.day)
+                plot_num = dataset[-7:-3] + "." + dataset[-2:]
+                plot_address = "#data " + year + month + day + "/" + plot_num + "#"
+                pyperclip.copy(plot_address)
