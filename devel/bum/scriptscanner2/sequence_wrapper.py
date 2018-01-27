@@ -234,6 +234,10 @@ class pulse_sequence_wrapper(object):
         
         self.scan_submit = [pt[self.submit_unit] for pt in self.scan]
         self.scan_submit = [U(pt, self.submit_unit) for pt in self.scan_submit]
+        
+  
+        
+        
 #         print self.scan_submit
         
         #if not self.parameters_dict.Display.relative_frequencies:
@@ -289,15 +293,10 @@ class pulse_sequence_wrapper(object):
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-#                     print "1234"  
-#                     print "this is the shift for the sideband in relative mode" , shift
-#                     return shift
+
+                    return shift
                
-#         print "1234"        
-#         print line 
-#         print order
-#         print sideband 
-        
+
         if line != None:
             center_frequency = self.parameters_dict.Carriers[carrier_translation[line]] 
             if sideband != None:
@@ -306,11 +305,9 @@ class pulse_sequence_wrapper(object):
             shift=center_frequency
         else:
             shift = U(0, self.scan_unit) 
-#         print "this is the shift in the scan {}".format(shift)
+
         
         return shift
-            #self.scan_submit=[center_frequency + x for x in self.scan_submit]
-        #center_frequency = self.parameters_dict.Carriers[carrier_translation[line]]
         
     def set_scan_none(self):
         """
@@ -353,6 +350,7 @@ class pulse_sequence_wrapper(object):
     def output_size(self):
         # function that gives the number of output cols in the readout file
         mode = self.parameters_dict.StateReadout.readout_mode
+        print "MODEEE", mode
         
         if mode == 'pmt':
             return len(self.parameters_dict.StateReadout.threshold_list.split(','))
@@ -453,12 +451,12 @@ class pulse_sequence_wrapper(object):
                                'S+1/2D+5/2':'c8',
                                'S-1/2D+3/2':'c9',
                                }
+        
               
         self.update_params(self.sc.all_parameters())
         line=self.parameters_dict.Spectrum.line_selection   
         self.setup_data_vault(cxn, self.name)
         self.use_camera = False
-        
         
         if 'camera' in self.parameters_dict.StateReadout.readout_mode: 
             self.use_camera = True
@@ -475,6 +473,10 @@ class pulse_sequence_wrapper(object):
         
         data = [] 
         data_x = []
+        
+        if self.parameters_dict.ScanParam.shuffle:
+            np.random.shuffle(self.scan)
+
         
         for it,x in enumerate(self.scan):
             
@@ -546,7 +548,8 @@ class pulse_sequence_wrapper(object):
             self.module.run_in_loop(cxn, self.parameters_dict, np.array(data),np.array(data_x))
             #submit the results to the data vault
             self.dv.add(submission, context = self.data_save_context)
-                
+            
+              
            
                 
         self.module.run_finally(cxn, self.parameters_dict, data, np.array(data_x))

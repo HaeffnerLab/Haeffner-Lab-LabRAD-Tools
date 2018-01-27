@@ -27,9 +27,11 @@ class config(object):
         
         ]
     
-    global_show_params= ['DopplerCooling.doppler_cooling_amplitude_397',
+    global_show_params= ['ScanParam.shuffle',
+                         'DopplerCooling.doppler_cooling_amplitude_397',
                          'DopplerCooling.doppler_cooling_frequency_397',
-                         'DopplerCooling.duration',
+                         'DopplerCooling.doppler_cooling_duration',
+                         'DopplerCooling.pre_duration',
                          
                          'Excitation_729.channel_729',
                          'Excitation_729.bichro',

@@ -53,7 +53,7 @@ class Dataset(QtCore.QObject):
     @inlineCallbacks
     def getData(self):
         Data = yield self.data_vault.get(100, context = self.context)
-        if (self.data == None):
+        if (self.data is None):
             yield self.accessingData.acquire()
             try:
                 self.data = Data.asarray

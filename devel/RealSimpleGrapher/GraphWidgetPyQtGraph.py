@@ -30,12 +30,12 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.name = config.name
         self.show_points = config.show_points
     	self.grid_on = config.grid_on
-
+ 
         self.dataset_queue = Queue.Queue(config.max_datasets)
         
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
-
+        
     
         colors = [(47,126,243), (250,138,39), (96,233,128), (255,77,77), (255,51,153), (128,255,0), (255,241,102)]
         #colors = ['r', 'g', 'y', 'c', 'm', 'w']
@@ -47,26 +47,26 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.pw = pg.PlotWidget()
         self.coords = QtGui.QLabel('')
         self.title = QtGui.QLabel(self.name)
-	frame = QtGui.QFrame()
-	splitter = QtGui.QSplitter()
+        frame = QtGui.QFrame()
+        splitter = QtGui.QSplitter()
         splitter.addWidget(self.tracelist)
-	hbox = QtGui.QHBoxLayout()
+        hbox = QtGui.QHBoxLayout()
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.title)
         vbox.addWidget(self.pw)
         vbox.addWidget(self.coords)
-	frame.setLayout(vbox)
-	splitter.addWidget(frame)
+        frame.setLayout(vbox)
+        splitter.addWidget(frame)
         hbox.addWidget(splitter)
         self.setLayout(hbox)
         #self.legend = self.pw.addLegend()
         self.tracelist.itemChanged.connect(self.checkboxChanged)
-        self.pw.plot([],[])
+        self.pw.plot([0],[0])
         vb = self.pw.plotItem.vb
         self.img = pg.ImageItem()
         vb.addItem(self.img)
         self.pw.scene().sigMouseMoved.connect(self.mouseMoved)
-	self.pw.sigRangeChanged.connect(self.rangeChanged)
+        self.pw.sigRangeChanged.connect(self.rangeChanged)
 
     def update_figure(self):
         for ident, params in self.artists.iteritems():
@@ -89,9 +89,9 @@ class Graph_PyQtGraph(QtGui.QWidget):
         '''
         new_color = self.colorChooser.next()
         if self.show_points and not no_points:
-            line = self.pw.plot([], [], symbol='o', symbolBrush = new_color, pen = new_color, name = ident)
+            line = self.pw.plot([0], [0], symbol='o', symbolBrush = new_color, pen = new_color, name = ident)
         else:
-            line = self.pw.plot([], [], pen = new_color, name = ident)
+            line = self.pw.plot([0], [0], pen = new_color, name = ident)
 	if self.grid_on:
 	   self.pw.showGrid(x=True, y=True)
         self.artists[ident] = artistParameters(line, dataset, index, True)

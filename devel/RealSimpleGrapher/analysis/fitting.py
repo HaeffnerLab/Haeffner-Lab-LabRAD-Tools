@@ -6,10 +6,11 @@ from fit_lorentzian import Lorentzian
 from fit_gaussian import Gaussian
 from fit_linear import Linear
 from fit_rabi import Rabi
+from fit_parity import Parity
 
 class FitWrapper():
 
-    models = ['Lorentzian', 'Gaussian', 'Rabi', 'Linear']
+    models = ['Lorentzian', 'Gaussian', 'Rabi', 'Linear', 'Parity']
 
     def __init__(self, dataset, index):
         self.dataset = dataset
@@ -22,6 +23,7 @@ class FitWrapper():
             'Gaussian': Gaussian,
             'Linear': Linear,
             'Rabi': Rabi,
+            'Parity': Parity
             }
         self.model = model_dict[model]()
 

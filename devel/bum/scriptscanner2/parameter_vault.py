@@ -19,6 +19,9 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 class ParameterVault(LabradServer):
+    
+    name = "ParameterVault"
+    
     """
     Data Server for storing ongoing experimental parameters
     """

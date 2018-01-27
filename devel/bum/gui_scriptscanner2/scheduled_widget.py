@@ -39,7 +39,12 @@ class scheduled_widget(QtGui.QWidget):
         self.scheduled_duration.setRange(1, 3600)
         self.scheduled_duration.setKeyboardTracking(False)
         self.scheduled_duration.setSuffix(' sec')
-        self.scheduled_duration.setValue(self.duration)
+        #Need to debug this later, if you try to close and open gui when 
+        #scan is running, creates problem
+        try:
+            self.scheduled_duration.setValue(self.duration)
+        except:
+            self.scheduled_duration.setValue(0)
         self.cancel_button = fixed_width_button("Cancel", (75,23))
         layout.addWidget(self.id_label)
         layout.addWidget(self.name_label)

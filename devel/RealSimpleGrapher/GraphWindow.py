@@ -17,9 +17,8 @@ class GraphWindow(QtGui.QTabWidget):
         
     def initUI(self):
         reactor = self.reactor
-
         self.graphDict = {}
-	self.tabDict = {}
+        self.tabDict = {}
 
         for gc in GUIConfig.tabs:
             gcli = gc.config_list
@@ -30,14 +29,15 @@ class GraphWindow(QtGui.QTabWidget):
                 if config.isScrolling:
                     g = ScrollingGraph(config, reactor)
                 else:
+                    print "config: ", config 
                     g = Graph(config, reactor)
                 g.set_ylimits(config.ylim)
                 self.graphDict[name] = g
                 gli.append(g)
-	    widget = GridGraphWindow(gli, gc.row_list, gc.column_list, reactor)
-	    self.tabDict[name] = widget
+            widget = GridGraphWindow(gli, gc.row_list, gc.column_list, reactor)
+            self.tabDict[name] = widget
             self.addTab(widget, gc.tab)
-	    self.setMovable(True)
+            self.setMovable(True)
             
 
     def insert_tab(self, t):

@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use("Agg")
 from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
