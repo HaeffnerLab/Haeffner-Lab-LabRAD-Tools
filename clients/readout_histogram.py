@@ -43,6 +43,7 @@ class readout_histogram(QtGui.QWidget):
         layout = QtGui.QVBoxLayout()
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
+        self.fig.patch.set_facecolor("moccasin")
         self.canvas.setParent(self)
         self.axes = self.fig.add_subplot(111)
         self.axes.set_xlim(left = 0, right = 100)
@@ -75,7 +76,8 @@ class readout_histogram(QtGui.QWidget):
             self.last_hist.remove()
             #explicitly delete the refrence although not necessary
             del self.last_hist
-        self.last_hist = self.axes.bar(data[:,0], data[:,1], width = numpy.max(data[:,0])/len(data[:,0]))
+        self.last_hist = self.axes.bar(data[:,0], data[:,1], 
+										width = float(numpy.max(data[:,0])/len(data[:,0])))
         #redo the limits
         x_maximum = data[:,0].max()
         self.axes.set_xlim(left = 0)

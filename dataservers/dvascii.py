@@ -798,7 +798,7 @@ class NumpyDataset( Dataset ):
 
     def addData( self, data ):
         varcount = len( self.independents ) + len( self.dependents )
-        data = data.asarray
+        #data = data.asarray
 
         # reshape single row
         if len( data.shape ) == 1:

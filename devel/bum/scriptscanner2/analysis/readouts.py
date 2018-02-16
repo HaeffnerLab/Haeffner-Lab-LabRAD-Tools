@@ -37,6 +37,9 @@ def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
             #IPython.embed()
             #print binned
             N = float(len(readouts))
+#             print " 555"
+#             print "number of meas is ", N
+#             print readouts
             perc_excited = binned/N
             #mean = numpy.dot(binned, range(num_ions+1)) # avg number of ions dark
 

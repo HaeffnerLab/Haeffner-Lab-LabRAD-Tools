@@ -76,8 +76,15 @@ class Graph_PyQtGraph(QtGui.QWidget):
                     index = params.index
                     current_update = ds.updateCounter
                     if params.last_update < current_update:
+                        # adding the sort 
+                        
                         x = ds.data[:,0]
                         y = ds.data[:,index+1]
+                        # some scans are 
+#                         inds = np.argsort(x)
+#                         x=x[inds]
+#                         y=y[inds]
+#                         
                         params.last_update = current_update
                         params.artist.setData(x,y)
                 except: pass

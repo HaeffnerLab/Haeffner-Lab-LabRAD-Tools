@@ -139,6 +139,9 @@ class pulse_sequence(object):
     
     @classmethod
     def gaussian_fit(cls, f, p, return_all_params = False, init_guess = None):
+        if init_guess == "stop":
+            return None
+
         model = lambda x, c0, a, w: a * np.exp(-( x - c0 )**2. / w**2.)
         force_guess = False
         if return_all_params: 

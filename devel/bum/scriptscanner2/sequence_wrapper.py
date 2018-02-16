@@ -350,15 +350,16 @@ class pulse_sequence_wrapper(object):
     def output_size(self):
         # function that gives the number of output cols in the readout file
         mode = self.parameters_dict.StateReadout.readout_mode
-        print "MODEEE", mode
-        
+      
+        # Temporary fix
+        n_temp = 2
         if mode == 'pmt':
-            return len(self.parameters_dict.StateReadout.threshold_list.split(','))
+            return n_temp#len(self.parameters_dict.StateReadout.threshold_list.split(','))
         if mode == 'pmt_states':
-            return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 1
+            return n_temp+1#len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 1
         if mode == 'pmt_parity':
             # cols for the states and plus one for the parity calculation 
-            return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 2
+            return n_temp+2#len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 2
         
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)
@@ -527,7 +528,8 @@ class pulse_sequence_wrapper(object):
                 
                 if self.name == 'ReferenceImage':
                     data=images
-                    ion_state=np.ones(self.parameters_dict.IonsOnCamera.ion_number)
+                    ion_no = int(self.parameters_dict.IonsOnCamera.ion_number)
+                    ion_state=np.ones(ion_no)
                 else:
                     ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera,self.parameters_dict.StateReadout.readout_mode)
                     self.save_confidences(confidences)
