@@ -4,6 +4,9 @@ from scripting_widget import scripting_widget
 from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 from parameter_importer.script_explorer_widget import script_explorer_widget
+# from common.clients.pulse_sequence_visualizer import pulse_sequence_visualizer
+from pulse_sequence_visualizer import pulse_sequence_visualizer
+
 
 class script_scanner_gui(QtGui.QWidget):
     
@@ -355,8 +358,10 @@ class script_scanner_gui(QtGui.QWidget):
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
         control.setLayout(layout)
+        self.pulse_seq_vis = pulse_sequence_visualizer(self)
         self.script_explorer = script_explorer_widget(self)
         tab.addTab(control, 'Scan Control')
+        tab.addTab(self.pulse_seq_vis, 'Pulse Sequence Visualizer')
         tab.addTab(self.script_explorer, 'Parameter Creator')
 
         topLevelLayout.addWidget(tab)

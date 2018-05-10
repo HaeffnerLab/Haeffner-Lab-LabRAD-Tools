@@ -32,6 +32,31 @@ def is_same_laser(channel1, channel2):
 
 
 
+class dds_box():
+    def __init__(self, box, sequence, channel, i_start, i_end, offset, scale):
+        self.box = box
+        self.sequence = sequence
+        self.channel = channel
+        self.i_start = i_start
+        self.i_end = i_end
+        self.offset = offset
+        self.scale = scale
+
+    def frequency(self):
+        return self.sequence.get_dds_freqs_ampls(self.channel)[0][self.i_start]
+
+    def amplitude(self):
+        return self.sequence.get_dds_freqs_ampls(self.channel)[1][self.i_start]
+
+    def starttime(self):
+        return self.sequence.dds_dict['times'][self.i_start]
+
+    def duration(self):
+        return self.sequence.dds_dict['times'][self.i_end] - self.starttime()
+
+
+
+
 class sequence_analyzer():
     def __init__(self, human_readable_ttl, human_readable_dds, channels):
         self.raw_ttl = human_readable_ttl
@@ -43,6 +68,9 @@ class sequence_analyzer():
 
         self.ttl_channels = [key for key in self.ttl_dict.keys() if key is not 'times']
         self.dds_channels = [key for key in self.dds_dict.keys() if key is not 'times']
+
+        self.dds_boxes = []
+
 
     def _make_ttl_dict(self):
         """Takes human-readable ttl (retrieved from the pulser's 'human_readable_ttl' function) and converts it into a dictionary of  """
@@ -69,7 +97,6 @@ class sequence_analyzer():
 
     def _make_dds_dict(self):
         """"""
-
         dds_dict = {}
 
         # Create list of times when the DDS is advanced (which is a subset of the TTL times)
@@ -100,22 +127,28 @@ class sequence_analyzer():
         return dds_dict
 
 
-    def create_ttl_plot(self, channel, axis, offset, scale=1.0):
+    def create_ttl_plot(self, channel, axes, offset, scale=1.0):
         times = self.ttl_dict['times']
         ttl = self.ttl_dict[channel]
         (times_sqr, ttl_sqr) = squarify(times, ttl)
-        axis.plot(1e3*times_sqr, offset+scale*ttl_sqr, color='k', linewidth=0.5)
-        axis.annotate(channel, xy=(0, offset + 0.5*scale), horizontalalignment='right')
+        axes.plot(1e3*times_sqr, offset+scale*ttl_sqr, color='k', linewidth=0.75, label=channel)
+        axes.annotate(channel, xy=(0, offset-0.1*scale), horizontalalignment='left', verticalalignment='top', weight='bold')
 
 
     def get_dds_freqs_ampls(self, channel):
         return (self.dds_dict[channel][0], self.dds_dict[channel][1])
 
 
-    def get_freqs_while_on(self, channel):
-        (freq_array, ampl_array) = self.get_dds_freqs_ampls(channel)
+    def when_on(self, channel):
+        (_, ampl_array) = self.get_dds_freqs_ampls(channel)
         min_ampl = min(ampl_array)
-        return [freq_array[i] for i in range(len(freq_array)) if ampl_array[i]!=min_ampl]
+        return [ampl!=min_ampl for ampl in ampl_array]
+
+
+    def get_freqs_while_on(self, channel):
+        is_on = self.when_on(channel)
+        (freq_array, _) = self.get_dds_freqs_ampls(channel)
+        return [freq_array[i] for i in range(len(freq_array)) if is_on[i]]
 
 
     def normalized_freqsandamps(self, channel, other_channels=[]):
@@ -136,7 +169,7 @@ class sequence_analyzer():
         return (freqs_normlzd, amps_normlzd)
 
 
-    def create_dds_plot(self, channel, axis, offset, scale=1.0):
+    def create_dds_plot(self, channel, axes, offset, scale=1.0):
         times = self.dds_dict['times']
 
         same_laser = []
@@ -148,8 +181,8 @@ class sequence_analyzer():
         (freqs_normlzd, amps_normlzd) = self.normalized_freqsandamps(channel, other_channels=same_laser)
         (times_sqr, amps_sqr) = squarify(times, amps_normlzd)
         linecolor='k'
-        axis.plot(1e3*times_sqr, offset+amps_sqr, color=linecolor, linewidth=0.5)
-        axis.annotate(channel, xy=(0, offset + 0.5*scale), horizontalalignment='right')
+        axes.plot(1e3*times_sqr, offset+amps_sqr, color=linecolor, linewidth=0.75, label=channel)
+        axes.annotate(channel, xy=(0, offset-0.1*scale), horizontalalignment='left', verticalalignment='top', weight='bold')
 
         freq_changes = different_from_last(freqs_normlzd)
         amp_changes = different_from_last(amps_normlzd)
@@ -161,16 +194,17 @@ class sequence_analyzer():
             i_curr = change_indices[i_ch]
             i_next = change_indices[i_ch+1]
             if amps_normlzd[i_curr]:
-                axis.fill_between([1e3*times[i_curr], 1e3*times[i_next]], [offset, offset], [offset+scale*amps_normlzd[i_curr], offset+scale*amps_normlzd[i_curr]], facecolor=cmap(freqs_normlzd[i_curr]))
+                box = axes.fill_between([1e3*times[i_curr], 1e3*times[i_next]], [offset, offset], [offset+scale*amps_normlzd[i_curr], offset+scale*amps_normlzd[i_curr]], facecolor=cmap(freqs_normlzd[i_curr]))
+                self.dds_boxes.append(dds_box(box, self, channel, i_curr, i_next, offset, scale))
 
 
-    def create_full_plot(self, axis):
+    def create_full_plot(self, axes):
         offset = 0
         for channel in self.ttl_channels:
-            self.create_ttl_plot(channel, axis, offset, scale=0.5)
+            self.create_ttl_plot(channel, axes, offset, scale=0.5)
             offset += 0.75
         offset += 0.5
         offset = np.ceil(offset)
         for channel in self.dds_channels:
-            self.create_dds_plot(channel, axis, offset)
+            self.create_dds_plot(channel, axes, offset)
             offset += 1.5
