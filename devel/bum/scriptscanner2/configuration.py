@@ -24,7 +24,7 @@ class config(object):
         ('lattice.PulseSequences2.LLI_PhaseMeasurement', 'LLI_PhaseMeasurement'),
         ('lattice.PulseSequences2.CompositeRabiFlopping', 'CompositeRabiFlopping'),
         ('lattice.PulseSequences2.RabiFlopping_2ions', 'RabiFlopping_2ions'),
-        ('lattice.PulseSequences2.RabiFlopping_2ions', 'RabiFlopping_2ions_test'),
+        
         
         
         ]
