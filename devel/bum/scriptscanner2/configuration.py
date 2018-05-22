@@ -2,7 +2,7 @@ class config(object):
 
     #list in the format (import_path, class_name)
     sequences = [
-        #('common.devel.bum.sequences.example', 'Sequence'),
+        ('common.devel.bum.sequences.example', 'Sequence'),
         ('lattice.PulseSequences2.RabiFlopping', 'RabiFlopping'),
         ('lattice.PulseSequences2.RabiFloppingManual', 'RabiFloppingManual'),
         ('lattice.PulseSequences2.Spectrum', 'Spectrum'),
@@ -24,53 +24,51 @@ class config(object):
         ('lattice.PulseSequences2.LLI_PhaseMeasurement', 'LLI_PhaseMeasurement'),
         ('lattice.PulseSequences2.CompositeRabiFlopping', 'CompositeRabiFlopping'),
         ('lattice.PulseSequences2.RabiFlopping_2ions', 'RabiFlopping_2ions'),
+        # ('sqip.Pulsesequence2.RabiFloppingManual', 'RabiFloppingManual'),
+
         
         
         ]
     
-    global_show_params= ['ScanParam.shuffle',
-                         'DopplerCooling.doppler_cooling_amplitude_397',
-                         'DopplerCooling.doppler_cooling_frequency_397',
-                         'DopplerCooling.doppler_cooling_duration',
-                         'DopplerCooling.pre_duration',
+    global_show_params= [
+                        # 'ScanParam.shuffle',
+                        #  'DopplerCooling.doppler_cooling_amplitude_397',
+                        #  'DopplerCooling.doppler_cooling_frequency_397',
+                        #  'DopplerCooling.doppler_cooling_duration',
+                        #  'DopplerCooling.pre_duration',
                          
-                         'Excitation_729.channel_729',
-                         'Excitation_729.bichro',
+                        #  'Excitation_729.channel_729',
+                        #  'Excitation_729.bichro',
                          
-                         'OpticalPumping.line_selection',
+                        #  'OpticalPumping.line_selection',
                          
-                         'OpticalPumpingAux.aux_op_line_selection',
+                        #  'OpticalPumpingAux.aux_op_line_selection',
                          
-                         'Heating.background_heating_time',
+                        #  'Heating.background_heating_time',
                          
-                         'SidebandCooling.selection_sideband',
-                         'SidebandCooling.order',
-                         'SidebandCooling.line_selection',
-                         'SidebandCooling.sideband_cooling_amplitude_854',
+                        #  'SidebandCooling.selection_sideband',
+                        #  'SidebandCooling.order',
+                        #  'SidebandCooling.line_selection',
+                        #  'SidebandCooling.sideband_cooling_amplitude_854',
                          
-                         'SequentialSBCooling.channel_729',
-                         'SequentialSBCooling.selection_sideband',                       
-                         'SequentialSBCooling.order',
-                         'SequentialSBCooling.enable',
+                        #  'SequentialSBCooling.channel_729',
+                        #  'SequentialSBCooling.selection_sideband',                       
+                        #  'SequentialSBCooling.order',
+                        #  'SequentialSBCooling.enable',
                          
                          
-                         'StatePreparation.channel_729',
-                         'StatePreparation.aux_optical_pumping_enable',
-                         'StatePreparation.optical_pumping_enable',
-                         'StatePreparation.sideband_cooling_enable',
+                        #  'StatePreparation.channel_729',
+                        #  'StatePreparation.aux_optical_pumping_enable',
+                        #  'StatePreparation.optical_pumping_enable',
+                        #  'StatePreparation.sideband_cooling_enable',
 
-                         'StateReadout.readout_mode',
-                         'StateReadout.state_readout_amplitude_397',
-                         'StateReadout.state_readout_frequency_397',
-                         'StateReadout.threshold_list',
-                         #'StateReadout.use_camera_for_readout',
+                        #  'StateReadout.readout_mode',
+                        #  'StateReadout.state_readout_amplitude_397',
+                        #  'StateReadout.state_readout_frequency_397',
+                        #  'StateReadout.threshold_list',
+                        #  #'StateReadout.use_camera_for_readout',
                          
-                         'TrapFrequencies.aux_axial',
-                         'TrapFrequencies.aux_radial',
-                         'TrapFrequencies.axial_frequency',
-                         'TrapFrequencies.radial_frequency_1',
-                         'TrapFrequencies.radial_frequency_2',
-                         'TrapFrequencies.rf_drive_frequency'
+                      
                                                   
                        ]
 
