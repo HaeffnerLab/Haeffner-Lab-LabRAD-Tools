@@ -4,23 +4,21 @@ from model import Model, ParameterInfo
 import numpy as np
 
 class Parity(Model):
-
+    not_checkable = ["freq"]
+    
     def __init__(self):
         self.parameters = {
             'amp': ParameterInfo('amp', 0, self.guess_amp),
             'phase': ParameterInfo('phase', 1, self.guess_phase),
-            'offset': ParameterInfo('offset', 2, self.guess_offset)
+            'offset': ParameterInfo('offset', 2, self.guess_offset),
+            'freq': ParameterInfo('freq', 3, self.guess_freq),
+
             }
 
     def model(self, x, p):
-        '''
-        Sine fit
-
-        '''
-        a = p[0]
-        b = p[1]
-        c = p[2]
-        return np.abs(a) * np.sin( np.deg2rad(2*x-b) ) + c
+        '''Sine fit'''
+        a, b, c, d = p
+        return np.abs(a) * np.sin(d * np.deg2rad(x - b)) + c
 
     def guess_amp(self, x, y):
         max_index = np.argmax(y)
@@ -32,3 +30,6 @@ class Parity(Model):
 
     def guess_offset(self, x, y):
         return 0.0
+
+    def guess_freq(self, x, y):
+        return 2.0

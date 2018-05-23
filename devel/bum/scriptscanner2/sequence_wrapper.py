@@ -352,14 +352,14 @@ class pulse_sequence_wrapper(object):
         mode = self.parameters_dict.StateReadout.readout_mode
       
         # Temporary fix
-        n_temp = 2
+        # n_temp = 2
         if mode == 'pmt':
-            return n_temp#len(self.parameters_dict.StateReadout.threshold_list.split(','))
+            return len(self.parameters_dict.StateReadout.threshold_list.split(','))
         if mode == 'pmt_states':
-            return n_temp+1#len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 1
+            return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 1
         if mode == 'pmt_parity':
             # cols for the states and plus one for the parity calculation 
-            return n_temp+2#len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 2
+            return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 2
         
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)

@@ -24,6 +24,9 @@ class config(object):
         ('lattice.PulseSequences2.LLI_PhaseMeasurement', 'LLI_PhaseMeasurement'),
         ('lattice.PulseSequences2.CompositeRabiFlopping', 'CompositeRabiFlopping'),
         ('lattice.PulseSequences2.RabiFlopping_2ions', 'RabiFlopping_2ions'),
+        ('lattice.PulseSequences2.LLI_PhaseMeasurement_4ions', 'LLI_PhaseMeasurement_4ions'),
+        ('lattice.PulseSequences2.tester', "tester"),
+        
         
         
         ]
@@ -58,6 +61,8 @@ class config(object):
                          'StatePreparation.aux_optical_pumping_enable',
                          'StatePreparation.optical_pumping_enable',
                          'StatePreparation.sideband_cooling_enable',
+                         'StatePreparation.precooling_sideband_enable',
+                         
 
                          'StateReadout.readout_mode',
                          'StateReadout.state_readout_amplitude_397',

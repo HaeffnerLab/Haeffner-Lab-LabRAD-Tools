@@ -199,15 +199,23 @@ class ParameterVault(LabradServer):
     @setting(51, "Get Parameter", collection = 's', parameter_name = 's', checked = 'b', returns = ['?'])
     def getParameter(self, c, collection, parameter_name, checked = True):
         """Get Parameter Value"""
+        print("qwertyuiop line 202")
         key = (collection, parameter_name)
-               
+        
+        print("qwertyuiop line 205")       
         if key not in self.parameters.keys():
+            print("qwertyuiop line 207")
             raise Exception ("Parameter Not Found")
+        print("qwertyuiop line 209")
         result = self.parameters[key]
+        print("qwertyuiop line 211")
         if checked:
+            print("qwertyuiop line 213")
             result = self.check_parameter(key, result)
-            
+        
+        print("qwertyuiop line 216")    
         t,item = self.parameters[key]
+        print("qwertyuiop line 218")
         return result
 
     @setting(52, 'New Parameter', collection = 's', parameter_name = 's', value = '?', returns = '')

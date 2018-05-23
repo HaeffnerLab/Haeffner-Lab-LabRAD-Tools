@@ -79,11 +79,14 @@ class FitWindow(QtGui.QWidget):
 
             self.row_info_dict[p] = RowInfo(vary_select, manual_value, fitted_value)
 
-            vary_select.setFlags(QtCore.Qt.ItemIsUserCheckable|QtCore.Qt.ItemIsEnabled)
-            if self.fw.getVary(p):
-                vary_select.setCheckState(QtCore.Qt.Checked)
+            if p not in self.fw.not_checkable:
+                vary_select.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                if self.fw.getVary(p):
+                    vary_select.setCheckState(QtCore.Qt.Checked)
+                else:
+                    vary_select.setCheckState(QtCore.Qt.Unchecked)
             else:
-                vary_select.setCheckState(QtCore.Qt.Unchecked)
+                vary_select.setFlags(vary_select.flags() | ~QtCore.Qt.ItemIsEditable)
 
             manualValue = self.fw.getManualValue(p)
             manual_value.setDecimals(6)

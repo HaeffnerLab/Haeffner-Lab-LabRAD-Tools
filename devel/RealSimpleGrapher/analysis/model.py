@@ -8,6 +8,7 @@ class ParameterInfo():
         self.index = index
 
 class Model():
+    not_checkable = []
 
     def __init__(self):
         pass
