@@ -82,9 +82,13 @@ class Control(object):
         except: self.multipoles = hc.default_multipoles
         try: self.position = int(head[1].split('osition:')[1])
         except: self.position = 0
+        print self.position
         self.num_columns = len(body[0])
         print self.num_columns
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
+        print self.multipole_matrix
+        self.position_vector = body[-1]
+        print self.position_vector
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
 
@@ -95,7 +99,9 @@ class Control(object):
             for n in range(self.num_columns):
                 for m in self.multipoles:
                     self.voltage_matrix[e][n] += self.multipole_matrix[e][m][n] * self.multipole_vector[m]
-        if self.num_columns > 1: self.interpolateVoltageMatrix()
+        # print self.voltage_matrix
+        # if self.num_columns > 1: self.interpolateVoltageMatrix()
+        # print self.voltage_matrix
      
     def interpolateVoltageMatrix(self):
         # fix step size here
@@ -105,8 +111,11 @@ class Control(object):
         splineFit = {elec: UniSpline(range(self.num_columns) , self.voltage_matrix[elec], s=0) for elec in hc.elec_dict.keys()}
         self.voltage_matrix = {elec: splineFit[elec](partition) for elec in hc.elec_dict.keys()}
 
-    def getVoltages(self): 
-        return [(e, self.voltage_matrix[e][self.position]) for e in hc.elec_dict.keys()]
+    def getVoltages(self):
+        # if self.num_columns
+        pindex = self.position_vector.index(str(self.position))
+        # print pindex
+        return [(e, self.voltage_matrix[e][pindex]) for e in hc.elec_dict.keys()]
 
     def getShuttleVoltages(self, new_position, step_size, duration, loop, loop_delay, overshoot):
         old_position = self.position
@@ -459,6 +468,23 @@ class DACServer(LabradServer):
     def getQueue(self,c):
         return self.queue.current_set
 
+    @setting(18, "Set Multipole Position", position='i')
+    def setMultipolePosition(self, c, position):
+        """
+        Set new position of multipoles.
+        """
+        self.control.position = position
+        print 'Server: ' + str(self.control.position)
+        # self.control.populateVoltageMatrix(multipole_vector)
+        yield self.setIndividualAnalogVoltages(c, self.control.getVoltages())
+        # Update registry
+        if self.control.Cfile_name:
+            yield self.registry.cd(self.registry_path + [self.control.Cfile_name], True)
+            yield self.registry.set('position', position)
+
+    @setting(19, "Get Position Vector", returns='*s')
+    def getPositionVector(self, c):
+        return self.control.position_vector
 
     def initContext(self, c):
         self.listeners.add(c.ID)

@@ -110,12 +110,12 @@ class SequencePlotter():
         pyplot.plot(x, y)
         pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right')
         self.offset += 4
-        x, y = self.getDDSCoordinates(advance, freqs)
-        y = np.array(y) / 250.0 + self.offset #normalizes the amplitude 0 to 250 to height between 0 and 3
-        pyplot.plot(x, y, label = 'DDS Freq' + channel )
-        label =  'DDS: ' + channel + ' Frequency '
-        pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right')
-        self.offset += 4
+        # x, y = self.getDDSCoordinates(advance, freqs)
+        # y = np.array(y) / 250.0 + self.offset #normalizes the amplitude 0 to 250 to height between 0 and 3
+        # pyplot.plot(x, y, label = 'DDS Freq' + channel )
+        # label =  'DDS: ' + channel + ' Frequency '
+        # pyplot.annotate(label, xy = (0,  self.offset + 1.5), horizontalalignment = 'right')
+        # self.offset += 4
     
     def getDDSCoordinates(self, advance, ampls):
         x = [0]

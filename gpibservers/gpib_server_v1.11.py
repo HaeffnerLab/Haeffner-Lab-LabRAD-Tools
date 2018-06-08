@@ -19,7 +19,9 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from labrad.units import WithUnit
-from pyvisa import visa, vpp43
+from pyvisa.legacy import vpp43
+import visa
+
 
 """
 ### BEGIN NODE INFO
