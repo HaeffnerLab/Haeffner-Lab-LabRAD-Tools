@@ -52,6 +52,7 @@ class script_scanner_gui(QtGui.QWidget):
         yield self.populateExperiments()
         yield self.populateParameters()
         yield self.setupListenersScriptScanner()
+        yield self.setupListenersParameterVault()
         try:
             yield self.cxn.get_server('ScriptScanner')
             self.disable(False)

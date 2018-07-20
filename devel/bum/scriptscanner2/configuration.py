@@ -25,7 +25,11 @@ class config(object):
         ('lattice.PulseSequences2.CompositeRabiFlopping', 'CompositeRabiFlopping'),
         ('lattice.PulseSequences2.RabiFlopping_2ions', 'RabiFlopping_2ions'),
         ('lattice.PulseSequences2.LLI_PhaseMeasurement_4ions', 'LLI_PhaseMeasurement_4ions'),
-        ('lattice.PulseSequences2.tester', "tester"),
+        # ('lattice.PulseSequences2.tester', "tester"),
+        ('lattice.PulseSequences2.MotionAnalysisSpectrum', "MotionAnalysisSpectrum"),
+        ('lattice.PulseSequences2.MotionAnalysisRamsey', "MotionAnalysisRamsey"),
+
+        
         
         
         
@@ -33,6 +37,7 @@ class config(object):
         ]
     
     global_show_params= ['ScanParam.shuffle',
+                        'global_scan_options.quick_finish',
                          'DopplerCooling.doppler_cooling_amplitude_397',
                          'DopplerCooling.doppler_cooling_frequency_397',
                          'DopplerCooling.doppler_cooling_duration',

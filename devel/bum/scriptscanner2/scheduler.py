@@ -223,8 +223,8 @@ class scheduler(object):
         else:
             should_launch = False
             non_conflicting = self.get_non_conflicting()
-            if not self.running:
-                #no running scripts or current one has no conflicts
+            if not [s for s in self.running.itervalues() if s.status.status != 'Paused']:
+                #no scripts are running and unpaused, or current one has no conflicts
                 should_launch = True
                 pause_running_not_a_function = False
             elif self.is_higher_priority_than_running(priority):

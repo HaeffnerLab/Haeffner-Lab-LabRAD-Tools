@@ -52,6 +52,7 @@ class ParameterVault(LabradServer):
     @inlineCallbacks
     def load_parameters(self):
         """Recursively add all parameters to the dictionary."""
+        self.parameters_to_save = set()
         yield self._addParametersInDirectory(self.registryDirectory, [])
 
     @inlineCallbacks
@@ -91,11 +92,15 @@ class ParameterVault(LabradServer):
         """save the latest parameters into registry."""
         regDir = self.registryDirectory
         for key, value in self.parameters.iteritems():
-            key = list(key)
-            parameter_name = key.pop()
-            fullDir = regDir + key
-            yield self.client.registry.cd(fullDir)
-            yield self.client.registry.set(parameter_name, value)
+            if key in self.parameters_to_save:
+                key = list(key)
+                parameter_name = key.pop()
+                fullDir = regDir + key
+                yield self.client.registry.cd(fullDir)
+                yield self.client.registry.set(parameter_name, value)
+
+        print "Successfully saved parameters:", self.parameters_to_save
+        self.parameters_to_save = set()
 
     @inlineCallbacks
     def save_single_parameter(self, collection, parameter_name, value):
@@ -192,30 +197,21 @@ class ParameterVault(LabradServer):
             
             self.parameters[key] = self._save_full(key, value)
             
-            
-        notified = self.getOtherListeners(c)
+        self.parameters_to_save.add(key)
+        notified = self.getOtherListeners(c)        
         self.onParameterChange((key[0], key[1]), notified)
 
     @setting(51, "Get Parameter", collection = 's', parameter_name = 's', checked = 'b', returns = ['?'])
     def getParameter(self, c, collection, parameter_name, checked = True):
         """Get Parameter Value"""
-        print("qwertyuiop line 202")
-        key = (collection, parameter_name)
-        
-        print("qwertyuiop line 205")       
+        key = (collection, parameter_name)        
         if key not in self.parameters.keys():
-            print("qwertyuiop line 207")
             raise Exception ("Parameter Not Found")
-        print("qwertyuiop line 209")
         result = self.parameters[key]
-        print("qwertyuiop line 211")
         if checked:
-            print("qwertyuiop line 213")
             result = self.check_parameter(key, result)
         
-        print("qwertyuiop line 216")    
         t,item = self.parameters[key]
-        print("qwertyuiop line 218")
         return result
 
     @setting(52, 'New Parameter', collection = 's', parameter_name = 's', value = '?', returns = '')

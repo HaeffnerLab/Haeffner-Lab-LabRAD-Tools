@@ -1,10 +1,12 @@
 from twisted.internet.defer import inlineCallbacks, DeferredLock, Deferred
+from threading import Lock
 from signals import Signals
 
 class script_semaphore(object):
     '''class for storing information about runtime behavior script'''
     def __init__(self, ident, signals):
-        self.pause_lock = DeferredLock()
+        #self.pause_lock = DeferredLock()
+        self.pause_lock = Lock()
         self.pause_requests = []
         self.continue_requests = []
         self.already_called_continue = False
@@ -19,6 +21,7 @@ class script_semaphore(object):
     
     def set_percentage(self, perc):
         if not 0.0 <= perc <= 100.0: raise Exception ("Incorrect Percentage of Completion")
+        print 'percentage complete =', perc
         self.percentage_complete = perc
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
     
@@ -30,7 +33,7 @@ class script_semaphore(object):
         '''
         gets called by the script to pause.
         '''
-        if self.pause_lock.locked:
+        if self.pause_lock.locked():
             self.status = 'Paused'
             self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
             self.signals.on_running_script_paused((self.ident, True))
@@ -43,7 +46,7 @@ class script_semaphore(object):
         self.pause_lock.acquire()
         self.pause_lock.release()
         print 'script proceeding'
-        if self.status == 'Paused':
+        if self.status == 'Paused' or self.status == 'Pausing':
             self.status = 'Running'
             self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
             self.signals.on_running_script_paused((self.ident, False))
@@ -57,7 +60,7 @@ class script_semaphore(object):
         '''
         gets called by the script to pause.
         '''
-        if self.pause_lock.locked:
+        if self.pause_lock.locked():
             self.status = 'Paused'
             self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
             self.signals.on_running_script_paused((self.ident, True))
@@ -84,16 +87,16 @@ class script_semaphore(object):
         self.status = 'Stopping'
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
         #if was paused, unpause:
-        if self.pause_lock.locked:
+        if self.pause_lock.locked():
             self.pause_lock.release()
     
     def set_pausing(self, should_pause):
         '''if asking to pause, returns a deferred which is fired when script actually paused'''
         if should_pause:
             request = Deferred()
-            print 'made request', request
+            print 'made pause request', request
             self.pause_requests.append(request)
-            if not self.pause_lock.locked:
+            if not self.pause_lock.locked():
                 #if not already paused
                 self.pause_lock.acquire()#immediately returns a deferred that we don't use
                 self.status = 'Pausing'
@@ -102,9 +105,10 @@ class script_semaphore(object):
             else:
                 print 'not acquiring because locked'
         else:
-            if not self.pause_lock.locked:
+            if not self.pause_lock.locked():
                 raise Exception ("Trying to unpause script that was not paused")
             request = Deferred()
+            print 'made continue request', request
             self.continue_requests.append(request)
 #            print 'releasing the lock!'
             self.pause_lock.release()
