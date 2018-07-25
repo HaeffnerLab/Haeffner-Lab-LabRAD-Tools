@@ -277,7 +277,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             # for the pause to complete before trying to unpause this one
             scan = self.scheduler.running.get(sequence_ID, None)
             pause_requests = self.scheduler.pause_running(None, scan, sequence_ID)
-            print 'waiting for pauses to complete:', d
+            print 'waiting for pauses to complete:', pause_requests
             def continue_sequence(result):
                 print 'continuing sequence after pauses have completed'
                 status.set_pausing(False)

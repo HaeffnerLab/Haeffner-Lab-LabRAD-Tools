@@ -468,7 +468,7 @@ class pulse_sequence_wrapper(object):
 
                     
         # sequence initializing hardware (dds_cw or mirrors?)    
-        self.module.run_initial(cxn, self.parameters_dict)
+        # self.module.run_initial(cxn, self.parameters_dict)
         
         self.readout_save_iteration = 0
         
@@ -478,15 +478,23 @@ class pulse_sequence_wrapper(object):
         if self.parameters_dict.ScanParam.shuffle:
             np.random.shuffle(self.scan)
 
-        
+        num_scan_points = len(self.scan)
         for it,x in enumerate(self.scan):
             
+
+
             should_stop = self.sc._pause_or_stop(ident)
             if should_stop: break
             update = {self.parameter_to_scan: x}
             ## needs the two lines of update to ensure the proper updating!!!
             self.update_params(update)
             self.update_scan_param(update)
+
+            if it == 0:
+                # sequence initializing hardware (dds_cw or mirrors?)    
+                self.module.run_initial(cxn, self.parameters_dict)
+
+
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
             print "programmed pulser"
@@ -550,10 +558,11 @@ class pulse_sequence_wrapper(object):
             self.module.run_in_loop(cxn, self.parameters_dict, np.array(data),np.array(data_x))
             #submit the results to the data vault
             self.dv.add(submission, context = self.data_save_context)
-            
-              
+
+            progress = 100.0 * ((it+1.0) / num_scan_points)
+            self.sc.sequence_set_progress(None, ident, progress)
            
-                
+        self.sc.sequence_set_progress(None, ident, 100.0)
         self.module.run_finally(cxn, self.parameters_dict, data, np.array(data_x))
 
         self._finalize(cxn) 
