@@ -47,7 +47,7 @@ class ScriptScanner(Signals, LabradServer):
         loads script information from the configuration file
         '''
         for import_path, class_name in config.scripts:
-            #print import_path, class_name
+            # print import_path, class_name
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
