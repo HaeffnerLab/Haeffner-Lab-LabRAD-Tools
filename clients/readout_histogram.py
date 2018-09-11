@@ -110,7 +110,9 @@ class readout_histogram(QtGui.QWidget):
             line.remove()
         self.thresholdLines = []
         try:
-            thresholdVals = threshold.split(',')
+            
+            thresholdVals = str(threshold).split(',')
+            
             for threshold in thresholdVals:
                 self.thresholdLines.append(self.axes.axvline(float(threshold), ymin=0.0, ymax=100.0, linewidth=3.0, color = 'r', label = 'Threshold'))
         except Exception as e:

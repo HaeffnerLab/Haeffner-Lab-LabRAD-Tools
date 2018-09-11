@@ -15,6 +15,7 @@ class config(object):
         ('lattice.PulseSequences2.Parity', 'Parity'),
         ('lattice.PulseSequences2.Ramsey', 'Ramsey'),
         ('lattice.PulseSequences2.RamseyLocal', 'RamseyLocal'),
+        ('lattice.PulseSequences2.RamseyGlobalEcho', 'RamseyGlobalEcho'),
         ('lattice.PulseSequences2.RamseyLocalHanEcho', 'RamseyLocalHanEcho'),
         ('lattice.PulseSequences2.LLI_StatePreparation', 'LLI_StatePreparation'),
         #('lattice.PulseSequences2.CalibAxialLines', 'CalibAxialLines'),
@@ -28,8 +29,10 @@ class config(object):
         # ('lattice.PulseSequences2.tester', "tester"),
         ('lattice.PulseSequences2.MotionAnalysisSpectrum', "MotionAnalysisSpectrum"),
         ('lattice.PulseSequences2.MotionAnalysisRamsey', "MotionAnalysisRamsey"),
-
-        
+        ('lattice.PulseSequences2.MotionAnalysisSpectrumMulti', "MotionAnalysisSpectrumMulti"),
+        #('lattice.PulseSequences2.MolmerSorensenGateWithEcho', 'MolmerSorensenGateWithEcho'),
+        # ('lattice.PulseSequences2.MolmerSorensenGateDynamicalDecoupling', 'MolmerSorensenGateDynamicalDecoupling'),
+        ('lattice.PulseSequences2.RamseyGlobalACStarkShiftEcho', 'RamseyGlobalACStarkShiftEcho'),
         
         
         

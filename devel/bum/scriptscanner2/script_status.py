@@ -127,7 +127,7 @@ class script_semaphore(object):
         yield self.pause_lock.acquire()
         self.pause_lock.release()
         print 'script proceeding'
-        if self.status == 'Paused':
+        if self.status == 'Paused' or self.status == 'Pausing':
             self.status = 'Running'
             self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
             self.signals.on_running_script_paused((self.ident, False))

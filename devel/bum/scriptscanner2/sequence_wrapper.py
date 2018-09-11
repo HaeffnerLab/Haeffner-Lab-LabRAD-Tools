@@ -125,9 +125,10 @@ class pulse_sequence_wrapper(object):
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-                          
-        
-                    
+            elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
+                # MotionAnalysisSpectrum is always on the 1st-order sideband
+                sideband = self.parameters_dict.Motion_Analysis.sideband_selection
+                shift = self.parameters_dict.TrapFrequencies[sideband]
                 
            
    
@@ -184,6 +185,7 @@ class pulse_sequence_wrapper(object):
             else:
                 update_dict[key] = update[key]
         if self.dt is not None:
+            # connect to drift tracker to get the extrapolated lines
             carriers = yield self.dt.get_current_lines()
             for c, f in carriers:
                 carriers_dict[carrier_translation[c]] = f
@@ -293,8 +295,12 @@ class pulse_sequence_wrapper(object):
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-
                     return shift
+            elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
+                # MotionAnalysisSpectrum is always on the 1st-order sideband
+                sideband = self.parameters_dict.Motion_Analysis.sideband_selection
+                shift = self.parameters_dict.TrapFrequencies[sideband]
+                return shift
                
 
         if line != None:
@@ -482,8 +488,9 @@ class pulse_sequence_wrapper(object):
         for it,x in enumerate(self.scan):
             
 
-
+            # print "running sequence wrapper 1"
             should_stop = self.sc._pause_or_stop(ident)
+            # print "running sequence wrapper 1"
             if should_stop: break
             update = {self.parameter_to_scan: x}
             ## needs the two lines of update to ensure the proper updating!!!
@@ -564,6 +571,7 @@ class pulse_sequence_wrapper(object):
            
         self.sc.sequence_set_progress(None, ident, 100.0)
         self.module.run_finally(cxn, self.parameters_dict, data, np.array(data_x))
+        self.sc.save_parameters()
 
         self._finalize(cxn) 
     
