@@ -5,8 +5,10 @@ class config(object):
     
     fit_order = 1 #order of polynomial for fitting
     
-    keep_line_center_measurements = 24 * 3600
-    keep_B_measurements = 0.5*3600 #seconds
+    default_keep_line_center_measurements_local = 100*60
+    default_keep_line_center_measurements_global = 100*60
+    default_keep_B_measurements_local = 100*60
+    auto_update_rate = 10 #'s'
     
     #data vault saving configuration
     save_folder = ['', 'Drift_Tracking', 'Cavity729']
