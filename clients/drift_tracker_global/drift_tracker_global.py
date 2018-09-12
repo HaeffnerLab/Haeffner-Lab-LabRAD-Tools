@@ -437,7 +437,8 @@ class drift_tracker(QtGui.QWidget):
         if self.cxn is None:
             from common.clients.connection import connection
             self.cxn = connection()
-            yield self.cxn.connect(password = '')
+            yield self.cxn.connect('192.168.169.86', password = '', tls_mode = 'off')
+
         self.context = yield self.cxn.context()
         try:
             yield self.subscribe_tracker()
@@ -450,6 +451,9 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def subscribe_tracker(self):
         server = yield self.cxn.get_server('SD Tracker Global')
+
+        # s=yield server.get_clients()
+        # print s
         yield server.signal__new_fit(c.ID, context = self.context)
         yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
         yield self.initialize_layout()
