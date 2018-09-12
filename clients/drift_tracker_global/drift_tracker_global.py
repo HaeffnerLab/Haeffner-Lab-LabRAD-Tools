@@ -493,9 +493,10 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def on_new_fit(self, x, y):
-        self.global_checkbox.isChecked()
+        print "1234"
         yield self.update_lines()
         yield self.update_fit(self.global_checkbox.isChecked())
+        returnValue(None)
     
     @inlineCallbacks
     def update_fit(self, bool_center_global = False):
