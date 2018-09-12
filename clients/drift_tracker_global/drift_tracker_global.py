@@ -493,7 +493,6 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def on_new_fit(self, x, y):
-        print "1234"
         yield self.update_lines()
         yield self.update_fit(self.global_checkbox.isChecked())
         returnValue(None)
@@ -615,6 +614,7 @@ class drift_tracker(QtGui.QWidget):
             lines = yield server.get_current_lines(client_name)
         except Exception as e:
             #no lines available
+            print "Exception"
             self.update_spectrum(None)
             self.update_listing(None)
             returnValue(None)
@@ -756,7 +756,7 @@ class drift_tracker(QtGui.QWidget):
                 display_name = self.favorites.get(linename, linename)
                 label = self.spec.annotate(display_name, xy = (freq['MHz'], 0.9 - i * 0.7 / num), xycoords = 'data', fontsize = 13.0)
                 self.spectral_lines.append(label)
-            self.spec.set_xlim(left = srt[0][1].value - 1.0, right = srt[-1][1].value + 1.0)
+            self.spec.set_xlim(left = srt[0][1]['MHz'] - 1.0, right = srt[-1][1]['MHz'] + 1.0)
             self.spec_canvas.draw()
 
     def update_listing(self, lines): ##########################33
