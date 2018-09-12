@@ -454,8 +454,8 @@ class drift_tracker(QtGui.QWidget):
 
         # s=yield server.get_clients()
         # print s
-        yield server.signal__new_fit(c.ID, context = self.context)
-        yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
+        yield server.signal__new_fit(c.ID)
+        yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID)
         yield self.initialize_layout()
         self.subscribed = True
     
@@ -463,9 +463,9 @@ class drift_tracker(QtGui.QWidget):
     def reinitialize_tracker(self):
         self.setDisabled(False)
         server = yield self.cxn.get_server('SD Tracker Global')
-        yield server.signal__new_fit(c.ID, context = self.context)
+        yield server.signal__new_fit(c.ID)
         if not self.subscribed:
-            yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
+            yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID)
             yield self.initialize_layout()
             self.subscribed = True
 
