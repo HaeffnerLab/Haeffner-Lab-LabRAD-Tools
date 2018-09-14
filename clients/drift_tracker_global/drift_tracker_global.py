@@ -118,15 +118,19 @@ class drift_tracker(QtGui.QWidget):
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
         self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites, initial_selection = self.initial_selection, initial_values = self.initial_values)
         
+        self.last_B = 0.0
         self.Bfield_entry = QtGui.QDoubleSpinBox()
         self.Bfield_entry.setRange(0.0, 10000.0)
         self.Bfield_entry.setDecimals(6)
         self.Bfield_entry.setSuffix(' mGauss')
+        self.Bfield_entry.setValue(self.last_B)
 
+        self.last_center = 0.0
         self.linecenter_entry = QtGui.QDoubleSpinBox()
         self.linecenter_entry.setRange(-50000.0, 0.0)
         self.linecenter_entry.setDecimals(6)
         self.linecenter_entry.setSuffix(' kHz')
+        self.linecenter_entry.setValue(self.last_center)
         
         self.entry_Bfield_and_center_button = QtGui.QPushButton("Submit B and Line Center")
 
@@ -437,8 +441,7 @@ class drift_tracker(QtGui.QWidget):
         if self.cxn is None:
             from common.clients.connection import connection
             self.cxn = connection()
-            yield self.cxn.connect('192.168.169.86', password = '', tls_mode = 'off')
-
+            yield self.cxn.connect(password = '')
         self.context = yield self.cxn.context()
         try:
             yield self.subscribe_tracker()
@@ -451,11 +454,8 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def subscribe_tracker(self):
         server = yield self.cxn.get_server('SD Tracker Global')
-
-        # s=yield server.get_clients()
-        # print s
-        yield server.signal__new_fit(c.ID)
-        yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID)
+        yield server.signal__new_fit(c.ID, context = self.context)
+        yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
         yield self.initialize_layout()
         self.subscribed = True
     
@@ -463,9 +463,9 @@ class drift_tracker(QtGui.QWidget):
     def reinitialize_tracker(self):
         self.setDisabled(False)
         server = yield self.cxn.get_server('SD Tracker Global')
-        yield server.signal__new_fit(c.ID)
+        yield server.signal__new_fit(c.ID, context = self.context)
         if not self.subscribed:
-            yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID)
+            yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
             yield self.initialize_layout()
             self.subscribed = True
 
@@ -493,10 +493,25 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def on_new_fit(self, x, y):
+        yield self.update_entry()
         yield self.update_lines()
         yield self.update_fit(self.global_checkbox.isChecked())
-        returnValue(None)
     
+    @inlineCallbacks
+    def update_entry(self):
+        try:
+            server = yield self.cxn.get_server('SD Tracker Global')
+            b_field = yield server.get_last_b_field_local(client_name)
+            line_center = yield server.get_last_line_center_local(client_name)
+        except Exception as e:
+            pass
+        else:
+            if (self.last_B != b_field*1.0e3) or (self.last_center != line_center*1.0e3):
+                self.last_B = b_field*1.0e3
+                self.last_center = line_center*1.0e3
+                self.Bfield_entry.setValue(self.last_B)
+                self.linecenter_entry.setValue(self.last_center)
+
     @inlineCallbacks
     def update_fit(self, bool_center_global = False):
         try:
@@ -614,7 +629,6 @@ class drift_tracker(QtGui.QWidget):
             lines = yield server.get_current_lines(client_name)
         except Exception as e:
             #no lines available
-            print "Exception"
             self.update_spectrum(None)
             self.update_listing(None)
             returnValue(None)

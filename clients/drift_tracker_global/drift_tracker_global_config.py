@@ -1,6 +1,6 @@
 class config_729_tracker(object):
     
-    ID = 999992
+    ID = 99992
     
     update_rate = 10.0 #seconds
     frequency_limit = (-60, 140) #MHz

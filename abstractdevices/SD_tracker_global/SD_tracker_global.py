@@ -30,6 +30,7 @@ keep_line_center_measurements_local = dict.fromkeys(client_list, conf.default_ke
 keep_line_center_measurements_global = dict.fromkeys(client_list, conf.default_keep_line_center_measurements_global)
 keep_B_measurements_local = dict.fromkeys(client_list, conf.default_keep_B_measurements_local)
 auto_update_rate = conf.auto_update_rate
+clear_all_duration = conf.clear_all_duration
 
 class SDTrackerGlobal(LabradServer):
     """Provides ability to track drifts of the SD line"""
@@ -64,7 +65,7 @@ class SDTrackerGlobal(LabradServer):
         self.t_measure_line_center_fit_global_data = dict.fromkeys(client_list, numpy.array([]))
         self.line_center_fit_global_data = dict.fromkeys(client_list, numpy.array([]))
         #Create a dictionary to store global fit client lists for all clients
-        self.global_fit_list = dict.fromkeys(client_list)
+        self.global_fit_list = dict.fromkeys(client_list, [])
         #Create a dictionary to decide whether to return local one or global one when somebody calls a same setting
         self.bool_global = dict.fromkeys(client_list, False)
         #Data vault
@@ -127,7 +128,13 @@ class SDTrackerGlobal(LabradServer):
     def arraydict_join(self, dic, key_list = None):
         '''Create a joined array from selected keys in a dictionary'''
         array = numpy.array([])
-        if key_list:
+        if key_list == None:
+            for key in dic.keys():
+                if type(dic[key]) == numpy.ndarray:
+                    array = numpy.append(array, dic[key])
+                else:
+                    raise Exception('Value type in dictionary is not numpy.ndarray.')
+        else:
             for key in key_list:
                 if key not in dic.keys():
                     raise Exception('{0} not in {1}'.format(key, dic.keys()))
@@ -397,7 +404,7 @@ class SDTrackerGlobal(LabradServer):
             center = self.fitter.evaluate(current_time, self.line_center_fit_local[client])
             #print 'try worked'
         except TypeError:
-            print 'exception coming'
+            # print 'exception coming'
             raise Exception ("Fit is not available")
         B = WithUnit(B, 'gauss')
         center = WithUnit(center, 'MHz')
@@ -432,7 +439,7 @@ class SDTrackerGlobal(LabradServer):
             center = self.fitter.evaluate(current_time, self.line_center_fit_global[client])
             #print 'try worked'
         except TypeError:
-            print 'exception coming'
+            # print 'exception coming'
             raise Exception ("Fit is not available")
         B = WithUnit(B, 'gauss')
         center = WithUnit(center, 'MHz')
@@ -541,8 +548,12 @@ class SDTrackerGlobal(LabradServer):
         '''
         self.client_examination(client)
         current_time = time.time() - self.start_time
-        B = self.fitter.evaluate(current_time, self.B_fit_local[client])
-        B = WithUnit(B, 'gauss')
+        try:
+            B = self.fitter.evaluate(current_time, self.B_fit_local[client])
+            B = WithUnit(B, 'gauss')
+        except TypeError:
+            # print 'exception coming'
+            raise Exception ("Fit is not available")
         return B
         #returnValue(B)
         
@@ -555,8 +566,12 @@ class SDTrackerGlobal(LabradServer):
         '''
         self.client_examination(client)
         current_time = time.time() - self.start_time
-        center = self.fitter.evaluate(current_time, self.line_center_fit_local[client])
-        center = WithUnit(center, 'MHz')
+        try:
+            center = self.fitter.evaluate(current_time, self.line_center_fit_local[client])
+            center = WithUnit(center, 'MHz')
+        except TypeError:
+            # print 'exception coming'
+            raise Exception ("Fit is not available")
         return center
         #returnValue(center)
 
@@ -569,8 +584,12 @@ class SDTrackerGlobal(LabradServer):
         '''
         self.client_examination(client)
         current_time = time.time() - self.start_time
-        center = self.fitter.evaluate(current_time, self.line_center_fit_global[client])
-        center = WithUnit(center, 'MHz')
+        try:
+            center = self.fitter.evaluate(current_time, self.line_center_fit_global[client])
+            center = WithUnit(center, 'MHz')
+        except TypeError:
+            # print 'exception coming'
+            raise Exception ("Fit is not available")
         return center
         #returnValue(center)
 
@@ -628,8 +647,8 @@ class SDTrackerGlobal(LabradServer):
         Returns the last entered global B field
         Returns i.e.: 3.307939265053879
         '''
-        B_field_global = self.arraydict_join(self.B_field, client_list)
-        t_measure_B_global = self.arraydict_join(self.t_measure_B, client_list)
+        B_field_global = self.arraydict_join(self.B_field)
+        t_measure_B_global = self.arraydict_join(self.t_measure_B)
         last_index = numpy.where(t_measure_B_global == numpy.max(t_measure_B_global))
         return B_field_global[last_index]
 
@@ -649,8 +668,8 @@ class SDTrackerGlobal(LabradServer):
         Returns the last entered global line center
         Returns i.e.: -21.578811982043565
         '''
-        line_center_global = self.arraydict_join(self.line_center, client_list)
-        t_measure_line_center_global = self.arraydict_join(self.t_measure_line_center, client_list)
+        line_center_global = self.arraydict_join(self.line_center)
+        t_measure_line_center_global = self.arraydict_join(self.t_measure_line_center)
         last_index = numpy.where(t_measure_line_center_global == numpy.max(t_measure_line_center_global))
         return line_center_global[last_index]
 
@@ -664,7 +683,7 @@ class SDTrackerGlobal(LabradServer):
         self.client_examination(client)
         return self.line_center[client][-1]
 
-    @setting(110, 'Get B Field Global', returns = '?')
+    @setting(110, 'Get B Field Global', returns = '*(s*v)')
     def get_b_field_global(self, c):        
         '''
         Returns all entered B fields
@@ -685,7 +704,7 @@ class SDTrackerGlobal(LabradServer):
         self.client_examination(client)
         return self.B_field[client]
 
-    @setting(120, 'Get Line Center Global', returns = '?')
+    @setting(120, 'Get Line Center Global', returns = '*(s*v)')
     def get_line_center_global(self, c):
         '''
         Returns all entered line centers
@@ -733,7 +752,7 @@ class SDTrackerGlobal(LabradServer):
         self.global_fit_list[client] = fit_list
         self.do_fit_local(client)
 
-    @setting(131, "Get Global Fit List", client = 's', returns = '?')
+    @setting(131, "Get Global Fit List", client = 's', returns = '*s')
     def get_global_fit_list(self, c, client):
         '''
         Get global line center fit client list
@@ -747,6 +766,7 @@ class SDTrackerGlobal(LabradServer):
         '''
         Refresh data and fit parameters fot all clients
         '''
+
         for client in client_list:
             self.remove_old_measurements(client)
             if (len(self.t_measure_B[client])):
@@ -769,6 +789,24 @@ class SDTrackerGlobal(LabradServer):
                 self.line_center_fit_global[client] = self.fitter.fit(self.t_measure_line_center_fit_global_data[client], self.line_center_fit_global_data[client])
             else:
                 self.line_center_fit_global[client] = None
+        
+        if (time.time() - self.start_time) > clear_all_duration:
+            t_measure_line_center_all = self.arraydict_join(self.t_measure_line_center)
+            t_measure_B_all = self.arraydict_join(self.t_measure_B)
+            t_measure_all = numpy.append(t_measure_line_center_all, t_measure_B_all)
+            try:
+                t_measure_min = t_measure_all.min()
+            except Exception as e:
+                t_measure_min = clear_all_duration
+            for client in client_list:
+                self.t_measure_line_center[client] = self.t_measure_line_center[client] - t_measure_min
+                self.t_measure_B[client] = self.t_measure_B[client] - t_measure_min
+            self.t_measure_line_center_nofit = dict.fromkeys(client_list, numpy.array([]))
+            self.t_measure_B_nofit = dict.fromkeys(client_list, numpy.array([]))
+            self.line_center_nofit = dict.fromkeys(client_list, numpy.array([]))
+            self.B_field_nofit = dict.fromkeys(client_list, numpy.array([]))
+            self.start_time = self.start_time + t_measure_min
+        
         self.onNewFit(None)
 
     def do_fit_local(self, client):

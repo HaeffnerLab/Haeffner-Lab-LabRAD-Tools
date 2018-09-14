@@ -2,7 +2,7 @@ from fractions import Fraction
 from labrad import units as U
 from labrad.units import WithUnit
 import numpy
-from SD_tracker_config import config as conf
+from SD_tracker_global_config import config as conf
     
 class EnergyLevel(object):
     
@@ -122,12 +122,18 @@ class fitter(object):
     
     def fit(self, x, y):
         '''given two inputs x and y returns a polynomail fit'''
+        #if the length of inputs is 2, calculate the average y as fit result 
         #if the length of inputs is not sufficient, will avoid erros by decreasing the order of fitting
         #returns highest order as first element
-        fit_order = min(self.order, x.size - 1)
-        fit = numpy.polyfit(x, y, deg = fit_order)
-        ans = numpy.zeros(self.order + 1)
-        ans[(self.order - fit_order):] = fit
+        if x.size != y.size:
+            raise Exception("Please input x and y data at the same length")
+        elif x.size == 2:
+            ans = numpy.array([0.0, (y.mean())])
+        else:
+            fit_order = min(self.order, x.size - 1)
+            fit = numpy.polyfit(x, y, deg = fit_order)
+            ans = numpy.zeros(self.order + 1)
+            ans[(self.order - fit_order):] = fit
         return ans
     
     def evaluate(self, x, fit):

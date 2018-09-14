@@ -9,6 +9,7 @@ class config(object):
     default_keep_line_center_measurements_global = 100*60
     default_keep_B_measurements_local = 100*60
     auto_update_rate = 10 #'s'
+    clear_all_duration = 6000*60
     
     #data vault saving configuration
     save_folder = ['', 'Drift_Tracking', 'Cavity729']
