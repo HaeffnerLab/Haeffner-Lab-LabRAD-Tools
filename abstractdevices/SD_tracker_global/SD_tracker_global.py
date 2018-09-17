@@ -37,8 +37,14 @@ class SDTrackerGlobal(LabradServer):
     name = 'SD Tracker Global'
     
     onNewFit = Signal( 768120, 'signal: new fit', '' )
+    for ite1, ite2 in enumerate(client_list):
+        ite1 = 768121 + ite1
+        ite3 = 'signal: new save {}'.format(ite2)
+        exe_str = "onNewSave" + ite2.replace(' ', '') + " = Signal( 768121 + ite1, 'signal: new save " + ite2 + "', '')"
+        exec(exe_str)
+    del ite1, ite2, ite3, exe_str
     
-    @inlineCallbacks
+    #@inlineCallbacks
     def initServer(self):
         #Record server start time
         self.start_time = time.time()
@@ -69,13 +75,16 @@ class SDTrackerGlobal(LabradServer):
         #Create a dictionary to decide whether to return local one or global one when somebody calls a same setting
         self.bool_global = dict.fromkeys(client_list, False)
         #Data vault
+        '''
         self.dv = {}
         yield self.connect_data_vault()
         yield self.setupListeners()
+        '''
         #Auto update everything
         updater = LoopingCall(self.do_fit_global)
         updater.start(auto_update_rate)
     
+    '''
     @inlineCallbacks
     def connect_data_vault(self):
         try:
@@ -119,11 +128,11 @@ class SDTrackerGlobal(LabradServer):
     def save_result_datavault(self, t_measure, freq, b_field, client):
         self.client_examination(client)
         try:
-            yield self.dv.add((t_measure, freq, b_field, client))
+            yield self.dv.add((t_measure, freq, b_field))
         except AttributeError:
             print 'Data Vault Not Available, not saving'
             yield None
-
+    '''
 
     def arraydict_join(self, dic, key_list = None):
         '''Create a joined array from selected keys in a dictionary'''
@@ -184,8 +193,10 @@ class SDTrackerGlobal(LabradServer):
         # try to save to data vault
         # yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
         # save the epoch time, NOT the time since the software started t_measure
-        yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'], client)
+        #yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'], client)
         self.do_fit_local(client)
+        exe_str = "self.onNewSave" + client.replace(' ', '') + "(None)"
+        exec(exe_str)
 
     @setting(3, 'Set Measurements with Bfield and Line Center', B = '*(sv[gauss])', freq = '*(sv[MHz])', client = 's', returns = '')
     def set_measurements_with_bfield_and_line_center(self, c, B, freq, client):
@@ -211,8 +222,10 @@ class SDTrackerGlobal(LabradServer):
         # try to save to data vault
         # yield self.save_result_datavault(t_measure, freq['MHz'], B['gauss'])
         # save the epoch time, NOT the time since the software started t_measure
-        yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'], client)
+        #yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'], client)
         self.do_fit_local(client)
+        exe_str = "self.onNewSave" + client.replace(' ', '') + "(None)"
+        exec(exe_str)
     
     #@setting(12, 'Set Measurement One Line', line = 'sv[MHz]', client = 's', returns = '')
     #def set_measurement_one_line(self, c, line, client):

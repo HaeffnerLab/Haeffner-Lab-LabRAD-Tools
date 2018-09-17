@@ -36,6 +36,7 @@ class drift_tracker(QtGui.QWidget):
         self.reactor = reactor
         self.clipboard = clipboard
         self.cxn = cxn
+        self.cxn_global = None
         self.subscribed = False
         #see if favorites are provided in the configuration. if not, use an empty dictionary
         try:
@@ -269,7 +270,7 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def initialize_layout(self):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         transitions = yield server.get_transition_names()
         self.entry_table.fill_out(transitions)
         duration_B, duration_line_center = yield server.history_duration_local(client_name)
@@ -288,7 +289,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def do_copy_info_to_clipboard(self):
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             lines = yield server.get_current_lines(client_name)
             b_history, center_history =  yield server.get_fit_history(client_name)
             b_value =  b_history[-1][1]
@@ -318,7 +319,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def on_remove_B(self, clicked):
         to_remove = self.remove_B_count.value()
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         try:
             yield server.remove_b_measurement(to_remove, client_name)
             #print to_remove
@@ -328,7 +329,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def on_remove_line_center(self, clicked):
         to_remove = self.remove_line_center_count.value()
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         try:
             yield server.remove_line_center_measurement(to_remove, client_name)
         except self.Error as e:
@@ -336,12 +337,12 @@ class drift_tracker(QtGui.QWidget):
 
     @inlineCallbacks
     def on_remove_all_B_and_line_centers(self, clicked):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         yield server.remove_all_measurements(client_name)
 
     @inlineCallbacks
     def on_entry(self, clicked):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         info = self.entry_table.get_info()
         with_units = [(name, self.WithUnit(val, 'MHz')) for name,val in info]
         try:
@@ -361,7 +362,7 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def on_entry_Bfield_and_center(self, clicked):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         B_with_units = self.WithUnit(self.Bfield_entry.value()/1.0e3, 'gauss')
         f_with_units = self.WithUnit(self.linecenter_entry.value()/1.0e3, 'MHz')
 
@@ -388,27 +389,27 @@ class drift_tracker(QtGui.QWidget):
 
     @inlineCallbacks
     def on_new_B_track_duration(self, value):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         rate_B = self.WithUnit(value, 'min')
         rate_line_center = self.WithUnit(self.track_line_center_duration.value(), 'min')
         yield server.history_duration_local(client_name, (rate_B, rate_line_center))
     
     @inlineCallbacks
     def on_new_line_center_track_duration(self, value):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         rate_line_center = self.WithUnit(value, 'min')
         rate_B = self.WithUnit(self.track_B_duration.value(), 'min')
         yield server.history_duration_local(client_name, (rate_B, rate_line_center))
 
     @inlineCallbacks
     def on_new_global_line_center_track_duration(self, value):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         rate_global_line_center = self.WithUnit(value, 'min')
         yield server.history_duration_global_line_center(client_name, rate_global_line_center)
 
     @inlineCallbacks
     def global_or_local(self, checked):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         if bool(checked):
             yield server.return_global_or_local(True, client_name)
             for client in client_list:
@@ -425,7 +426,7 @@ class drift_tracker(QtGui.QWidget):
         
     @inlineCallbacks
     def on_new_fit_global(self, checked):
-        server = yield self.cxn.get_server('SD Tracker Global')
+        server = yield self.cxn_global.get_server('SD Tracker Global')
         fit_list = []
         for client in client_list:
             if self.client_checkbox[client].isChecked():
@@ -436,55 +437,84 @@ class drift_tracker(QtGui.QWidget):
     def connect_labrad(self):
         from labrad.units import WithUnit
         from labrad.types import Error
+        from common.clients.connection import connection
         self.WithUnit = WithUnit
         self.Error = Error
-        if self.cxn is None:
-            from common.clients.connection import connection
-            self.cxn = connection()
-            yield self.cxn.connect(password = '')
-        self.context = yield self.cxn.context()
+        self.cxn_global = connection()
+        yield self.cxn_global.connect(password = '')
+        self.context_global = yield self.cxn_global.context()
         try:
             yield self.subscribe_tracker()
         except Exception as e:
             self.setDisabled(True)
-        self.cxn.add_on_connect('SD Tracker Global', self.reinitialize_tracker)
-        self.cxn.add_on_disconnect('SD Tracker Global', self.disable)
+            pass
+        self.cxn_global.add_on_connect('SD Tracker Global', self.reinitialize_tracker)
+        self.cxn_global.add_on_disconnect('SD Tracker Global', self.disable)
         self.connect_layout()
+
+        if self.cxn is None:
+            self.cxn = connection()
+            yield self.cxn.connect(password = '')
+            self.context = yield self.cxn.context()
+        try:
+            yield self.subscribe_vault()
+        except Exception as e:
+            pass
+        self.cxn.add_on_connect('Data Vault', self.subscribe_vault)
         
     @inlineCallbacks
     def subscribe_tracker(self):
-        server = yield self.cxn.get_server('SD Tracker Global')
-        yield server.signal__new_fit(c.ID, context = self.context)
-        yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
+        server = yield self.cxn_global.get_server('SD Tracker Global')
+        yield server.signal__new_fit(c.ID, context = self.context_global)
+        yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
+        exe_str = 'server.' + 'signal__new_save_' + client_name.replace(' ', '_') + '(c.ID + 1, context = self.context_global)'
+        exec(yield exe_str)
+        yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
         yield self.initialize_layout()
         self.subscribed = True
-    
+
     @inlineCallbacks
     def reinitialize_tracker(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('SD Tracker Global')
-        yield server.signal__new_fit(c.ID, context = self.context)
+        server = yield self.cxn_global.get_server('SD Tracker Global')
+        yield server.signal__new_fit(c.ID, context = self.context_global)
+        exe_str = 'server.' + 'signal__new_save_' + client_name.replace(' ', '_') + '(c.ID + 1, context = self.context_global)'
+        exec(yield exe_str)
         if not self.subscribed:
-            yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context)
+            yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
+            yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
             yield self.initialize_layout()
             self.subscribed = True
 
     @inlineCallbacks
+    def subscribe_vault(self):
+        server = yield self.cxn.get_server('Data Vault')
+        directory = list(c.save_folder)
+        localtime = time.localtime()
+        dirappend = [time.strftime("%Y%b%d",localtime)]
+        directory.extend(dirappend)
+        yield server.cd(directory, True)
+        datasetNameAppend = time.strftime("%Y%b%d_%H%M_%S",localtime)
+        save_name = '{0} {1}'.format(c.dataset_name, datasetNameAppend)
+        self.line_center_dataset = yield server.new(save_name, [('t', 'sec')], [('Cavity Drift','Line Center','MHz'),('Cavity Drift','B Field','gauss')])
+        yield server.add_parameter('start_time', time.time())
+
+    @inlineCallbacks
     def readout_update(self):
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             center = yield server.get_current_center(client_name)
             self.current_line_center.setText('%.8f MHz'%center['MHz'])
         except Exception as e:
             self.current_line_center.setText('Error')
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             B = yield server.get_current_b_local(client_name)
             self.current_B.setText('%.8f gauss'%B['gauss'])
         except Exception as e:
             self.current_B.setText('Error')
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             time = yield server.get_current_time()
             self.current_time.setText('%.2f min'%time['min'])
         except:
@@ -493,29 +523,32 @@ class drift_tracker(QtGui.QWidget):
     
     @inlineCallbacks
     def on_new_fit(self, x, y):
-        yield self.update_entry()
         yield self.update_lines()
         yield self.update_fit(self.global_checkbox.isChecked())
     
     @inlineCallbacks
-    def update_entry(self):
+    def on_new_save(self, x, y):
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
-            b_field = yield server.get_last_b_field_local(client_name)
-            line_center = yield server.get_last_line_center_local(client_name)
+            server_sd = yield self.cxn_global.get_server('SD Tracker Global')
+            b_field = yield server_sd.get_last_b_field_local(client_name)
+            line_center = yield server_sd.get_last_line_center_local(client_name)
         except Exception as e:
+            print "Cannot get last data point"
             pass
         else:
-            if (self.last_B != b_field*1.0e3) or (self.last_center != line_center*1.0e3):
-                self.last_B = b_field*1.0e3
-                self.last_center = line_center*1.0e3
-                self.Bfield_entry.setValue(self.last_B)
-                self.linecenter_entry.setValue(self.last_center)
+            self.Bfield_entry.setValue(b_field*1.0e3)
+            self.linecenter_entry.setValue(line_center*1.0e3)
+            try:
+                server_dv = yield self.cxn.get_server('Data Vault')
+                yield server_dv.add((time.time(), line_center, b_field))
+            except:
+                print 'Data Vault Not Available, not saving'
+                yield None
 
     @inlineCallbacks
     def update_fit(self, bool_center_global = False):
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             history_B = yield server.get_fit_history(client_name)
             history_B = history_B[0]
             '''
@@ -625,7 +658,7 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def update_lines(self):
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             lines = yield server.get_current_lines(client_name)
         except Exception as e:
             #no lines available
@@ -675,7 +708,7 @@ class drift_tracker(QtGui.QWidget):
             legend = axes.legend()
             lines.append(legend)
 
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             if self.global_checkbox.isChecked():
                 try:
                     fit_data = yield server.get_line_center_global_fit_data(client_name)
@@ -799,7 +832,7 @@ class drift_tracker(QtGui.QWidget):
     def resize_spec_graph(self):
         # set the limits of the predicted spectrum to the extrema
         try:
-            server = yield self.cxn.get_server('SD Tracker Global')
+            server = yield self.cxn_global.get_server('SD Tracker Global')
             curr_lines = yield server.get_current_lines(client_name)
 
             curr_lines = dict(curr_lines)
