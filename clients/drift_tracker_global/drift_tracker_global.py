@@ -441,7 +441,7 @@ class drift_tracker(QtGui.QWidget):
         self.WithUnit = WithUnit
         self.Error = Error
         self.cxn_global = connection()
-        yield self.cxn_global.connect(password = '')
+        yield self.cxn_global.connect(cl.global_address, password = cl.global_password, tls_mode = 'off')
         self.context_global = yield self.cxn_global.context()
         try:
             yield self.subscribe_tracker()
@@ -454,7 +454,7 @@ class drift_tracker(QtGui.QWidget):
 
         if self.cxn is None:
             self.cxn = connection()
-            yield self.cxn.connect(password = '')
+            yield self.cxn.connect()
             self.context = yield self.cxn.context()
         try:
             yield self.subscribe_vault()
