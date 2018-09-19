@@ -16,6 +16,7 @@ class config(object):
         ('lattice.PulseSequences2.Ramsey', 'Ramsey'),
         ('lattice.PulseSequences2.RamseyLocal', 'RamseyLocal'),
         ('lattice.PulseSequences2.RamseyGlobalEcho', 'RamseyGlobalEcho'),
+        ('lattice.PulseSequences2.RamseyGlobalEchoPowerSpectralDensity', 'RamseyGlobalEchoPowerSpectralDensity'),
         ('lattice.PulseSequences2.RamseyLocalHanEcho', 'RamseyLocalHanEcho'),
         ('lattice.PulseSequences2.LLI_StatePreparation', 'LLI_StatePreparation'),
         #('lattice.PulseSequences2.CalibAxialLines', 'CalibAxialLines'),
@@ -45,6 +46,8 @@ class config(object):
                          'DopplerCooling.doppler_cooling_frequency_397',
                          'DopplerCooling.doppler_cooling_duration',
                          'DopplerCooling.pre_duration',
+
+                         'DriftTracker.global_sd_enable',
                          
                          'Excitation_729.channel_729',
                          'Excitation_729.bichro',

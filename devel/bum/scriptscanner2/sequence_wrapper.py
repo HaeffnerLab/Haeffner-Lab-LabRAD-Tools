@@ -31,6 +31,7 @@ import dvParameters
 from analysis import readouts
 import sys
 import time
+from common.client_config import client_info as dt_config
 
 
 class pulse_sequence_wrapper(object):
@@ -45,6 +46,7 @@ class pulse_sequence_wrapper(object):
         self.sc = sc # reference to scriptscanner class, not through the labrad connection
         self.cxn = cxn
         try:
+            
             self.dt = self.cxn.sd_tracker
         except:
             self.dt = None
@@ -135,9 +137,7 @@ class pulse_sequence_wrapper(object):
         if self.grapher is not None:
             
             
-#             print "this is the scan_submit"
-#             print self.scan_submit
-#             print "this is the shift", shift
+
             
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
         
@@ -184,17 +184,48 @@ class pulse_sequence_wrapper(object):
                 update_dict['.'.join(key)] = update[key]
             else:
                 update_dict[key] = update[key]
-        if self.dt is not None:
-            # connect to drift tracker to get the extrapolated lines
-            carriers = yield self.dt.get_current_lines()
-            for c, f in carriers:
-                carriers_dict[carrier_translation[c]] = f
-                
+        
+
         self.parameters_dict.update(update_dict)
+        
+        if self.parameters_dict.DriftTracker.global_sd_enable:
+            # using global sd 
+            print 'using global sd'
+            # there was a problem connecting in the regular sync was we had to establish a
+            carriers = yield self.get_lines_from_global_dt()
+            if carriers:
+                for c, f in carriers:
+                    carriers_dict[carrier_translation[c]] = f
+        else:
+            print "using the local dt"
+            if self.dt is not None:
+                # connect to drift tracker to get the extrapolated lines
+                carriers = yield self.dt.get_current_lines()
+                for c, f in carriers:
+                    carriers_dict[carrier_translation[c]] = f
+                
+        
         self.parameters_dict.update(carriers_dict)
         self.parameters_dict.update(self.module.fixed_params)
         
-        
+    @inlineCallbacks
+    def get_lines_from_global_dt(self):
+        # added this function to support async connection to the 
+        from labrad.wrappers import connectAsync
+        try:
+            print "connecting async to global sd"
+            global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
+            carriers =  yield global_sd_cxn.sd_tracker_global.get_current_lines(dt_config.client_name)
+            # need to add some delay time because it casues a problem with the camera ????
+            yield global_sd_cxn.disconnect()
+            sleep(0.05)
+            # print carriers 
+        except:
+            print "Problem with the global_sd. Make sure you have submitted a line."
+        else:
+            returnValue(carriers)
+
+
     def update_scan_param(self, update):
         update_dict = {}
         for key in update.keys():
@@ -239,18 +270,6 @@ class pulse_sequence_wrapper(object):
         
   
         
-        
-#         print self.scan_submit
-        
-        #if not self.parameters_dict.Display.relative_frequencies:
-        #    self.relative_freq()
-#         print self.scan_submit
-#         print self.scan
-#         
-        #print "setting up the scan params"
-        
-    
-    # calculate the relative freq
     
  
     
@@ -626,6 +645,12 @@ class pulse_sequence_wrapper(object):
                 camera.start_live_display()
                 
         cxn.disconnect()
+        # # try:
+        # #     print " disconnecting the global connection"
+        # #     self.global_sd_cxn.disconnect()
+        # # except:
+        #     pass
+
 
     def plot_current_sequence(self, cxn):
         
