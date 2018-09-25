@@ -31,7 +31,7 @@ class config(object):
         ('lattice.PulseSequences2.MotionAnalysisSpectrum', "MotionAnalysisSpectrum"),
         ('lattice.PulseSequences2.MotionAnalysisRamsey', "MotionAnalysisRamsey"),
         ('lattice.PulseSequences2.MotionAnalysisSpectrumMulti', "MotionAnalysisSpectrumMulti"),
-        #('lattice.PulseSequences2.MolmerSorensenGateWithEcho', 'MolmerSorensenGateWithEcho'),
+        ('lattice.PulseSequences2.MolmerSorensenGateWithEcho', 'MolmerSorensenGateWithEcho'),
         # ('lattice.PulseSequences2.MolmerSorensenGateDynamicalDecoupling', 'MolmerSorensenGateDynamicalDecoupling'),
         ('lattice.PulseSequences2.RamseyGlobalACStarkShiftEcho', 'RamseyGlobalACStarkShiftEcho'),
         
