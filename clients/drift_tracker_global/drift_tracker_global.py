@@ -447,7 +447,7 @@ class drift_tracker(QtGui.QWidget):
             yield self.subscribe_tracker()
         except Exception as e:
             self.setDisabled(True)
-            pass
+            yield None
         self.cxn_global.add_on_connect('SD Tracker Global', self.reinitialize_tracker)
         self.cxn_global.add_on_disconnect('SD Tracker Global', self.disable)
         self.connect_layout()
@@ -459,8 +459,9 @@ class drift_tracker(QtGui.QWidget):
         try:
             yield self.subscribe_vault()
         except Exception as e:
-            pass
+            yield None
         self.cxn.add_on_connect('Data Vault', self.subscribe_vault)
+        self.cxn.add_on_disconnect('Data Vault', self.disconnect_vault)
         
     @inlineCallbacks
     def subscribe_tracker(self):
@@ -488,16 +489,23 @@ class drift_tracker(QtGui.QWidget):
 
     @inlineCallbacks
     def subscribe_vault(self):
-        server = yield self.cxn.get_server('Data Vault')
-        directory = list(c.save_folder)
-        localtime = time.localtime()
-        dirappend = [time.strftime("%Y%b%d",localtime)]
-        directory.extend(dirappend)
-        yield server.cd(directory, True)
-        datasetNameAppend = time.strftime("%Y%b%d_%H%M_%S",localtime)
-        save_name = '{0} {1}'.format(c.dataset_name, datasetNameAppend)
-        self.line_center_dataset = yield server.new(save_name, [('t', 'sec')], [('Cavity Drift','Line Center','MHz'),('Cavity Drift','B Field','gauss')])
-        yield server.add_parameter('start_time', time.time())
+        try:
+            server = yield self.cxn.get_server('Data Vault')
+            directory = list(c.save_folder)
+            localtime = time.localtime()
+            dirappend = [time.strftime("%Y%b%d",localtime)]
+            directory.extend(dirappend)
+            yield server.cd(directory, True)
+            datasetNameAppend = time.strftime("%Y%b%d_%H%M_%S",localtime)
+            save_name = '{0} {1}'.format(c.dataset_name, datasetNameAppend)
+            self.line_center_dataset = yield server.new(save_name, [('t', 'sec')], [('Cavity Drift','Line Center','MHz'),('Cavity Drift','B Field','gauss')])
+            yield server.add_parameter('start_time', time.time())
+        except:
+            pass
+
+    @inlineCallbacks
+    def disconnect_vault(self):
+        yield None
 
     @inlineCallbacks
     def readout_update(self):
