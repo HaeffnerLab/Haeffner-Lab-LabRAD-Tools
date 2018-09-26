@@ -468,8 +468,14 @@ class drift_tracker(QtGui.QWidget):
         server = yield self.cxn_global.get_server('SD Tracker Global')
         yield server.signal__new_fit(c.ID, context = self.context_global)
         yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
-        exe_str = 'server.' + 'signal__new_save_' + client_name.replace(' ', '_') + '(c.ID + 1, context = self.context_global)'
-        exec(yield exe_str)
+        # should find a better way to do this 
+        exe_str = "yield server." + "signal__new_save_" + client_name.replace(' ', '_') + "(c.ID + 1, context = context)"
+        try:
+            exec "@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n"
+            yield receive_save_signal(server, c, self.context_global)
+        except Exception as e:
+            print e
+        # should find a better way to do this
         yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
         yield self.initialize_layout()
         self.subscribed = True
@@ -479,8 +485,14 @@ class drift_tracker(QtGui.QWidget):
         self.setDisabled(False)
         server = yield self.cxn_global.get_server('SD Tracker Global')
         yield server.signal__new_fit(c.ID, context = self.context_global)
-        exe_str = 'server.' + 'signal__new_save_' + client_name.replace(' ', '_') + '(c.ID + 1, context = self.context_global)'
-        exec(yield exe_str)
+        # should find a better way to do this
+        exe_str = "yield server." + "signal__new_save_" + client_name.replace(' ', '_') + "(c.ID + 1, context = context)"
+        try:
+            exec "@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n"
+            yield receive_save_signal(server, c, self.context_global)
+        except Exception as e:
+            print e
+        # should find a better way to do this
         if not self.subscribed:
             yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
             yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
