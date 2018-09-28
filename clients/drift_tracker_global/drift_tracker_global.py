@@ -380,7 +380,7 @@ class drift_tracker(QtGui.QWidget):
             for k in range(len(line_info)):
                 # get the current line from the server
                 new_freq = hlp[line_info[k][0]]
-                self.entry_table.cellWidget(k, 1).setValue(new_freq.value)                
+                self.entry_table.cellWidget(k, 1).setValue(new_freq[new_freq.units])                
 
             self.resize_spec_graph()
 
