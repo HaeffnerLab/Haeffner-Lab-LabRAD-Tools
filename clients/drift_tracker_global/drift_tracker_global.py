@@ -163,21 +163,12 @@ class drift_tracker(QtGui.QWidget):
         self.track_global_line_center_duration.setKeyboardTracking(False)
         self.track_global_line_center_duration.setSuffix('min')
         self.track_global_line_center_duration.setRange(1, 1000)
-        self.track_global_line_center_duration.setEnabled(False)
 
         self.global_checkbox = QtGui.QCheckBox("Global Line Center")
-        self.global_checkbox.setChecked(False)
 
         self.client_checkbox = dict.fromkeys(client_list)
         for client in client_list:
-            if client == client_name:
-                self.client_checkbox[client] = QtGui.QCheckBox(client)
-                self.client_checkbox[client_name].setChecked(True)
-                self.client_checkbox[client].setEnabled(False)
-            else:
-                self.client_checkbox[client] = QtGui.QCheckBox(client)
-                self.client_checkbox[client].setEnabled(False)
-                self.client_checkbox[client].setChecked(False)
+            self.client_checkbox[client] = QtGui.QCheckBox(client)
 
         self.current_line_center = QtGui.QLineEdit(readOnly = True)
         self.current_line_center.setAlignment(QtCore.Qt.AlignHCenter)
@@ -284,6 +275,15 @@ class drift_tracker(QtGui.QWidget):
         self.track_global_line_center_duration.blockSignals(True)
         self.track_global_line_center_duration.setValue(duration_line_center_global['min'])
         self.track_global_line_center_duration.blockSignals(False)
+        self.track_global_line_center_duration.setEnabled(False)
+        self.global_checkbox.setChecked(False)
+        for client in client_list:
+            if client == client_name:
+                self.client_checkbox[client_name].setChecked(True)
+                self.client_checkbox[client].setEnabled(False)
+            else:
+                self.client_checkbox[client].setEnabled(False)
+                self.client_checkbox[client].setChecked(False)
         yield self.on_new_fit(None, None)
     
     @inlineCallbacks
@@ -496,8 +496,8 @@ class drift_tracker(QtGui.QWidget):
         if not self.subscribed:
             yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
             yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
-            yield self.initialize_layout()
             self.subscribed = True
+        yield self.initialize_layout()
 
     @inlineCallbacks
     def subscribe_vault(self):
