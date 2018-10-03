@@ -27,7 +27,7 @@ class config(object):
         ('lattice.PulseSequences2.CompositeRabiFlopping', 'CompositeRabiFlopping'),
         ('lattice.PulseSequences2.RabiFlopping_2ions', 'RabiFlopping_2ions'),
         ('lattice.PulseSequences2.LLI_PhaseMeasurement_4ions', 'LLI_PhaseMeasurement_4ions'),
-        # ('lattice.PulseSequences2.tester', "tester"),
+        ('lattice.PulseSequences2.tester', "tester"),
         ('lattice.PulseSequences2.MotionAnalysisSpectrum', "MotionAnalysisSpectrum"),
         ('lattice.PulseSequences2.MotionAnalysisRamsey', "MotionAnalysisRamsey"),
         ('lattice.PulseSequences2.MotionAnalysisSpectrumMulti', "MotionAnalysisSpectrumMulti"),
