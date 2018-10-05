@@ -83,7 +83,7 @@ class pulse_sequence_wrapper(object):
             self.dv.add(np.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
             self.dv.add_parameter('HistogramCameraConfidence', True, context = self.histogram_save_context )
             self.total_camera_confidences = []
-            
+    
 
     def setup_data_vault(self, cxn, name):
         
@@ -103,23 +103,54 @@ class pulse_sequence_wrapper(object):
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan, self.submit_unit)], dependents, context = self.data_save_context)
         
         shift=U(0,self.submit_unit)
+
         
         if not self.parameters_dict.Display.relative_frequencies:
-            if self.window == "car1":
-                line = self.parameters_dict.DriftTracker.line_selection_1
-                shift = cxn.sd_tracker.get_current_line(line)
-            elif self.window == "car2":
-                line = self.parameters_dict.DriftTracker.line_selection_2
-                shift = cxn.sd_tracker.get_current_line(line)
-            elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                if self.name != 'RabiFloppingManual' :
-                    line = self.parameters_dict.Spectrum.line_selection 
-                    shift = cxn.sd_tracker.get_current_line(line) 
-                    # adding the shift for the sideband
-                    order = int(self.parameters_dict.Spectrum.order)  
-                    if  order != 0 :
-                        sideband= self.parameters_dict.Spectrum.selection_sideband
-                        shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+            if self.parameters_dict.DriftTracker.global_sd_enable:
+                # using global sd 
+                print 'using global sd'
+                # cannot use asynchrounous connection here
+                # from labrad.wrappers import connectAsync
+                try:
+                    print "connecting synchronous to global sd"
+                    global_sd_cxn = labrad.connect('192.168.169.86' , password ='',tls_mode='off')
+                    # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
+                except:
+                    print "cannot connect to global sd tracker"
+                else:
+                    if self.window == "car1":
+                        line = self.parameters_dict.DriftTracker.line_selection_1
+                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+                    elif self.window == "car2":
+                        line = self.parameters_dict.DriftTracker.line_selection_2
+                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+                    elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+                        if self.name != 'RabiFloppingManual' :
+                            line = self.parameters_dict.Spectrum.line_selection 
+                            shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+                            # adding the shift for the sideband
+                            order = int(self.parameters_dict.Spectrum.order)  
+                            if  order != 0 :
+                                sideband= self.parameters_dict.Spectrum.selection_sideband
+                                shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                    global_sd_cxn.disconnect()
+                    # sleep(0.05)
+            else:
+                if self.window == "car1":
+                    line = self.parameters_dict.DriftTracker.line_selection_1
+                    shift = cxn.sd_tracker.get_current_line(line)
+                elif self.window == "car2":
+                    line = self.parameters_dict.DriftTracker.line_selection_2
+                    shift = cxn.sd_tracker.get_current_line(line)
+                elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+                    if self.name != 'RabiFloppingManual' :
+                        line = self.parameters_dict.Spectrum.line_selection 
+                        shift = cxn.sd_tracker.get_current_line(line) 
+                        # adding the shift for the sideband
+                        order = int(self.parameters_dict.Spectrum.order)  
+                        if  order != 0 :
+                            sideband= self.parameters_dict.Spectrum.selection_sideband
+                            shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
         else:
             # when we scan the sideband in spectrum we want to have thier offset from the carrier
             if self.name == "Spectrum":
@@ -140,12 +171,11 @@ class pulse_sequence_wrapper(object):
 
             
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
-        
+            
         self.readout_save_directory = directory
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
         self.dv.new('Readouts',[('Iteration', 'Arb')],[('Readout Counts','Arb','Arb')], context = self.readout_save_context)
-        
         
         #print self.sc.datasets[self.ident]
         
