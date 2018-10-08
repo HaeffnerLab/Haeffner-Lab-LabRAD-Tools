@@ -34,7 +34,7 @@ class config(object):
         ('lattice.PulseSequences2.MolmerSorensenGateWithEcho', 'MolmerSorensenGateWithEcho'),
         # ('lattice.PulseSequences2.MolmerSorensenGateDynamicalDecoupling', 'MolmerSorensenGateDynamicalDecoupling'),
         ('lattice.PulseSequences2.RamseyGlobalACStarkShiftEcho', 'RamseyGlobalACStarkShiftEcho'),
-        
+        ('lattice.PulseSequences2.DriftTrackerRamsey_2ions', 'DriftTrackerRamsey_2ions'),
         
         
         
