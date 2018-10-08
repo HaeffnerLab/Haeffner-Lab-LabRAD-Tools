@@ -40,7 +40,7 @@ class SDTrackerGlobal(LabradServer):
     for ite1, ite2 in enumerate(client_list):
         ite1 = 768121 + ite1
         ite3 = 'signal: new save {}'.format(ite2)
-        exe_str = "onNewSave" + ite2.replace(' ', '') + " = Signal( 768121 + ite1, 'signal: new save " + ite2 + "', '')"
+        exe_str = "onNewSave" + ite2.replace(' ', '') + " = Signal( 768121 + ite1, 'signal: new save " + ite2 + "', 's')"
         exec(exe_str)
     del ite1, ite2, ite3, exe_str
     
@@ -165,7 +165,7 @@ class SDTrackerGlobal(LabradServer):
         '''Returns the names of possible transitions'''
         return self.tr.transitions()
         
-    @setting(2, 'Set Measurements', lines = '*(sv[MHz])', client = 's', returns = '')
+    @setting(2, 'Set Measurements', lines = '*(sv[MHz])', client = 's')
     def set_measurements(self, c, lines, client):
         '''
         Takes the names and frequencies of two lines and performs tracking.
@@ -195,10 +195,29 @@ class SDTrackerGlobal(LabradServer):
         # save the epoch time, NOT the time since the software started t_measure
         #yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'], client)
         self.do_fit_local(client)
-        exe_str = "self.onNewSave" + client.replace(' ', '') + "(None)"
-        exec(exe_str)
+        exe_str = "self.onNewSave" + client.replace(' ', '') + "('linecenter_bfield')"
+        exec exe_str
 
-    @setting(3, 'Set Measurements with Bfield and Line Center', B = '*(sv[gauss])', freq = '*(sv[MHz])', client = 's', returns = '')
+    @setting(13, "Set Measurements With One Line", line = '*(sv[MHz])', client = 's')
+    def set_measurements_with_one_line(self, c, line, client):
+        '''
+        Takes the names and frequencies of one line, and get line center from fit parameters, and performs tracking.
+        Input i.e.: ([("S-1/2D-1/2", U(-22.0, 'MHz')), 'lattice')
+        '''
+        self.client_examination(client)
+        t_measure = time.time() - self.start_time
+        name, f = line[0]
+        freq = yield self.get_current_center(c, client)
+        B = self.tr.energy_line_center_to_magnetic_field((name, f), freq)
+
+        self.t_measure_B[client] = numpy.append(self.t_measure_B[client], t_measure)
+        self.B_field[client] = numpy.append(self.B_field[client], B['gauss'])
+
+        self.do_fit_local(client)
+        exe_str = "self.onNewSave" + client.replace(' ', '') + "('bfield')"
+        exec exe_str
+
+    @setting(3, 'Set Measurements with Bfield and Line Center', B = '*(sv[gauss])', freq = '*(sv[MHz])', client = 's')
     def set_measurements_with_bfield_and_line_center(self, c, B, freq, client):
         '''
         takes the Bfield and the line center and sets up tracking
@@ -224,29 +243,67 @@ class SDTrackerGlobal(LabradServer):
         # save the epoch time, NOT the time since the software started t_measure
         #yield self.save_result_datavault(time.time(), freq['MHz'], B['gauss'], client)
         self.do_fit_local(client)
-        exe_str = "self.onNewSave" + client.replace(' ', '') + "(None)"
-        exec(exe_str)
+        exe_str = "self.onNewSave" + client.replace(' ', '') + "('linecenter_bfield')"
+        exec exe_str
     
-    #@setting(12, 'Set Measurement One Line', line = 'sv[MHz]', client = 's', returns = '')
-    #def set_measurement_one_line(self, c, line, client):
+    # @setting(12, 'Set Measurement One Line', line = 'sv[MHz]', client = 's', returns = '')
+    # def set_measurement_one_line(self, c, line, client):
     #    ''' takes name and frequency of one line, and assumes the cavity position from previous data '''
     #    t_measure = time.time() - self.start_time
     #    name,f = line
     #    if name not in self.tr.transitions():
     #        raise Exception("Line does not match a known transition")
 
+    @setting(14, "Set Measurements With Bfield", B = '*(sv[gauss])', client = 's')
+    def set_measurements_with_bfield(self, c, B, client):
+        '''
+        takes the Bfield and sets up tracking
+        Input i.e.: ([('bfield', U(5.0, 'gauss'))], 'lattice')
+        '''
+        self.client_examination(client)
+        t_measure = time.time() - self.start_time
+       
+        B = B[0][1]
+
+        self.t_measure_B[client] = numpy.append(self.t_measure_B[client] , t_measure)
+        self.B_field[client] = numpy.append(self.B_field[client] , B['gauss'])
+
+        self.do_fit_local(client)
+        exe_str = "self.onNewSave" + client.replace(' ', '') + "('bfield')"
+        exec exe_str
+
+    @setting(15, "Set Measurements With Line Center", freq = '*(sv[MHz])', client = 's')
+    def set_measurements_with_line_center(self, c, freq, client):
+        '''
+        takes the line center and sets up tracking
+        Input i.e.: ([('line_center', U(-22.0, 'MHz'))], 'lattice')
+        '''
+        self.client_examination(client)
+        t_measure = time.time() - self.start_time
+
+        freq = freq[0][1]
+
+        self.t_measure_line_center[client] = numpy.append(self.t_measure_line_center[client], t_measure)
+        self.line_center[client] = numpy.append(self.line_center[client] , freq['MHz'])
+
+        self.do_fit_local(client)
+        exe_str = "self.onNewSave" + client.replace(' ', '') + "('linecenter')"
+        exec exe_str
+
     @setting(4, "Get Clients", returns = '*s')
     def get_clients(self, c):
         '''Get all registered clients'''
         return client_list
 
-    @setting(5, "Return Global or Local", boolean = 'b', client = 's')
-    def return_global_or_local(self, c, boolean, client):
+    @setting(5, "Return Global or Local", client = 's', boolean = 'b', returns = 'b')
+    def return_global_or_local(self, c, client, boolean = None):
         '''
         Set the global or local auto-return boolean to be Ture or False
         Input i.e.: (True, 'lattice')
         '''
-        self.bool_global[client] = boolean
+        if boolean is not None:
+            self.bool_global[client] = boolean
+        return self.bool_global[client]
 
     @setting(6, "Get Current Time", returns = 'v[min]')
     def get_current_time(self, c):
@@ -392,6 +449,20 @@ class SDTrackerGlobal(LabradServer):
             return fit
         else:
             return None
+
+    @setting(32, "Get Fit Line Center", client = 's', returns = '?')
+    def get_fit_line_center(self, c, client):
+        '''
+        Automatically detect whether to return global or local line center fit parameters
+        Input i.e.: ('lattice')
+        Returns i.e.: DimensionlessArray([  2.35051007e-03,  -2.23465187e+01]) or None
+        '''
+        if self.bool_global[client]:
+            fit = yield self.get_fit_line_center_global(c, client)
+        else:
+            fit = yield self.get_fit_parameters_local(c, 'linecenter', client)
+        returnValue(fit)
+
     
     @setting(40, "Get Current Lines local", client = 's', returns = '*(sv[MHz])')
     def get_current_lines_local(self, c, client):
@@ -779,29 +850,20 @@ class SDTrackerGlobal(LabradServer):
         '''
         Refresh data and fit parameters fot all clients
         '''
-
+        bool_newfit = False
         for client in client_list:
-            self.remove_old_measurements(client)
-            if (len(self.t_measure_B[client])):
-                self.B_fit_local[client] = self.fitter.fit(self.t_measure_B[client], self.B_field[client])
-            else:
-                self.B_fit_local[client] = None
+            bool_refresh = self.remove_old_measurements(client)
+            if bool_refresh:
+                bool_newfit = True
+                if (len(self.t_measure_B[client])):
+                    self.B_fit_local[client] = self.fitter.fit(self.t_measure_B[client], self.B_field[client])
+                else:
+                    self.B_fit_local[client] = None
 
-            if (len(self.t_measure_line_center[client])):
-                self.line_center_fit_local[client] = self.fitter.fit(self.t_measure_line_center[client], self.line_center[client])
-            else:
-                self.line_center_fit_local[client] = None
-
-            line_center_global = self.arraydict_join(self.line_center, self.global_fit_list[client])
-            t_measure_line_center_global = self.arraydict_join(self.t_measure_line_center, self.global_fit_list[client])
-                
-            keep_line_center = numpy.where((self.current_time - t_measure_line_center_global) < self.keep_line_center_measurements_global[client])
-            self.line_center_fit_global_data[client] = line_center_global[keep_line_center]
-            self.t_measure_line_center_fit_global_data[client] = t_measure_line_center_global[keep_line_center]
-            if (len(self.t_measure_line_center_fit_global_data[client])):
-                self.line_center_fit_global[client] = self.fitter.fit(self.t_measure_line_center_fit_global_data[client], self.line_center_fit_global_data[client])
-            else:
-                self.line_center_fit_global[client] = None
+                if (len(self.t_measure_line_center[client])):
+                    self.line_center_fit_local[client] = self.fitter.fit(self.t_measure_line_center[client], self.line_center[client])
+                else:
+                    self.line_center_fit_local[client] = None
         
         if (time.time() - self.start_time) > clear_all_duration:
             t_measure_line_center_all = self.arraydict_join(self.t_measure_line_center)
@@ -820,11 +882,23 @@ class SDTrackerGlobal(LabradServer):
             self.B_field_nofit = dict.fromkeys(client_list, numpy.array([]))
             self.start_time = self.start_time + t_measure_min
         
-        self.onNewFit(None)
+        if bool_newfit:
+            for client in client_list:
+                line_center_global = self.arraydict_join(self.line_center, self.global_fit_list[client])
+                t_measure_line_center_global = self.arraydict_join(self.t_measure_line_center, self.global_fit_list[client])
+                    
+                keep_line_center = numpy.where((self.current_time - t_measure_line_center_global) < self.keep_line_center_measurements_global[client])
+                self.line_center_fit_global_data[client] = line_center_global[keep_line_center]
+                self.t_measure_line_center_fit_global_data[client] = t_measure_line_center_global[keep_line_center]
+                if (len(self.t_measure_line_center_fit_global_data[client])):
+                    self.line_center_fit_global[client] = self.fitter.fit(self.t_measure_line_center_fit_global_data[client], self.line_center_fit_global_data[client])
+                else:
+                    self.line_center_fit_global[client] = None
+            self.onNewFit(None)
 
     def do_fit_local(self, client):
         '''
-        Refresh data points and fit parameters fot a client
+        Refresh data points and fit parameters for a client
         '''
         self.client_examination(client)
 
@@ -864,10 +938,17 @@ class SDTrackerGlobal(LabradServer):
         keep_line_center = numpy.where( (self.current_time - self.t_measure_line_center[client]) < self.keep_line_center_measurements_local[client])
         keep_B = numpy.where( (self.current_time - self.t_measure_B[client]) < self.keep_B_measurements_local[client])
 
+        bool_refresh = False
+        if not numpy.array_equal(self.t_measure_line_center[client], self.t_measure_line_center[client][keep_line_center]):
+            bool_refresh = True
+        elif not numpy.array_equal(self.t_measure_B[client], self.t_measure_B[client][keep_B]):
+            bool_refresh = True
         self.t_measure_line_center[client] = self.t_measure_line_center[client][keep_line_center]
         self.t_measure_B[client] = self.t_measure_B[client][keep_B]
-        self.B_field[client] = self.B_field[client][keep_B]
         self.line_center[client] = self.line_center[client][keep_line_center]
+        self.B_field[client] = self.B_field[client][keep_B]
+
+        return bool_refresh
 
 if __name__ == '__main__':
     from labrad import util

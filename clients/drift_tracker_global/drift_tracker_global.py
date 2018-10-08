@@ -133,9 +133,22 @@ class drift_tracker(QtGui.QWidget):
         self.linecenter_entry.setSuffix(' kHz')
         self.linecenter_entry.setValue(self.last_center)
         
-        self.entry_Bfield_and_center_button = QtGui.QPushButton("Submit B and Line Center")
+        self.entry_Bfield_and_center_button = QtGui.QPushButton("Submit All")
+        self.entry_Bfield_button = QtGui.QPushButton("Submit B")
+        self.entry_center_button = QtGui.QPushButton("Submit Center")
+        entry_B_center = QtGui.QHBoxLayout()
+        entry_B_center.addWidget(self.entry_Bfield_button)
+        entry_B_center.addWidget(self.entry_center_button)
+        entry_B_center.addWidget(self.entry_Bfield_and_center_button)
 
         self.entry_button = QtGui.QPushButton("Submit Lines")
+        self.entry_line1_button = QtGui.QPushButton("Submit Line One")
+        self.entry_line2_button = QtGui.QPushButton("Submit Line Two")
+        entry_lines = QtGui.QHBoxLayout()
+        entry_lines.addWidget(self.entry_line1_button)
+        entry_lines.addWidget(self.entry_line2_button)
+        entry_lines.addWidget(self.entry_button)        
+
         self.copy_clipboard_button = QtGui.QPushButton("Copy Info to Clipboard")
 
         self.remove_all_B_and_lines_button = QtGui.QPushButton("Remove all B and Line Centers")
@@ -181,10 +194,10 @@ class drift_tracker(QtGui.QWidget):
         
         layout.addWidget(self.frequency_table, 0, 0, 6, 1)
         layout.addWidget(self.entry_table, 0, 1, 2, 1)
-        layout.addWidget(self.entry_button, 2, 1, 1, 1)
+        layout.addLayout(entry_lines, 2, 1, 1, 1)
         layout.addWidget(self.Bfield_entry, 3, 1, 1, 1)
         layout.addWidget(self.linecenter_entry, 4, 1, 1, 1)
-        layout.addWidget(self.entry_Bfield_and_center_button, 5, 1, 1, 1)
+        layout.addLayout(entry_B_center, 5, 1, 1, 1)
 
         hlp_layout = QtGui.QHBoxLayout()
         hlp_layout.addWidget(self.copy_clipboard_button)
@@ -247,7 +260,11 @@ class drift_tracker(QtGui.QWidget):
         self.remove_all_B_and_lines_button.clicked.connect(self.on_remove_all_B_and_line_centers)
         
         self.entry_button.clicked.connect(self.on_entry)
+        self.entry_line1_button.clicked.connect(self.on_entry_line1)
+        self.entry_line2_button.clicked.connect(self.on_entry_line2)
         self.entry_Bfield_and_center_button.clicked.connect(self.on_entry_Bfield_and_center)
+        self.entry_Bfield_button.clicked.connect(self.on_entry_Bfield)
+        self.entry_center_button.clicked.connect(self.on_entry_center)
         
         self.track_B_duration.valueChanged.connect(self.on_new_B_track_duration)
         self.track_line_center_duration.valueChanged.connect(self.on_new_line_center_track_duration)
@@ -275,15 +292,24 @@ class drift_tracker(QtGui.QWidget):
         self.track_global_line_center_duration.blockSignals(True)
         self.track_global_line_center_duration.setValue(duration_line_center_global['min'])
         self.track_global_line_center_duration.blockSignals(False)
-        self.track_global_line_center_duration.setEnabled(False)
-        self.global_checkbox.setChecked(False)
-        for client in client_list:
-            if client == client_name:
-                self.client_checkbox[client_name].setChecked(True)
-                self.client_checkbox[client].setEnabled(False)
-            else:
-                self.client_checkbox[client].setEnabled(False)
-                self.client_checkbox[client].setChecked(False)
+
+        global_or_local = yield server.return_global_or_local(client_name)
+        global_fit_list = yield server.get_global_fit_list(client_name)
+        if global_or_local:
+            self.track_global_line_center_duration.setEnabled(True)
+            self.global_checkbox.setChecked(True)
+            for name in global_fit_list:
+                self.client_checkbox[name].setChecked(True)
+        else:
+            self.track_global_line_center_duration.setEnabled(False)
+            self.global_checkbox.setChecked(False)
+            for client in client_list:
+                if client == client_name:
+                    self.client_checkbox[client_name].setChecked(True)
+                    self.client_checkbox[client].setEnabled(False)
+                else:
+                    self.client_checkbox[client].setEnabled(False)
+                    self.client_checkbox[client].setChecked(False)
         yield self.on_new_fit(None, None)
     
     @inlineCallbacks
@@ -355,8 +381,36 @@ class drift_tracker(QtGui.QWidget):
             self.Bfield_entry.setValue(b_field*1.0e3)
             self.linecenter_entry.setValue(line_center*1.0e3)
 
-            self.resize_spec_graph()
+            # self.resize_spec_graph()
 
+        except self.Error as e:
+            self.displayError(e.msg)
+
+    @inlineCallbacks
+    def on_entry_line1(self, clicked):
+        server = yield self.cxn_global.get_server('SD Tracker Global')
+        info = self.entry_table.get_info()
+        with_units = [(name, self.WithUnit(val, 'MHz')) for name,val in info]
+        with_units = [with_units[0]]
+        try:
+            yield server.set_measurements_with_one_line(with_units, client_name)
+
+            # self.resize_spec_graph()
+
+        except self.Error as e:
+            self.displayError(e.msg)
+
+    @inlineCallbacks
+    def on_entry_line2(self, clicked):
+        server = yield self.cxn_global.get_server('SD Tracker Global')
+        info = self.entry_table.get_info()
+        with_units = [(name, self.WithUnit(val, 'MHz')) for name,val in info]
+        with_units = [with_units[1]]
+        try:
+            yield server.set_measurements_with_one_line(with_units, client_name)
+
+            # self.resize_spec_graph()
+            
         except self.Error as e:
             self.displayError(e.msg)
     
@@ -382,10 +436,34 @@ class drift_tracker(QtGui.QWidget):
                 new_freq = hlp[line_info[k][0]]
                 self.entry_table.cellWidget(k, 1).setValue(new_freq[new_freq.units])                
 
-            self.resize_spec_graph()
+            # self.resize_spec_graph()
 
         except self.Error as e:
-            self.displayError(e.msg)        
+            self.displayError(e.msg)
+
+    @inlineCallbacks
+    def on_entry_Bfield(self, clicked):
+        server = yield self.cxn_global.get_server('SD Tracker Global')
+        B_with_units = self.WithUnit(self.Bfield_entry.value()/1.0e3, 'gauss')
+
+        hlp1 = [('Bfield', B_with_units)]
+
+        try:
+            yield server.set_measurements_with_bfield(hlp1, client_name)
+        except self.Error as e:
+            self.displayError(e.msg)
+
+    @inlineCallbacks
+    def on_entry_center(self, clicked):
+        server = yield self.cxn_global.get_server('SD Tracker Global')
+        f_with_units = self.WithUnit(self.linecenter_entry.value()/1.0e3, 'MHz')
+
+        hlp2 = [('line_center', f_with_units)]
+
+        try:
+            yield server.set_measurements_with_line_center(hlp2, client_name)
+        except self.Error as e:
+            self.displayError(e.msg)
 
     @inlineCallbacks
     def on_new_B_track_duration(self, value):
@@ -411,12 +489,12 @@ class drift_tracker(QtGui.QWidget):
     def global_or_local(self, checked):
         server = yield self.cxn_global.get_server('SD Tracker Global')
         if bool(checked):
-            yield server.return_global_or_local(True, client_name)
+            yield server.return_global_or_local(client_name, True)
             for client in client_list:
                 self.client_checkbox[client].setEnabled(True)
             self.track_global_line_center_duration.setEnabled(True)
         else:
-            yield server.return_global_or_local(False, client_name)
+            yield server.return_global_or_local(client_name, False)
             for client in client_list:
                 self.client_checkbox[client].setChecked(False)
                 self.client_checkbox[client].setEnabled(False)
@@ -504,14 +582,21 @@ class drift_tracker(QtGui.QWidget):
         try:
             server = yield self.cxn.get_server('Data Vault')
             directory = list(c.save_folder)
+            start_time = time.time()
             localtime = time.localtime()
             dirappend = [time.strftime("%Y%b%d",localtime)]
             directory.extend(dirappend)
             yield server.cd(directory, True)
             datasetNameAppend = time.strftime("%Y%b%d_%H%M_%S",localtime)
-            save_name = '{0} {1}'.format(c.dataset_name, datasetNameAppend)
-            self.line_center_dataset = yield server.new(save_name, [('t', 'sec')], [('Cavity Drift','Line Center','MHz'),('Cavity Drift','B Field','gauss')])
-            yield server.add_parameter('start_time', time.time())
+            save_name_line_center_and_Bfield = '{0} {1}'.format(c.dataset_name_linecenter_bfield, datasetNameAppend)
+            self.line_center_Bfield_dataset = yield server.new(save_name_line_center_and_Bfield, [('t', 'sec')], [('Cavity Drift','Line Center','MHz'),('Cavity Drift','B Field','gauss')])
+            yield server.add_parameter('start_time', start_time)
+            save_name_line_center = '{0} {1}'.format(c.dataset_name_linecenter, datasetNameAppend)
+            self.line_center_dataset = yield server.new(save_name_line_center, [('t', 'sec')], [('Cavity Drift','Line Center','MHz')])
+            yield server.add_parameter('start_time', start_time)
+            save_name_Bfield = '{0} {1}'.format(c.dataset_name_bfield, datasetNameAppend)
+            self.Bfield_dataset = yield server.new(save_name_Bfield, [('t', 'sec')], [('Cavity Drift','B Field','gauss')])
+            yield server.add_parameter('start_time', start_time)
         except:
             pass
 
@@ -544,29 +629,54 @@ class drift_tracker(QtGui.QWidget):
     @inlineCallbacks
     def on_new_fit(self, x, y):
         yield self.update_lines()
-        yield self.update_fit(self.global_checkbox.isChecked())
+        yield self.update_fit()
     
     @inlineCallbacks
     def on_new_save(self, x, y):
         try:
             server_sd = yield self.cxn_global.get_server('SD Tracker Global')
-            b_field = yield server_sd.get_last_b_field_local(client_name)
-            line_center = yield server_sd.get_last_line_center_local(client_name)
+            if y == 'linecenter_bfield':
+                b_field = yield server_sd.get_last_b_field_local(client_name)
+                line_center = yield server_sd.get_last_line_center_local(client_name)
+            elif y == 'bfield':
+                b_field = yield server_sd.get_last_b_field_local(client_name)
+            elif y == 'linecenter':
+                line_center = yield server_sd.get_last_line_center_local(client_name)
         except Exception as e:
             print "Cannot get last data point"
             pass
         else:
-            self.Bfield_entry.setValue(b_field*1.0e3)
-            self.linecenter_entry.setValue(line_center*1.0e3)
-            try:
-                server_dv = yield self.cxn.get_server('Data Vault')
-                yield server_dv.add((time.time(), line_center, b_field))
-            except:
-                print 'Data Vault Not Available, not saving'
-                yield None
+            if y == 'linecenter_bfield':
+                self.Bfield_entry.setValue(b_field*1.0e3)
+                self.linecenter_entry.setValue(line_center*1.0e3)
+                try:
+                    server_dv = yield self.cxn.get_server('Data Vault')
+                    yield server_dv.open_appendable(self.line_center_Bfield_dataset[1])
+                    yield server_dv.add((time.time(), line_center, b_field))
+                except:
+                    print 'Data Vault Not Available, not saving'
+                    yield None
+            elif y == 'bfield':
+                self.Bfield_entry.setValue(b_field*1.0e3)
+                try:
+                    server_dv = yield self.cxn.get_server('Data Vault')
+                    yield server_dv.open_appendable(self.Bfield_dataset[1])
+                    yield server_dv.add((time.time(), b_field))
+                except:
+                    print 'Data Vault Not Available, not saving'
+                    yield None
+            elif y == 'linecenter':
+                self.linecenter_entry.setValue(line_center*1.0e3)
+                try:
+                    server_dv = yield self.cxn.get_server('Data Vault')
+                    yield server_dv.open_appendable(self.line_center_dataset[1])
+                    yield server_dv.add((time.time(), line_center))
+                except:
+                    print 'Data Vault Not Available, not saving'
+                    yield None
 
     @inlineCallbacks
-    def update_fit(self, bool_center_global = False):
+    def update_fit(self):
         try:
             server = yield self.cxn_global.get_server('SD Tracker Global')
             history_B = yield server.get_fit_history(client_name)
@@ -610,10 +720,8 @@ class drift_tracker(QtGui.QWidget):
 
             fit_b = yield server.get_fit_parameters_local('bfield', client_name)
 
-            if bool_center_global:
-                fit_f = yield server.get_fit_line_center_global(client_name)
-            else:
-                fit_f = yield server.get_fit_parameters_local('linecenter', client_name)
+            fit_f = yield server.get_fit_line_center(client_name)
+
         except Exception as e:
             #no fit available
             print e
@@ -848,21 +956,21 @@ class drift_tracker(QtGui.QWidget):
     	zeeman = ('Zeeman Splitting',self.WithUnit(-freq1+freq2, 'MHz'))
     	return zeeman
     
-    @inlineCallbacks
-    def resize_spec_graph(self):
-        # set the limits of the predicted spectrum to the extrema
-        try:
-            server = yield self.cxn_global.get_server('SD Tracker Global')
-            curr_lines = yield server.get_current_lines(client_name)
+    # @inlineCallbacks
+    # def resize_spec_graph(self):
+    #     # set the limits of the predicted spectrum to the extrema
+    #     try:
+    #         server = yield self.cxn_global.get_server('SD Tracker Global')
+    #         curr_lines = yield server.get_current_lines(client_name)
 
-            curr_lines = dict(curr_lines)
-            hlp, my_min = min(curr_lines.iteritems(), key = lambda x: x[1])
-            hlp, my_max = max(curr_lines.iteritems(), key = lambda x: x[1])
-            self.spec.set_xlim(left = my_min.value - 1.0, right = my_max.value + 1.0)
+    #         curr_lines = dict(curr_lines)
+    #         hlp, my_min = min(curr_lines.iteritems(), key = lambda x: x[1])
+    #         hlp, my_max = max(curr_lines.iteritems(), key = lambda x: x[1])
+    #         self.spec.set_xlim(left = my_min.value - 1.0, right = my_max.value + 1.0)
 
-        except Exception as e:
-            #no lines available
-            return
+    #     except Exception as e:
+    #         #no lines available
+    #         return
         
     @inlineCallbacks
     def disable(self):

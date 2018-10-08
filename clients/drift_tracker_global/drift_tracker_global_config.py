@@ -13,6 +13,7 @@ class config_729_tracker(object):
     show_rate = 1
 
     save_folder = ['', 'Drift_Tracking', 'Cavity729']
-    dataset_name = 'Cavity Drift'
-
+    dataset_name_linecenter_bfield = 'Line Center & Bfield Drift'
+    dataset_name_linecenter = 'Line Center Drift'
+    dataset_name_bfield = 'Bfield Drift'
 

@@ -111,6 +111,15 @@ class Transitions_SD(object):
         B = B.inUnitsOf('gauss')
         offset = en1 - (md1 * d_scale - ms1 * s_scale) * B
         return B, offset
+
+    def energy_line_center_to_magnetic_field(self, transition, line_center):
+        ms,md = self.str_to_fractions(transition[0])
+        en = transition[1]
+        s_scale = self.S.energy_scale
+        d_scale = self.D.energy_scale
+        B = (en - line_center) / (d_scale * md - s_scale * ms)
+        B = B.inUnitsOf('gauss')
+        return B
         
     def str_to_fractions(self, inp):
         #takes S-1/2D5+1/2 and converts to Fraction(-1/2), Fraction(1/2)
