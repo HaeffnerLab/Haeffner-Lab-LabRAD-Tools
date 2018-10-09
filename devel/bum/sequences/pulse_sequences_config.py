@@ -49,6 +49,7 @@ dds729global = double_pass_729('729global', f_shift = WithUnit(0.15, 'MHz'))
 dds729global_1 = double_pass_729('729global_1', f_shift = WithUnit(0.15, 'MHz'))
 dds729global_2 = double_pass_729('729global_2', f_shift = WithUnit(0.15, 'MHz'))
 dds729global_3 = double_pass_729('729global_3', f_shift = WithUnit(0.15, 'MHz'))
+dds729global_4 = double_pass_729('729global_4', f_shift = WithUnit(0.15, 'MHz'))
 dds729local = double_pass_729('729local', f_shift = WithUnit(-0.2, 'MHz'))
 
 #dds729global = double_pass_729('729global', f_shift = WithUnit(0.0, 'MHz'))
@@ -75,6 +76,7 @@ dds_name_dictionary = {
                         '729global_1':dds729global_1,
                         '729global_2':dds729global_2,
                         '729global_3':dds729global_3,
+                        '729global_4':dds729global_4,
                         '729local':dds729local,
                         '729_aux':dds729DP_aux,
                         '729DP_aux':dds729DP_aux,
