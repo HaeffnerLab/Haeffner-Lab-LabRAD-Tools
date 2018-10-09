@@ -1,0 +1,29 @@
+class config(object):
+
+    #list in the format (import_path, class_name)
+    sequences = [
+        #('common.devel.bum.sequences.example', 'Sequence'),
+        ('lattice.PulseSequences2.RabiFlopping', 'RabiFlopping'),
+        ('lattice.PulseSequences2.RabiFloppingManual', 'RabiFloppingManual'),
+        ('lattice.PulseSequences2.Spectrum', 'Spectrum'),
+        ('lattice.PulseSequences2.multispectrum', 'MultiSpectrum'),
+        ('lattice.PulseSequences2.ReferenceImage', 'ReferenceImage'),
+        ('lattice.PulseSequences2.CalibAllLines', 'CalibAllLines'),
+        ('lattice.PulseSequences2.SidebandOptimization', 'SidebandOptimization'),
+        ('lattice.PulseSequences2.MolmerSorensenGate', 'MolmerSorensenGate'),
+        ('lattice.PulseSequences2.Parity', 'Parity'),
+        ('lattice.PulseSequences2.Ramsey', 'Ramsey')]
+    
+    global_show_params= ['AO_calibration.delay_time',
+                         'Excitation_729.channel_729',
+                         'StatePreparation.channel_729',
+                         'StatePreparation.optical_pumping_enable',
+                         'StatePreparation.sideband_cooling_enable']
+
+
+    allowed_concurrent = {
+#        'fft_spectrum': ['non_conflicting_experiment'],
+#        'non_conflicting_experiment' : ['fft_spectrum'],
+    }
+    
+    launch_history = 1000               
