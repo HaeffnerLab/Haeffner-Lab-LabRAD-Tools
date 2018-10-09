@@ -2,6 +2,7 @@ from twisted.internet.defer import inlineCallbacks, DeferredLock, Deferred
 from threading import Lock
 from signals import Signals
 
+
 '''
 script_semaphore defines a class used to store runtime behavior information
 about a script that is ready, running, paused, stopped, or finished.
@@ -54,6 +55,7 @@ class script_semaphore(object):
         self.pause_requests = []
         self.continue_requests = []
         self.already_called_continue = False # [TO DO - This is unused - delete?]
+
         self.status = 'Ready'
         self.percentage_complete = 0.0
         self.should_stop = False
@@ -67,7 +69,9 @@ class script_semaphore(object):
         if not 0.0 <= perc <= 100.0: raise Exception ("Incorrect Percentage of Completion")
         print 'percentage complete =', perc
         self.percentage_complete = perc
+
         self.status = 'Running'
+
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
     
     def launch_confirmed(self):
@@ -76,6 +80,7 @@ class script_semaphore(object):
 
     def pause(self):
         '''
+
         pause() is typically called by script_scanner after the collection of each
         data point, to see if the script needs to be paused or not.
 
@@ -86,6 +91,7 @@ class script_semaphore(object):
         acquisition of pause_lock, to be released immediately thereafter. So pause()
         will not return until pause_lock has been released, which occurs whenever
         the script is requested to be either continued or stopped.
+
         '''
         if self.pause_lock.locked():
             self.status = 'Paused'
@@ -127,7 +133,9 @@ class script_semaphore(object):
         yield self.pause_lock.acquire()
         self.pause_lock.release()
         print 'script proceeding'
+
         if self.status == 'Paused' or self.status == 'Pausing':
+
             self.status = 'Running'
             self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
             self.signals.on_running_script_paused((self.ident, False))
@@ -145,6 +153,7 @@ class script_semaphore(object):
             self.pause_lock.release()
     
     def set_pausing(self, should_pause):
+
         '''
         Called to request that a script be paused (should_pause==True) or continued
         (should_pause==False). This does not actually pause the script -- it simply
@@ -156,6 +165,7 @@ class script_semaphore(object):
         If asking to continue, returns a Deferred which is called back after the script
         has been unpaused and is running again.
         '''
+
         if should_pause:
             request = Deferred()
             print 'made pause request', request
@@ -166,6 +176,7 @@ class script_semaphore(object):
                 self.status = 'Pausing'
                 self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
                 #print 'acquired pause', request
+
             else:
                 print 'not acquiring because locked'
         else:
@@ -175,6 +186,7 @@ class script_semaphore(object):
             print 'made continue request', request
             self.continue_requests.append(request)
             #print 'releasing the lock!'
+
             self.pause_lock.release()
         return request
             
