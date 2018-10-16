@@ -116,6 +116,36 @@ class pulse_sequence(object):
                 raise Exception('sideband not found') 
         return freq
 
+    # old parameter_vault version 
+    def calc_freq_from_array(self, carrier='S-1/2D-1/2', sideband_selection=[0,0,0,0]):
+        '''given calculates the frequency of the 729 DP drive from the carriers and sidebands
+        in the parameter vault
+        '''
+        carrier_translation = {'S+1/2D-3/2':'c0',
+                               'S-1/2D-5/2':'c1',
+                               'S+1/2D-1/2':'c2',
+                               'S-1/2D-3/2':'c3',
+                               'S+1/2D+1/2':'c4',
+                               'S-1/2D-1/2':'c5',
+                               'S+1/2D+3/2':'c6',
+                               'S-1/2D+1/2':'c7',
+                               'S+1/2D+5/2':'c8',
+                               'S-1/2D+3/2':'c9',
+                               }
+#         print "230984", self.parameters.Carriers[carrier_translation[carrier]]
+#         print carrier_translation[carrier]
+        freq=self.parameters.Carriers[carrier_translation[carrier]]
+        try: 
+            freq=self.parameters.Carriers[carrier_translation[carrier]]
+        except:
+            raise Exception('carrier not found') 
+        trapfreq = self.parameters.TrapFrequencies
+        sideband_frequencies = [trapfreq.radial_frequency_1, trapfreq.radial_frequency_2, trapfreq.axial_frequency, trapfreq.rf_drive_frequency]
+        for order,sideband_frequency in zip(sideband_selection, sideband_frequencies):
+            freq += order * sideband_frequency
+        return freq
+
+
     def get_params(self):
         return self.parameters    
     
