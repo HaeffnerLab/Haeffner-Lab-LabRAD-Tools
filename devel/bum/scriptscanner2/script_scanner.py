@@ -17,7 +17,7 @@ timeout = 20
 '''
 from labrad.server import LabradServer, setting
 from labrad.units import WithUnit
-from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
+from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue, waitForDeferred
 from signals import Signals
 from configuration import config
 import scan_methods
@@ -269,8 +269,19 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         status = self.scheduler.get_running_status(sequence_ID)
         if status is None:
             raise Exception ("Trying to pause sequence with ID {0} but it was not running".format(sequence_ID))
-        status.status = 'Pausing'
-        #status.set_pausing(should_pause)
+        if should_pause:
+            # call set_pausing immediately
+            status.set_pausing(True)
+        else:
+            # if we are continuing a sequence, we must pause any conflicting ones and wait
+            # for the pause to complete before trying to unpause this one
+            scan = self.scheduler.running.get(sequence_ID, None)
+            pause_requests = self.scheduler.pause_running(None, scan, sequence_ID)
+            print 'waiting for pauses to complete:', pause_requests
+            def continue_sequence(result):
+                print 'continuing sequence after pauses have completed'
+                status.set_pausing(False)
+            pause_requests.addCallback(continue_sequence)
         
     @setting(21, "Stop Sequence", sequence_ID = 'w')
     def stop_sequence(self, c, sequence_ID):
@@ -432,7 +443,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             running = DeferredList(self.scheduler.running_deferred_list())
             yield running
             # uncomment this for saving the params when the server stops
-            # yield self.save_parameters()
+            yield self.save_parameters()
         except AttributeError:
             #if dictionary doesn't exist yet (i.e bad identification error), do nothing
             pass

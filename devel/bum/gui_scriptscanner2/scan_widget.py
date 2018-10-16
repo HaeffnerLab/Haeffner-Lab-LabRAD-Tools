@@ -95,6 +95,7 @@ class sequence_widget(QtGui.QWidget):
         scroll = QtGui.QScrollArea(self)
         layout.addWidget(scroll)
         scroll.setWidgetResizable(True)
+        #scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         scrollContent = QtGui.QWidget(scroll)
         
         scrollLayout = QtGui.QVBoxLayout(scrollContent)
@@ -176,6 +177,7 @@ class scan_widget(QtGui.QWidget):
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.scan_box)
         layout.addWidget(self.PreferredParameters)
+
         self.setLayout(layout)
         
     def buildSequenceWidget(self, experiment, params):

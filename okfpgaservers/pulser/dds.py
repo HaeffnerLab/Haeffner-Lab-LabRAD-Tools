@@ -105,7 +105,7 @@ class DDS(LabradServer):
             else:
                 prof_off = prof+1                
                 ampl_2 = ampl
-            #print "Profile ",prof
+            print "Profile ",prof
            
             num = self.settings_to_num(channel, freq, ampl, phase, prof)
             if not channel.phase_coherent_model:

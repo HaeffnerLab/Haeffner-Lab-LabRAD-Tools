@@ -31,8 +31,6 @@ import dvParameters
 from analysis import readouts
 import sys
 import time
-from common.client_config import client_info as dt_config
-
 
 
 class pulse_sequence_wrapper(object):
@@ -47,7 +45,6 @@ class pulse_sequence_wrapper(object):
         self.sc = sc # reference to scriptscanner class, not through the labrad connection
         self.cxn = cxn
         try:
-
             self.dt = self.cxn.sd_tracker
         except:
             self.dt = None
@@ -84,7 +81,7 @@ class pulse_sequence_wrapper(object):
             self.dv.add(np.vstack((bins[0:-1],hist)).transpose(), context = self.histogram_save_context )
             self.dv.add_parameter('HistogramCameraConfidence', True, context = self.histogram_save_context )
             self.total_camera_confidences = []
-
+            
 
     def setup_data_vault(self, cxn, name):
         
@@ -104,56 +101,23 @@ class pulse_sequence_wrapper(object):
         self.ds = self.dv.new(self.timetag, [(self.parameter_to_scan, self.submit_unit)], dependents, context = self.data_save_context)
         
         shift=U(0,self.submit_unit)
-
-
         
         if not self.parameters_dict.Display.relative_frequencies:
-            if self.parameters_dict.DriftTracker.global_sd_enable:
-                # using global sd 
-                print 'using global sd'
-                # cannot use asynchrounous connection here
-                # from labrad.wrappers import connectAsync
-                try:
-                    print "connecting synchronous to global sd"
-                    global_sd_cxn = labrad.connect('192.168.169.86' , password ='',tls_mode='off')
-                    # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
-                except:
-                    print "cannot connect to global sd tracker"
-                else:
-                    if self.window == "car1":
-                        line = self.parameters_dict.DriftTracker.line_selection_1
-                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                    elif self.window == "car2":
-                        line = self.parameters_dict.DriftTracker.line_selection_2
-                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                    elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                        if self.name != 'RabiFloppingManual' :
-                            line = self.parameters_dict.Spectrum.line_selection 
-                            shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                            # adding the shift for the sideband
-                            order = int(self.parameters_dict.Spectrum.order)  
-                            if  order != 0 :
-                                sideband= self.parameters_dict.Spectrum.selection_sideband
-                                shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-                    global_sd_cxn.disconnect()
-                    # sleep(0.05)
-            else:
-                if self.window == "car1":
-                    line = self.parameters_dict.DriftTracker.line_selection_1
-                    shift = cxn.sd_tracker.get_current_line(line)
-                elif self.window == "car2":
-                    line = self.parameters_dict.DriftTracker.line_selection_2
-                    shift = cxn.sd_tracker.get_current_line(line)
-                elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                    if self.name != 'RabiFloppingManual' :
-                        line = self.parameters_dict.Spectrum.line_selection 
-                        shift = cxn.sd_tracker.get_current_line(line) 
-                        # adding the shift for the sideband
-                        order = int(self.parameters_dict.Spectrum.order)  
-                        if  order != 0 :
-                            sideband= self.parameters_dict.Spectrum.selection_sideband
-                            shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-
+            if self.window == "car1":
+                line = self.parameters_dict.DriftTracker.line_selection_1
+                shift = cxn.sd_tracker.get_current_line(line)
+            elif self.window == "car2":
+                line = self.parameters_dict.DriftTracker.line_selection_2
+                shift = cxn.sd_tracker.get_current_line(line)
+            elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+                if self.name != 'RabiFloppingManual' :
+                    line = self.parameters_dict.Spectrum.line_selection 
+                    shift = cxn.sd_tracker.get_current_line(line) 
+                    # adding the shift for the sideband
+                    order = int(self.parameters_dict.Spectrum.order)  
+                    if  order != 0 :
+                        sideband= self.parameters_dict.Spectrum.selection_sideband
+                        shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
         else:
             # when we scan the sideband in spectrum we want to have thier offset from the carrier
             if self.name == "Spectrum":
@@ -161,28 +125,27 @@ class pulse_sequence_wrapper(object):
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-
-            elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
-                # MotionAnalysisSpectrum is always on the 1st-order sideband
-                sideband = self.parameters_dict.Motion_Analysis.sideband_selection
-                shift = self.parameters_dict.TrapFrequencies[sideband]
+                          
+        
+                    
                 
            
    
         if self.grapher is not None:
             
             
-
-
+#             print "this is the scan_submit"
+#             print self.scan_submit
+#             print "this is the shift", shift
             
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
-            
+        
         self.readout_save_directory = directory
         # save the readouts
         self.dv.cd(directory, True, context = self.readout_save_context)
         self.dv.new('Readouts',[('Iteration', 'Arb')],[('Readout Counts','Arb','Arb')], context = self.readout_save_context)
         
-
+        
         #print self.sc.datasets[self.ident]
         
         # for the scheduled scan this is no creating the dataset for some reason?
@@ -196,7 +159,6 @@ class pulse_sequence_wrapper(object):
         
         
         
-
     @inlineCallbacks
     def update_params(self, update):
         # also update from the drift tracker here?
@@ -221,49 +183,16 @@ class pulse_sequence_wrapper(object):
                 update_dict['.'.join(key)] = update[key]
             else:
                 update_dict[key] = update[key]
-        
-
-
-        self.parameters_dict.update(update_dict)
-        
-        if self.parameters_dict.DriftTracker.global_sd_enable:
-            # using global sd 
-            print 'using global sd'
-            # there was a problem connecting in the regular sync was we had to establish a
-            carriers = yield self.get_lines_from_global_dt()
-            if carriers:
-                for c, f in carriers:
-                    carriers_dict[carrier_translation[c]] = f
-        else:
-            print "using the local dt"
-            if self.dt is not None:
-                # connect to drift tracker to get the extrapolated lines
-                carriers = yield self.dt.get_current_lines()
-                for c, f in carriers:
-                    carriers_dict[carrier_translation[c]] = f
+        if self.dt is not None:
+            carriers = yield self.dt.get_current_lines()
+            for c, f in carriers:
+                carriers_dict[carrier_translation[c]] = f
                 
-        
+        self.parameters_dict.update(update_dict)
         self.parameters_dict.update(carriers_dict)
         self.parameters_dict.update(self.module.fixed_params)
         
-    @inlineCallbacks
-    def get_lines_from_global_dt(self):
-        # added this function to support async connection to the 
-        from labrad.wrappers import connectAsync
-        try:
-            print "connecting async to global sd"
-            global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
-            carriers =  yield global_sd_cxn.sd_tracker_global.get_current_lines(dt_config.client_name)
-            # need to add some delay time because it casues a problem with the camera ????
-            yield global_sd_cxn.disconnect()
-            sleep(0.05)
-            # print carriers 
-        except:
-            print "Problem with the global_sd. Make sure you have submitted a line."
-        else:
-            returnValue(carriers)
-
-
+        
     def update_scan_param(self, update):
         update_dict = {}
         for key in update.keys():
@@ -308,6 +237,18 @@ class pulse_sequence_wrapper(object):
         
   
         
+        
+#         print self.scan_submit
+        
+        #if not self.parameters_dict.Display.relative_frequencies:
+        #    self.relative_freq()
+#         print self.scan_submit
+#         print self.scan
+#         
+        #print "setting up the scan params"
+        
+    
+    # calculate the relative freq
     
  
     
@@ -354,11 +295,6 @@ class pulse_sequence_wrapper(object):
                     shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
 
                     return shift
-            elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
-                # MotionAnalysisSpectrum is always on the 1st-order sideband
-                sideband = self.parameters_dict.Motion_Analysis.sideband_selection
-                shift = self.parameters_dict.TrapFrequencies[sideband]
-                return shift
                
 
         if line != None:
@@ -532,8 +468,7 @@ class pulse_sequence_wrapper(object):
 
                     
         # sequence initializing hardware (dds_cw or mirrors?)    
-
-        # self.module.run_initial(cxn, self.parameters_dict)
+        self.module.run_initial(cxn, self.parameters_dict)
         
         self.readout_save_iteration = 0
         
@@ -543,26 +478,15 @@ class pulse_sequence_wrapper(object):
         if self.parameters_dict.ScanParam.shuffle:
             np.random.shuffle(self.scan)
 
-
-        num_scan_points = len(self.scan)
+        
         for it,x in enumerate(self.scan):
             
-
-            # print "running sequence wrapper 1"
             should_stop = self.sc._pause_or_stop(ident)
-            # print "running sequence wrapper 1"
             if should_stop: break
             update = {self.parameter_to_scan: x}
             ## needs the two lines of update to ensure the proper updating!!!
             self.update_params(update)
             self.update_scan_param(update)
-
-
-            if it == 0:
-                # sequence initializing hardware (dds_cw or mirrors?)    
-                self.module.run_initial(cxn, self.parameters_dict)
-
-
             seq = self.module(self.parameters_dict)
             seq.programSequence(pulser)
             print "programmed pulser"
@@ -626,14 +550,11 @@ class pulse_sequence_wrapper(object):
             self.module.run_in_loop(cxn, self.parameters_dict, np.array(data),np.array(data_x))
             #submit the results to the data vault
             self.dv.add(submission, context = self.data_save_context)
-
-
-            progress = 100.0 * ((it+1.0) / num_scan_points)
-            self.sc.sequence_set_progress(None, ident, progress)
+            
+              
            
-        self.sc.sequence_set_progress(None, ident, 100.0)
+                
         self.module.run_finally(cxn, self.parameters_dict, data, np.array(data_x))
-        self.sc.save_parameters()
 
         self._finalize(cxn) 
     
@@ -688,7 +609,6 @@ class pulse_sequence_wrapper(object):
                 camera.start_live_display()
                 
         cxn.disconnect()
-
 
     def plot_current_sequence(self, cxn):
         

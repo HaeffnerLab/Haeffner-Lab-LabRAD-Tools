@@ -102,8 +102,8 @@ class pulse_sequence(object):
                                'S+1/2D+5/2':'c8',
                                'S-1/2D+3/2':'c9',
                                }
-#         print "230984", self.parameters.Carriers[carrier_translation[carrier]]
-#         print carrier_translation[carrier]
+        #print "230984", self.parameters.Carriers[carrier_translation[carrier]]
+        #print carrier_translation[carrier]
         freq=self.parameters.Carriers[carrier_translation[carrier]]
         try: 
             freq=self.parameters.Carriers[carrier_translation[carrier]]

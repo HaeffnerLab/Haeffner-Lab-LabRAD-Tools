@@ -19,7 +19,8 @@ class config_729_hist(object):
     #data vault comment
     dv_parameter = 'Histogram729'
     #semaphore locations
-    readout_threshold_dir =  ('StateReadout','state_readout_threshold')
+    #readout_threshold_dir =  ('StateReadout','state_readout_threshold')
+    readout_threshold_dir =  ('StateReadout','threshold_list')
 
 class readout_histogram(QtGui.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):
@@ -48,7 +49,7 @@ class readout_histogram(QtGui.QWidget):
         self.axes = self.fig.add_subplot(111)
         self.axes.set_xlim(left = 0, right = 100)
         self.axes.set_ylim(bottom = 0, top = 50)
-        self.thresholdLine = self.axes.axvline(self.thresholdVal, linewidth=3.0, color = 'r', label = 'Threshold')
+        self.thresholdLines = [self.axes.axvline(self.thresholdVal, linewidth=3.0, color = 'r', label = 'Threshold')]
         self.axes.legend(loc = 'best')
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
         self.axes.set_title('PMT Readout', fontsize = 22)
@@ -94,18 +95,26 @@ class readout_histogram(QtGui.QWidget):
         #update canvas
         self.update_canvas_line(threshold)
         try:
-            server = yield self.cxn.get_server('ParameterVault')
+            
+            # server = yield self.cxn.get_server('ParameterVault')
+            server = yield self.cxn.get_server('scriptscanner')
+            print " updated the readout"
             yield server.set_parameter(config_729_hist.readout_threshold_dir[0], config_729_hist.readout_threshold_dir[1], threshold, context = self.context)
         except Exception, e:
+            print "readout_ histogram problem setting the threshold"
             print e
             yield None
                
     def update_canvas_line(self, threshold):
-        self.thresholdLine.remove()
-        #explicitly delete the refrence although not necessary
-        del self.thresholdLine
+        for line in self.thresholdLines:
+            line.remove()
+        self.thresholdLines = []
         try:
-            self.thresholdLine = self.axes.axvline(threshold, ymin=0.0, ymax=100.0, linewidth=3.0, color = 'r', label = 'Threshold')
+            
+            thresholdVals = str(threshold).split(',')
+            
+            for threshold in thresholdVals:
+                self.thresholdLines.append(self.axes.axvline(float(threshold), ymin=0.0, ymax=100.0, linewidth=3.0, color = 'r', label = 'Threshold'))
         except Exception as e:
             #drawing axvline throws an error when the plot is never shown (i.e in different tab)
             print 'Weird singular matrix bug deep inside matplotlib'
@@ -144,7 +153,7 @@ class readout_histogram(QtGui.QWidget):
     
     @inlineCallbacks
     def subscribe_parameter_vault(self): 
-        server = yield self.cxn.get_server('ParameterVault')
+        server = yield self.cxn.get_server('scriptscanner')
         yield server.signal__parameter_change(config_729_hist.ID_B, context = self.context)
         yield server.addListener(listener = self.on_parameter_change, source = None, ID = config_729_hist.ID_B, context = self.context)
         init_val = yield server.get_parameter(config_729_hist.readout_threshold_dir[0],config_729_hist.readout_threshold_dir[1], context = self.context)
@@ -154,7 +163,7 @@ class readout_histogram(QtGui.QWidget):
     @inlineCallbacks
     def reinitialize_data_vault(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('ParameterVault')
+        server = yield self.cxn.get_server('scriptscanner')
         yield server.signal__new_parameter_dataset(config_729_hist.ID_A, context = self.context)
         if not self.subscribed[0]:
             yield server.addListener(listener = self.on_new_dataset, source = None, ID = config_729_hist.ID_A, context = self.context)
@@ -163,7 +172,7 @@ class readout_histogram(QtGui.QWidget):
     @inlineCallbacks
     def reinitialize_parameter_vault(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('ParameterVault')
+        server = yield self.cxn.get_server('scriptscanner')
         yield server.signal__parameter_change(config_729_hist.ID_B, context = self.context)
         if not self.subscribed[1]:
             yield server.addListener(listener = self.on_parameter_change, source = None, ID = config_729_hist.ID_B, context = self.context)
@@ -179,7 +188,7 @@ class readout_histogram(QtGui.QWidget):
     @inlineCallbacks
     def on_parameter_change(self, signal, parameter_id):
         if parameter_id == config_729_hist.readout_threshold_dir:
-            server = yield self.cxn.get_server('ParameterVault')
+            server = yield self.cxn.get_server('scriptscanner')
             init_val = yield server.get_parameter(config_729_hist.readout_threshold_dir[0],config_729_hist.readout_threshold_dir[1], context = self.context)
             self.update_canvas_line(init_val)
             

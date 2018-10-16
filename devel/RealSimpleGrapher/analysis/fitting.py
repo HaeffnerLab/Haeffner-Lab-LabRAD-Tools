@@ -26,6 +26,7 @@ class FitWrapper():
             'Parity': Parity
             }
         self.model = model_dict[model]()
+        self.not_checkable = self.model.not_checkable
 
     def getParameters(self):
         '''
