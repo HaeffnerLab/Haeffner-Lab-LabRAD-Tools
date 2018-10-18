@@ -115,7 +115,7 @@ class pulse_sequence_wrapper(object):
                 # from labrad.wrappers import connectAsync
                 try:
                     print "connecting synchronous to global sd"
-                    global_sd_cxn = labrad.connect('192.168.169.86' , password ='',tls_mode='off')
+                    global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
                     # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
                 except:
                     print "cannot connect to global sd tracker"
@@ -252,7 +252,7 @@ class pulse_sequence_wrapper(object):
         from labrad.wrappers import connectAsync
         try:
             print "connecting async to global sd"
-            global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
+            global_sd_cxn = yield connectAsync(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
             carriers =  yield global_sd_cxn.sd_tracker_global.get_current_lines(dt_config.client_name)
             # need to add some delay time because it casues a problem with the camera ????
             yield global_sd_cxn.disconnect()
