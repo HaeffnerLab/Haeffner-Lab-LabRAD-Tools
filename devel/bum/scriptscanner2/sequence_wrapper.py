@@ -245,6 +245,8 @@ class pulse_sequence_wrapper(object):
         
         self.parameters_dict.update(carriers_dict)
         self.parameters_dict.update(self.module.fixed_params)
+        print "fixed params"
+        print self.module.fixed_params
         
     @inlineCallbacks
     def get_lines_from_global_dt(self):
@@ -272,7 +274,9 @@ class pulse_sequence_wrapper(object):
                 update_dict['.'.join(key)] = update[key]
             else:
                 update_dict[key] = update[key]
-        self.parameters_dict.update(update)
+        # self.parameters_dict.update(update)
+        self.parameters_dict.update(update_dict)
+        self.parameters_dict.update(self.module.fixed_params)
             
 
     def set_scan(self, scan_param, minim, maxim, steps, unit):
