@@ -15,6 +15,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 from helper_widgets.helper_widgets import saved_frequencies_table
 from helper_widgets.compound_widgets import table_dropdowns_with_entry
+from helper_widgets.switch_button import TextChangingButton
 import numpy
 import time
 from drift_tracker_global_config import config_729_tracker as c
@@ -161,6 +162,8 @@ class drift_tracker(QtGui.QWidget):
         self.remove_B_count.setRange(-20,20)
         self.remove_line_center_count = QtGui.QSpinBox()
         self.remove_line_center_count.setRange(-20,20)
+
+        self.bool_keep_last_button = TextChangingButton()
         
         self.track_B_duration = QtGui.QSpinBox()
         self.track_B_duration.setKeyboardTracking(False)
@@ -228,6 +231,10 @@ class drift_tracker(QtGui.QWidget):
         for client in client_list:
             client_checkbox_layout.addWidget(self.client_checkbox[client])
 
+        keep_last_point = QtGui.QHBoxLayout()
+        keep_last_point.addWidget(QtGui.QLabel("Keep Last Point"))
+        keep_last_point.addWidget(self.bool_keep_last_button)
+
         line_center_show = QtGui.QHBoxLayout()
         line_center_show.addWidget(QtGui.QLabel("Current Line Center: "))
         line_center_show.addWidget(self.current_line_center)
@@ -241,10 +248,11 @@ class drift_tracker(QtGui.QWidget):
         time_show.addWidget(self.current_time)
       
         layout.addLayout(hlp_layout, 6, 0, 1, 1)
-        layout.addWidget(self.global_checkbox, 7, 1, 1, 1)
-        layout.addLayout(client_checkbox_layout, 8, 1, 1, 1)
+        layout.addWidget(self.global_checkbox, 6, 1, 1, 1)
         layout.addLayout(remove_B_layout, 7, 0, 1, 1)
+        layout.addLayout(client_checkbox_layout, 7, 1, 1, 1)
         layout.addLayout(remove_line_center_layout, 8, 0, 1, 1)
+        layout.addLayout(keep_last_point, 8, 1, 1, 1)
         layout.addLayout(keep_global_line_center_layout, 9, 1, 1, 1)
         layout.addLayout(line_center_show, 9, 0, 1, 1)
         layout.addLayout(keep_local_line_center_layout, 10, 1, 1, 1)
@@ -275,6 +283,8 @@ class drift_tracker(QtGui.QWidget):
 
         for client in client_list:
             self.client_checkbox[client].stateChanged.connect(self.on_new_fit_global)
+
+        self.bool_keep_last_button.toggled.connect(self.bool_keep_last_point)
     
     @inlineCallbacks
     def initialize_layout(self):
@@ -292,8 +302,10 @@ class drift_tracker(QtGui.QWidget):
         self.track_global_line_center_duration.blockSignals(True)
         self.track_global_line_center_duration.setValue(duration_line_center_global['min'])
         self.track_global_line_center_duration.blockSignals(False)
+        bool_keep_last_point = yield server.bool_keep_last_point(client_name)
+        self.bool_keep_last_button.set_value_no_signal(bool_keep_last_point)
 
-        global_or_local = yield server.return_global_or_local(client_name)
+        global_or_local = yield server.bool_global(client_name)
         global_fit_list = yield server.get_global_fit_list(client_name)
         if global_or_local:
             self.track_global_line_center_duration.setEnabled(True)
@@ -489,12 +501,12 @@ class drift_tracker(QtGui.QWidget):
     def global_or_local(self, checked):
         server = yield self.cxn_global.get_server('SD Tracker Global')
         if bool(checked):
-            yield server.return_global_or_local(client_name, True)
+            yield server.bool_global(client_name, True)
             for client in client_list:
                 self.client_checkbox[client].setEnabled(True)
             self.track_global_line_center_duration.setEnabled(True)
         else:
-            yield server.return_global_or_local(client_name, False)
+            yield server.bool_global(client_name, False)
             for client in client_list:
                 self.client_checkbox[client].setChecked(False)
                 self.client_checkbox[client].setEnabled(False)
@@ -502,6 +514,11 @@ class drift_tracker(QtGui.QWidget):
             self.track_global_line_center_duration.setEnabled(False)
         yield self.on_new_fit_global(None)
         
+    @inlineCallbacks
+    def bool_keep_last_point(self, toggled):
+        server = yield self.cxn_global.get_server('SD Tracker Global')
+        yield server.bool_keep_last_point(client_name, toggled)
+
     @inlineCallbacks
     def on_new_fit_global(self, checked):
         server = yield self.cxn_global.get_server('SD Tracker Global')
