@@ -26,4 +26,6 @@ class config(object):
 #        'non_conflicting_experiment' : ['fft_spectrum'],
     }
     
-    launch_history = 1000               
+    launch_history = 1000   
+
+    quick_finish_path = "/home/lattice/data/"            

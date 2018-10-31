@@ -13,6 +13,7 @@ import dvParameters
 from analysis import readouts
 import sys
 from sequence_wrapper import pulse_sequence_wrapper
+from configuration import config
 
 class multi_sequence_wrapper(pulse_sequence_wrapper):
     
@@ -241,7 +242,7 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         if self.parameters_dict.global_scan_options.quick_finish:
 #           t0 = time.time()
             d = self.readout_save_directory
-            loc = "/home/lattice/data/" + ".dir/".join(d[1:]) + ".dir/00001 - %s.pickle" %d[-1] 
+            loc = config.quick_finish_path+ ".dir/".join(d[1:]) + ".dir/00001 - %s.pickle" %d[-1] 
             pickle_out = open(loc, "wb")
             pickle.dump(dict(self.parameters_dict), pickle_out)
             pickle_out.close()
