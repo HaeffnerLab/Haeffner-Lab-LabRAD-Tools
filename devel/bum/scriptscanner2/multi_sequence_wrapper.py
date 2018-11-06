@@ -136,6 +136,8 @@ class multi_sequence_wrapper(pulse_sequence_wrapper):
         pulser = cxn.pulser
         
         self.update_params(self.sc.all_parameters())
+        self.update_scan_param(self.module.fixed_params)
+        print "!!!!!readout mode:",self.parameters_dict.StateReadout.readout_mode
         if type(module) == tuple:
             multisequence_params = module[1]
             self.set_multisequence_params(multisequence_params)

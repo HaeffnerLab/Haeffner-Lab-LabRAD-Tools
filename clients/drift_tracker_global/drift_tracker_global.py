@@ -334,7 +334,7 @@ class drift_tracker(QtGui.QWidget):
                     self.client_checkbox[client].blockSignals(True)
                     self.client_checkbox[client].setEnabled(False)
                     self.client_checkbox[client].setChecked(False)
-                    self.client_checkbox[client].blockSignals(True)
+                    self.client_checkbox[client].blockSignals(False)
         yield self.on_new_fit(None, None)
     
     @inlineCallbacks

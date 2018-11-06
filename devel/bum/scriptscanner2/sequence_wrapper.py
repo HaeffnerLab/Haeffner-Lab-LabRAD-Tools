@@ -524,6 +524,8 @@ class pulse_sequence_wrapper(object):
         
               
         self.update_params(self.sc.all_parameters())
+        self.update_scan_param(self.module.fixed_params)
+        print "!!!!!readout mode:",self.parameters_dict.StateReadout.readout_mode
         line=self.parameters_dict.Spectrum.line_selection   
         self.setup_data_vault(cxn, self.name)
         self.use_camera = False
