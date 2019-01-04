@@ -603,7 +603,7 @@ class pulse_sequence_wrapper(object):
                 
                 if not proceed:
                     camera.abort_acquisition()
-                    self._finalize(cxn)
+                    self._finalize_single(cxn)
                     raise Exception ("Did not get all kinetic images from camera")
                 
                 images = camera.get_acquired_data(exposures)
@@ -642,7 +642,8 @@ class pulse_sequence_wrapper(object):
         self.module.run_finally(cxn, self.parameters_dict, data, np.array(data_x))
         self.sc.save_parameters()
 
-        self._finalize(cxn) 
+        self._finalize_single(cxn) 
+        self.sc._finish_confirmed(self.ident)
     
     def run_single_point(self,cxn,x=0):
         cxn = labrad.connect()
@@ -660,7 +661,7 @@ class pulse_sequence_wrapper(object):
             
         
     
-    def _finalize(self, cxn):
+    def _finalize_single(self, cxn):
         # Add finalize the camera when needed 
         
         
@@ -681,7 +682,7 @@ class pulse_sequence_wrapper(object):
 #            t1 = time.time()
 #            print "TIME", t1-t0
         
-        self.sc._finish_confirmed(self.ident)
+        # self.sc._finish_confirmed(self.ident)
         
         
         
@@ -720,6 +721,145 @@ class pulse_sequence_wrapper(object):
         for order,sideband_frequency in zip(sideband_selection, sideband_frequencies):
             freq += order * sideband_frequency
         return freq
+
+
+
+    def run_single(self, module):
+        
+        cxn = labrad.connect()
+        pulser = cxn.pulser
+        
+        # self.update_params(self.sc.all_parameters())
+        self.update_scan_param(self.module.fixed_params)
+        print "!!!!!readout mode:",self.parameters_dict.StateReadout.readout_mode
+        if type(module) == tuple:
+            multisequence_params = module[1]
+            self.set_multisequence_params(multisequence_params)
+            module = module[0]
+            
+        self.setup_data_vault(cxn, module.__name__)
+
+       
+               
+        if 'camera' in self.parameters_dict.StateReadout.readout_mode: 
+            self.use_camera = True
+            self.initialize_camera(cxn)
+            camera = cxn.andor_server
+        else:
+            self.use_camera = False
+
+
+
+        module.run_initial(cxn, self.parameters_dict)
+        self.readout_save_iteration = 0
+
+        data_x = []
+        data = [] 
+        
+        
+
+        for x in self.scan:
+            print " scan param.{}".format(x)
+            should_stop = self.sc._pause_or_stop(self.ident)
+            if should_stop: break
+            update = {self.parameter_to_scan: x}
+            self.update_params(update)
+            self.update_scan_param(update)
+            seq = module(self.parameters_dict)
+            seq.programSequence(pulser)
+            print "programmed pulser"          
+            self.plot_current_sequence(cxn)
+            
+            repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
+            if self.use_camera:
+                
+                exposures = repetitions 
+                camera.set_number_kinetics(exposures)
+                camera.start_acquisition()
+                
+            
+            pulser.start_number(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
+            pulser.wait_sequence_done()
+            pulser.stop_sequence()
+            
+            if not self.use_camera:
+                readout_mode=self.parameters_dict.StateReadout.readout_mode 
+                rds = pulser.get_readout_counts()
+                ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list,readout_mode)
+                self.save_data(rds)
+                data.append(ion_state)
+                
+            else:
+                #get the percentage of excitation using the camera state readout
+                proceed = camera.wait_for_kinetic()
+                
+                if not proceed:
+                    camera.abort_acquisition()
+                    self._finalize_single(cxn)
+                    raise Exception ("Did not get all kinetic images from camera")
+                
+                images = camera.get_acquired_data(exposures)
+                camera.abort_acquisition()
+                
+                if self.name == 'ReferenceImage':
+                    data=images
+                    ion_state=np.ones(self.parameters_dict.IonsOnCamera.ion_number)
+                else:
+                    ion_state, cam_readout, confidences = readouts.camera_ion_probabilities(images, exposures, self.parameters_dict.IonsOnCamera,self.parameters_dict.StateReadout.readout_mode)
+                    self.save_confidences(confidences)
+                    data.append(ion_state)
+                
+                #useful for debugging, saving the images
+                #numpy.save('readout {}'.format(int(time.time())), images)
+            x_shift=self.Scan_shift()
+            
+            submission = [x[self.submit_unit]+x_shift[self.submit_unit]]  # + center_frequency[self.submit_unit]]
+            submission.extend(ion_state)
+            data_x.append(x[self.submit_unit] + x_shift[self.submit_unit])
+            
+            module.run_in_loop(cxn, self.parameters_dict, np.array(data),np.array(data_x))
+            #submit the results to the data vault
+            self.dv.cd(self.readout_save_directory, context = self.data_save_context)
+            self.dv.open_appendable(self.ds[1], context = self.data_save_context)
+            self.dv.add(submission, context = self.data_save_context)
+                
+           
+               
+                        
+        single_result = module.run_finally(cxn, self.parameters_dict, np.array(data), np.array(data_x))
+        self._finalize_single(cxn)
+        self.sc.save_parameters()
+
+        return single_result
+
+
+    def setup_experiment(self, cxn, scan, unit, parameter_to_scan ='param', dependents_name = 'default', num_of_params_to_sub =1, window = 'current'):
+        # paramter to scan
+        # sets up the data vault 
+        # setup the grapher
+        import time
+        
+        dv = cxn.data_vault
+        grapher = cxn.grapher
+        
+        localtime = time.localtime()
+        timetag = time.strftime('%H%M_%S', localtime)
+        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.module.__name__, timetag]
+        data_save_context_extra = cxn.context()       
+        dv.cd(directory, True, context = data_save_context_extra)
+        
+        # creating the col names in the output file
+        dependents = [('', dependents_name+'{}'.format(x), '') for x in range(num_of_params_to_sub)]
+                
+        ds = dv.new( timetag ,[(parameter_to_scan, unit)],dependents, context = data_save_context_extra )
+        
+        
+        if grapher is not None:           
+            grapher.plot_with_axis(ds, window, scan) # -> plot_with_axis
+        
+        return directory, ds, data_save_context_extra
+        
     
     
 if __name__=='__main__':

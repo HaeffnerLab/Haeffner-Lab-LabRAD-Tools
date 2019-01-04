@@ -235,12 +235,17 @@ class pulse_sequence(object):
                     li.append((item[0], s, subcls.__name__))
             return li
         elif cls.is_2dimensional and not cls.is_composite:
-            scan = cls.scannable_params.items()
             li = []
+            scan = cls.scannable_params_1d.items()
+            for item in scan:
+                s = item[1][0]
+                s = (float(s[0]), float(s[1]), float(s[2]), s[3])
+                li.append((item[0], s, '1d'))
+            scan = cls.scannable_params.items()
             for item in scan:
                 s = item[1][0]
                 s = (float(s[0]), float(s[1]), float(s[2]), s[3]) # this fixes a weird labrad bug
-                li.append((item[0], s, item[1][2]))
+                li.append((item[0], s, cls.__name__))
             return li
         elif cls.is_2dimensional and cls.is_composite:
             li = []
