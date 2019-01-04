@@ -10,6 +10,7 @@ class pulse_sequence(object):
     Version 2 -- made for new script scanner project
     '''
     
+    is_2dimensional = False
     is_composite = False
     fixed_params = {}
     
@@ -213,7 +214,7 @@ class pulse_sequence(object):
     @classmethod
     def get_scannable_parameters(cls):
         
-        if not cls.is_composite:
+        if not cls.is_composite and not cls.is_2dimensional:
             scan = cls.scannable_params.items()
             li = []
             for item in scan:
@@ -221,7 +222,7 @@ class pulse_sequence(object):
                 s = (float(s[0]), float(s[1]), float(s[2]), s[3]) # this fixes a weird labrad bug
                 li.append((item[0], s, cls.__name__))
             return li
-        else:
+        elif cls.is_composite and not cls.is_2dimensional:
             li = []
             for subcls in cls.sequences:
                 if type(subcls) == tuple:
@@ -233,8 +234,33 @@ class pulse_sequence(object):
                     s = (float(s[0]), float(s[1]), float(s[2]), s[3])
                     li.append((item[0], s, subcls.__name__))
             return li
+        elif cls.is_2dimensional and not cls.is_composite:
+            scan = cls.scannable_params.items()
+            li = []
+            for item in scan:
+                s = item[1][0]
+                s = (float(s[0]), float(s[1]), float(s[2]), s[3]) # this fixes a weird labrad bug
+                li.append((item[0], s, item[1][2]))
+            return li
+        elif cls.is_2dimensional and cls.is_composite:
+            li = []
+            scan = cls.scannable_params_1d.items()
+            for item in scan:
+                s = item[1][0]
+                s = (float(s[0]), float(s[1]), float(s[2]), s[3])
+                li.append((item[0], s, '1d'))
+            for subcls in cls.sequences:
+                if type(subcls) == tuple:
+                    subcls = subcls[0]
+            
+                scan = subcls.scannable_params.items()
+                for item in scan:
+                    s = item[1][0]
+                    s = (float(s[0]), float(s[1]), float(s[2]), s[3])
+                    li.append((item[0], s, subcls.__name__))
+            return li
     
-    
+
     @classmethod
     def run_initial(cls, cxn, parameters_dict):
         pass
@@ -249,4 +275,8 @@ class pulse_sequence(object):
     def run_finally(cls, cxn, parameters_dict, all_data, data_x):
         pass
         #print "646884:  This is the data we want", all_data
+
+    @classmethod
+    def final_data_process(cls, cxn, processed_data):
+        pass
     
