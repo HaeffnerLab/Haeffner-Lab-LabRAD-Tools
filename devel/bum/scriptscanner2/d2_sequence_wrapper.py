@@ -101,6 +101,8 @@ class d2_sequence_wrapper(pulse_sequence_wrapper):
             self.update_params(update_1d)
             self.update_scan_param(update_1d)
             
+            self.update_scan_param(self.module.fixed_params)
+
             processed_result = self.run_single(self.module)
 
             submission_1d = [scan_param1[self.submit_unit_1d], processed_result]

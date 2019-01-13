@@ -3,6 +3,7 @@ from pulse_sequences_config import dds_name_dictionary as dds_config
 from labrad.units import WithUnit
 from treedict import TreeDict
 from scipy.optimize import curve_fit
+from inspect import isfunction
 
 class pulse_sequence(object):
     '''
@@ -13,6 +14,8 @@ class pulse_sequence(object):
     is_2dimensional = False
     is_composite = False
     fixed_params = {}
+    scannable_params = {}
+    show_params = []
     
     def __init__(self, parameter_dict, start = WithUnit(0, 's')):
         if not type(parameter_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
@@ -24,7 +27,8 @@ class pulse_sequence(object):
         #self.parameters = self.fill_parameters(self.required_parameters , self.replace)
         self.parameters = parameter_dict
         pulse_sequence.parameters = parameter_dict
-        self.sequence()
+        if isfunction(self.sequence):
+            self.sequence()
         
         
     def sequence(self):
@@ -149,6 +153,12 @@ class pulse_sequence(object):
 
     def get_params(self):
         return self.parameters    
+
+    def get_dds(self):
+        return self._dds_pulses
+
+    def get_ttl(self):
+        return self._ttl_pulses
     
     
     @classmethod
@@ -249,21 +259,29 @@ class pulse_sequence(object):
             return li
         elif cls.is_2dimensional and cls.is_composite:
             li = []
-            scan = cls.scannable_params_1d.items()
-            for item in scan:
-                s = item[1][0]
-                s = (float(s[0]), float(s[1]), float(s[2]), s[3])
-                li.append((item[0], s, '1d'))
-            for subcls in cls.sequences:
-                if type(subcls) == tuple:
-                    subcls = subcls[0]
-            
-                scan = subcls.scannable_params.items()
-                for item in scan:
-                    s = item[1][0]
-                    s = (float(s[0]), float(s[1]), float(s[2]), s[3])
-                    li.append((item[0], s, subcls.__name__))
+            cls.loop_get_scan(li)
             return li
+
+    @classmethod
+    def loop_get_scan(cls, li):
+        scan = cls.scannable_params.items()
+        for item in scan:
+            s = item[1][0]
+            s = (float(s[0]), float(s[1]), float(s[2]), s[3]) # this fixes a weird labrad bug
+            li.append((item[0], s, cls.__name__))
+        try:
+            if type(cls.sequence) == list:
+                for subcls in cls.sequence:
+                    subcls.loop_get_scan(li)
+            elif type(cls.sequence) == type:
+                cls.sequence.loop_get_scan(li)
+        except:
+            print "error with ", cls.__name__
+            return
+
+
+
+
     
 
     @classmethod
@@ -273,12 +291,12 @@ class pulse_sequence(object):
     
     @classmethod
     def run_in_loop(cls, cxn, parameters_dict, data_so_far,data_x):
-        pass
+        return data_so_far, data_x
     
     
     @classmethod
     def run_finally(cls, cxn, parameters_dict, all_data, data_x):
-        pass
+        return all_data, data_x
         #print "646884:  This is the data we want", all_data
 
     @classmethod

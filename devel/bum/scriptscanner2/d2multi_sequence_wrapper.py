@@ -67,72 +67,136 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
         
     def run(self, ident):
         self.ident = ident
-        sequences = self.module.sequences
 
         cxn = labrad.connect()
 
-        self.parameter_to_scan_1d, self.scan_unit_1d, self.scan_1d, self.submit_unit_1d, self.scan_submit_1d = self.scans['1d']
-        try:
-            self.window_1d = self.module.scannable_params[self.parameter_to_scan_1d][1]
-        except:
-            self.window_1d = 'current'
+        self.update_params(self.sc.all_parameters())
+        self.update_params(self.module.fixed_params)
 
-
-        self.directory_1d, self.ds_1d, self.data_save_context_1d = self.setup_experiment(cxn, self.scan_1d, self.submit_unit_1d, self.parameter_to_scan_1d, self.module.d1_scan, window = self.window_1d)
-
-
-        
-        for scan_param1 in self.scans['1d'][2]:
-
-            single_results = []
-
-            for seq in sequences:
-
-                if type(seq) == tuple:
-                    multisequence_params = seq[1]
-                    self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[seq[0].__name__]          
-                else:
-                    multisequence_params = None
-                    self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[seq.__name__]
-                
-                try:
-                    if type(seq) == tuple:
-                        self.window = seq[0].scannable_params[self.parameter_to_scan][1]
-                    else:
-                        self.window = seq.scannable_params[self.parameter_to_scan][1]
-                except:
-                    self.window = 'current'
-
-        
-                # run the single scan 
-                should_stop = self.sc._pause_or_stop(self.ident)
-                if should_stop: 
-                    print " stoping the scan and not proceeding to the next "
-                    break
-
-                self.update_params(self.sc.all_parameters())
-                update_1d = {self.parameter_to_scan_1d: scan_param1}
-                self.update_params(update_1d)
-                self.update_scan_param(update_1d)
-            
-                single_results.append(self.run_single(seq))
-
-            try:
-                processed_data = self.module.final_data_process(cxn, single_results)
-            except:
-            	print "something wrong!@$%^^&**(())"
-            	pass
-            else:
-                submission_1d = [scan_param1[self.submit_unit_1d], processed_data]
-                dv = cxn.data_vault
-                dv.cd(self.directory_1d, context = self.data_save_context_1d)
-                dv.open_appendable(self.ds_1d[1], context = self.data_save_context_1d)
-                dv.add(submission_1d, context = self.data_save_context_1d)
-        
+        self.loop_run(self, self.module, cxn)
             
         cxn.disconnect()    
 
         self.sc._finish_confirmed(self.ident)
+
+
+    def loop_run(self, ident, module, cxn):
+        if not module(TreeDict()).get_dds() and not module(TreeDict()).get_ttl():
+
+            module.run_initial(cxn, self.parameters_dict)
+
+            if module.__name__ not in self.scans.keys() and type(module.sequence) == list:
+                seq_results = []
+                seq_results_name = []
+                for seq in module.sequence:
+                    print "!!!!!!!!!!!!!!!!!!!!"
+                    should_stop = self.sc._pause_or_stop(ident)
+                    if should_stop:
+                        print " stoping the scan and not proceeding to the next "
+                        break
+                    result = self.loop_run(ident, seq, cxn)
+                    seq_results.append(result)
+                    seq_results_name.append(seq.__name__)
+                    module.run_in_loop(cxn, self.parameters_dict, seq_results, seq_results_name)
+                final_result = module.run_finally(cxn, self.parameters_dict, seq_results, seq_results_name)
+                return final_result
+            elif module.__name__ in self.scans.keys() and not type(module.sequence) == list:
+                parameter_to_scan, scan_unit, scan, submit_unit, scan_submit = self.scans[module.__name__]
+                try:
+                    window = module.scannable_params[parameter_to_scan][1]
+                except:
+                    window = 'current'
+                directory, ds, data_save_context = self.setup_experiment(cxn, scan, submit_unit, parameter_to_scan, module.__name__, window = window)
+                results = []
+                results_x = []
+                for scan_param in scan:
+                    print "!!!!!!!!!!!!!!!!!!!!"
+                    should_stop = self.sc._pause_or_stop(ident)
+                    if should_stop:
+                        print " stoping the scan and not proceeding to the next "
+                        break
+                    update = {parameter_to_scan: scan_param}
+                    self.update_params(update)
+                    self.update_scan_param(update)
+                    result = self.loop_run(ident, module.sequence, cxn)
+                    results.append(result)
+                    results_x.append(scan_param[submit_unit])
+                    submission = [scan_param[submit_unit]]
+                    submission.extend(result)
+                    dv = cxn.data_vault
+                    dv.cd(directory, context = data_save_context)
+                    dv.open_appendable(ds, context = data_save_context)
+                    dv.add(submission, context = data_save_context)
+                    module.run_in_loop(cxn, self.parameters_dict, results, results_name)
+                final_result = module.run_finally(cxn, self.parameters_dict, results, results_name)
+                return final_result
+            else:
+            	raise Exception("please specify either sequence list or scan params")
+
+        else:
+        	result = self.run_single(module)
+        	return result
+
+
+    @inlineCallbacks
+    def update_params(self, update):
+        # also update from the drift tracker here?
+#        print "UPDATING"
+        carrier_translation = {'S+1/2D-3/2':'Carriers.c0',
+                               'S-1/2D-5/2':'Carriers.c1',
+                               'S+1/2D-1/2':'Carriers.c2',
+                               'S-1/2D-3/2':'Carriers.c3',
+                               'S+1/2D+1/2':'Carriers.c4',
+                               'S-1/2D-1/2':'Carriers.c5',
+                               'S+1/2D+3/2':'Carriers.c6',
+                               'S-1/2D+1/2':'Carriers.c7',
+                               'S+1/2D+5/2':'Carriers.c8',
+                               'S-1/2D+3/2':'Carriers.c9',
+                               }
+        
+        update_dict = {}
+        carriers_dict = {}
+        for key in update.keys():
+            if type(key) == tuple:
+                print key
+                update_dict['.'.join(key)] = update[key]
+            else:
+                update_dict[key] = update[key]
+        
+
+
+        self.parameters_dict.update(update_dict)
+        
+        if self.parameters_dict.DriftTracker.global_sd_enable:
+            # using global sd 
+            print 'using global sd'
+            # there was a problem connecting in the regular sync was we had to establish a
+            carriers = yield self.get_lines_from_global_dt()
+            if carriers:
+                for c, f in carriers:
+                    carriers_dict[carrier_translation[c]] = f
+        else:
+            print "using the local dt"
+            if self.dt is not None:
+                # connect to drift tracker to get the extrapolated lines
+                carriers = yield self.dt.get_current_lines()
+                for c, f in carriers:
+                    carriers_dict[carrier_translation[c]] = f
+                
+        
+        self.parameters_dict.update(carriers_dict)
+
+    def update_scan_param(self, update):
+        update_dict = {}
+        for key in update.keys():
+            if type(key) == tuple:
+                print key
+                update_dict['.'.join(key)] = update[key]
+            else:
+                update_dict[key] = update[key]
+        # self.parameters_dict.update(update)
+        self.parameters_dict.update(update_dict)
+
             
 
 
