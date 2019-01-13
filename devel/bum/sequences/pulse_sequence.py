@@ -3,7 +3,7 @@ from pulse_sequences_config import dds_name_dictionary as dds_config
 from labrad.units import WithUnit
 from treedict import TreeDict
 from scipy.optimize import curve_fit
-from inspect import isfunction
+import types
 
 class pulse_sequence(object):
     '''
@@ -27,8 +27,7 @@ class pulse_sequence(object):
         #self.parameters = self.fill_parameters(self.required_parameters , self.replace)
         self.parameters = parameter_dict
         pulse_sequence.parameters = parameter_dict
-        if isfunction(self.sequence):
-            self.sequence()
+        self.sequence()
         
         
     def sequence(self):

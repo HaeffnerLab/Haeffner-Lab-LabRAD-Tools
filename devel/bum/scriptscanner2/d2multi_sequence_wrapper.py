@@ -81,7 +81,9 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
 
 
     def loop_run(self, ident, module, cxn):
-        if not module(TreeDict()).get_dds() and not module(TreeDict()).get_ttl():
+        try:
+            module(self.parameters_dict)
+        except:
 
             module.run_initial(cxn, self.parameters_dict)
 
@@ -90,7 +92,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 seq_results_name = []
                 for seq in module.sequence:
                     print "!!!!!!!!!!!!!!!!!!!!"
-                    should_stop = self.sc._pause_or_stop(ident)
+                    should_stop = self.sc._pause_or_stop(self.ident)
                     if should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
@@ -111,7 +113,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 results_x = []
                 for scan_param in scan:
                     print "!!!!!!!!!!!!!!!!!!!!"
-                    should_stop = self.sc._pause_or_stop(ident)
+                    should_stop = self.sc._pause_or_stop(self.ident)
                     if should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
@@ -122,20 +124,26 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                     results.append(result)
                     results_x.append(scan_param[submit_unit])
                     submission = [scan_param[submit_unit]]
-                    submission.extend(result)
+                    submission.append(result)
+                    submission = [num for item in submission for num in (item if isinstance(item, list) else (item,))]
                     dv = cxn.data_vault
                     dv.cd(directory, context = data_save_context)
-                    dv.open_appendable(ds, context = data_save_context)
+                    dv.open_appendable(ds[1], context = data_save_context)
                     dv.add(submission, context = data_save_context)
-                    module.run_in_loop(cxn, self.parameters_dict, results, results_name)
-                final_result = module.run_finally(cxn, self.parameters_dict, results, results_name)
+                    module.run_in_loop(cxn, self.parameters_dict, results, results_x)
+                final_result = module.run_finally(cxn, self.parameters_dict, results, results_x)
                 return final_result
             else:
             	raise Exception("please specify either sequence list or scan params")
 
         else:
-        	result = self.run_single(module)
-        	return result
+            self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[module.__name__]
+            try:
+                self.window = module.scannable_params[self.parameter_to_scan][1]
+            except:
+                self.window = 'current'    
+            result = self.run_single(module)
+            return result
 
 
     @inlineCallbacks
