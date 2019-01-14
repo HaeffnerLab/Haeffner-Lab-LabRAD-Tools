@@ -271,6 +271,8 @@ class pulse_sequence(object):
         try:
             if type(cls.sequence) == list:
                 for subcls in cls.sequence:
+                    if type(subcls) == tuple:
+                        subcls = subcls[0]
                     subcls.loop_get_scan(li)
             elif type(cls.sequence) == type:
                 cls.sequence.loop_get_scan(li)

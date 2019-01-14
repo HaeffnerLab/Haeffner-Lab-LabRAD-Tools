@@ -15,6 +15,7 @@ import sys
 from sequence_wrapper import pulse_sequence_wrapper
 from configuration import config
 from time import sleep
+import inspect
 
 class d2multi_sequence_wrapper(pulse_sequence_wrapper):
     
@@ -71,7 +72,6 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
         cxn = labrad.connect()
 
         self.update_params(self.sc.all_parameters())
-        self.update_params(self.module.fixed_params)
 
         self.loop_run(self, self.module, cxn)
             
@@ -81,25 +81,37 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
 
 
     def loop_run(self, ident, module, cxn):
-        try:
-            module(self.parameters_dict)
-        except:
+        if not inspect.ismethod(module.sequence):
 
             module.run_initial(cxn, self.parameters_dict)
 
             if module.__name__ not in self.scans.keys() and type(module.sequence) == list:
                 seq_results = []
                 seq_results_name = []
+                current_parameters_dict = self.parameters_dict
                 for seq in module.sequence:
-                    print "!!!!!!!!!!!!!!!!!!!!"
                     should_stop = self.sc._pause_or_stop(self.ident)
                     if should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
-                    result = self.loop_run(ident, seq, cxn)
-                    seq_results.append(result)
-                    seq_results_name.append(seq.__name__)
+                    if type(seq) == tuple:
+                        self.update_params(current_parameters_dict)
+                        self.update_params(seq[0].fixed_params)
+                        self.update_scan_param(seq[0].fixed_params)
+                        multisequence_params = seq[1]
+                        self.set_multisequence_params(multisequence_params)
+                        result = self.loop_run(ident, seq[0], cxn)
+                        seq_results.append(result)
+                        seq_results_name.append(seq[0].__name__)
+                    else:
+                        self.update_params(current_parameters_dict)
+                        self.update_params(seq.fixed_params)
+                        self.update_scan_param(seq.fixed_params)
+                        result = self.loop_run(ident, seq, cxn)
+                        seq_results.append(result)
+                        seq_results_name.append(seq.__name__)
                     module.run_in_loop(cxn, self.parameters_dict, seq_results, seq_results_name)
+                print "!!!!!!!!!!!!!!!!!!!!", seq_results, seq_results_name
                 final_result = module.run_finally(cxn, self.parameters_dict, seq_results, seq_results_name)
                 return final_result
             elif module.__name__ in self.scans.keys() and not type(module.sequence) == list:
@@ -111,6 +123,8 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 directory, ds, data_save_context = self.setup_experiment(cxn, scan, submit_unit, parameter_to_scan, module.__name__, window = window)
                 results = []
                 results_x = []
+                self.update_params(module.fixed_params)
+                self.update_scan_param(module.fixed_params)
                 for scan_param in scan:
                     print "!!!!!!!!!!!!!!!!!!!!"
                     should_stop = self.sc._pause_or_stop(self.ident)
@@ -131,6 +145,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                     dv.open_appendable(ds[1], context = data_save_context)
                     dv.add(submission, context = data_save_context)
                     module.run_in_loop(cxn, self.parameters_dict, results, results_x)
+                print "!!!!!!!!!!!!!!!!!!!!", results, results_x
                 final_result = module.run_finally(cxn, self.parameters_dict, results, results_x)
                 return final_result
             else:
