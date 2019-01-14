@@ -22,6 +22,8 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
     def __init__(self, module, sc, cxn):
         super(d2multi_sequence_wrapper,self).__init__( module, sc, cxn)
 
+        self.fixed_parameters_dict = TreeDict()
+
         
     #def set_scan(self, scan_param, minim, maxim, steps, unit):
     def set_scan(self, settings):
@@ -71,8 +73,6 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
 
         cxn = labrad.connect()
 
-        self.update_params(self.sc.all_parameters())
-
         self.loop_run(self, self.module, cxn)
             
         cxn.disconnect()    
@@ -88,25 +88,23 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
             if module.__name__ not in self.scans.keys() and type(module.sequence) == list:
                 seq_results = []
                 seq_results_name = []
-                current_parameters_dict = self.parameters_dict
+                self.update_fixed_params(module.fixed_params, overwrite = False)
+                self.update_fixed_params(module.fixed_params, overwrite = False)
+                current_fixed_parameters_dict = self.fixed_parameters_dict
                 for seq in module.sequence:
                     should_stop = self.sc._pause_or_stop(self.ident)
                     if should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
                     if type(seq) == tuple:
-                        self.update_params(current_parameters_dict)
-                        self.update_params(seq[0].fixed_params)
-                        self.update_scan_param(seq[0].fixed_params)
+                        self.fixed_parameters_dict = current_fixed_parameters_dict
                         multisequence_params = seq[1]
-                        self.set_multisequence_params(multisequence_params)
+                        self.set_multisequence_params(multisequence_params, overwrite = False)
                         result = self.loop_run(ident, seq[0], cxn)
                         seq_results.append(result)
                         seq_results_name.append(seq[0].__name__)
                     else:
-                        self.update_params(current_parameters_dict)
-                        self.update_params(seq.fixed_params)
-                        self.update_scan_param(seq.fixed_params)
+                        self.fixed_parameters_dict = current_fixed_parameters_dict
                         result = self.loop_run(ident, seq, cxn)
                         seq_results.append(result)
                         seq_results_name.append(seq.__name__)
@@ -123,8 +121,8 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 directory, ds, data_save_context = self.setup_experiment(cxn, scan, submit_unit, parameter_to_scan, module.__name__, window = window)
                 results = []
                 results_x = []
-                self.update_params(module.fixed_params)
-                self.update_scan_param(module.fixed_params)
+                self.update_fixed_params(module.fixed_params, overwrite = False)
+                self.update_fixed_params(module.fixed_params, overwrite = False)
                 for scan_param in scan:
                     print "!!!!!!!!!!!!!!!!!!!!"
                     should_stop = self.sc._pause_or_stop(self.ident)
@@ -156,13 +154,17 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
             try:
                 self.window = module.scannable_params[self.parameter_to_scan][1]
             except:
-                self.window = 'current'    
+                self.window = 'current'
+            self.update_fixed_params(module.fixed_params, overwrite = False)
+            self.update_fixed_params(module.fixed_params, overwrite = False)
+            self.update_params(self.sc.all_parameters(), overwrite = True)
+            self.update_params(self.fixed_parameters_dict, overwrite = True)
             result = self.run_single(module)
             return result
 
 
     @inlineCallbacks
-    def update_params(self, update):
+    def update_params(self, update, overwrite = True):
         # also update from the drift tracker here?
 #        print "UPDATING"
         carrier_translation = {'S+1/2D-3/2':'Carriers.c0',
@@ -188,7 +190,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
         
 
 
-        self.parameters_dict.update(update_dict)
+        self.parameters_dict.update(update_dict, overwrite = overwrite)
         
         if self.parameters_dict.DriftTracker.global_sd_enable:
             # using global sd 
@@ -209,7 +211,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
         
         self.parameters_dict.update(carriers_dict)
 
-    def update_scan_param(self, update):
+    def update_scan_param(self, update, overwrite = True):
         update_dict = {}
         for key in update.keys():
             if type(key) == tuple:
@@ -218,20 +220,31 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
             else:
                 update_dict[key] = update[key]
         # self.parameters_dict.update(update)
-        self.parameters_dict.update(update_dict)
+        self.parameters_dict.update(update_dict, overwrite = overwrite)
+
+    def update_fixed_params(self, update, overwrite = True):
+        update_dict = {}
+        for key in update.keys():
+            if type(key) == tuple:
+                print key
+                update_dict['.'.join(key)] = update[key]
+            else:
+                update_dict[key] = update[key]
+        # self.parameters_dict.update(update)
+        self.fixed_parameters_dict.update(update_dict, overwrite = overwrite)
 
             
 
 
-    def set_multisequence_params(self, params):
+    def set_multisequence_params(self, params, overwrite = True):
         for key, val in params.items():
             d = {}
             if "." in val:
                 d[key] = self.parameters_dict[val]
-                self.update_params(d)
+                self.update_fixed_params(d, overwrite)
             else:
                 d[key] = val
-                self.update_params(d)
+                self.update_fixed_params(d, overwrite)
 
             
         

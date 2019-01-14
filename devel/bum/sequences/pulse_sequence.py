@@ -280,6 +280,32 @@ class pulse_sequence(object):
             print "error with ", cls.__name__
             return
 
+    @classmethod
+    def get_show_parameters(cls):
+        if cls.is_2dimensional and cls.is_composite:
+            show = []
+            cls.loop_get_show(show)
+            return show
+        else:
+            return cls.show_params
+
+    @classmethod
+    def loop_get_show(cls, li):
+        for item in cls.show_params:
+            if item not in li:
+                li.append(item)
+        try:
+            if type(cls.sequence) == list:
+                for subcls in cls.sequence:
+                    if type(subcls) == tuple:
+                        subcls = subcls[0]
+                    subcls.loop_get_show(li)
+            elif type(cls.sequence) == type:
+                cls.sequence.loop_get_show(li)
+        except:
+            print "error with ", cls.__name__
+            return
+
 
 
 
