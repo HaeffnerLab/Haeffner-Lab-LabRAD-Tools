@@ -22,8 +22,6 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
     def __init__(self, module, sc, cxn):
         super(d2multi_sequence_wrapper,self).__init__( module, sc, cxn)
 
-        self.fixed_parameters_dict = TreeDict()
-
         
     #def set_scan(self, scan_param, minim, maxim, steps, unit):
     def set_scan(self, settings):
@@ -73,14 +71,16 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
 
         cxn = labrad.connect()
 
-        self.loop_run(self, self.module, cxn)
+        self.fixed_parameters_dict = TreeDict()
+
+        self.loop_run(self.module, cxn)
             
         cxn.disconnect()    
 
         self.sc._finish_confirmed(self.ident)
 
 
-    def loop_run(self, ident, module, cxn):
+    def loop_run(self, module, cxn):
         if not inspect.ismethod(module.sequence):
 
             module.run_initial(cxn, self.parameters_dict)
@@ -100,12 +100,12 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                         self.fixed_parameters_dict = current_fixed_parameters_dict
                         multisequence_params = seq[1]
                         self.set_multisequence_params(multisequence_params, overwrite = False)
-                        result = self.loop_run(ident, seq[0], cxn)
+                        result = self.loop_run(seq[0], cxn)
                         seq_results.append(result)
                         seq_results_name.append(seq[0].__name__)
                     else:
                         self.fixed_parameters_dict = current_fixed_parameters_dict
-                        result = self.loop_run(ident, seq, cxn)
+                        result = self.loop_run(seq, cxn)
                         seq_results.append(result)
                         seq_results_name.append(seq.__name__)
                     module.run_in_loop(cxn, self.parameters_dict, seq_results, seq_results_name)
@@ -132,7 +132,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                     update = {parameter_to_scan: scan_param}
                     self.update_params(update)
                     self.update_scan_param(update)
-                    result = self.loop_run(ident, module.sequence, cxn)
+                    result = self.loop_run(module.sequence, cxn)
                     results.append(result)
                     results_x.append(scan_param[submit_unit])
                     submission = [scan_param[submit_unit]]
