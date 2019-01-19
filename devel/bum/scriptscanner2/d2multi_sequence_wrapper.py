@@ -128,8 +128,8 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 current_fixed_parameters_dict = self.fixed_parameters_dict
                 for index, seq in enumerate(module.sequence):
                     lis1 = lis + [index]
-                    should_stop = self.sc._pause_or_stop(self.ident)
-                    if should_stop:
+                    self.should_stop = self.sc._pause_or_stop(self.ident)
+                    if self.should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
                     if type(seq) == tuple:
@@ -145,9 +145,10 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                         seq_results.append(result)
                         seq_results_name.append(seq.__name__)
                     module.run_in_loop(cxn, self.parameters_dict, seq_results, seq_results_name)
-                print "!!!!!!!!!!!!!!!!!!!!", seq_results, seq_results_name
-                final_result = module.run_finally(cxn, self.parameters_dict, seq_results, seq_results_name)
-                return final_result
+                if not self.should_stop:
+                    print "!!!!!!!!!!!!!!!!!!!!", seq_results, seq_results_name
+                    final_result = module.run_finally(cxn, self.parameters_dict, seq_results, seq_results_name)
+                    return final_result
             elif module.__name__ in self.scans.keys() and not type(module.sequence) == list:
                 parameter_to_scan, scan_unit, scan, submit_unit, scan_submit = self.scans[module.__name__]
                 try:
@@ -161,27 +162,29 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 self.update_fixed_params(module.fixed_params, overwrite = False)
                 for index, scan_param in enumerate(scan):
                     lis1 = lis + [index]
-                    should_stop = self.sc._pause_or_stop(self.ident)
-                    if should_stop:
+                    self.should_stop = self.sc._pause_or_stop(self.ident)
+                    if self.should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
                     update = {parameter_to_scan: scan_param}
                     self.update_params(update)
                     self.update_scan_param(update)
                     result = self.loop_run(module.sequence, cxn, lis1)
-                    results.append(result)
-                    results_x.append(scan_param[submit_unit])
-                    submission = [scan_param[submit_unit]]
-                    submission.append(result)
-                    submission = [num for item in submission for num in (item if isinstance(item, list) else (item,))]
-                    dv = cxn.data_vault
-                    dv.cd(directory, context = data_save_context)
-                    dv.open_appendable(ds[1], context = data_save_context)
-                    dv.add(submission, context = data_save_context)
-                    module.run_in_loop(cxn, self.parameters_dict, results, results_x)
-                print "!!!!!!!!!!!!!!!!!!!!", results, results_x
-                final_result = module.run_finally(cxn, self.parameters_dict, results, results_x)
-                return final_result
+                    if not self.should_stop:
+                        results.append(result)
+                        results_x.append(scan_param[submit_unit])
+                        submission = [scan_param[submit_unit]]
+                        submission.append(result)
+                        submission = [num for item in submission for num in (item if isinstance(item, list) else (item,))]
+                        dv = cxn.data_vault
+                        dv.cd(directory, context = data_save_context)
+                        dv.open_appendable(ds[1], context = data_save_context)
+                        dv.add(submission, context = data_save_context)
+                        module.run_in_loop(cxn, self.parameters_dict, results, results_x)
+                if not self.should_stop:
+                    print "!!!!!!!!!!!!!!!!!!!!", results, results_x
+                    final_result = module.run_finally(cxn, self.parameters_dict, results, results_x)
+                    return final_result
             else:
             	raise Exception("please specify either sequence list or scan params")
 
@@ -231,8 +234,8 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
         for index, x in enumerate(self.scan):
 
             print " scan param.{}".format(x)
-            should_stop = self.sc._pause_or_stop(self.ident)
-            if should_stop: break
+            self.should_stop = self.sc._pause_or_stop(self.ident)
+            if self.should_stop: break
             update = {self.parameter_to_scan: x}
             self.update_params(update)
             self.update_scan_param(update)
@@ -301,12 +304,12 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
             print "Current progress: {}%".format(progress)
             self.sc.sequence_set_progress(None, self.ident, progress)
            
-                        
-        single_result = module.run_finally(cxn, self.parameters_dict, np.array(data), np.array(data_x))
-        self._finalize_single(cxn)
-        self.sc.save_parameters()
+        if not self.should_stop:                
+            single_result = module.run_finally(cxn, self.parameters_dict, np.array(data), np.array(data_x))
+            self._finalize_single(cxn)
+            self.sc.save_parameters()
 
-        return single_result
+            return single_result
 
 
     @inlineCallbacks
@@ -385,7 +388,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
     def set_multisequence_params(self, params, overwrite = True):
         for key, val in params.items():
             d = {}
-            if "." in val:
+            if type(val) == str and "." in val:
                 d[key] = self.parameters_dict[val]
                 self.update_fixed_params(d, overwrite)
             else:
