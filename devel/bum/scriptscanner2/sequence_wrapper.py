@@ -127,7 +127,7 @@ class pulse_sequence_wrapper(object):
                     elif self.window == "car2":
                         line = self.parameters_dict.DriftTracker.line_selection_2
                         shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                    elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+                    elif 'sideband_detuning' in self.parameter_to_scan or self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
                         if self.name != 'RabiFloppingManual' :
                             line = self.parameters_dict.Spectrum.line_selection 
                             shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
@@ -145,7 +145,7 @@ class pulse_sequence_wrapper(object):
                 elif self.window == "car2":
                     line = self.parameters_dict.DriftTracker.line_selection_2
                     shift = cxn.sd_tracker.get_current_line(line)
-                elif self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+                elif 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
                     if self.name != 'RabiFloppingManual' :
                         line = self.parameters_dict.Spectrum.line_selection 
                         shift = cxn.sd_tracker.get_current_line(line) 
@@ -156,8 +156,22 @@ class pulse_sequence_wrapper(object):
                             shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
 
         else:
+            try:
+                print "connecting synchronous to global sd"
+                global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
+                # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
+            except:
+                print "cannot connect to global sd tracker"
+            else:
+                if self.window == "car1":
+                    line = self.parameters_dict.DriftTracker.line_selection_1
+                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+                elif self.window == "car2":
+                    line = self.parameters_dict.DriftTracker.line_selection_2
+                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+                global_sd_cxn.disconnect()
             # when we scan the sideband in spectrum we want to have thier offset from the carrier
-            if self.name == "Spectrum":
+            if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
                 order = int(self.parameters_dict.Spectrum.order)
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband
@@ -343,7 +357,7 @@ class pulse_sequence_wrapper(object):
                 line = self.parameters_dict.DriftTracker.line_selection_1
             elif self.window == "car2":
                 line = self.parameters_dict.DriftTracker.line_selection_2
-            elif self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+            elif 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
 #                 print "scanning the Spectrum in a false relative freq"
                 line = self.parameters_dict.Spectrum.line_selection
                 order = int(self.parameters_dict.Spectrum.order)  
@@ -352,7 +366,7 @@ class pulse_sequence_wrapper(object):
                     
         else:
             # when we scan the sideband in spectrum we want to have thier offset from the carrier
-            if self.name == "Spectrum":
+            if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
                 order = int(self.parameters_dict.Spectrum.order)
                 if  order != 0 :
                     sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband

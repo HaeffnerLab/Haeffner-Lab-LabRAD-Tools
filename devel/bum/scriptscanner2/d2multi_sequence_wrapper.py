@@ -125,7 +125,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 seq_results_name = []
                 self.update_fixed_params(module.fixed_params, overwrite = False)
                 self.update_fixed_params(module.fixed_params, overwrite = False)
-                current_fixed_parameters_dict = self.fixed_parameters_dict
+                current_fixed_parameters_dict = self.fixed_parameters_dict.copy(deep = True)
                 for index, seq in enumerate(module.sequence):
                     lis1 = lis + [index]
                     self.should_stop = self.sc._pause_or_stop(self.ident)
@@ -133,14 +133,14 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                         print " stoping the scan and not proceeding to the next "
                         break
                     if type(seq) == tuple:
-                        self.fixed_parameters_dict = current_fixed_parameters_dict
+                        self.fixed_parameters_dict = current_fixed_parameters_dict.copy(deep = True)
                         multisequence_params = seq[1]
                         self.set_multisequence_params(multisequence_params, overwrite = False)
                         result = self.loop_run(seq[0], cxn, lis1)
                         seq_results.append(result)
                         seq_results_name.append(seq[0].__name__)
                     else:
-                        self.fixed_parameters_dict = current_fixed_parameters_dict
+                        self.fixed_parameters_dict = current_fixed_parameters_dict.copy(deep = True)
                         result = self.loop_run(seq, cxn, lis1)
                         seq_results.append(result)
                         seq_results_name.append(seq.__name__)
@@ -160,15 +160,16 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 results_x = []
                 self.update_fixed_params(module.fixed_params, overwrite = False)
                 self.update_fixed_params(module.fixed_params, overwrite = False)
+                current_fixed_parameters_dict = self.fixed_parameters_dict.copy(deep = True)
                 for index, scan_param in enumerate(scan):
                     lis1 = lis + [index]
                     self.should_stop = self.sc._pause_or_stop(self.ident)
                     if self.should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
+                    self.fixed_parameters_dict = current_fixed_parameters_dict.copy(deep = True)
                     update = {parameter_to_scan: scan_param}
-                    self.update_params(update)
-                    self.update_scan_param(update)
+                    self.update_fixed_params(update)
                     result = self.loop_run(module.sequence, cxn, lis1)
                     if not self.should_stop:
                         results.append(result)
@@ -198,6 +199,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
             self.update_fixed_params(module.fixed_params, overwrite = False)
             self.update_params(self.sc.all_parameters(), overwrite = True)
             self.update_params(self.fixed_parameters_dict, overwrite = True)
+            print "fixed params for {} scan:",format(module.__name__), self.fixed_parameters_dict.makeReport()
             result = self.run_single(module, lis)
             return result
 
@@ -381,6 +383,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                 update_dict[key] = update[key]
         # self.parameters_dict.update(update)
         self.fixed_parameters_dict.update(update_dict, overwrite = overwrite)
+        print "fixed_params!!!!!!!!!!!!!!!!!!!", update_dict
 
             
 
