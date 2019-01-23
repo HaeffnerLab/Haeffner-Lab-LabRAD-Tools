@@ -24,9 +24,6 @@ import scan_methods
 from scheduler import scheduler
 from parameter_vault import ParameterVault
 from sequence_wrapper import pulse_sequence_wrapper as psw
-from multi_sequence_wrapper import multi_sequence_wrapper
-from d2_sequence_wrapper import d2_sequence_wrapper
-from d2multi_sequence_wrapper import d2multi_sequence_wrapper
 import sys
         
 class ScriptScanner(ParameterVault, Signals, LabradServer):
@@ -125,28 +122,10 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
             raise Exception ("Sequence {} Not Found".format(sequence_name))
 
         cls = self.sequences[sequence_name]
-        
-        if not cls.is_composite and not cls.is_2dimensional:
-            print "running a single scan"
-            scan_param, m1, m2, steps, unit = settings[0][1]
-            wrapper = psw(cls, self, self.client)
-            if scan_param == 'None':
-                wrapper.set_scan_none()
-            else:
-                wrapper.set_scan(scan_param, m1, m2, steps, unit)
-                
-        elif cls.is_composite and not cls.is_2dimensional: # this is for composite sequences
-            print "running a composite scan"
-            wrapper = multi_sequence_wrapper(cls, self, self.client)
-            wrapper.set_scan(settings)
-        elif cls.is_2dimensional and not cls.is_composite:
-            print "running a 2D scan"
-            wrapper = d2_sequence_wrapper(cls, self, self.client)
-            wrapper.set_scan(settings)
-        elif cls.is_2dimensional and cls.is_composite:
-            print "running a 2D composite scan"
-            wrapper = d2multi_sequence_wrapper(cls, self, self.client)
-            wrapper.set_scan(settings)
+
+        print "running a scan"
+        wrapper = psw(cls, self, self.client)
+        wrapper.set_scan(settings)
             
         scan_id = self.scheduler.add_scan_to_queue(wrapper)
         self.datasets[scan_id] = [] # empty list
@@ -166,28 +145,9 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         
         cls = self.sequences[sequence_name]
         
-        if not cls.is_composite and not cls.is_2dimensional:
-            print "running a single scan"
-            scan_param, m1, m2, steps, unit = settings[0][1]
-            wrapper = psw(cls, self, self.client)
-            if scan_param == 'None':
-                wrapper.set_scan_none()
-                raise Exception ('Scheduled sequences must have a scan parameter')
-            else:
-                wrapper.set_scan(scan_param, m1, m2, steps, unit)
-                
-        elif cls.is_composite and not cls.is_2dimensional: # this is for composite sequences
-            print "running a composite scan"
-            wrapper = multi_sequence_wrapper(cls, self, self.client)
-            wrapper.set_scan(settings)
-        elif cls.is_2dimensional and not cls.is_composite:
-            print "running a 2D scan"
-            wrapper = d2_sequence_wrapper(cls, self, self.client)
-            wrapper.set_scan(settings)
-        elif cls.is_2dimensional and cls.is_composite:
-            print "running a 2D composite scan"
-            wrapper = d2multi_sequence_wrapper(cls, self, self.client)
-            wrapper.set_scan(settings)
+        print "running a scan"
+        wrapper = psw(cls, self, self.client)
+        wrapper.set_scan(settings)
        
                 
         schedule_id = self.scheduler.new_scheduled_scan(wrapper, duration['s'], priority, start_now)
