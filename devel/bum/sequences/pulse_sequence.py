@@ -223,43 +223,9 @@ class pulse_sequence(object):
     @classmethod
     def get_scannable_parameters(cls):
         
-        if not cls.is_composite and not cls.is_2dimensional:
-            scan = cls.scannable_params.items()
-            li = []
-            for item in scan:
-                s = item[1][0]
-                s = (float(s[0]), float(s[1]), float(s[2]), s[3]) # this fixes a weird labrad bug
-                li.append((item[0], s, cls.__name__))
-            return li
-        elif cls.is_composite and not cls.is_2dimensional:
-            li = []
-            for subcls in cls.sequences:
-                if type(subcls) == tuple:
-                    subcls = subcls[0]
-            
-                scan = subcls.scannable_params.items()
-                for item in scan:
-                    s = item[1][0]
-                    s = (float(s[0]), float(s[1]), float(s[2]), s[3])
-                    li.append((item[0], s, subcls.__name__))
-            return li
-        elif cls.is_2dimensional and not cls.is_composite:
-            li = []
-            scan = cls.scannable_params_1d.items()
-            for item in scan:
-                s = item[1][0]
-                s = (float(s[0]), float(s[1]), float(s[2]), s[3])
-                li.append((item[0], s, '1d'))
-            scan = cls.scannable_params.items()
-            for item in scan:
-                s = item[1][0]
-                s = (float(s[0]), float(s[1]), float(s[2]), s[3]) # this fixes a weird labrad bug
-                li.append((item[0], s, cls.__name__))
-            return li
-        elif cls.is_2dimensional and cls.is_composite:
-            li = []
-            cls.loop_get_scan(li)
-            return li
+        li = []
+        cls.loop_get_scan(li)
+        return li
 
     @classmethod
     def loop_get_scan(cls, li):
@@ -282,12 +248,9 @@ class pulse_sequence(object):
 
     @classmethod
     def get_show_parameters(cls):
-        if cls.is_2dimensional and cls.is_composite:
-            show = []
-            cls.loop_get_show(show)
-            return show
-        else:
-            return cls.show_params
+        show = []
+        cls.loop_get_show(show)
+        return show
 
     @classmethod
     def loop_get_show(cls, li):
@@ -325,8 +288,3 @@ class pulse_sequence(object):
     def run_finally(cls, cxn, parameters_dict, all_data, data_x):
         return all_data, data_x
         #print "646884:  This is the data we want", all_data
-
-    @classmethod
-    def final_data_process(cls, cxn, processed_data):
-        pass
-    
