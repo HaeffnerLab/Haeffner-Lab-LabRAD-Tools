@@ -2,7 +2,7 @@
 ### BEGIN NODE INFO
 [info]
 name = ScriptScanner
-version = 0.9
+version = 2.0
 description =
 instancename = ScriptScanner
 

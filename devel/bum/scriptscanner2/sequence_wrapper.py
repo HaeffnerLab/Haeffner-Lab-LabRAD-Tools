@@ -171,7 +171,6 @@ class pulse_sequence_wrapper(object):
             module.run_initial(cxn, self.parameters_dict)
 
             # module.sequence == list indicates multi sequence scan
-            # module.sequence == class indicates higher dimensional scan
             if module.__name__ not in self.scans.keys() and type(module.sequence) == list:
                 seq_results = []
                 seq_results_name = []
@@ -182,28 +181,55 @@ class pulse_sequence_wrapper(object):
                 # to avoid conflict between sequences
                 current_fixed_parameters_dict = self.fixed_parameters_dict.copy(deep = True)
                 for index, seq in enumerate(module.sequence):
+
+                    # pass number of current scan status
                     lis1 = lis + [index]
+
+                    # check if should stop
                     self.should_stop = self.sc._pause_or_stop(self.ident)
                     if self.should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
+
+                    # if elements in sequence list is tuple, it contains fixed parameters
                     if type(seq) == tuple:
+
+                        # restore to the copy of fixed parameter dict before subsequence parameter update
                         self.fixed_parameters_dict = current_fixed_parameters_dict.copy(deep = True)
+
+                        # update fixed parameter for subsequence in sequence list
                         multisequence_params = seq[1]
                         self.set_multisequence_params(multisequence_params, overwrite = False)
+
+                        # run subsequence
                         result = self.loop_run(seq[0], cxn, lis1)
                         seq_results.append(result)
                         seq_results_name.append(seq[0].__name__)
-                    else:
+
+                    # if elements in sequence is class, there is no fixed parameters
+                    elif type(seq) == type:
+
+                        # restore to the copy of fixed parameter dict before subsequence parameter update
                         self.fixed_parameters_dict = current_fixed_parameters_dict.copy(deep = True)
+
+                        # run subsequence
                         result = self.loop_run(seq, cxn, lis1)
                         seq_results.append(result)
                         seq_results_name.append(seq.__name__)
+
+                    else:
+                        raise Exception("Wrong type of sequence inside sequence list")
+
                     module.run_in_loop(cxn, self.parameters_dict, seq_results, seq_results_name)
+
+                # process data using run_finally function if should not stop, 
+                # to eliminate possible errors in data propagation 
                 if not self.should_stop:
-                    print "!!!!!!!!!!!!!!!!!!!!", seq_results, seq_results_name
+                    print "Results for {} !!!!!!!!!!!!!!!!!!!!".format(module.__name__), seq_results, seq_results_name
                     final_result = module.run_finally(cxn, self.parameters_dict, seq_results, seq_results_name)
                     return final_result
+
+            # module.sequence == class indicates higher dimensional scan
             elif module.__name__ in self.scans.keys() and not type(module.sequence) == list:
                 parameter_to_scan, scan_unit, scan, submit_unit, scan_submit = self.scans[module.__name__]
                 try:
@@ -215,20 +241,35 @@ class pulse_sequence_wrapper(object):
                 results_x = []
                 self.update_fixed_params(module.fixed_params, overwrite = False)
                 self.update_fixed_params(module.fixed_params, overwrite = False)
+
+                # copy fixed parameters before scan, make sure no conflict between subscan sequence fixed parameters
                 current_fixed_parameters_dict = self.fixed_parameters_dict.copy(deep = True)
                 for index, scan_param in enumerate(scan):
+
+                    # pass number of current scan status
                     lis1 = lis + [index]
+
+                    # check if should stop
                     self.should_stop = self.sc._pause_or_stop(self.ident)
                     if self.should_stop:
                         print " stoping the scan and not proceeding to the next "
                         break
+
+                    # restore to the copy of fixed parameter dict before subsequence parameter update
                     self.fixed_parameters_dict = current_fixed_parameters_dict.copy(deep = True)
+
+                    # update scan parameter
+                    # need to overwrite
                     update = {parameter_to_scan: scan_param}
                     self.update_fixed_params(update)
+
+                    # run subsequence
                     result = self.loop_run(module.sequence, cxn, lis1)
+                    results.append(result)
+                    results_x.append(scan_param[submit_unit])
+
+                    # submit result to data vault if should not stop
                     if not self.should_stop:
-                        results.append(result)
-                        results_x.append(scan_param[submit_unit])
                         submission = [scan_param[submit_unit]]
                         submission.append(result)
                         submission = [num for item in submission for num in (item if isinstance(item, list) else (item,))]
@@ -239,24 +280,34 @@ class pulse_sequence_wrapper(object):
                         dv.open_appendable(ds[1], context = data_save_context)
                         dv.add(submission, context = data_save_context)
                         module.run_in_loop(cxn, self.parameters_dict, results, results_x)
+
+                # process data if should not stop
                 if not self.should_stop:
-                    print "!!!!!!!!!!!!!!!!!!!!", results, results_x
+                    print "Results for {} !!!!!!!!!!!!!!!!!!!!".format(module.__name__), results, results_x
                     final_result = module.run_finally(cxn, self.parameters_dict, results, results_x)
                     return final_result
+
             else:
                 raise Exception("please specify either sequence list or scan params")
 
+        # if sequence is function, it is a fundamental sequence
         else:
             self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[module.__name__]
             try:
                 self.window = module.scannable_params[self.parameter_to_scan][1]
             except:
                 self.window = 'current'
+
+            # non-overwrite update
             self.update_fixed_params(module.fixed_params, overwrite = False)
             self.update_fixed_params(module.fixed_params, overwrite = False)
             self.update_params(self.sc.all_parameters(), overwrite = True)
             self.update_params(self.fixed_parameters_dict, overwrite = True)
-            print "fixed params for {} scan:",format(module.__name__), self.fixed_parameters_dict.makeReport()
+
+            # print final version of fixed parameter dict before a fundamental sequence run
+            print "fixed params for {} scan: ".format(module.__name__), self.fixed_parameters_dict.makeReport()
+
+            # run fundamental sequence
             result = self.run_single(module, lis)
             return result
 
@@ -264,8 +315,6 @@ class pulse_sequence_wrapper(object):
         
         cxn = labrad.connect()
         pulser = cxn.pulser
-        
-        # self.update_params(self.sc.all_parameters())
         
         print "!!!!!readout mode:",self.parameters_dict.StateReadout.readout_mode
             
@@ -357,6 +406,7 @@ class pulse_sequence_wrapper(object):
             self.dv.open_appendable(self.ds[1], context = self.data_save_context)
             self.dv.add(submission, context = self.data_save_context)
 
+            # calculate current progress
             lis1 = lis + [index + 1]
             temp_structure = self.scan_structure    
             progress = 100 * self.calc_current_step(temp_structure, lis1)/self.total_scan
@@ -389,10 +439,7 @@ class pulse_sequence_wrapper(object):
 #            t0 = time.time()
             dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
 #            t1 = time.time()
-#            print "TIME", t1-t0
-        
-        # self.sc._finish_confirmed(self.ident)
-        
+#            print "TIME", t1-t0      
         
         
         if self.use_camera:
@@ -484,6 +531,7 @@ class pulse_sequence_wrapper(object):
                 update_dict[key] = update[key]
         # self.parameters_dict.update(update)
         self.parameters_dict.update(update_dict, overwrite = overwrite)
+
 
     def update_fixed_params(self, update, overwrite = True):
         update_dict = {}
