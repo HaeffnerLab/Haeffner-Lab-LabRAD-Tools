@@ -76,7 +76,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
         
         localtime = time.localtime()
         timetag = time.strftime('%H%M_%S', localtime)
-        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), self.module.__name__, timetag]
+        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), dependents_name, timetag]
         data_save_context_extra = cxn.context()       
         dv.cd(directory, True, context = data_save_context_extra)
         
@@ -155,7 +155,7 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                     window = module.scannable_params[parameter_to_scan][1]
                 except:
                     window = 'current'
-                directory, ds, data_save_context = self.setup_experiment(cxn, scan, submit_unit, parameter_to_scan, module.__name__, window = window)
+                directory =  ds = data_save_context = None
                 results = []
                 results_x = []
                 self.update_fixed_params(module.fixed_params, overwrite = False)
@@ -177,6 +177,8 @@ class d2multi_sequence_wrapper(pulse_sequence_wrapper):
                         submission = [scan_param[submit_unit]]
                         submission.append(result)
                         submission = [num for item in submission for num in (item if isinstance(item, list) else (item,))]
+                        if not ds:
+                            directory, ds, data_save_context = self.setup_experiment(cxn, scan, submit_unit, parameter_to_scan = parameter_to_scan, dependents_name = module.__name__, num_of_params_to_sub = len(submission)-1, window = window)
                         dv = cxn.data_vault
                         dv.cd(directory, context = data_save_context)
                         dv.open_appendable(ds[1], context = data_save_context)
