@@ -26,6 +26,7 @@ class scripting_widget(QtGui.QWidget):
     
     def setupLayout(self):
         layout = QtGui.QVBoxLayout()
+        # layout.setSizeConstraint(1)
         self.selector = experiment_selector_widget(self.reactor, parent = self)
         self.running = running_combined(self.reactor)
         self.scheduled = scheduled_combined(self.reactor)

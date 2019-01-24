@@ -90,12 +90,14 @@ class sequence_widget(QtGui.QWidget):
 
     def makeLayout(self, params, single_seq = True):
         layout = QtGui.QVBoxLayout()
+        # layout.setSizeConstraint(1)
         self.setLayout(layout)
         
         scroll = QtGui.QScrollArea(self)
         layout.addWidget(scroll)
         scroll.setWidgetResizable(True)
-        #scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        scroll.setMaximumHeight(250)
+        # scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         scrollContent = QtGui.QWidget(scroll)
         
         scrollLayout = QtGui.QVBoxLayout(scrollContent)
@@ -104,6 +106,7 @@ class sequence_widget(QtGui.QWidget):
             minim, maxim, steps, unit = x
             p = (par, minim, maxim, steps, unit)
             self.parameters[par] = ScanItem(p, sequence_name, self)
+            layout.addWidget(self.parameters[par])
             scrollLayout.addWidget(self.parameters[par])
         scroll.setWidget(scrollContent)
         
@@ -142,10 +145,21 @@ class multi_sequence_widget(QtGui.QWidget):
     def __init__(self, widgets):
         super(multi_sequence_widget, self).__init__()
         layout = QtGui.QVBoxLayout()
+        self.setLayout(layout)
+        
+        scroll = QtGui.QScrollArea(self)
+        layout.addWidget(scroll)
+        scroll.setWidgetResizable(True)
+        scroll.setMaximumHeight(250)
+        # scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        scrollContent = QtGui.QWidget(scroll)
+        scrollLayout = QtGui.QVBoxLayout(scrollContent)
+        scrollContent.setLayout(scrollLayout)
         self.widgets = widgets
         for widget in widgets:
             layout.addWidget(widget)
-        self.setLayout(layout)
+            scrollLayout.addWidget(widget)
+        scroll.setWidget(scrollContent)
         
     def get_scan_parameter(self):
         return [(w.get_sequence_name(), w.get_scan_parameter()) for w in self.widgets]
@@ -204,7 +218,8 @@ class scan_widget(QtGui.QWidget):
         #self.widgets[experiment] = sw
         self.scan_box.addWidget(multi)
         self.widgets[experiment] = multi
-        self.show_none()
+        self.widgets[experiment].setVisible(False)
+        # self.show_none()
 
         self.preferreds[experiment] = [x[0].split('.') for x in params]
 
