@@ -47,11 +47,11 @@ class pulse_sequence_wrapper(object):
         self.scan = None
         self.sc = sc # reference to scriptscanner class, not through the labrad connection
         self.cxn = cxn
-        try:
+        # try:
 
-            self.dt = self.cxn.sd_tracker
-        except:
-            self.dt = None
+        #     self.dt = self.cxn.sd_tracker
+        # except:
+        #     self.dt = None
         try:
             self.grapher = cxn.grapher
         except:
@@ -484,21 +484,13 @@ class pulse_sequence_wrapper(object):
 
         self.parameters_dict.update(update_dict, overwrite = overwrite)
         
-        if self.parameters_dict.DriftTracker.global_sd_enable:
-            # using global sd 
-            print 'using global sd'
-            # there was a problem connecting in the regular sync was we had to establish a
-            carriers = yield self.get_lines_from_global_dt()
-            if carriers:
-                for c, f in carriers:
-                    carriers_dict[carrier_translation[c]] = f
-        else:
-            print "using the local dt"
-            if self.dt is not None:
-                # connect to drift tracker to get the extrapolated lines
-                carriers = yield self.dt.get_current_lines()
-                for c, f in carriers:
-                    carriers_dict[carrier_translation[c]] = f
+        # using global sd 
+        print 'using global sd'
+        # there was a problem connecting in the regular sync was we had to establish a
+        carriers = yield self.get_lines_from_global_dt()
+        if carriers:
+            for c, f in carriers:
+                carriers_dict[carrier_translation[c]] = f
         
         self.parameters_dict.update(carriers_dict)
 
@@ -657,51 +649,34 @@ class pulse_sequence_wrapper(object):
 
         
         if not self.parameters_dict.Display.relative_frequencies:
-            if self.parameters_dict.DriftTracker.global_sd_enable:
-                # using global sd 
-                print 'using global sd'
-                # cannot use asynchrounous connection here
-                # from labrad.wrappers import connectAsync
-                try:
-                    print "connecting synchronous to global sd"
-                    global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
-                    # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
-                except:
-                    print "cannot connect to global sd tracker"
-                else:
-                    if self.window == "car1":
-                        line = self.parameters_dict.DriftTracker.line_selection_1
-                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                    elif self.window == "car2":
-                        line = self.parameters_dict.DriftTracker.line_selection_2
-                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                    elif 'sideband_detuning' in self.parameter_to_scan or self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                        if self.name != 'RabiFloppingManual' :
-                            line = self.parameters_dict.Spectrum.line_selection 
-                            shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                            # adding the shift for the sideband
-                            order = int(self.parameters_dict.Spectrum.order)  
-                            if  order != 0 :
-                                sideband= self.parameters_dict.Spectrum.selection_sideband
-                                shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-                    global_sd_cxn.disconnect()
-                    # sleep(0.05)
+            # using global sd 
+            print 'using global sd'
+            # cannot use asynchrounous connection here
+            # from labrad.wrappers import connectAsync
+            try:
+                print "connecting synchronous to global sd"
+                global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
+                # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
+            except:
+                print "cannot connect to global sd tracker"
             else:
                 if self.window == "car1":
                     line = self.parameters_dict.DriftTracker.line_selection_1
-                    shift = cxn.sd_tracker.get_current_line(line)
+                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
                 elif self.window == "car2":
                     line = self.parameters_dict.DriftTracker.line_selection_2
-                    shift = cxn.sd_tracker.get_current_line(line)
-                elif 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+                elif 'sideband_detuning' in self.parameter_to_scan or self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
                     if self.name != 'RabiFloppingManual' :
                         line = self.parameters_dict.Spectrum.line_selection 
-                        shift = cxn.sd_tracker.get_current_line(line) 
+                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
                         # adding the shift for the sideband
                         order = int(self.parameters_dict.Spectrum.order)  
                         if  order != 0 :
                             sideband= self.parameters_dict.Spectrum.selection_sideband
                             shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                global_sd_cxn.disconnect()
+                # sleep(0.05)
 
         else:
             try:
