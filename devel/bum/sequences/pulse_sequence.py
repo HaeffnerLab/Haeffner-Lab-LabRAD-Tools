@@ -11,8 +11,6 @@ class pulse_sequence(object):
     Version 2 -- made for new script scanner project
     '''
     
-    is_2dimensional = False
-    is_composite = False
     fixed_params = {}
     scannable_params = {}
     show_params = []
