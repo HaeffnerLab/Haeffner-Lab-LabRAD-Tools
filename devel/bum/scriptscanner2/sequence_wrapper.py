@@ -34,6 +34,7 @@ import time
 from common.client_config import client_info as dt_config
 from configuration import config
 import inspect
+import traceback
 
 
 class pulse_sequence_wrapper(object):
@@ -126,32 +127,40 @@ class pulse_sequence_wrapper(object):
         
         return directory, ds, data_save_context_extra
         
+        
     def run(self, ident):
         self.ident = ident
 
         cxn = labrad.connect()
 
-        # define a new parameter dict to allow non-overwrite update
-        self.fixed_parameters_dict = TreeDict()
+        try:
 
-        # get scan structure, 
-        # i.e. {5:[10,20]} means scan two sequences for 5 times, 
-        # sequence1 contains 10 repititions, sequence2 contains 20 repititions
-        self.scan_structure = self.get_scan_structure(self.module)
-        print "Scan tructure: ", self.scan_structure
+            # define a new parameter dict to allow non-overwrite update
+            self.fixed_parameters_dict = TreeDict()
 
-        # calculate total repititions from scan structure
-        self.total_scan = self.calc_total_scan(self.scan_structure)
-        print "Total scan rounds: ", self.total_scan
+            # get scan structure, 
+            # i.e. {5:[10,20]} means scan two sequences for 5 times, 
+            # sequence1 contains 10 repititions, sequence2 contains 20 repititions
+            self.scan_structure = self.get_scan_structure(self.module)
+            print "Scan tructure: ", self.scan_structure
 
-        # status_list defines current status
-        status_list = []
+            # calculate total repititions from scan structure
+            self.total_scan = self.calc_total_scan(self.scan_structure)
+            print "Total scan rounds: ", self.total_scan
 
-        # call loop function to generate complicated scan
-        self.loop_run(self.module, cxn, status_list)
-            
-        cxn.disconnect()    
-        self.sc._finish_confirmed(self.ident)
+            # status_list defines current status
+            status_list = []
+
+            # call loop function to generate complicated scan
+            self.loop_run(self.module, cxn, status_list)
+            self.sc._finish_confirmed(self.ident)
+
+        except Exception as e:
+            reason = traceback.format_exc()
+            print reason
+            self.sc.error_finish_confirmed(None, self.ident, reason)
+
+        cxn.disconnect()
 
 
     def loop_run(self, module, cxn, lis):
@@ -281,7 +290,8 @@ class pulse_sequence_wrapper(object):
                         dv.add(submission, context = data_save_context)
                         module.run_in_loop(cxn, self.parameters_dict, results, results_x)
 
-                # process data if should not stop
+                # process data using run_finally function if should not stop, 
+                # to eliminate possible errors in data propagation 
                 if not self.should_stop:
                     print "Results for {} !!!!!!!!!!!!!!!!!!!!".format(module.__name__), results, results_x
                     final_result = module.run_finally(cxn, self.parameters_dict, results, results_x)
