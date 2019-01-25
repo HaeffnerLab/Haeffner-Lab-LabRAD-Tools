@@ -6,6 +6,7 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 import itertools
 from Dataset import Dataset
+from random import shuffle
 import Queue
 
 import numpy as np
@@ -37,8 +38,14 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.live_update_loop.start(0)
         
     
-        colors = [(47,126,243), (250,138,39), (96,233,128), (255,77,77), (255,51,153), (128,255,0), (255,241,102)]
+        colors = [(47,126,243), (250,138,39), (96,233,128), (255,77,77), (255,51,153), (128,255,0), (255,241,102),
+                  (255,128,128), (255,255,192), (255,255,64), (0,255,0), (64, 255,255), (0,128, 255), (192,64,192),
+                  (255,255,255), (64, 0, 255), (128,128,128)]
+        # colors = [(128,0,0),(170,110,40),(128,128,0),(0,128,128),(0,0,128),(230,25,75),(245,130,48),(255,255,25),
+        #           (2190,245,60),(60,180,75),(70,240,240),(0,130,200),(145,30,180),(240,50,230),(128,128,128),
+        #           (250,190,190),(255,215,180),(255,250,200),(170,255,195),(230,190,255),(255,255,255)]
         #colors = ['r', 'g', 'y', 'c', 'm', 'w']
+        shuffle(colors)
         self.colorChooser = itertools.cycle(colors)
         self.initUI()
 
