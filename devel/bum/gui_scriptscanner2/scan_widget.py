@@ -257,8 +257,8 @@ class scan_widget(QtGui.QWidget):
         Select experiment to show
         '''
         try:
-            self.widgets[experiment].setVisible(True)
             self.scan_box.setCurrentWidget(self.widgets[experiment])
+            self.widgets[experiment].setVisible(True)
             self.PreferredParameters.show_only(self.preferreds[experiment])
         except KeyError: # no experiment selected
             self.show_none()
