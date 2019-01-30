@@ -46,7 +46,9 @@ class ParameterVault(LabradServer):
     def getOtherListeners(self,c):
         """Returns the set of all listeners excluding the provided context c."""
         notified = self.listeners.copy()
-        notified.remove(c.ID)
+        # Don't know why need to remove itself
+        # This makes "to doppler cooling" & "to state readout" not working
+        # notified.remove(c.ID)
         return notified
     
     @inlineCallbacks
