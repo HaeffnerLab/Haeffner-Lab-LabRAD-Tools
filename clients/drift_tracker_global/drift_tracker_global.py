@@ -31,7 +31,7 @@ client_name = cl.client_name
 
 colors = c.default_color_cycle[0:len(client_list)]
 
-class drift_tracker(QtGui.QWidget):
+class drift_tracker_global(QtGui.QWidget):
     def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.reactor = reactor
