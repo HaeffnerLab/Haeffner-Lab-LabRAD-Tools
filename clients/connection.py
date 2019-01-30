@@ -71,6 +71,7 @@ class connection(object):
         print 'server connected'
         server_name = server_name[1]
         print server_name
+        yield self.cxn.refresh()
         if server_name in self._servers.keys():
             print '{} Connected'.format(server_name)
             self._servers[server_name] = yield self.cxn[server_name]
