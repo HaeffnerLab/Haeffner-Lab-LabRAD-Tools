@@ -87,8 +87,7 @@ class pulse_sequence_wrapper(object):
                 submit_unit = 'deg' 
                 
             else:
-                #submit_unit = self.scan_unit
-                print "Need to figure out what to do here"
+                submit_unit = unit
                 
             scan_submit = [pt[submit_unit] for pt in scan]
             scan_submit = [U(pt, submit_unit) for pt in scan_submit]
@@ -281,7 +280,7 @@ class pulse_sequence_wrapper(object):
                     if not self.should_stop:
                         submission = [scan_param[submit_unit]]
                         submission.append(result)
-                        submission = [num for item in submission for num in (item if isinstance(item, list) else (item,))]
+                        submission = [num for item in submission for num in (item if isinstance(item, list) or isinstance(item, tuple) else (item,))]
                         if not ds:
                             directory, ds, data_save_context = self.setup_experiment(cxn, scan, submit_unit, parameter_to_scan = parameter_to_scan, dependents_name = module.__name__, num_of_params_to_sub = len(submission)-1, window = window)
                         dv = cxn.data_vault
