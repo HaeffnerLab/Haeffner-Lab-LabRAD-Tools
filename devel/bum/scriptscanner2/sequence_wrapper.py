@@ -77,11 +77,12 @@ class pulse_sequence_wrapper(object):
             
             x = scan[0]
             
-            if x.isCompatible('s'): 
-                submit_unit = 'us'
                 
-            elif x.isCompatible('Hz'):
+            if x.isCompatible('Hz'):
                 submit_unit = 'MHz' 
+
+             # elif x.isCompatible('s'): 
+            #     submit_unit = 'us'               
     
             elif x.isCompatible('deg'):
                 submit_unit = 'deg' 
