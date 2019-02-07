@@ -165,7 +165,7 @@ class pulse_sequence(object):
         '''
         max_index = np.where(p == p.max())[0][0]
         fmax = f[max_index]
-        if (p.max() <= 0.15 and not force_guess):
+        if (p.max() <= 0.1 and not force_guess):
             
             #raise Exception("Peak not found") Need to know how to implement this with the GUI
             return None
