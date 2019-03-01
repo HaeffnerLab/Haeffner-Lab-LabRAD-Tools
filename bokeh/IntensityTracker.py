@@ -302,8 +302,8 @@ def saveFiles(filename, PC_on=False):
                 np.delete(y, j[0])
         
         for j in enumerate(y):     #similar issue
-        	if type(j[1]) == float:
-        		np.delete(x_temp, j[0])
+            if type(j[1]) == float:
+                np.delete(x_temp, j[0])
                 np.delete(y, j[0])
 
         if not PC_on:
@@ -456,7 +456,7 @@ def updateLoad(PC=False):
                     item = legend.items[i-1]
                     item.label['value'] = cname
                 except:
-                	pass
+                    pass
 
     except:
         for i in range(4):

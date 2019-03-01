@@ -230,8 +230,13 @@ class DsoxServer(LabradServer):
     @setting(17, 'get waveform data', returns='*v[]')
     def getWaveformData(self, c):
         ''' Returns digitized waveform data as a list of floats.'''
-        raw_data = self.ask(self.instr, "WAVeform:DATA?")
+        # raw_data = self.ask(self.instr, "WAVeform:DATA?")
         data = [float(i) for i in self.instr.ask("WAVeform:DATA?")[11:].split(",")]
+        # try:
+        #     data = [float(i) for i in self.instr.ask("WAVeform:DATA?")[11:].split(",")]
+        # except:
+        #     # Need to figure out what to do here
+        #     data = raw_data
         return data
 
     @setting(18, 'get waveform preamble', returns='*v[]')
