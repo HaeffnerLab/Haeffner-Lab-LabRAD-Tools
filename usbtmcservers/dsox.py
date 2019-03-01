@@ -27,7 +27,7 @@ import numpy as np
 from datetime import timedelta as td
 from math import pi
 
-SERVERNAME = 'DSOX server'
+SERVERNAME = 'DSOX serverbbbb'
 SIGNALID = 190233
 
 class DsoxServer(LabradServer):
