@@ -679,10 +679,12 @@ class pulse_sequence_wrapper(object):
                     if self.name != 'RabiFloppingManual' :
                         line = self.parameters_dict.Spectrum.line_selection 
                         shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                        # adding the shift for the sideband
-                        order = int(self.parameters_dict.Spectrum.order)  
-                        if  order != 0 :
-                            sideband= self.parameters_dict.Spectrum.selection_sideband
+                        # adding the shift for the sideband  
+                        sideband= self.parameters_dict.Spectrum.selection_sideband
+                        if sideband == 'Ignore Me!':
+                            shift += self.calculate_spectrum_shift()
+                        else:
+                            order = int(self.parameters_dict.Spectrum.order)
                             shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
                 global_sd_cxn.disconnect()
                 # sleep(0.05)
@@ -704,10 +706,12 @@ class pulse_sequence_wrapper(object):
                 global_sd_cxn.disconnect()
             # when we scan the sideband in spectrum we want to have thier offset from the carrier
             if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
-                order = int(self.parameters_dict.Spectrum.order)
-                if  order != 0 :
-                    sideband= self.parameters_dict.Spectrum.selection_sideband
-                    shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                sideband= self.parameters_dict.Spectrum.selection_sideband
+                if sideband == 'Ignore Me!':
+                    shift = self.calculate_spectrum_shift()
+                else:
+                    order = int(self.parameters_dict.Spectrum.order)
+                    shift = 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
 
             elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
                 # MotionAnalysisSpectrum is always on the 1st-order sideband
@@ -772,19 +776,26 @@ class pulse_sequence_wrapper(object):
             elif 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
 #                 print "scanning the Spectrum in a false relative freq"
                 line = self.parameters_dict.Spectrum.line_selection
-                order = int(self.parameters_dict.Spectrum.order)  
-                if  order != 0 :
-                    sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
+                if self.parameters_dict.Spectrum.selection_sideband == 'Ignore Me!':
+                    shift = self.calculate_spectrum_shift()
+                    shift += self.parameters_dict.Carriers[carrier_translation[line]]
+                    return shift 
+                else:
+                    order = int(self.parameters_dict.Spectrum.order)  
+                    if  order != 0 :
+                        sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
                     
         else:
             # when we scan the sideband in spectrum we want to have thier offset from the carrier
             if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
-                order = int(self.parameters_dict.Spectrum.order)
-                if  order != 0 :
-                    sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
-                    shift= 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+                sideband= self.parameters_dict.Spectrum.selection_sideband
+                if sideband == 'Ignore Me!':
+                    shift = self.calculate_spectrum_shift()
+                else:
+                    order = int(self.parameters_dict.Spectrum.order)
+                    shift = 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
 
-                    return shift
+                return shift
             elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
                 # MotionAnalysisSpectrum is always on the 1st-order sideband
                 sideband = self.parameters_dict.Motion_Analysis.sideband_selection
@@ -960,12 +971,15 @@ class pulse_sequence_wrapper(object):
         #t1 = time.time()
         #print "TIME", t1-t0
 
-    # @classmethod
-    # def add_sidebands(cls, freq, sideband_selection, trap):
-    #     sideband_frequencies = [trap.radial_frequency_1, trap.radial_frequency_2, trap.axial_frequency, trap.rf_drive_frequency]
-    #     for order,sideband_frequency in zip(sideband_selection, sideband_frequencies):
-    #         freq += order * sideband_frequency
-    #     return freq
+
+    def calculate_spectrum_shift(self):
+        shift = 0
+        trap = self.parameters_dict.TrapFrequencies
+        sideband_selection = self.parameters_dict.Spectrum.sideband_selection
+        sideband_frequencies = [trap.radial_frequency_1, trap.radial_frequency_2, trap.axial_frequency, trap.rf_drive_frequency]
+        for order,sideband_frequency in zip(sideband_selection, sideband_frequencies):
+            shift += order * sideband_frequency
+        return shift
 
         
     
