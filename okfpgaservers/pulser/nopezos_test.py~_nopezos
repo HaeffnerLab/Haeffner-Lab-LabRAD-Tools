@@ -1,0 +1,72 @@
+# test for the pulser
+
+from api import api
+import array
+from hardwareConfiguration import hardwareConfiguration as hc
+a = api()
+
+def cnot(control, inp):
+    if control:
+        inp = not inp
+    return inp
+
+def settings_to_buf(channel, freq, ampl):
+    num = settings_to_num(channel, freq, ampl)
+    buf = intToBuf_coherent(num)
+    buf = buf + '\x00\x00'
+    return buf
+
+def intToBuf_coherent(num):
+    '''
+    takes the integer representing the setting and returns the buffer string for dds programming
+    '''
+    freq_num = num % 2**32
+    a, b = freq_num // 256**2, freq_num % 256**2
+    freq_arr = array.array('B', [b % 256 ,b // 256, a % 256, a // 256])
+    
+    phase_ampl_num = num // 2**32
+    a, b = phase_ampl_num // 256**2, phase_ampl_num % 256**2
+    phase_ampl_arr = array.array('B', [a % 256 ,a // 256, b % 256, b // 256])
+    
+    ans = phase_ampl_arr.tostring() + freq_arr.tostring()
+    return ans
+
+def settings_to_num(channel, freq, ampl, phase = 0.0, profile = 0):
+    ans = 0
+    for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 35,  13), (profile,(0,7),2**32, 3) , (phase,channel.boardphaserange, 2 ** 48,  16)]:
+            minim, maxim = r
+            resolution = (maxim - minim) / float(2**precision - 1)
+            seq = int((val - minim)/resolution) #sequential representation
+            ans += m*seq
+    return ans    
+
+def program_dds_channel(channel, buf):
+    addr = channel.channelnumber
+    a.resetAllDDS()
+    a.setDDSchannel(addr)
+    k = ":".join("{:02x}".format(ord(c)) for c in buf)
+    print bytearray(buf)
+    a.programDDS(buf)
+
+def setParameters(channel, freq, ampl):
+    buf = settings_to_buf(channel, freq, ampl)
+    program_dds_channel(channel, buf)
+
+### initialize the board
+a.connectOKBoard()
+for channel in hc.channelDict.itervalues():
+    channelnumber = channel.channelnumber
+    if channel.ismanual:
+        state = cnot(channel.manualinv, channel.manualstate)
+        a.setManual(channelnumber, state)
+    else:
+        a.setAuto(channelnumber, channel.autoinv)
+
+# initialize dds
+ddsDict = hc.ddsDict
+a.initializeDDS()
+for name, channel in ddsDict.iteritems():
+    channel.name = name
+    freq, ampl = (channel.frequency, channel.amplitude)
+    setParameters(channel, freq, ampl)
+    break

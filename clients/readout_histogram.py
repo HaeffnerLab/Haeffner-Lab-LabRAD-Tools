@@ -44,7 +44,7 @@ class readout_histogram(QtGui.QWidget):
         layout = QtGui.QVBoxLayout()
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
-        self.fig.patch.set_facecolor("moccasin")
+        self.fig.patch.set_facecolor((.96, .96, .96))
         self.canvas.setParent(self)
         self.axes = self.fig.add_subplot(111)
         self.axes.set_xlim(left = 0, right = 100)

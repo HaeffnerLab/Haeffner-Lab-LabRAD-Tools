@@ -379,7 +379,7 @@ class script_scanner_gui(QtGui.QWidget):
         topLevelLayout = QtGui.QGridLayout()
 
         tab = QtGui.QTabWidget()
-        control = QtGui.QWidget()
+        control = QtGui.QTabWidget()
         layout = QtGui.QHBoxLayout()
         
         # topLevelLayout.addStretch()

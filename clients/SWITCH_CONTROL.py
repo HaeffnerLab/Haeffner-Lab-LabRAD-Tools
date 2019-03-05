@@ -93,27 +93,47 @@ class switchWidget(QtGui.QFrame):
         #set layout
         layout = QtGui.QGridLayout()
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         #get switch names and add them to the layout, and connect their function
         #layout.addWidget(QtGui.QLabel('Switches'),0,0)
         #print channels
         for order,name in enumerate(channels):
             #setting up physical container
-            groupBox = QtGui.QGroupBox(name) 
+            groupBox = QtGui.QGroupBox() 
+            if len(name) <= 7:
+                groupBox.setTitle(name)
+            else:
+                groupBox.setTitle(name[:7])
+            groupBox.setStyleSheet("font-size: 11pt")
+
             groupBoxLayout = QtGui.QVBoxLayout()
             buttonOn = QtGui.QPushButton('ON')
             buttonOn.setAutoExclusive(True)
             buttonOn.setCheckable(True)
+            buttonOn.setStyleSheet("QPushButton { background-color: gray }" 
+                                   "QPushButton:On { background-color: green}") 
             buttonOff = QtGui.QPushButton('OFF')
             buttonOff.setCheckable(True)
+            buttonOff.setStyleSheet("QPushButton { background-color: gray }"
+                                    "QPushButton:On { background-color: green}")
             buttonOff.setAutoExclusive(True)
             buttonAuto = QtGui.QPushButton('Auto')
             buttonAuto.setCheckable(True)
             buttonAuto.setAutoExclusive(True)
+            buttonAuto.setStyleSheet("QPushButton { background-color: gray }"
+                                     "QPushButton:On { background-color: green}")
+            
+            if len(name) <= 7:
+                Name = QtGui.QLabel(" ")
+            else:
+                Name = QtGui.QLabel(name[7:])
+            Name.setStyleSheet("font-size: 11pt")
+            groupBoxLayout.addWidget(Name)
             groupBoxLayout.addWidget(buttonOn)
             groupBoxLayout.addWidget(buttonOff)
             groupBoxLayout.addWidget(buttonAuto)
             groupBox.setLayout(groupBoxLayout)
+                    
             #adding to dictionary for signal following
             self.d[name] = {}
             self.d[name]['ON'] = buttonOn

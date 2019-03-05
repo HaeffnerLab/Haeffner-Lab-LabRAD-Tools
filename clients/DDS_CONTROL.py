@@ -44,7 +44,9 @@ class DDS_CHAN(QCustomFreqPower):
             self.spinPower.valueChanged.connect(self.powerChanged)
             self.spinFreq.valueChanged.connect(self.freqChanged) 
             self.buttonSwitch.toggled.connect(self.switchChanged)
-    
+            self.buttonSwitch.setStyleSheet("QPushButton { background-color: gray }"
+                      "QPushButton:On { background-color: green }" )
+
     def setParamNoSignal(self, param, value):
         if param == 'amplitude':
             self.setPowerNoSignal(WithUnit(value,'dBm'))
@@ -101,7 +103,7 @@ class DDS_CONTROL(QtGui.QFrame):
     def __init__(self, reactor, cxn = None):
         super(DDS_CONTROL, self).__init__()
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.cxn = cxn
         self.initialized = False

@@ -557,7 +557,9 @@ class Pulser(DDS, LineTrigger, LabradServer):
     
     def expireContext(self, c):
         self.listeners.remove(c.ID)
-     
+
+
 if __name__ == "__main__":
+    __server__ = Pulser()
     from labrad import util
-    util.runServer( Pulser() )
+    util.runServer(__server__)
