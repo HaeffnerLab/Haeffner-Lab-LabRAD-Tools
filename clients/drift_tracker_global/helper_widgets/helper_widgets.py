@@ -1,16 +1,16 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 
 class dropdown(QtGui.QComboBox):
-    
+
     '''
     dropdown is a QComboBox used for selecting of 729 line names
-    
+
     @param favorites: favorite is an optical parameter that's a replacement ditionary of the names that should be displayed
     i.e favorites = {'S-1/2D-1/2': 'best'} will show 'best' in the dropdown menu instead of 'S-1/2D-1/2'.
     '''
-    
+
     new_selection = QtCore.pyqtSignal(str)
-     
+
     def __init__(self, reactor, font = None, names = [], favorites = {}, initial_selection = None, info_position = None, only_show_favorites = False, parent = None ):
         super(dropdown, self).__init__(parent)
         self.reactor = reactor
@@ -28,7 +28,7 @@ class dropdown(QtGui.QComboBox):
         #select the item set in the config file
         if initial_selection is not None:
             self.set_selected(initial_selection)
-        
+
     def set_selected(self, linename):
         '''
         set the selection by finding the entry where linename is saved as the stored data
@@ -39,15 +39,15 @@ class dropdown(QtGui.QComboBox):
         self.blockSignals(True)
         self.setCurrentIndex(index)
         self.blockSignals(False)
-        
+
     def set_favorites(self, favorites):
         self.favorites = favorites
-    
+
     def on_user_selection(self,index):
         text = self.itemData(index).toString()
         self.selected = text
         self.new_selection.emit(text)
-    
+
     def set_dropdown(self, info):
         self.blockSignals(True)
         for values in info:
@@ -79,12 +79,12 @@ class saved_frequencies_table(QtGui.QTableWidget):
         self.suffix = suffix
         self.reactor = reactor
         self.initializeGUI()
-        
+
     def initializeGUI(self):
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setColumnCount(2)
-    
+
     def fill_out_widget(self, info):
         self.setRowCount(len(info))
         form = '{' + '0:.{}f'.format(self.sig_figs) + '}' + ' {}'.format( self.suffix)
@@ -105,11 +105,11 @@ class saved_frequencies_table(QtGui.QTableWidget):
                 self.setItem(enum , 1 , sample)
         for col in range(self.columnCount()):
             self.resizeColumnToContents(col)
-    
+
     def resizeEvent(self, event):
         for col in range(self.columnCount()):
             self.resizeColumnToContents(col)
-            
+
     def closeEvent(self, x):
         self.reactor.stop()
 

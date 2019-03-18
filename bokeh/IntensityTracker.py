@@ -15,7 +15,8 @@ from bokeh.models import DatetimeTickFormatter, ColumnDataSource
 from bokeh.layouts import gridplot, widgetbox, layout, row
 from bokeh.models.widgets import Toggle, TextInput, Select, Div, Panel, Tabs
 from bokeh.models.annotations import Legend
-from bokeh.io import curdoc, push_session, push
+from bokeh.client import push_session
+from bokeh.io import curdoc
 from bokeh.document import without_document_lock
 from concurrent.futures import ThreadPoolExecutor
 from tornado import gen
@@ -61,10 +62,10 @@ for i in range(4):
 #initialize scope
 scope.connect((0x0957,0x17a4, '')) #include S/N if more than one device
 scope.reset()
-scope.autoScale()
-scope.setAcquireType('hres')
-scope.setWaveformPoints(100)
-scope.setWaveformFormat('ASCii')
+scope.auto_scale()
+scope.set_acquire_type('hres')
+scope.set_waveform_points(100)
+scope.set_waveform_format('ASCii')
 
 
 
@@ -192,10 +193,10 @@ def updateChannels():
 
 
 def updateChannel(channel):
-    scope.setWaveformSource(channel)
+    scope.set_waveform_source(channel)
     scope.setWaveformPoints(int(num_avgs_select.value))
-    curr_data = np.mean(scope.getWaveformData()) 
-    preamble = scope.getWaveformPreamble()
+    curr_data = np.mean(scope.get_waveform_data()) 
+    preamble = scope.get_waveform_preamble()
     now = dt.now(PT)
     t_temp = [now + td(seconds=i*float(preamble[0])) for i in range(int(num_avgs_select.value))]
     t = [i - td(hours=8) for i in t_temp] #Bokeh axis_type=datetime ignores tzinfo and assumes utc, so we need this offset
@@ -216,12 +217,12 @@ def updateChannelsPC():
     if not PC_flag[0]:
         return
     curr_channel = int(channel_select_value[1][-1])
-    scope.setTriggerSource(curr_channel)
-    scope.setTriggerLevel(trigger_level_input_value[0])
-    scope.setTriggerReferenceLeft()
-    scope.setTimeRange(float(time_range_select_value[0])/1000000.)
-    scope.setWaveformSource(curr_channel)
-    scope.setWaveformPoints(number_points_select_value[0])
+    scope.set_trigger_source(curr_channel)
+    scope.set_trigger_level(trigger_level_input_value[0])
+    scope.set_trigger_reference_left()
+    scope.set_time_range(float(time_range_select_value[0])/1000000.)
+    scope.set_waveform_source(curr_channel)
+    scope.set_waveform_points(number_points_select_value[0])
     scope.digitize(curr_channel)
     result = yield executor_pc.submit(updateChannelPC, curr_channel)
     res_PC[0] = result
@@ -231,9 +232,9 @@ def updateChannelPC(channel):
     if not PC_flag[0]:
         return
     
-    preamble = scope.getWaveformPreamble()
-    curr_data_list = list(scope.getWaveformData())
-    t_PC = [i*float(preamble[0])*1E6 for i in range(scope.getWaveformPoints())]
+    preamble = scope.get_waveform_preamble()
+    curr_data_list = list(scope.get_waveform_data())
+    t_PC = [i*float(preamble[0])*1E6 for i in range(scope.get_waveform_points())]
     return t_PC, curr_data_list
 
 @gen.coroutine
@@ -369,7 +370,7 @@ def pulseCapture_ButtonClick():
         PC_flag[0] = True
         source_PC.data = dict(x=[],y=[])
         pc_plot.title.text = "Pulse Capture"
-        scope.setAcquireType('normal')
+        scope.set_acquire_type('normal')
         time_range_select_value[0] = time_range_input.value
         channel_select_value[1] = channel_name_select2.value
         number_points_select_value[0] = int(number_points_select.value)
@@ -385,8 +386,8 @@ def pulseCapture_ButtonClick():
         PC_flag[0] = False
         time.sleep(1) # See above
         scope.reset()
-        scope.autoScale()
-        scope.setAcquireType('hres')
+        scope.auto_scale()
+        scope.set_acquire_type('hres')
         time.sleep(1) # See above
 
 def reset_ButtonClick():
@@ -398,7 +399,7 @@ def reset_ButtonClick():
 
 def autoscale_ButtonClick():
     if channel_flag == [False, False, False, False] and not PC_flag[0]:
-        scope.autoScale()
+        scope.auto_scale()
         autoscale_button.active = False
     else:
         autoscale_button.active = False

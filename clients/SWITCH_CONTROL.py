@@ -100,10 +100,10 @@ class switchWidget(QtGui.QFrame):
         for order,name in enumerate(channels):
             #setting up physical container
             groupBox = QtGui.QGroupBox() 
-            if len(name) <= 7:
+            if len(name) <= 8:
                 groupBox.setTitle(name)
             else:
-                groupBox.setTitle(name[:7])
+                groupBox.setTitle(name[:5] + "." + name[-3:])
             groupBox.setStyleSheet("font-size: 11pt")
 
             groupBoxLayout = QtGui.QVBoxLayout()
@@ -123,12 +123,12 @@ class switchWidget(QtGui.QFrame):
             buttonAuto.setStyleSheet("QPushButton { background-color: gray }"
                                      "QPushButton:On { background-color: green}")
             
-            if len(name) <= 7:
-                Name = QtGui.QLabel(" ")
-            else:
-                Name = QtGui.QLabel(name[7:])
-            Name.setStyleSheet("font-size: 11pt")
-            groupBoxLayout.addWidget(Name)
+            #if len(name) <= 7:
+            #    Name = QtGui.QLabel(" ")
+            #else:
+            #    Name = QtGui.QLabel(name[7:])
+            #Name.setStyleSheet("font-size: 11pt")
+            #groupBoxLayout.addWidget(Name)
             groupBoxLayout.addWidget(buttonOn)
             groupBoxLayout.addWidget(buttonOff)
             groupBoxLayout.addWidget(buttonAuto)

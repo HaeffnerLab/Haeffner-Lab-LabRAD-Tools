@@ -82,6 +82,8 @@ class linetriggerWidget(QtGui.QFrame):
         #button
         self.button_linetrig = TextChangingButton()
         self.button_linetrig.setCheckable(True)
+        self.button_linetrig.setStyleSheet("QPushButton { background-color: gray }"
+                                           "QPushButton:On { background-color: green}")
         state = yield server.line_trigger_state(context = self.context)
         self.button_linetrig.setChecked(state)
         self.button_linetrig.toggled.connect(self.setState)
