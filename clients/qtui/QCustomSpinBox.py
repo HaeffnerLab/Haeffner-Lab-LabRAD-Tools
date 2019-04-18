@@ -5,7 +5,7 @@ from PyQt4 import QtCore,uic
 
 class QCustomSpinBox(QtGui.QWidget):
     onNewValues = QtCore.pyqtSignal()
-    def __init__(self, title, levelRange, parent=None):
+    def __init__(self, title, levelRange, parent=None,decimals = 3,step_size = 0.001):
         QtGui.QWidget.__init__(self, parent)
 	basepath = os.path.dirname(__file__)
         path = os.path.join(basepath,'titlespin.ui')
@@ -13,10 +13,10 @@ class QCustomSpinBox(QtGui.QWidget):
         self.title.setText(title)
         self.levelRange = levelRange
         self.spinLevel.setRange(*levelRange)
-        self.spinLevel.setDecimals(3)
+        self.spinLevel.setDecimals(decimals)
         self.level = 0
         self.spinLevel.valueChanged.connect(self.spinLevelChanged)
-        self.setStepSize(0.001) #set step size of box
+        self.setStepSize(step_size) #set step size of box
 
     def setValues(self, level):
         self.disconnectAll()

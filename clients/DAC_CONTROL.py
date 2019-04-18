@@ -54,10 +54,11 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     def inputHasUpdated(self):
         self.inputUpdated = True
         for k in self.multipoles:
-            self.multipoleValues[k] = round(self.controls[k].spinLevel.value(), 3)
+            self.multipoleValues[k] = round(self.controls[k].spinLevel.value(), 5)
         
     def sendToServer(self):
         if self.inputUpdated:
+            print self.multipoleValues.items()
             self.dacserver.set_multipole_values(self.multipoleValues.items())
             self.inputUpdated = False
     

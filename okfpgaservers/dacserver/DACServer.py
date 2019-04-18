@@ -56,6 +56,7 @@ class Voltage( object ):
         else: setN = bin(1)[2:].zfill(10)
         voltage = bin(self.digital_voltage)[2:].zfill(16)
         big = voltage + port + setN + '0'        
+        print self.channel.dacChannelNumber
         return chr(int(big[8:16], 2)) + chr(int(big[:8],2))+ chr(int(big[24:32], 2)) + chr(int(big[16:24], 2))
 
 
@@ -73,7 +74,7 @@ class Control(object):
         print "getting info"
         Cfile_text = open(self.Cfile_path).read().split('\n')[:-1]
         
-        print Cfile_text
+        #print Cfile_text
         
         for i in range(len(Cfile_text)):
             if Cfile_text[i].find(':') >= 0: head.append(Cfile_text[i])
@@ -84,7 +85,7 @@ class Control(object):
         except: self.position = 0
         print self.position
         self.num_columns = len(body[0])
-        print self.num_columns
+        #print self.num_columns
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
         print self.multipole_matrix
         self.position_vector = body[-1]
@@ -113,9 +114,10 @@ class Control(object):
 
     def getVoltages(self):
         # if self.num_columns
-        pindex = self.position_vector.index(str(self.position))
+        #pindex = self.position_vector.index(str(self.position))
         # print pindex
-        return [(e, self.voltage_matrix[e][pindex]) for e in hc.elec_dict.keys()]
+        # return [(e, self.voltage_matrix[e][pindex]) for e in hc.elec_dict.keys()]
+        return [(e, self.voltage_matrix[e][self.position]) for e in hc.elec_dict.keys()]
 
     def getShuttleVoltages(self, new_position, step_size, duration, loop, loop_delay, overshoot):
         old_position = self.position
@@ -240,6 +242,7 @@ class DACServer(LabradServer):
         subs, keys = yield self.registry.dir()
         print 'Calibrated channels: ', subs
         for chan in self.dac_dict.values():
+            print chan.dacChannelNumber
             c = [] # list of calibration coefficients in form [c0, c1, ..., cn]
             if str(chan.dacChannelNumber) in subs:
                 yield self.registry.cd(self.registry_path + ['Calibrations', str(chan.dacChannelNumber)])
@@ -335,7 +338,12 @@ class DACServer(LabradServer):
         (portNum, newVolts)
         """
         for (port, av) in analog_voltages:
-            #print (port,av)
+            ####################################################################
+            # VOLTAGES INVERTED FOR TEMPORARY USE WITH THE OLD LATTICE DAC
+            # av = -av
+            # print (port,av)
+            ####################################################################
+
             self.queue.insert(Voltage(self.dac_dict[port], analog_voltage=av))
             if self.dac_dict[port].smaOutNumber and self.control.Cfile_name:
                 yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'])

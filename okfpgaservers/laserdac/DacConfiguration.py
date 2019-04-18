@@ -33,8 +33,8 @@ class hardwareConfiguration(object):
             '02' : '866',
             '03' : '422',
             '04' : '854',
-            '05' : '729super',
-            '06' : '729inject'
+            '05' : '729supervisor',
+            '06' : '729slave'
             }
     elec_dict = {
         '01': channelConfiguration(1, trapElectrodeNumber=1),

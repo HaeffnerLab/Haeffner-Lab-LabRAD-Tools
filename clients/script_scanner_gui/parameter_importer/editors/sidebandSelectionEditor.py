@@ -15,13 +15,15 @@ class SidebandSelectionEditor(base, form):
         self.uiRadial2.setValue(0)
         self.uiAxial.setValue(0)
         self.uiMicromotion.setValue(0)
+        self.uiRotation.setValue(0)
 
     def full_info(self):
         
         settings = [self.uiRadial1.value(),
                     self.uiRadial2.value(),
                     self.uiAxial.value(),
-                    self.uiMicromotion.value()
+                    self.uiMicromotion.value(),
+                    self.uiRotation.value()
                     ]
 
         full_info = ('sideband_selection', settings)

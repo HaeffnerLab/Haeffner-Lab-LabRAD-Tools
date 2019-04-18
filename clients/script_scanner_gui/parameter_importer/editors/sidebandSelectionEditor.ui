@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
+    <width>374</width>
     <height>308</height>
    </rect>
   </property>
@@ -26,8 +26,49 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="4">
-    <widget class="QSpinBox" name="uiAxial">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Radial1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Radial2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Axial</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Micromotion</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Rotation</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QSpinBox" name="uiRadial1">
      <property name="maximumSize">
       <size>
        <width>50</width>
@@ -53,7 +94,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="3">
+   <item row="1" column="1">
     <widget class="QSpinBox" name="uiRadial2">
      <property name="maximumSize">
       <size>
@@ -80,20 +121,34 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="2">
-    <widget class="QLabel" name="label">
+   <item row="1" column="2">
+    <widget class="QSpinBox" name="uiAxial">
      <property name="maximumSize">
       <size>
-       <width>16777215</width>
-       <height>20</height>
+       <width>50</width>
+       <height>16777215</height>
       </size>
      </property>
-     <property name="text">
-      <string>Radial1</string>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="keyboardTracking">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <number>-5</number>
+     </property>
+     <property name="maximum">
+      <number>5</number>
      </property>
     </widget>
    </item>
-   <item row="2" column="5">
+   <item row="1" column="3">
     <widget class="QSpinBox" name="uiMicromotion">
      <property name="maximumSize">
       <size>
@@ -120,53 +175,8 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="3">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Radial2</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="4">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Axial</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="5">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Micromotion</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="2">
-    <widget class="QSpinBox" name="uiRadial1">
-     <property name="maximumSize">
-      <size>
-       <width>50</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="keyboardTracking">
-      <bool>false</bool>
-     </property>
-     <property name="minimum">
-      <number>-5</number>
-     </property>
-     <property name="maximum">
-      <number>5</number>
-     </property>
-    </widget>
+   <item row="1" column="4">
+    <widget class="QSpinBox" name="uiRotation"/>
    </item>
   </layout>
  </widget>
