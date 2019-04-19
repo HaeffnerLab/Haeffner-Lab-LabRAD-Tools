@@ -352,7 +352,7 @@ class script_scanner_gui(QtGui.QWidget):
         seq = str(seq)
         #print 
         #p = self.scan_widget.get_scan_settings(seq)
-        p=[('Dummy', ('Dummy.Dummy_detuning', 0.0, 200.0, 1.0, 'MHz'))]
+        p=[(seq, ('Dummy.Dummy_detuning', 0.0, 200.0, 1.0, 'MHz'))]
         #print "453"
         #print "parameters to scan"
         #print p
@@ -375,15 +375,17 @@ class script_scanner_gui(QtGui.QWidget):
         self.ParametersEditor = ParametersEditor(self.reactor)
         self.scan_widget = scan_widget(self.reactor, self)
 
-        topLevelLayout = QtGui.QHBoxLayout()
+        
+        topLevelLayout = QtGui.QGridLayout()
 
         tab = QtGui.QTabWidget()
-        control = QtGui.QWidget()
+        control = QtGui.QTabWidget()
         layout = QtGui.QHBoxLayout()
         
+        # topLevelLayout.addStretch()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.scan_widget)
-        #layout.addWidget(self.ParametersEditor)
+        layout.addWidget(self.ParametersEditor)
         control.setLayout(layout)
         #self.script_explorer = script_explorer_widget(self)
         tab.addTab(control, 'Scan Control')

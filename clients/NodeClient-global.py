@@ -4,7 +4,7 @@ import time
 
 #connect to LabRAD
 try:
-	cxn = labrad.connect('192.168.169.49')
+	cxn = labrad.connect('192.168.169.49', password="lab")
 except:
 	print 'Please start LabRAD Manager'
 	time.sleep(10)
@@ -21,7 +21,7 @@ for node in ['node_lab_49']: #sets the order of opening
 	else:
 		print '\n' + 'Working on ' + node + '\n'
 		#if node server is up, start all possible servers on it that are not already running
-		running_servers = np.array(cxn.servers[node].running_servers().asarray)
+		running_servers = np.array(cxn.servers[node].running_servers())
 		for server in nodeDict[node]:
 			if server in running_servers: 
 				print server + ' is already running'
