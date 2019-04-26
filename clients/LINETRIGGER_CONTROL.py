@@ -1,6 +1,6 @@
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
-from connection import connection
+#from connection import connection
 
 SIGNALID = 378903
 
@@ -153,6 +153,7 @@ if __name__=="__main__":
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
+    from connection import connection
     triggerWidget = linetriggerWidget(reactor)
     triggerWidget.show()
     reactor.run()

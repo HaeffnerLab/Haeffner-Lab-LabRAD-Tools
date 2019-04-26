@@ -15,7 +15,7 @@ class connection(object):
         self._on_disconnect = {}
 
     @inlineCallbacks
-    def connect(self, host = C.MANAGER_HOST, password = '', tls_mode = 'off'):
+    def connect(self, host = C.MANAGER_HOST, password = C.PASSWORD, tls_mode = 'off'):
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync(host, password = password, tls_mode = tls_mode)
         yield self.setupListeners()

@@ -1,6 +1,6 @@
 from PyQt4 import QtGui
 from twisted.internet.defer import inlineCallbacks, returnValue
-from connection import connection
+#from connection import connection
 
 '''
 The Switch Control GUI lets the user control the TTL channels of the Pulser
@@ -26,7 +26,9 @@ class switchWidget(QtGui.QFrame):
             yield self.cxn.connect()
             from labrad.types import Error#self.tabWidget.addTab(pie
             self.Error = Error
+        
         self.context = yield self.cxn.context()
+        print "connect"
         try:
             displayed_channels = yield self.get_displayed_channels()
             yield self.initializeGUI(displayed_channels)
@@ -35,6 +37,7 @@ class switchWidget(QtGui.QFrame):
             print e
             print 'SWTICH CONTROL: Pulser not available'
             self.setDisabled(True)
+        print "connect"
         self.cxn.add_on_connect('Pulser', self.reinitialize)
         self.cxn.add_on_disconnect('Pulser', self.disable)
     
@@ -214,6 +217,7 @@ if __name__=="__main__":
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
+    from connection import connection
     triggerWidget = switchWidget(reactor)
     triggerWidget.show()
     reactor.run()
