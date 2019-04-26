@@ -23,7 +23,7 @@ class ParameterVault(LabradServer):
     Data Server for storing ongoing experimental parameters
     """
     name = "ParameterVault"
-    registryDirectory = ['','Servers', 'Parameter Vault']
+    registryDirectory = ['','Servers', 'Parameter Vault SSv1']
     onParameterChange = Signal(612512, 'signal: parameter change', '(ss)')
 
     @inlineCallbacks
