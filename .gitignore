@@ -11,6 +11,7 @@ DDS_CONTROL_config.py
 PICOMOTOR_CONTROL_config.py
 APT_config.py
 connection_config.py
+dataservers/__data__/*
 *~
 DacConfiguration.py
 .settings
