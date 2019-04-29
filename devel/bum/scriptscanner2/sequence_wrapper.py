@@ -373,7 +373,7 @@ class pulse_sequence_wrapper(object):
             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
             pulser.stop_sequence()
-            
+
             if not self.use_camera:
                 readout_mode=self.parameters_dict.StateReadout.readout_mode 
                 rds = pulser.get_readout_counts()
@@ -855,7 +855,7 @@ class pulse_sequence_wrapper(object):
         
         
     def col_names(self):
-        mode = self.parameters_dict.StateReadout.readout_mode     
+        mode = self.parameters_dict.StateReadout.readout_mode  
         names = np.array(range(self.output_size())[::-1])+1
          
         if mode == 'pmt':

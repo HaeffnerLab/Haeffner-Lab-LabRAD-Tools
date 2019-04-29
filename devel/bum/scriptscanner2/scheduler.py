@@ -238,9 +238,8 @@ class scheduler(object):
                 
     def do_launch(self, ident, scan, priority, pause_running_not_a_function):
                
-        print "pause_running: {}",pause_running_not_a_function, "for scan ident:",ident
-        
-        d = Deferred()    
+        print "pause_running: {}".format(pause_running_not_a_function), "for scan ident:",ident
+        d = Deferred()  
         scan.update_params(self.parent.all_parameters())
         status = script_semaphore(ident, self.signals)
         self._add_to_running(ident, scan, d, status, priority)
