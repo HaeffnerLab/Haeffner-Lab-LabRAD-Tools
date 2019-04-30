@@ -141,7 +141,7 @@ class pulse_sequence_wrapper(object):
             # i.e. {5:[10,20]} means scan two sequences for 5 times, 
             # sequence1 contains 10 repititions, sequence2 contains 20 repititions
             self.scan_structure = self.get_scan_structure(self.module)
-            print "Scan tructure: ", self.scan_structure
+            print "Scan structure: ", self.scan_structure
 
             # calculate total repititions from scan structure
             self.total_scan = self.calc_total_scan(self.scan_structure)
@@ -444,7 +444,7 @@ class pulse_sequence_wrapper(object):
 #            t1 = time.time()
 #            print "TIME", t1-t0
         
-        else:    
+        else:   
 #            t0 = time.time()
             dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
 #            t1 = time.time()
@@ -458,8 +458,7 @@ class pulse_sequence_wrapper(object):
             camera.set_exposure_time(self.initial_exposure)
             camera.set_image_region(self.initial_region)
             if self.camera_initially_live_display:
-                camera.start_live_display()
-                
+                camera.start_live_display()      
         cxn.disconnect()
 
 
@@ -641,7 +640,14 @@ class pulse_sequence_wrapper(object):
         localtime = time.localtime()
         self.dv = cxn.data_vault
         self.timetag = time.strftime('%H%M_%S', localtime)
-        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), name, self.timetag]
+        print self.parameters_dict.global_scan_options.save_folder
+        if self.parameters_dict.global_scan_options.save_folder == 'date':
+            directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), name, self.timetag]
+        elif self.parameters_dict.global_scan_options.save_folder == 'experiment':
+            directory = ['','Experiments',name,time.strftime('%Y%m%d', localtime),self.timetag]
+        else:
+            directory = []
+            print "saving convention not recognized. check global_scan_options.save_folder"
         self.data_save_context = cxn.context()
         self.readout_save_context = cxn.context()
         self.histogram_save_context = cxn.context()
