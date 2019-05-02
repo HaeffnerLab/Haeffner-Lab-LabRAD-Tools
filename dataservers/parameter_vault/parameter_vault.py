@@ -131,7 +131,7 @@ class ParameterVault(LabradServer):
         if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
             return item[2]
-        elif t == 'string' or t == 'bool' or t == 'sideband_selection' or t == 'spectrum_sensitivity':
+        elif t == 'string' or t == 'bool' or t == 'sideband_selection' or t == 'spectrum_sensitivity' or t == 'int_list':
             return item
         elif t == 'scan':
             minim,maxim = item[0]
