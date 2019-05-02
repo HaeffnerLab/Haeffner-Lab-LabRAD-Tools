@@ -1024,6 +1024,6 @@ if __name__=="__main__":
     from common.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    widget = drift_tracker(reactor, clipboard)
+    widget = drift_tracker_global(reactor, clipboard)
     widget.show()
     reactor.run()
