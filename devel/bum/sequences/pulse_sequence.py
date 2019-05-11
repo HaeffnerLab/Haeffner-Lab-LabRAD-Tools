@@ -119,7 +119,7 @@ class pulse_sequence(object):
         return freq
 
     # old parameter_vault version 
-    def calc_freq_from_array(self, carrier='S-1/2D-1/2', sideband_selection=[0,0,0,0]):
+    def calc_freq_from_array(self, carrier='S-1/2D-1/2', sideband_selection=[0,0,0,0,0]):
         '''given calculates the frequency of the 729 DP drive from the carriers and sidebands
         in the parameter vault
         '''
@@ -136,7 +136,7 @@ class pulse_sequence(object):
                                }
 #         print "230984", self.parameters.Carriers[carrier_translation[carrier]]
 #         print carrier_translation[carrier]
-        freq=self.parameters.Carriers[carrier_translation[carrier]]
+        #freq=self.parameters.Carriers[carrier_translation[carrier]]
         try: 
             freq=self.parameters.Carriers[carrier_translation[carrier]]
         except:

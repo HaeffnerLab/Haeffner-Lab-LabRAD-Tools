@@ -157,7 +157,7 @@ class DDS(LabradServer):
             r = channel.allowedamplrange
         elif t == 'frequency':
             r = channel.allowedfreqrange
-        if not r[0]<= val <= r[1]: raise Exception ("channel {0} : {1} of {2} is outside the allowed range".format(channel.name, t, val))
+        if not r[0]<= val <= r[1]: raise Exception ("channel {0} : {1} of {2} is outside the allowed range: {3}".format(channel.name, t, val,r))
     
     def _getChannel(self,c, name):
         try:

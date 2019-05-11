@@ -66,7 +66,15 @@ def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
         parity=np.sum(np.array(parity))
         # calculate the parity
         perc_excited=np.append(perc_excited,[parity])
- 
+    
+    if readout_mode == 'pmt_excitation':
+        ## add calculation for excitation (DD+1/2(SD+DS))
+        #doesn't plot bins separately
+        num_ions = len(perc_excited)
+        excitation = [(i*perc_excited[i])/num_ions for i in range(len(perc_excited))]
+        excitation = np.sum(np.array(excitation))
+
+        perc_excited = [excitation]
        
    
     return perc_excited 

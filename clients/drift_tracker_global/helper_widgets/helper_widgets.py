@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore
+from PyQt4 import QtGui, QtCore
 
 class dropdown(QtGui.QComboBox):
 
