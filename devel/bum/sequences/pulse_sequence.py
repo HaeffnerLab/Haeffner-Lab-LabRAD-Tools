@@ -203,7 +203,28 @@ class pulse_sequence(object):
             print "problem with the fit"
             return None
         
+    @classmethod
+    def sin_fit(cls, phase, excitation, return_all_params = False, init_guess = None):
+        if init_guess == "stop":
+            return None
+
+        model = lambda x, a, x0, c: a*np.sin((np.pi*x/180.)+x0) + c
+        force_guess = False
         
+        guess = [.5,np.pi/2.,.5]
+        #print "1234"
+        #print f,p, guess
+        print phase,excitation
+        try:
+            popt, copt = curve_fit(model, phase, excitation, p0=guess,bounds=((0,-np.inf,-1),(1,np.inf,1)))
+            print popt
+            if return_all_params:
+                return popt[0], popt[1], popt[2] # amplitude, phase offset, amplitude offset
+            else:
+                return popt[0] # return only the center value
+        except:
+            print "problem with the fit"
+            return None
     
     
     @classmethod

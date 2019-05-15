@@ -406,7 +406,6 @@ class pulse_sequence_wrapper(object):
                 
                 #useful for debugging, saving the images
                 #numpy.save('readout {}'.format(int(time.time())), images)
-            "SETTING SHIFT"
             x_shift=self.Scan_shift(cxn)
             
             submission = [x[self.submit_unit]+x_shift[self.submit_unit]]  # + center_frequency[self.submit_unit]]
@@ -778,7 +777,6 @@ class pulse_sequence_wrapper(object):
         ## running in abs frequency mode
 
         if self.do_shift:
-            print "shifting2"
             pv = cxn.parametervault
             shift = pv.get_parameter('Display','shift') # where shift is set in the experiment.
         else:

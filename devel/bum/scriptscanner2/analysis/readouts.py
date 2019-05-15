@@ -34,6 +34,7 @@ def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
             #print "working with {}  ions".format(num_ions)
             #print threshold_list
             binned = np.histogram(readouts, bins=[0]+threshold_list)[0]
+            print binned
             #IPython.embed()
             #print binned
             N = float(len(readouts))
@@ -71,7 +72,7 @@ def pmt_simple(readouts, threshold , readout_mode = 'pmt'):
         ## add calculation for excitation (DD+1/2(SD+DS))
         #doesn't plot bins separately
         num_ions = len(perc_excited)
-        excitation = [(i*perc_excited[i])/num_ions for i in range(len(perc_excited))]
+        excitation = [((num_ions-i)*perc_excited[i])/num_ions for i in range(len(perc_excited))]
         excitation = np.sum(np.array(excitation))
 
         perc_excited = [excitation]

@@ -152,8 +152,8 @@ if __name__=="__main__":
     a = QtGui.QApplication( [] )
     import qt4reactor
     qt4reactor.install()
-    from twisted.internet import reactor
     from connection import connection
+    from twisted.internet import reactor
     triggerWidget = linetriggerWidget(reactor)
     triggerWidget.show()
     reactor.run()
