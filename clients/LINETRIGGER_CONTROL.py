@@ -46,6 +46,7 @@ class linetriggerWidget(QtGui.QFrame):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
+        print self.context
         from labrad.units import WithUnit
         self.WithUnit = WithUnit
         try:
@@ -126,6 +127,7 @@ class linetriggerWidget(QtGui.QFrame):
     @inlineCallbacks
     def setState(self, state):
         server = yield self.cxn.get_server('Pulser')
+        print server
         yield server.line_trigger_state(state, context = self.context)
     
     @inlineCallbacks
@@ -134,7 +136,9 @@ class linetriggerWidget(QtGui.QFrame):
         yield server.signal__new_line_trigger_parameter(SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = SIGNALID, context = self.context)
     
-    def followSignal(self, x, (state, duration)):
+    def followSignal(self, x, ins):
+        state = ins[0]
+        duration = ins[1]
         self.spinbox.blockSignals(True)
         self.button_linetrig.set_value_no_signal(state)
         self.spinbox.setValue(duration)
