@@ -54,7 +54,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
         from labrad.wrappers import connectAsync
         from labrad.types import Error
         self.cxn = yield connectAsync()
-        self.dacserver = yield self.cxn.dac_server
+        self.dacserver  = yield self.cxn.dac_server
         yield self.setupListeners()
         self.ctrlLayout = QtGui.QVBoxLayout()
         yield self.makeGUI()
@@ -121,35 +121,13 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         elecList = hc.elec_dict.keys()
         elecList.sort()
             
-        for i,e in enumerate(elecList): #i is the number value of the elec, e is the name
-            if bool(hc.sma_dict):            
-                self.controls[s].setAutoFillBackground(True)
-            if int(i)==0:
-                elecLayout.addWidget(self.controls[e],1,4)
-            if int(i)==1:
-#                elecLayout.addWidget(QtGui.QLabel(e),0,6)
-                elecLayout.addWidget(self.controls[e],0,3)
-            if int(i)==2:
-#                elecLayout.addWidget(QtGui.QLabel(e),0,2)
-                elecLayout.addWidget(self.controls[e],0,1)
-            if int(i)==3:
-#                elecLayout.addWidget(QtGui.QLabel(e),2,0)
-                elecLayout.addWidget(self.controls[e],1,0)
-            if int(i)==4:
-#                elecLayout.addWidget(QtGui.QLabel(e),5,0)
-                elecLayout.addWidget(self.controls[e],3,0)
-            if int(i)==5:
-#                elecLayout.addWidget(QtGui.QLabel(e),7,2)
-                elecLayout.addWidget(self.controls[e],4,1)
-            if int(i)==6:
-#                elecLayout.addWidget(QtGui.QLabel(e),7,6)
-                elecLayout.addWidget(self.controls[e],4,3)
-            if int(i)==7:
-#                elecLayout.addWidget(QtGui.QLabel(e),5,8)
-                elecLayout.addWidget(self.controls[e],3,4)
-            if int(i)==8:
-#                elecLayout.addWidget(QtGui.QLabel(e),5,8)
-                elecLayout.addWidget(self.controls[e],2,1)
+        elecListHALF=range(0,len(elecList)-2,2)
+
+        for i in elecListHALF:
+            layout.addWidget(self.controls[elecList[i]],i+1,2,1,1)
+            layout.addWidget(self.controls[elecList[i+1]],i+1,3,1,1)
+        layout.addWidget(self.controls['Q39'],11,1,1,1)
+        layout.addWidget(self.controls['Q40'],11,4,1,1)
                         
         #elecLayout.addItem(QtGui.QLayoutItem.spacerItem(),1,0,1,8)    
         elecLayout.setRowMinimumHeight(0,20)
@@ -328,8 +306,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
-     #       print k
-            print v
+            print str(k)+", "+str(v)
             self.displays[k].display(float(v)) 
 
     def closeEvent(self, x):
@@ -370,38 +347,19 @@ class CHANNEL_MONITOR(QtGui.QWidget):
 
         elecList = hc.elec_dict.keys()
         elecList.sort()
-        if bool(hc.centerElectrode):
-            elecList.pop(hc.centerElectrode-1)
-        for i,e in enumerate(elecList): #i is the number value of the elec, e is the name
-            if bool(hc.sma_dict):            
-                self.displays[k].setAutoFillBackground(True)
-            if int(i)==0:
-                elecLayout.addWidget(QtGui.QLabel(e),2,8)
-                elecLayout.addWidget(self.displays[e],2,7)
-            if int(i)==1:
-                elecLayout.addWidget(QtGui.QLabel(e),0,6)
-                elecLayout.addWidget(self.displays[e],0,5)
-            if int(i)==2:
-                elecLayout.addWidget(QtGui.QLabel(e),0,2)
-                elecLayout.addWidget(self.displays[e],0,3)
-            if int(i)==3:
-                elecLayout.addWidget(QtGui.QLabel(e),2,0)
-                elecLayout.addWidget(self.displays[e],2,1)
-            if int(i)==4:
-                elecLayout.addWidget(QtGui.QLabel(e),5,0)
-                elecLayout.addWidget(self.displays[e],5,1)
-            if int(i)==5:
-                elecLayout.addWidget(QtGui.QLabel(e),7,2)
-                elecLayout.addWidget(self.displays[e],7,3)
-            if int(i)==6:
-                elecLayout.addWidget(QtGui.QLabel(e),7,6)
-                elecLayout.addWidget(self.displays[e],7,5)
-            if int(i)==7:
-                elecLayout.addWidget(QtGui.QLabel(e),5,8)
-                elecLayout.addWidget(self.displays[e],5,7)
-            if int(i)==8:
-                elecLayout.addWidget(QtGui.QLabel(e),3,3)
-                elecLayout.addWidget(self.displays[e],3,4)
+
+        elecListHALF=range(0,len(elecList)-2,2)
+
+        for i in elecListHALF:
+            elecLayout.addWidget(QtGui.QLabel(elecList[i]),i+1,3,1,1)
+            elecLayout.addWidget(self.displays[elecList[i]],i+1,4,1,1)
+            elecLayout.addWidget(QtGui.QLabel(elecList[i+1]),i+1,5,1,1)
+            elecLayout.addWidget(self.displays[elecList[i+1]],i+1,6,1,1)
+        elecLayout.addWidget(QtGui.QLabel('Q39'),11,1,1,1)
+        elecLayout.addWidget(self.displays['Q39'],11,2,1,1)
+        elecLayout.addWidget(QtGui.QLabel('Q40'),11,7,1,1)
+        elecLayout.addWidget(self.displays['Q40'],11,8,1,1)
+
         #elecLayout.addItem(QtGui.QLayoutItem.spacerItem(),1,0,1,8)    
         elecLayout.setRowMinimumHeight(1,20)
         elecLayout.setRowMinimumHeight(3,20)
@@ -441,8 +399,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
-     #       print k
-     #       print v
+            print str(k)+", "+str(v)
             self.displays[k].display(float(v)) 
             if abs(v) > 30:
                 self.displays[k].setStyleSheet("QWidget {background-color: orange }")

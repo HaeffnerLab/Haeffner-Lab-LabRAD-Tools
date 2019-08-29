@@ -1,9 +1,7 @@
-#import qt4reactor
-#qt4reactor.install()
 from qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui
-from labrad.units import WithUnit
+
 
 
 '''
@@ -244,7 +242,7 @@ if __name__=="__main__":
     qt4reactor.install()
     from twisted.internet import reactor
     from connection import connection
-    
+    from labrad.units import WithUnit
     trapdriveWidget = DDS_CONTROL(reactor)
     trapdriveWidget.show()
     reactor.run()

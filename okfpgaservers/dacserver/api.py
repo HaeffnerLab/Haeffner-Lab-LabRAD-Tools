@@ -43,3 +43,4 @@ class api(object):
         
     def setDACVoltage(self, volstr):
         self.xem.WriteToBlockPipeIn(0x82, 2, volstr)   
+
