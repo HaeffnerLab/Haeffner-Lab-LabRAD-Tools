@@ -19,6 +19,6 @@ devel/bum/scriptscanner2/PulseSequence.pdf
 devel/bum/scriptscanner2/reference_image.pdf
 devel/bum/scriptscanner2/configuration.py
 devel/bum/scriptscanner2/sequences/pulse_sequences_config.py
-	
+client_config.py	
 
 
