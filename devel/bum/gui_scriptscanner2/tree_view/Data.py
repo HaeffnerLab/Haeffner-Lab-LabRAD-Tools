@@ -376,6 +376,7 @@ class SidebandElectorNode(Node):
         
     def set_full_info(self, info):
         self._radial1, self._radial2, self._axial, self._micromotion, self._rotation = info
+        
     
     def filter_text(self):
         return self.parent().name() + self.name()

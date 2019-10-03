@@ -2,7 +2,7 @@ from PyQt4 import QtGui, uic
 import os
 
 basepath =  os.path.dirname(__file__)
-path = os.path.join(basepath,"..","..","Views", "SidebandSelectionEditor2.ui")
+path = os.path.join(basepath,"..","..","Views", "SidebandSelectionEditor.ui")
 base, form = uic.loadUiType(path)
 
 class sideband_selection_editor(base, form):
@@ -20,7 +20,7 @@ class sideband_selection_editor(base, form):
         self._dataMapper.addMapping(self.uiRadial2, 4)
         self._dataMapper.addMapping(self.uiAxial, 5)
         self._dataMapper.addMapping(self.uiMicromotion, 6)
-        self._dataMapper.addMapping(self.uiRotation, 7)
+        # self._dataMapper.addMapping(self.uiRotation, 7)
 
 
     def setSelection(self, current):

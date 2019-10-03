@@ -74,8 +74,6 @@ class Control(object):
         print "getting info"
         Cfile_text = open(self.Cfile_path).read().split('\n')[:]
         
-        print Cfile_text
-        
         for i in range(len(Cfile_text)):
             if Cfile_text[i].find(':') >= 0: head.append(Cfile_text[i])
             else: body.append(Cfile_text[i].split())
@@ -85,7 +83,6 @@ class Control(object):
         except: self.position = 0
         self.num_columns = len(body[0])
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
-        print self.multipole_matrix
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
 
@@ -108,7 +105,6 @@ class Control(object):
 
     def getVoltages(self): 
         a = [(e, self.voltage_matrix[e][self.position]) for e in hc.elec_dict.keys()]
-        print "getVoltages", a
         return a
 
     def getShuttleVoltages(self, new_position, step_size, duration, loop, loop_delay, overshoot):
@@ -262,7 +258,6 @@ class DACServer(LabradServer):
 
     @setting(0, "Set Control File", Cfile_path='s')
     def setControlFile(self, c, Cfile_path):
-        "setting control file path"
         self.control = Control(Cfile_path)
         yield self.setPreviousVoltages()
         yield self.registry.cd(self.registry_path)
@@ -342,7 +337,7 @@ class DACServer(LabradServer):
         for i in range(len(self.queue.set_dict[self.queue.current_set])):
             v = self.queue.get() 
             self.api.setDACVoltage(v.hex_rep)
-            #print v.channel.name, v.analog_voltage
+            print v.channel.name, v.analog_voltage
             if v.channel.name in dict(hc.elec_dict.items() + hc.sma_dict.items()).keys():
                 self.current_voltages[v.channel.name] = v.analog_voltage
         if c is not None:
@@ -385,8 +380,6 @@ class DACServer(LabradServer):
         """
         Return the current voltage
         """
-        #print 'in get analog voltages',
-        #print self.current_voltages.items()
         return self.current_voltages.items()        
 
     @setting( 10, "Get Multipole Values",returns='*(s, v)')

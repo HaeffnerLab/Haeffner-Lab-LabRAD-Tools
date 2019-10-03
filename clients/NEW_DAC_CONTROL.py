@@ -190,11 +190,86 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             self.controls[c].setValueNoSignal(v)
 
     def closeEvent(self, x):
-        self.reactor.stop()        
+        self.reactor.stop() 
 
 class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################################
     def __init__(self, reactor, parent=None):
         super(MULTIPOLE_MONITOR, self).__init__(parent)
+        self.reactor = reactor        
+        self.makeGUI()
+        self.connect()
+
+
+    def makeGUI(self): 
+        
+        self.multipolelist = hc.default_multipoles
+        self.displays = {k: QtGui.QLCDNumber() for k in self.multipolelist}  
+        layout = QtGui.QGridLayout()
+        Multipolebox = QtGui.QGroupBox('Multipoles')
+        multilayout = QtGui.QGridLayout()
+        
+        
+        Multipolebox.setLayout(multilayout)
+        layout.addWidget(Multipolebox,0,0)
+        
+        i = 0 
+        for e in self.multipolelist:
+            multilayout.addWidget(QtGui.QLabel(e),i,0)
+            multilayout.addWidget(self.displays[e],i,1)
+            i = i+1
+        
+        self.inputUpdated = False                
+        
+        self.setLayout(layout)      
+
+    def inputHasUpdated(self):
+        def iu():
+            self.inputUpdated = True
+        return iu
+    
+#######################################################
+
+    @inlineCallbacks    
+    def setmultipole(self, multipoles):    
+        list1 = [('Ex',multipoles[0]),('Ey',multipoles[1]),('Ez',multipoles[2]),('U3',10)]
+        print "setting multipoles"
+        yield self.dacserver.set_multipole_values(list1)
+        yield self.connect()
+                     
+            
+    @inlineCallbacks
+    def connect(self):
+        from labrad.wrappers import connectAsync
+        from labrad.types import Error
+        self.cxn = yield connectAsync()
+        self.dacserver = yield self.cxn.dac_server
+        self.ionInfo = {}
+        yield self.setupListeners()
+        yield self.followSignal(0, 0)    
+        for i in hc.notused_dict:        #Sets unused channels to about 0V
+            yield self.dacserver.set_individual_digital_voltages_u([(i, 32768)])     
+
+   
+    @inlineCallbacks    
+    def setupListeners(self):
+        yield self.dacserver.signal__ports_updated(SIGNALID2)
+        yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
+
+    @inlineCallbacks
+    def followSignal(self, x, s):        
+        av = yield self.dacserver.get_multipole_values()
+        brightness = 210
+        darkness = 255 - brightness           
+        for (k, v) in av:
+            print str(k)+", "+str(v)
+            self.displays[k].display(float(v)) 
+
+    def closeEvent(self, x):
+        self.reactor.stop()       
+
+class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  #######################################################
+    def __init__(self, reactor, parent=None):
+        super(MULTIPOLE_MONITOR_SCAN, self).__init__(parent)
         self.reactor = reactor        
         self.makeGUI()
         self.connect()
@@ -278,6 +353,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
     @inlineCallbacks    
     def setmultipole(self, multipoles):    
         list1 = [('Ex',multipoles[0]),('Ey',multipoles[1]),('Ez',multipoles[2]),('U3',10)]
+        print "setting multipoles"
         yield self.dacserver.set_multipole_values(list1)
         yield self.connect()
                      
@@ -394,7 +470,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
     
     @inlineCallbacks
-    def followSignal(self, x, s):        
+    def followSignal(self, x, s):       
         av = yield self.dacserver.get_analog_voltages()
         brightness = 210
         darkness = 255 - brightness           
@@ -420,12 +496,12 @@ class DAC_Control(QtGui.QMainWindow):
 
         channelControlTab = self.buildChannelControlTab()        
         multipoleControlTab = self.buildMultipoleControlTab()
-        multipoleScanTab = self.buildMultipoleScanTab()
+        #multipoleScanTab = self.buildMultipoleScanTab()
         # scanTab = self.buildScanTab()
         tab = QtGui.QTabWidget()
         tab.addTab(multipoleControlTab,'&Multipoles')
         tab.addTab(channelControlTab, '&Channels')
-        tab.addTab(multipoleScanTab, '&Multipole Scan')
+        #tab.addTab(multipoleScanTab, '&Multipole Scan')
         # tab.addTab(scanTab, '&Scans')
         self.setWindowTitle('DAC Control')
         self.setCentralWidget(tab)
@@ -442,6 +518,7 @@ class DAC_Control(QtGui.QMainWindow):
         widget = QtGui.QWidget()
         gridLayout = QtGui.QGridLayout()
         gridLayout.addWidget(CHANNEL_CONTROL(self.reactor),0,0)
+        gridLayout.addWidget(MULTIPOLE_MONITOR(self.reactor),0,1)
         widget.setLayout(gridLayout)
         return widget
     
@@ -449,7 +526,7 @@ class DAC_Control(QtGui.QMainWindow):
         widget =QtGui.QWidget()
         gridLayout = QtGui.QGridLayout()
         gridLayout.addWidget(CHANNEL_MONITOR(self.reactor),0,0)
-        gridLayout.addWidget(MULTIPOLE_MONITOR(self.reactor),0,1) ##WE MUST BUILD
+        gridLayout.addWidget(MULTIPOLE_MONITOR_SCAN(self.reactor),0,1) ##WE MUST BUILD
         widget.setLayout(gridLayout)
         return widget    
         
