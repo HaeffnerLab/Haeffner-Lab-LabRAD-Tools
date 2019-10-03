@@ -497,6 +497,7 @@ class pulse_sequence_wrapper(object):
         
         # using global sd 
         # there was a problem connecting in the regular sync was we had to establish a
+        #print "trying"
         carriers = yield self.get_lines_from_global_dt()
         if carriers:
             for c, f in carriers:

@@ -16,7 +16,6 @@ timeout = 20
 
 ### END NODE INFO
 '''
-import matplotlib.pyplot as plt
 
 import sys
 from labrad.server import LabradServer, setting, Signal, inlineCallbacks
