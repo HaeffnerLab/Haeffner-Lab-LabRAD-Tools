@@ -1,0 +1,4 @@
+﻿  sdk.c
+sdk.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
+     Creating library C:\Users\lattice\Desktop\LabRAD\common\cdllservers\NuvuCamera\DLL\x64\Debug\Nuvu.lib and object C:\Users\lattice\Desktop\LabRAD\common\cdllservers\NuvuCamera\DLL\x64\Debug\Nuvu.exp
+  Nuvu.vcxproj -> C:\Users\lattice\Desktop\LabRAD\common\cdllservers\NuvuCamera\DLL\x64\Debug\Nuvu.dll
