@@ -1,7 +1,7 @@
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import returnValue
 from twisted.internet.threads import deferToThread
-from ctypes import c_long, c_buffer, c_float, windll, pointer
+from ctypes import c_long, c_buffer, c_float, cdll, pointer
 from APT_config import stageConfiguration
 
 """
@@ -23,7 +23,7 @@ timeout = 5
 
 class APTMotor():
     def __init__(self):
-        self.aptdll = windll.LoadLibrary("APT.dll")
+        self.aptdll = cdll.LoadLibrary("APT.dll")
         #self.aptdll.EnableEventDlg(False)
         self.aptdll.APTInit()
         self.config=stageConfiguration()

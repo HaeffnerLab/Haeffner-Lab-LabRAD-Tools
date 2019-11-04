@@ -8,8 +8,11 @@ Errors.log
 .directory
 SWITCH_CONTROL_config.py
 DDS_CONTROL_config.py
+PICOMOTOR_CONTROL_config.py
 APT_config.py
 connection_config.py
+dataservers/__data__/*
 *~
 DacConfiguration.py
 .settings
+*.npy

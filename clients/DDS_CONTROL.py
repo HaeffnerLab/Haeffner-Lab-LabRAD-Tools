@@ -2,6 +2,7 @@ from qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
 from connection import connection
 from PyQt4 import QtGui
+from labrad.units import WithUnit
 
 '''
 The DDS Control GUI lets the user control the DDS channels of the Pulser
@@ -46,9 +47,9 @@ class DDS_CHAN(QCustomFreqPower):
     
     def setParamNoSignal(self, param, value):
         if param == 'amplitude':
-            self.setPowerNoSignal(value)
+            self.setPowerNoSignal(WithUnit(value,'dBm'))
         elif param == 'frequency':
-            self.setFreqNoSignal(value)
+            self.setFreqNoSignal(WithUnit(value,'MHz'))
         elif param == 'state':
             self.setStateNoSignal(value)
         
@@ -140,8 +141,11 @@ class DDS_CONTROL(QtGui.QFrame):
         listed in the registry. If there is no listing, will display all channels.
         '''
         server = yield self.cxn.get_server('Pulser')
+        
         all_channels = yield server.get_dds_channels(context = self.context)
+        
         channels_to_display, widgets_per_row = yield self.registry_load_displayed(all_channels, 1)
+        
         step_sizes = yield self.registry_load_step_sizes(channels_to_display)
         if channels_to_display is None:
             channels_to_display = all_channels
@@ -157,21 +161,14 @@ class DDS_CONTROL(QtGui.QFrame):
         try:
             displayed = yield reg.get('display_channels', context = self.context)
         except self.Error as e:
-            if e.code == 21:
-                #key error
-                yield reg.set('display_channels', all_names, context = self.context)
-                displayed = None
-            else:
-                raise
+            yield reg.set('display_channels', all_names, context = self.context)
+            displayed = None
+
         try:
             widgets_per_row = yield reg.get('widgets_per_row', context = self.context)
         except self.Error as e:
-            if e.code == 21:
-                #key error
-                yield reg.set('widgets_per_row', 1, context = self.context)
-                widgets_per_row = None
-            else:
-                raise
+            yield reg.set('widgets_per_row', 1, context = self.context)
+            widgets_per_row = None
         returnValue((displayed, widgets_per_row))
 
     @inlineCallbacks
@@ -184,11 +181,12 @@ class DDS_CONTROL(QtGui.QFrame):
                 step_size = yield reg.get(channel, context = self.context)
                 step_sizes.append(step_size)
             except self.Error as e:
-                print e
-                if e.code == 21:
-                    step_sizes.append(0.1) # default step size
-                else:
-                    raise
+                #print e
+                #if e.code == 21:
+                 #   step_sizes.append(0.1) # default step size
+                #else:
+                    #raise
+                step_sizes.append(0.1)
         returnValue(step_sizes)
 
     @inlineCallbacks
@@ -212,7 +210,7 @@ class DDS_CONTROL(QtGui.QFrame):
         layout = QtGui.QGridLayout()
         item = 0
         for chan, step_size in zip(self.display_channels, self.step_sizes):
-            print step_size
+            #print step_size
             widget = DDS_CHAN(chan, step_size, self.reactor, self.cxn, self.context)
             self.widgets[chan] = widget
             layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)
@@ -226,9 +224,12 @@ class DDS_CONTROL(QtGui.QFrame):
     
     def followSignal(self, x, y):
         chan, param, val = y
-        if chan in self.widgets.keys():
-            #this check is neeed in case signal comes in about a channel that is not displayed
-            self.widgets[chan].setParamNoSignal(param, val)
+        try:
+            if chan in self.widgets.keys():
+                #this check is neeed in case signal comes in about a channel that is not displayed
+                self.widgets[chan].setParamNoSignal(param, val)
+        except Exception,e:
+            print e
 
     def closeEvent(self, x):
         self.reactor.stop()

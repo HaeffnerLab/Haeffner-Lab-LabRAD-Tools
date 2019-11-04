@@ -72,6 +72,9 @@ class Control(object):
         body = []
         print "getting info"
         Cfile_text = open(self.Cfile_path).read().split('\n')[:-1]
+        
+        print Cfile_text
+        
         for i in range(len(Cfile_text)):
             if Cfile_text[i].find(':') >= 0: head.append(Cfile_text[i])
             else: body.append(Cfile_text[i].split())
@@ -79,21 +82,26 @@ class Control(object):
         except: self.multipoles = hc.default_multipoles
         try: self.position = int(head[1].split('osition:')[1])
         except: self.position = 0
+        print self.position
         self.num_columns = len(body[0])
         print self.num_columns
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
+        print self.multipole_matrix
+        self.position_vector = body[-1]
+        print self.position_vector
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
 
     def populateVoltageMatrix(self, multipole_vector):
         self.multipole_vector = {m: v for (m,v) in multipole_vector}
-        print self.multipole_vector
         for e in hc.elec_dict.keys():
             self.voltage_matrix[e] = [0. for n in range(self.num_columns)]
             for n in range(self.num_columns):
                 for m in self.multipoles:
                     self.voltage_matrix[e][n] += self.multipole_matrix[e][m][n] * self.multipole_vector[m]
-        if self.num_columns > 1: self.interpolateVoltageMatrix()
+        # print self.voltage_matrix
+        # if self.num_columns > 1: self.interpolateVoltageMatrix()
+        # print self.voltage_matrix
      
     def interpolateVoltageMatrix(self):
         # fix step size here
@@ -103,8 +111,11 @@ class Control(object):
         splineFit = {elec: UniSpline(range(self.num_columns) , self.voltage_matrix[elec], s=0) for elec in hc.elec_dict.keys()}
         self.voltage_matrix = {elec: splineFit[elec](partition) for elec in hc.elec_dict.keys()}
 
-    def getVoltages(self): 
-        return [(e, self.voltage_matrix[e][self.position]) for e in hc.elec_dict.keys()]
+    def getVoltages(self):
+        # if self.num_columns
+        pindex = self.position_vector.index(str(self.position))
+        # print pindex
+        return [(e, self.voltage_matrix[e][pindex]) for e in hc.elec_dict.keys()]
 
     def getShuttleVoltages(self, new_position, step_size, duration, loop, loop_delay, overshoot):
         old_position = self.position
@@ -148,7 +159,9 @@ class Control(object):
         # volts2 = [self.voltage_sets[i][0][1] for i in range(len(self.voltage_sets))]
         # plt.plot(self.times, volts2, '-')
         # plt.show()
-
+        
+        
+            
     def setDefault(self):
         self.multipoles = hc.default_multipoles
         self.position = 0
@@ -178,6 +191,9 @@ class Queue(object):
         v = self.set_dict[self.current_set].pop(0)
         return v
 
+    def clear(self):
+        self.current_set = 1
+        self.set_dict = {i: [] for i in range(1, hc.maxCache + 1)}
 
 class DACServer(LabradServer):
     """
@@ -263,7 +279,7 @@ class DACServer(LabradServer):
         
         try: multipole_vector = yield self.registry.get('multipole_vector')         
         except: multipole_vector = [(k, 0) for k in self.control.multipoles] # if no previous multipole values have been recorded, set them to zero. 
-        yield self.setMultipoleValues(0, multipole_vector)      
+        yield self.setMultipoleValues(0, multipole_vector)   
         
         yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'], True)
         for k in hc.sma_dict.keys():
@@ -278,6 +294,7 @@ class DACServer(LabradServer):
         """
         self.control.populateVoltageMatrix(multipole_vector)
         yield self.setIndividualAnalogVoltages(c, self.control.getVoltages())
+        print multipole_vector
         # Update registry
         if self.control.Cfile_name:
             yield self.registry.cd(self.registry_path + [self.control.Cfile_name], True)
@@ -318,6 +335,7 @@ class DACServer(LabradServer):
         (portNum, newVolts)
         """
         for (port, av) in analog_voltages:
+            #print (port,av)
             self.queue.insert(Voltage(self.dac_dict[port], analog_voltage=av))
             if self.dac_dict[port].smaOutNumber and self.control.Cfile_name:
                 yield self.registry.cd(self.registry_path + [self.control.Cfile_name, 'sma_voltages'])
@@ -329,7 +347,7 @@ class DACServer(LabradServer):
         for i in range(len(self.queue.set_dict[self.queue.current_set])):
             v = self.queue.get() 
             self.api.setDACVoltage(v.hex_rep)
-            print v.channel.name, v.analog_voltage
+            #print v.channel.name, v.analog_voltage
             if v.channel.name in dict(hc.elec_dict.items() + hc.sma_dict.items()).keys():
                 self.current_voltages[v.channel.name] = v.analog_voltage
         if c is not None:
@@ -354,6 +372,13 @@ class DACServer(LabradServer):
             yield self.registry.set('position', self.control.position)
 
         returnValue(self.control.times)
+        
+        
+##################################################   
+
+
+        
+###################################################
 
     @setting( 8, "Set Next Voltages New Multipoles", multipole_vector='*(sv)')
     def setNextVoltagesNewMultipoles(self, c, multipole_vector):
@@ -365,8 +390,8 @@ class DACServer(LabradServer):
         """
         Return the current voltage
         """
-        print 'in get analog voltages',
-        print self.current_voltages.items()
+        #print 'in get analog voltages',
+        #print self.current_voltages.items()
         return self.current_voltages.items()        
 
     @setting( 10, "Get Multipole Values",returns='*(s, v)')
@@ -374,6 +399,7 @@ class DACServer(LabradServer):
         """
         Return a list of multipole voltages
         """
+        
         return self.control.multipole_vector.items()
 
     @setting( 11, "Get Multipole Names",returns='*s')
@@ -400,11 +426,65 @@ class DACServer(LabradServer):
     @setting(14, "Get DAC  Channel Name", port_number='i', returns='s' )
     def getDACChannelName(self, c, port_number):
         '''
-        Return the channal name for a given port port number.
+        Return the channel name for a given port port number.
         '''
         for key in self.dac_dict.keys():
             if self.dac_dict[key].dacChannelNumber == port_number:
                 return key
+
+    @setting(15, "Set Endcap Voltages", analog_voltage='v')
+    def setEndcapVoltages(self, c, analog_voltage):
+        self.setIndividualAnalogVoltages(c, [('endcap1', analog_voltage), ('endcap2', analog_voltage)])
+
+    @setting(16, "Ramp Multipole", ramped_multipole='s',start = 'v', stop = 'v',steps='i')
+    def ramp_multipole(self, c, ramped_multipole, start, stop, steps):
+        ramp = []
+        for i in range(0,steps+1):
+            ramp.append(start+float(i)*(stop-start)/steps)
+        
+        vector = self.control.multipole_vector.items()
+        new_dim=zip(*vector)
+        idx = new_dim[0].index(ramped_multipole)
+
+        ## Ramp to a field
+        vector[idx] = (ramped_multipole,ramp[0])
+        self.control.populateVoltageMatrix(vector)
+        yield self.setMultipoleValues(c, vector)
+        for field in ramp:
+            self.queue.advance()
+            vector[idx] = (ramped_multipole,field)
+            self.control.populateVoltageMatrix(vector)
+            yield self.setMultipoleValues(c, vector)
+        ## ramp back    
+        ramp.reverse()
+        for field in ramp:
+            self.queue.advance()
+            vector[idx] = (ramped_multipole,field)
+            self.control.populateVoltageMatrix(vector)
+            yield self.setMultipoleValues(c, vector)
+        self.queue.reset()
+    
+    @setting(17, "get queue")
+    def getQueue(self,c):
+        return self.queue.current_set
+
+    @setting(18, "Set Multipole Position", position='i')
+    def setMultipolePosition(self, c, position):
+        """
+        Set new position of multipoles.
+        """
+        self.control.position = position
+        print 'Server: ' + str(self.control.position)
+        # self.control.populateVoltageMatrix(multipole_vector)
+        yield self.setIndividualAnalogVoltages(c, self.control.getVoltages())
+        # Update registry
+        if self.control.Cfile_name:
+            yield self.registry.cd(self.registry_path + [self.control.Cfile_name], True)
+            yield self.registry.set('position', position)
+
+    @setting(19, "Get Position Vector", returns='*s')
+    def getPositionVector(self, c):
+        return self.control.position_vector
 
     def initContext(self, c):
         self.listeners.add(c.ID)

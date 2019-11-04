@@ -1,4 +1,5 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
+from labrad import constants as C, manager, protocol, support, types
 
 '''
 The shared connection object allows multiple asynchronous clients to share a single connection to the manager
@@ -13,9 +14,9 @@ class connection(object):
         self._on_disconnect = {}
     
     @inlineCallbacks
-    def connect(self):
+    def connect(self, host = C.MANAGER_HOST, password = None, tls_mode = 'off'):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(host, password = password, tls_mode = tls_mode)
         yield self.setupListeners()
         returnValue(self)
     
@@ -70,6 +71,7 @@ class connection(object):
         print 'server connected'
         server_name = server_name[1]
         print server_name
+        yield self.cxn.refresh()
         if server_name in self._servers.keys():
             print '{} Connected'.format(server_name)
             self._servers[server_name] = yield self.cxn[server_name]

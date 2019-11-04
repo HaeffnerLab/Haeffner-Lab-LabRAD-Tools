@@ -33,7 +33,7 @@ class script_class_parameters(object):
         self.cls = cls
         self.parameters = parameters
         
-class ScriptScanner(LabradServer, Signals):
+class ScriptScanner(Signals, LabradServer):
     
     name = 'ScriptScanner'
     
@@ -47,6 +47,7 @@ class ScriptScanner(LabradServer, Signals):
         loads script information from the configuration file
         '''
         for import_path, class_name in config.scripts:
+            # print import_path, class_name
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
@@ -67,6 +68,8 @@ class ScriptScanner(LabradServer, Signals):
                     print 'Name is not provided for class {0} in module {1}'.format(class_name, module)
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
+ 
+
                     
     @setting(0, "Get Available Scripts", returns = '*s')
     def get_available_scripts(self, c):
@@ -136,7 +139,7 @@ class ScriptScanner(LabradServer, Signals):
         scan_id = self.scheduler.add_scan_to_queue(repeat_launch)
         return scan_id
     
-    @setting(12, "New Script Scan", scan_script_name = 's', measure_script_name = 's', collection = 's', parameter_name = 's', minim = 'v', maxim = 'v', steps = 'w', units = 's')
+    @setting(12, "New Script Scan", scan_script_name = 's', measure_script_name = 's', collection = 's', parameter_name = 's', minim = 'v[]', maxim = 'v[]', steps = 'w', units = 's')
     def new_scan(self, c, scan_script_name, measure_script_name, collection, parameter_name, minim, maxim, steps, units):
         #need error checking that parmaters are valid
         if scan_script_name not in self.script_parameters.keys():
@@ -253,6 +256,27 @@ class ScriptScanner(LabradServer, Signals):
             raise Exception ("Trying to confirm error finish of script with ID {0} but it was not running".format(script_ID))
         status.error_finish_confirmed(error_message)
         self.scheduler.remove_if_external(script_ID)
+
+    @setting(37, 'Get Undefined Parameters', script = 's', returns = '*(ss)')
+    def get_undefined_parameters(self, c, script):
+        '''
+        Returns parameters which have not been defined
+        in the parametervault
+        '''
+        if script not in self.script_parameters.keys():
+            raise Exception ("Script {} Not Found".format(script))
+        try:
+            pv = self.client.parametervault
+        except:
+            pv = None
+            raise Exception('Cannot connect to ParameterVault')
+        invalid = []
+        if pv is not None:
+            parameters = self.script_parameters[script].parameters
+            for collection, parameter_name in parameters:
+                defined = yield pv.verify_parameter_defined(collection, parameter_name)
+                if not defined: invalid.append( (collection, parameter_name) )
+        returnValue( invalid )
 
     @inlineCallbacks
     def stopServer(self):

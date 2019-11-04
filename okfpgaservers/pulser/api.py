@@ -31,11 +31,12 @@ class api(object):
     
     def programOKBoard(self):
         prog = self.xem.ConfigureFPGA(self.okDeviceFile)
-        if prog: raise("Not able to program FPGA")
+        if prog: raise Exception("Not able to program FPGA")
         pll = ok.PLL22150()
         self.xem.GetEepromPLL22150Configuration(pll)
         pll.SetDiv1(pll.DivSrc_VCO,4)
         self.xem.SetPLL22150Configuration(pll)
+        #print 'program ran fine'
         
     def programBoard(self, sequence):
         self.xem.WriteToBlockPipeIn(0x80, 2, sequence)
@@ -111,6 +112,7 @@ class api(object):
     
     def getNormalCounts(self, number):
         buf = "\x00"* ( number * 2 )
+        #buf = bytearray(buf)
         self.xem.ReadFromBlockPipeOut(0xa1,2,buf)
         return buf
     
@@ -135,7 +137,9 @@ class api(object):
     
     def setPMTCountRate(self, time):
         #takes time in seconds
-        self.xem.SetWireInValue(0x01,int(1000 * time))
+        time = int(1000*time)
+        #print time
+        self.xem.SetWireInValue(0x01,0x64)
         self.xem.UpdateWireIns()
         
     def setAuto(self, channel, inversion):
@@ -169,6 +173,8 @@ class api(object):
     
     def programDDS(self, prog):
         '''program the dds channel with a list of frequencies and amplitudes. The channel of the particular channel must be selected first'''
+        #import IPython
+        #IPython.embed()
         self.xem.WriteToBlockPipeIn(0x81, 2, prog)
     
     def initializeDDS(self):

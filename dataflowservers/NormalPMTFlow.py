@@ -89,6 +89,12 @@ class NormalPMTFlow( LabradServer):
         except AttributeError:
             self.dv = None
             print 'Not Connected: Data Vault'
+            
+        try:
+            self.grapher = yield self.client.grapher
+        except AttributeError:
+            self.grapher = None
+            print "no grapher"
     
     @inlineCallbacks
     def disconnect_data_vault(self):
@@ -133,17 +139,24 @@ class NormalPMTFlow( LabradServer):
        
     @inlineCallbacks
     def makeNewDataSet(self, folder, name):
+        print "making new data set"
         yield self.dv.cd(folder, True)
-        newSet = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
+        ds = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec','866 ON','num'),('KiloCounts/sec','866 OFF','num'),('KiloCounts/sec','Differential Signal','num')])
         self.startTime = time.time()
         yield self.addParameters(self.startTime)
-        name = newSet[1]
+        try:
+            self.grapher = yield self.client.grapher
+            self.grapher.plot(ds, 'pmt',False)
+        except AttributeError:
+            self.grapher = None
+            print "no grapher"
+            
         returnValue(name)
     
     @inlineCallbacks
     def addParameters(self, start):
         yield self.dv.add_parameter("Window", ["PMT Counts"])
-        yield self.dv.add_parameter('plotLive',True)
+        #yield self.dv.add_parameter('plotLive',True)
         yield self.dv.add_parameter('startTime',start)
     
     @setting(0, 'Set Save Folder', folder = '*s', returns = '')
@@ -154,6 +167,7 @@ class NormalPMTFlow( LabradServer):
     @setting(1, 'Start New Dataset', setName = 's', returns = 's')
     def setNewDataSet(self, c, setName = None):
         """Starts new dataset, if name not provided, it will be the same"""
+        print "starting new dataset"
         if setName is not None: self.dataSetName = setName
         self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
         otherListeners = self.getOtherListeners(c)
@@ -165,12 +179,15 @@ class NormalPMTFlow( LabradServer):
         """
         Start recording Time Resolved Counts into Data Vault
         """
+        print "setting mode"
         if mode not in self.modes: raise Exception('Incorrect Mode')
         if not self.recording.running:
             self.currentMode = mode
             yield self.pulser.set_mode(mode)
+            
         else:
             yield self.dostopRecording()
+            
             self.currentMode = mode
             yield self.dorecordData()
         otherListeners = self.getOtherListeners(c)      
@@ -202,8 +219,13 @@ class NormalPMTFlow( LabradServer):
         #then starts the recording loop
         newSet = None
         self.keepRunning = True
+        
+        #print self.collection_period['s']
+        
         yield self.pulser.set_collection_time(self.collection_period, self.currentMode)
+       
         yield self.pulser.set_mode(self.currentMode)
+        
         if self.currentMode == 'Differential':
             yield self._programPulserDiff()
         if self.openDataSet is None:
@@ -247,7 +269,7 @@ class NormalPMTFlow( LabradServer):
         initrunning = self.recording.running #if recording when the call is made, need to stop and restart
         if initrunning:
             yield self.recording.stop()
-        yield self.pulser.set_collection_time(timelength['s'], mode)
+        yield self.pulser.set_collection_time(timelength, mode)
         if initrunning:
             if mode == 'Differential':
                 yield self._stopPulserDiff()
@@ -293,6 +315,7 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def _programPulserDiff(self):
         yield self.pulser.new_sequence()
+        print "new sequence"
         yield self.pulser.add_ttl_pulse('DiffCountTrigger', T.Value(0.0,'us'), T.Value(10.0,'us'))
         yield self.pulser.add_ttl_pulse('DiffCountTrigger', self.collection_period, T.Value(10.0,'us'))
         yield self.pulser.add_ttl_pulse('866DP', T.Value(0.0,'us'), self.collection_period)

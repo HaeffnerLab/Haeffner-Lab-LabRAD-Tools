@@ -1,6 +1,12 @@
 from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+# this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
+try:
+	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+except:
+	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+
+
 from matplotlib.figure import Figure
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
@@ -184,7 +190,8 @@ class readout_histogram(QtGui.QWidget):
             yield dv.cd(directory, context = self.context)
             yield dv.open(dataset, context = self.context)
             data = yield dv.get( context = self.context)
-            data = data.asarray
+            #data = data.asarray
+            #data = np.asarray(data)
             yield deferToThread(self.on_new_data, data)
             yield dv.cd([''], context = self.context)
                                           

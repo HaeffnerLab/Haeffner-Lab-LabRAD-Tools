@@ -157,7 +157,17 @@ class AndorVideo(QtGui.QWidget):
      
     @inlineCallbacks
     def on_new_gain(self, gain):
+        yield self.live_update_loop.stop()
+        yield self.server.abortAcquisition(None)
         yield self.server.setEMCCDGain(None, gain)
+        yield self.server.setTriggerMode(None, 'Internal')
+        yield self.server.setAcquisitionMode(None, 'Run till abort')
+        yield self.server.startAcquisition(None)
+        self.binx, self.biny, self.startx, self.stopx, self.starty, self.stopy = yield self.server.getImageRegion(None)
+        self.pixels_x = (self.stopx - self.startx + 1) / self.binx
+        self.pixels_y = (self.stopy - self.starty + 1) / self.biny
+        yield self.server.waitForAcquisition(None)
+        self.live_update_loop.start(0)
      
     def set_gain(self, gain):
         self.emccdSpinBox.blockSignals(True)
