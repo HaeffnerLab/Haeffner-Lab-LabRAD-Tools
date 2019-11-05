@@ -10,7 +10,6 @@ from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 from labrad.server import LabradServer, setting, Signal
 from NuvuCamera import NuvuCamera
-from labrad.units import WithUnit
 import numpy as np
 
 """
@@ -53,36 +52,6 @@ class NuvuCameraServer(LabradServer):
         notified.remove(c.ID)
         return notified
 		
-	'''
-	The following functions are called in pulse_sequence.py:
-	
-		abort_acquisition()
-		get_acquired_data(self.N)
-		get_exposure_time()
-		get_trigger_mode()
-		set_image_region(*self.image_region)
-		set_acquisition_mode("Kinetics")
-		set_exposure_time(self.initial_exposure)
-		set_image_region(1, 1, 1, 658, 1, 496)
-		set_number_kinetics(self.N)
-		set_trigger_mode("External")
-		start_acquisition()
-		start_live_display()
-		wait_for_kinetic()
-
-    In addition to the functions above, the following functions are called in NuvuVideo.py:
-
-        get_acquisition_mode
-        get_detector_dimensions
-        getEMCCDGain
-        getemrange
-        getImageRegion
-        getMostRecentImage
-        setEMCCDGain
-        stop
-        waitForAcquisition
-	'''
-	
     '''
     Acquisition Mode
     '''
@@ -103,6 +72,7 @@ class NuvuCameraServer(LabradServer):
             print('releasing: {}'.format(self.setAcquisitionMode.__name__))
             self.lock.release()
         self.gui.set_acquisition_mode(mode)
+
     '''
     Trigger Mode
     '''    
@@ -131,7 +101,7 @@ class NuvuCameraServer(LabradServer):
     def getExposureTime(self, c):
         """Gets Current Exposure Time"""
         time = self.camera.get_exposure_time()
-        return time #WithUnit(time, 's')
+        return time
         
     @setting(6, "Set Exposure Time", expTime = 'v', returns = 'v')
     def setExposureTime(self, c, expTime):
@@ -148,7 +118,7 @@ class NuvuCameraServer(LabradServer):
         time = self.camera.get_exposure_time()
         if c is not None:
             self.gui.set_exposure(time)
-        returnValue(time) #WithUnit(time, 's'))
+        returnValue(time)
 		
     '''
     Image Region
@@ -169,6 +139,7 @@ class NuvuCameraServer(LabradServer):
         finally:
             print('releasing: {}'.format(self.setImageRegion.__name__))
             self.lock.release()
+
     '''
     Acquisition
     '''
@@ -179,9 +150,6 @@ class NuvuCameraServer(LabradServer):
         try:
             print('acquired : {}'.format(self.startAcquisition.__name__))
             yield deferToThread(self.camera.start_acquisition)
-            #necessary so that start_acquisition call completes even for long kinetic series
-            #yield self.wait(0.050)
-            yield self.wait(0.1)
         finally:
             print('releasing: {}'.format(self.startAcquisition.__name__))
             self.lock.release()
@@ -261,12 +229,11 @@ class NuvuCameraServer(LabradServer):
         finally:
             print('releasing: {}'.format(self.setNumberKinetics.__name__))
             self.lock.release()
-			
-    # UPDATED THE TIMEOUT. FIX IT LATER
+
     @setting(18, "Wait For Kinetic", timeout = 'v', returns = 'b')
-    def waitForKinetic(self, c, timeout = 20): #WithUnit(1,'s')):
+    def waitForKinetic(self, c, timeout=1):
         '''Waits until the given number of kinetic images are completed'''
-        requestCalls = int(timeout / 0.050 ) #number of request calls
+        requestCalls = int(timeout / 0.050) #number of request calls
         for i in range(requestCalls):
             print('acquiring: {}'.format(self.waitForKinetic.__name__))
             yield self.lock.acquire()
@@ -319,8 +286,6 @@ class NuvuCameraServer(LabradServer):
 
     @setting(21, "getemrange", returns = '(ii)')
     def getemrange(self, c):
-        #emrange = yield self.camera.get_camera_em_gain_range()
-        #returnValue(emrange)
         return self.camera.get_camera_em_gain_range()
         
     def wait(self, seconds, result=None):
@@ -357,7 +322,6 @@ class NuvuCameraServer(LabradServer):
             print('releasing: {}'.format(self.stopServer.__name__))
             self.lock.release()
         except Exception:
-            #not yet created
             pass
 
 if __name__ == "__main__":

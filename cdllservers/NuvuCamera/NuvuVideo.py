@@ -160,7 +160,6 @@ class NuvuVideo(QtGui.QWidget):
     def on_live_button(self, checked):
         if checked:
             yield self.server.setTriggerMode(None, 'INTERNAL')
-            yield self.server.setAcquisitionMode(None, 'Run till abort')
             yield self.server.startAcquisition(None)
             self.binx, self.biny, self.startx, self.stopx, self.starty, self.stopy = yield self.server.getImageRegion(None)
             self.pixels_x = (self.stopx - self.startx + 1) / self.binx
