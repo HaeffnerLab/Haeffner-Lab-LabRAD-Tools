@@ -149,10 +149,10 @@ class NuvuCamera():
         if not SUCCESS(error):
             raise Exception(ERROR_DESCRIPTION(error))
         
-        print('exposure time in ms:', exposure_time_in_ms.value)
-        print('readout time in ms:', readout_time_in_ms.value)
-        print('waiting time in ms:', waiting_time_in_ms.value)
-        print('timeout in ms:', timeout_in_ms.value)
+        print('Exposure time in ms:', exposure_time_in_ms.value)
+        print('Readout time in ms:', readout_time_in_ms.value)
+        print('Waiting time in ms:', waiting_time_in_ms.value)
+        print('Timeout in ms:', timeout_in_ms.value)
 
         self.info.exposure_time = exposure_time_in_ms.value / 1000.
         self.info.readout_time = readout_time_in_ms.value / 1000.
@@ -207,12 +207,14 @@ class NuvuCamera():
         
         # Also kick off the call to read_images_from_camera() here by calling acquireImagesAsync()
         num_images = self.get_number_images_to_acquire()
-        print('starting acquisition for ' + str(num_images) + ' images')
         if num_images > 0:
+            print('Starting acquisition for ' + str(num_images) + ' images')
             self.acquire_images_async()
             timeout_in_seconds = 5
             if not self.acquisition_started_event.wait(timeout_in_seconds):
                 raise Exception('Failed to start acquisition')
+        else:
+            print('Starting continuous acquisition')
 
     def is_acquiring(self):
         is_acquiring = c.c_int()
@@ -259,7 +261,7 @@ class NuvuCamera():
             images.extend(image[:roi_size])
             
         if num_images_to_acquire > 1:
-            print('successfully acquired ' + str(num_images_to_acquire) + ' images')
+            print('Successfully acquired ' + str(num_images_to_acquire) + ' images')
         return images
     
     def get_most_recent_image(self):
