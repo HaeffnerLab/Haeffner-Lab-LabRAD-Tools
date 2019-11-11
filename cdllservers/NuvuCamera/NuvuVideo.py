@@ -107,8 +107,7 @@ class NuvuVideo(QtGui.QWidget):
         self.emccdSpinBox.setValue(gain)
         trigger_mode = yield self.server.getTriggerMode(None)
         self.trigger_mode.setText(trigger_mode)
-        acquisition_mode = yield self.server.getAcquisitionMode(None)
-        self.acquisition_mode.setText(acquisition_mode)
+        self.acquisition_mode.setText('N/A') # not applicable for Nuvu camera
         self.emccdSpinBox.valueChanged.connect(self.on_new_gain)
         self.live_button.clicked.connect(self.on_live_button)
         self.auto_levels_button.clicked.connect(self.on_auto_levels_button)
@@ -143,9 +142,6 @@ class NuvuVideo(QtGui.QWidget):
     
     def set_trigger_mode(self, mode):
         self.trigger_mode.setText(mode)
-    
-    def set_acquisition_mode(self, mode):
-        self.acquisition_mode.setText(mode)
      
     @inlineCallbacks
     def on_new_gain(self, gain):
@@ -159,12 +155,13 @@ class NuvuVideo(QtGui.QWidget):
     @inlineCallbacks
     def on_live_button(self, checked):
         if checked:
+            yield self.server.abortAcquisition(None)
             yield self.server.setTriggerMode(None, 'INTERNAL')
+            yield self.server.setNumberImagesToAcquire(None, 0)
             yield self.server.startAcquisition(None)
             self.binx, self.biny, self.startx, self.stopx, self.starty, self.stopy = yield self.server.getImageRegion(None)
             self.pixels_x = (self.stopx - self.startx + 1) / self.binx
             self.pixels_y = (self.stopy - self.starty + 1) / self.biny
-            #yield self.server.waitForAcquisition(None)
             self.live_update_loop.start(0)
         else:
             yield self.live_update_loop.stop()

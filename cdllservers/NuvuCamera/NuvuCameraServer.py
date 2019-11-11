@@ -51,27 +51,6 @@ class NuvuCameraServer(LabradServer):
         notified = self.listeners.copy()
         notified.remove(c.ID)
         return notified
-		
-    '''
-    Acquisition Mode
-    '''
-    @setting(1, "Get Acquisition Mode", returns = 's')
-    def getAcquisitionMode(self, c):
-        """Gets Current Acquisition Mode"""
-        return self.camera.get_acquisition_mode()
-        
-    @setting(2, "Set Acquisition Mode", mode = 's', returns = '')
-    def setAcquisitionMode(self, c, mode):
-        """Sets Current Acquisition Mode"""
-        print('acquiring: {}'.format(self.setAcquisitionMode.__name__))
-        yield self.lock.acquire()
-        try:
-            print('acquired : {}'.format(self.setAcquisitionMode.__name__))
-            yield deferToThread(self.camera.set_acquisition_mode, mode)
-        finally:
-            print('releasing: {}'.format(self.setAcquisitionMode.__name__))
-            self.lock.release()
-        self.gui.set_acquisition_mode(mode)
 
     '''
     Trigger Mode
@@ -153,17 +132,6 @@ class NuvuCameraServer(LabradServer):
         finally:
             print('releasing: {}'.format(self.startAcquisition.__name__))
             self.lock.release()
-
-    @setting(10, "Wait For Acquisition", returns = '')
-    def waitForAcquisition(self, c):
-        print 'acquiring: {}'.format(self.waitForAcquisition.__name__)
-        yield self.lock.acquire()
-        try:
-            print 'acquired : {}'.format(self.waitForAcquisition.__name__)
-            yield deferToThread(self.camera.wait_for_acquisition)
-        finally:
-            print 'releasing: {}'.format(self.waitForAcquisition.__name__)
-            self.lock.release()
         
     @setting(11, "Abort Acquisition", returns = '')
     def abortAcquisition(self, c):
@@ -178,17 +146,18 @@ class NuvuCameraServer(LabradServer):
             print('releasing: {}'.format(self.abortAcquisition.__name__))
             self.lock.release()
     
-    @setting(12, "Get Acquired Data", num_images = 'i',returns = '*i')
-    def getAcquiredData(self, c, num_images = 1):
+    @setting(12, "Get Acquired Data", timeout_in_seconds = 'i',returns = '*i')
+    def getAcquiredData(self, c, timeout_in_seconds = 60):
         """Get the acquired images"""
         print('acquiring: {}'.format(self.getAcquiredData.__name__))
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.getAcquiredData.__name__))
-            image = yield deferToThread(self.camera.get_acquired_data, num_images)
+            image = yield deferToThread(self.camera.get_acquired_data, timeout_in_seconds)
         finally:
             print('releasing: {}'.format(self.getAcquiredData.__name__))
             self.lock.release()
+        print('acquired data length', len(image))
         returnValue(image)
 		
     '''
@@ -213,44 +182,22 @@ class NuvuCameraServer(LabradServer):
     def isLiveDisplayRunning(self, c):
         return self.gui.live_update_running
     
-    @setting(16, "Get Number Kinetics", returns = 'i')
-    def getNumberKinetics(self, c):
-        """Gets Number Of Scans In A Kinetic Cycle"""
-        return self.camera.get_number_kinetics()
+    @setting(16, "Get Number Images To Acquire", returns = 'i')
+    def getNumberImagesToAcquire(self, c):
+        """Gets Number Of Images To Acquire"""
+        return self.camera.get_number_images_to_acquire()
      
-    @setting(17, "Set Number Kinetics", numKin = 'i', returns = '')
-    def setNumberKinetics(self, c, numKin):
-        """Sets Number Of Scans In A Kinetic Cycle"""
-        print('acquiring: {}'.format(self.setNumberKinetics.__name__))
+    @setting(17, "Set Number Images To Acquire", numImages = 'i', returns = '')
+    def setNumberImagesToAcquire(self, c, numImages):
+        """Sets Number Of Images To Acquire"""
+        print('acquiring: {}'.format(self.setNumberImagesToAcquire.__name__))
         yield self.lock.acquire()
         try:
-            print('acquired : {}'.format(self.setNumberKinetics.__name__))
-            yield deferToThread(self.camera.set_number_kinetics, numKin)
+            print('acquired : {}'.format(self.setNumberImagesToAcquire.__name__))
+            yield deferToThread(self.camera.set_number_images_to_acquire, numImages)
         finally:
-            print('releasing: {}'.format(self.setNumberKinetics.__name__))
+            print('releasing: {}'.format(self.setNumberImagesToAcquire.__name__))
             self.lock.release()
-
-    @setting(18, "Wait For Kinetic", timeout = 'v', returns = 'b')
-    def waitForKinetic(self, c, timeout=1):
-        '''Waits until the given number of kinetic images are completed'''
-        requestCalls = int(timeout / 0.050) #number of request calls
-        for i in range(requestCalls):
-            print('acquiring: {}'.format(self.waitForKinetic.__name__))
-            yield self.lock.acquire()
-            try:
-                print('acquired : {}'.format(self.waitForKinetic.__name__))
-                #status = yield deferToThread(self.camera.get_status)
-                #useful for debugging of how many iterations have been completed in case of missed trigger pulses
-                #a,b = yield deferToThread(self.camera.get_series_progress)
-                #print(a,b)
-                #print(status)
-            finally:
-                print('releasing: {}'.format(self.waitForKinetic.__name__))
-                self.lock.release()
-            if status == 'DRV_IDLE':
-                returnValue(True)
-            yield self.wait(0.050)
-        returnValue(False)
     
     '''
     EMCCD Gain Settings

@@ -2,20 +2,22 @@ import ctypes as c
 from configuration import nuvu_configuration as config
 import os
 from NuvuErrors import NuvuErrors
+import threading
+import time
 
 class NuvuInfo(object):
     def __init__(self):
-        self.width                  = None
-        self.height                 = None
-        self.min_gain               = None
-        self.max_gain               = None
-        self.emccd_gain             = None
-        self.trigger_mode           = None
-        self.exposure_time          = None
-        self.readout_time           = None
-        self.waiting_time           = None
-        self.image_region           = None
-        self.number_kinetics        = None
+        self.width                    = None
+        self.height                   = None
+        self.min_gain                 = None
+        self.max_gain                 = None
+        self.emccd_gain               = None
+        self.trigger_mode             = None
+        self.exposure_time            = None
+        self.readout_time             = None
+        self.waiting_time             = None
+        self.image_region             = None
+        self.number_images_to_acquire = None
         
 class NuvuCamera():
     def __init__(self):
@@ -25,7 +27,7 @@ class NuvuCamera():
             self.dll = c.CDLL(config.path_to_dll)
             
             self.ncCam = c.pointer(c.c_long())
-            error = self.dll.ncCamOpen(NC_AUTO_UNIT, NC_AUTO_CHANNEL, 4, c.byref(self.ncCam))
+            error = self.dll.ncCamOpen(NC_AUTO_UNIT, NC_AUTO_CHANNEL, 20, c.byref(self.ncCam))
             if not SUCCESS(error):
                 raise Exception(ERROR_DESCRIPTION(error))
             
@@ -34,6 +36,10 @@ class NuvuCamera():
                 raise Exception(ERROR_DESCRIPTION(error))
 
             print('Nuvu Camera opened successfully', self.ncCam)
+            
+            self.acquired_images = []
+            self.acquisition_started_event = threading.Event()
+            self.acquisition_done_event = threading.Event()
 
             self.get_detector_dimensions()
             self.get_camera_em_gain_range()
@@ -50,7 +56,7 @@ class NuvuCamera():
             print('trigger_mode', self.info.trigger_mode)
             print('exposure_time', self.info.exposure_time)
             print('image_region', self.info.image_region)
-            print('number_kinetics', self.info.number_kinetics)
+            print('number_images_to_acquire', self.info.number_images_to_acquire)
         except Exception as e:
             print('Error initializing Nuvu Camera:', e)
             return
@@ -96,14 +102,6 @@ class NuvuCamera():
 
         self.info.emccd_gain = gain
     
-    def set_acquisition_mode(self, mode):
-        # not needed for Nuvu camera
-        pass
-    
-    def get_acquisition_mode(self):
-        # not needed for Nuvu camera
-        return 'N/A'
-    
     def set_trigger_mode(self, mode):
         try:
             mode_number = TriggerMode[mode]
@@ -145,7 +143,17 @@ class NuvuCamera():
         error = self.dll.ncCamSetWaitingTime(self.ncCam, waiting_time_in_ms)
         if not SUCCESS(error):
             raise Exception(ERROR_DESCRIPTION(error))
+
+        timeout_in_ms = c.c_int(int(waiting_time_in_ms.value + readout_time_in_ms.value + exposure_time_in_ms.value))
+        error = self.dll.ncCamSetTimeout(self.ncCam, timeout_in_ms)
+        if not SUCCESS(error):
+            raise Exception(ERROR_DESCRIPTION(error))
         
+        print('exposure time in ms:', exposure_time_in_ms.value)
+        print('readout time in ms:', readout_time_in_ms.value)
+        print('waiting time in ms:', waiting_time_in_ms.value)
+        print('timeout in ms:', timeout_in_ms.value)
+
         self.info.exposure_time = exposure_time_in_ms.value / 1000.
         self.info.readout_time = readout_time_in_ms.value / 1000.
         self.info.waiting_time = waiting_time_in_ms.value / 1000.
@@ -172,21 +180,39 @@ class NuvuCamera():
     
     def get_image(self):
         return self.info.image_region
+
+    def reset_image_acquisition(self):
+        self.acquired_images = []
+        self.acquisition_started_event.clear()
+        self.acquisition_done_event.clear()
+
+    def acquire_images_async(self):
+        def acquire_worker(self):
+            self.acquisition_started_event.set()
+            self.acquired_images = self.read_images_from_camera()
+            self.acquisition_done_event.set()
+
+        self.reset_image_acquisition()
+        thread = threading.Thread(name='acquire', target=acquire_worker, args=(self,))
+        thread.start()
     
     def start_acquisition(self):
         error = self.dll.ncCamSetShutterMode(self.ncCam, SHUTTER_OPEN)
         if not SUCCESS(error):
             raise Exception(ERROR_DESCRIPTION(error))
 
-        error = self.dll.ncCamStart(self.ncCam, self.info.number_kinetics)
+        error = self.dll.ncCamStart(self.ncCam, self.info.number_images_to_acquire)
         if not SUCCESS(error):
             raise Exception(ERROR_DESCRIPTION(error))
-    
-    def wait_for_acquisition(self):
-        # Loop until the camera is no longer in acquisition mode
-        is_acquiring = True
-        while is_acquiring:
-            is_acquiring = self.is_acquiring()
+        
+        # Also kick off the call to read_images_from_camera() here by calling acquireImagesAsync()
+        num_images = self.get_number_images_to_acquire()
+        print('starting acquisition for ' + str(num_images) + ' images')
+        if num_images > 0:
+            self.acquire_images_async()
+            timeout_in_seconds = 5
+            if not self.acquisition_started_event.wait(timeout_in_seconds):
+                raise Exception('Failed to start acquisition')
 
     def is_acquiring(self):
         is_acquiring = c.c_int()
@@ -200,46 +226,50 @@ class NuvuCamera():
         if not SUCCESS(error):
             raise Exception(ERROR_DESCRIPTION(error))
 
-    def get_acquired_data(self, num_images):
+    def get_acquired_data(self, timeout_in_seconds=60):
+        # If we have already started acquisition, wait for it to finish
+        if self.acquisition_started_event.set():
+            if not self.acquisition_done_event.wait(timeout_in_seconds):
+                raise Exception('Camera acquisition timed out, timeout_in_seconds = ' + str(timeout_in_seconds))
+        
+        if len(self.acquired_images) > 0:
+            images = self.acquired_images
+            self.reset_image_acquisition()
+            return images
+
+        # If we haven't acquired any images yet, read directly from the camera
+        return self.read_images_from_camera()
+
+    def read_images_from_camera(self):
         hbin, vbin, hstart, hend, vstart, vend = self.info.image_region
-        dim = int( ( hend - hstart + 1 ) * (vend - vstart + 1) / float(hbin * vbin) )
+        roi_size = int( ( hend - hstart + 1 ) * (vend - vstart + 1) / float(hbin * vbin) )
+        dim = self.info.width * self.info.height
+
+        num_images_to_acquire = self.get_number_images_to_acquire()
+        if num_images_to_acquire == 0: # continuous acquisition mode
+            num_images_to_acquire = 1
+
         images = []
-        for i in range(num_images):
+        for i in range(num_images_to_acquire):
             image_struct = c.c_uint32 * dim
             image = image_struct()
             error = self.dll.ncCamReadUInt32(self.ncCam, c.pointer(image))
             if not SUCCESS(error):
                 raise Exception(ERROR_DESCRIPTION(error))
-            images.extend(image[:])
+            images.extend(image[:roi_size])
+            
+        if num_images_to_acquire > 1:
+            print('successfully acquired ' + str(num_images_to_acquire) + ' images')
         return images
     
     def get_most_recent_image(self):
-        return self.get_acquired_data(num_images=1)
+        return self.get_acquired_data()
 
-    def set_number_kinetics(self, numKin):
-        self.info.number_kinetics = numKin
+    def set_number_images_to_acquire(self, num_images):
+        self.info.number_images_to_acquire = num_images
     
-    def get_number_kinetics(self):
-        return self.info.number_kinetics
-
-    # def get_status(self):
-    #     # TODO: implement using Nuvu APIs, if needed for debugging
-    #     status = c.c_int()
-    #     error = self.dll.GetStatus(c.byref(status))
-    #     if (ERROR_CODE[error] == 'DRV_SUCCESS'):
-    #         return ERROR_CODE[status.value]      
-    #     else:
-    #         raise Exception(ERROR_CODE[error])
-         
-    # def get_series_progress(self):
-    #     # TODO: implement using Nuvu APIs, if needed for debugging
-    #     acc = c.c_long()
-    #     series = c.c_long()
-    #     error = self.dll.GetAcquisitionProgress(c.byref(acc),c.byref(series))
-    #     if ERROR_CODE[error] == "DRV_SUCCESS":
-    #         return acc.value, series.value
-    #     else:
-    #         raise Exception(ERROR_CODE[error])
+    def get_number_images_to_acquire(self):
+        return self.info.number_images_to_acquire
 
     def shut_down(self):
         error = self.dll.ncCamAbort(self.ncCam)
