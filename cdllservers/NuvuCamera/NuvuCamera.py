@@ -27,7 +27,7 @@ class NuvuCamera():
             self.dll = c.CDLL(config.path_to_dll)
             
             self.ncCam = c.pointer(c.c_long())
-            error = self.dll.ncCamOpen(NC_AUTO_UNIT, NC_AUTO_CHANNEL, 20, c.byref(self.ncCam))
+            error = self.dll.ncCamOpen(NC_AUTO_UNIT, NC_AUTO_CHANNEL, 4, c.byref(self.ncCam))
             if not SUCCESS(error):
                 raise Exception(ERROR_DESCRIPTION(error))
             

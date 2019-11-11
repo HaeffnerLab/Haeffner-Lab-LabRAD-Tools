@@ -67,7 +67,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.setTriggerMode.__name__))
-            yield deferToThread(self.camera.set_trigger_mode, mode)
+            self.camera.set_trigger_mode(mode)
         finally:
             print('releasing: {}'.format(self.setTriggerMode.__name__))
             self.lock.release()
@@ -89,7 +89,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.setExposureTime.__name__))
-            yield deferToThread(self.camera.set_exposure_time, expTime)
+            self.camera.set_exposure_time(expTime)
         finally:
             print('releasing: {}'.format(self.setExposureTime.__name__))
             self.lock.release()
@@ -114,7 +114,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.setImageRegion.__name__))
-            yield deferToThread(self.camera.set_image, horizontalBinning, verticalBinning, horizontalStart, horizontalEnd, verticalStart, verticalEnd)
+            self.camera.set_image(horizontalBinning, verticalBinning, horizontalStart, horizontalEnd, verticalStart, verticalEnd)
         finally:
             print('releasing: {}'.format(self.setImageRegion.__name__))
             self.lock.release()
@@ -128,7 +128,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.startAcquisition.__name__))
-            yield deferToThread(self.camera.start_acquisition)
+            self.camera.start_acquisition()
         finally:
             print('releasing: {}'.format(self.startAcquisition.__name__))
             self.lock.release()
@@ -141,7 +141,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.abortAcquisition.__name__))
-            yield deferToThread(self.camera.abort_acquisition)
+            self.camera.abort_acquisition()
         finally:
             print('releasing: {}'.format(self.abortAcquisition.__name__))
             self.lock.release()
@@ -153,7 +153,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.getAcquiredData.__name__))
-            image = yield deferToThread(self.camera.get_acquired_data, timeout_in_seconds)
+            image = self.camera.get_acquired_data(timeout_in_seconds)
         finally:
             print('releasing: {}'.format(self.getAcquiredData.__name__))
             self.lock.release()
@@ -165,10 +165,10 @@ class NuvuCameraServer(LabradServer):
     '''
     @setting(13, "Get Most Recent Image", returns = '*i')
     def getMostRecentImage(self, c):
-        """Get all Data"""
+        """Get most recently acquired image"""
         yield self.lock.acquire()
         try:
-            image = yield deferToThread(self.camera.get_most_recent_image)
+            image = self.camera.get_most_recent_image()
         finally:
             self.lock.release()
         returnValue(image)
@@ -194,7 +194,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print('acquired : {}'.format(self.setNumberImagesToAcquire.__name__))
-            yield deferToThread(self.camera.set_number_images_to_acquire, numImages)
+            self.camera.set_number_images_to_acquire(numImages)
         finally:
             print('releasing: {}'.format(self.setNumberImagesToAcquire.__name__))
             self.lock.release()
@@ -210,7 +210,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print 'acquired : {}'.format(self.getEMCCDGain.__name__)
-            gain = yield deferToThread(self.camera.get_emccd_gain)
+            gain = self.camera.get_emccd_gain()
         finally:
             print 'releasing: {}'.format(self.getEMCCDGain.__name__)
             self.lock.release()
@@ -224,7 +224,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print 'acquired : {}'.format(self.setEMCCDGain.__name__)
-            yield deferToThread(self.camera.set_emccd_gain, gain)
+            self.camera.set_emccd_gain(gain)
         finally:
             print 'releasing: {}'.format(self.setEMCCDGain.__name__)
             self.lock.release()
@@ -247,7 +247,7 @@ class NuvuCameraServer(LabradServer):
         yield self.lock.acquire()
         try:
             print 'acquired : {}'.format(self.get_detector_dimensions.__name__)
-            dimensions = yield deferToThread(self.camera.get_detector_dimensions)
+            dimensions = self.camera.get_detector_dimensions()
         finally:
             print 'releasing: {}'.format(self.get_detector_dimensions.__name__)
             self.lock.release()
