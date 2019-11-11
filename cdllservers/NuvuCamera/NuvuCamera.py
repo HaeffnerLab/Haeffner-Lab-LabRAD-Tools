@@ -205,7 +205,7 @@ class NuvuCamera():
         if not SUCCESS(error):
             raise Exception(ERROR_DESCRIPTION(error))
         
-        # Also kick off the call to read_images_from_camera() here by calling acquireImagesAsync()
+        # Also kick off the call to read_images_from_camera() here by calling acquire_images_async()
         num_images = self.get_number_images_to_acquire()
         if num_images > 0:
             print('Starting acquisition for ' + str(num_images) + ' images')
