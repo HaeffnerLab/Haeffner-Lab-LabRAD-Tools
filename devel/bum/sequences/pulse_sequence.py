@@ -119,7 +119,7 @@ class pulse_sequence(object):
         return freq
 
     # old parameter_vault version 
-    def calc_freq_from_array(self, carrier='S-1/2D-1/2', sideband_selection=[0,0,0,0]):
+    def calc_freq_from_array(self, carrier='S-1/2D-1/2', sideband_selection=[0,0,0,0,0]):
         '''given calculates the frequency of the 729 DP drive from the carriers and sidebands
         in the parameter vault
         '''
@@ -136,7 +136,7 @@ class pulse_sequence(object):
                                }
 #         print "230984", self.parameters.Carriers[carrier_translation[carrier]]
 #         print carrier_translation[carrier]
-        freq=self.parameters.Carriers[carrier_translation[carrier]]
+        #freq=self.parameters.Carriers[carrier_translation[carrier]]
         try: 
             freq=self.parameters.Carriers[carrier_translation[carrier]]
         except:
@@ -167,7 +167,7 @@ class pulse_sequence(object):
         fmax = f[max_index]
         if (p.max() <= 0.1 and not force_guess):
             
-            #raise Exception("Peak not found") Need to know how to implement this with the GUI
+            raise Exception("Peak not found") #Need to know how to implement this with the GUI
             return None
             
         else:
@@ -203,9 +203,80 @@ class pulse_sequence(object):
             print "problem with the fit"
             return None
         
+    @classmethod
+    def sin_fit(cls, phase, excitation, return_all_params = False, init_guess = None):
+        if init_guess == "stop":
+            return None
+
+        model = lambda x, a, x0, c: a*np.sin((np.pi*x/180.)+x0) + c
+        force_guess = False
         
-    
-    
+        guess = [.5,np.pi/2.,.5]
+        #print "1234"
+        #print f,p, guess
+        print phase,excitation
+        try:
+            popt, copt = curve_fit(model, phase, excitation, p0=guess,bounds=((0,-np.inf,-1),(1,np.inf,1)))
+            print popt
+            if return_all_params:
+                return popt[0], popt[1], popt[2] # amplitude, phase offset, amplitude offset
+            else:
+                return popt[0] # return only the center value
+        except:
+            print "problem with the fit"
+            return None
+
+    @classmethod
+    def rot_ramsey_fit(cls, phase, excitation, return_all_params = False, init_guess = None):
+        if init_guess == "stop":
+            return None
+
+        force_guess = False
+        
+        guess = [60,10,5,0.845,100]
+        #print "1234"
+        #print f,p, guess
+        print time,excitation
+        try:
+            popt, copt = curve_fit(self.rot_ramsey_decay, phase, excitation, p0=guess,bounds=((0,-np.inf,-1),(1,np.inf,1)))
+
+            return popt[0], popt[1] # sigma_l, omega_khz, delta_kHz, _f_trap_MHz, f_rot_kHz
+
+        except:
+            print "problem with the fit"
+            return None
+
+    def rot_ramsey_decay(self, times_us, sigma_l, Omega_kHz, delta_kHz, f_trap_MHz, f_rot_kHz):
+        # convert inputs to SI
+        times = 1e-6 * times_us
+        Omega = 1e3 * 2*np.pi * Omega_kHz
+        delta = 1e3 * 2*np.pi * delta_kHz
+        w_trap = 1e6 * 2*np.pi * f_trap_MHz
+        w_rot = 1e3 * 2*np.pi * f_rot_kHz
+        #fix parameters for diffusion measurment
+        scale = 1
+        Delta_l = 1
+        # calculate moment of inertia
+        m = 40*scc.atomic_mass
+        r = 1/2.0 * (scc.e**2/(4*np.pi*scc.epsilon_0) * 2.0/(m*(w_trap**2 - w_rot**2)))**(1/3.0) #rotor radius
+        I = 2*m*r**2  # moment of inertia
+
+        # calculate l distribution and detunings
+        l_0 = I*w_rot/scc.hbar
+        ls = np.arange(int(l_0-3*sigma_l), int(l_0+3*sigma_l))
+        c_ls_unnorm = np.exp(-(ls-l_0)**2/(4.0*sigma_l**2))
+        c_ls = c_ls_unnorm/np.linalg.norm(c_ls_unnorm)
+        delta_ls = scc.hbar*Delta_l/I*(l_0-ls) + delta
+
+        def calc_ramsey_exc(c_ls, delta_ls, Omega, T):
+            Omega_gens = np.sqrt(Omega**2 + delta_ls**2) #generalized Rabi frequency
+            u1s = np.pi*Omega_gens/(4*Omega)
+            u2s = delta_ls*T/2.0
+            return sum(np.abs(c_ls)**2 * (2*Omega/Omega_gens**2*np.sin(u1s) * (Omega_gens*np.cos(u1s)*np.cos(u2s) - delta_ls*np.sin(u1s)*np.sin(u2s)))**2)
+            
+
+        return [scale * calc_ramsey_exc(c_ls, delta_ls, Omega, T) for T in times]
+
     @classmethod
     def execute_external(cls, scan, fun = None):
         '''

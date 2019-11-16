@@ -61,7 +61,7 @@ class drift_tracker(QtGui.QWidget):
     def create_drift_layout(self):
         layout = QtGui.QVBoxLayout()
         self.fig = Figure()
-        self.fig.patch.set_facecolor("moccasin")
+        #self.fig.patch.set_facecolor("moccasin") EWWW
         #self.fig.patch.set_alpha(0.8)
         self.drift_canvas = FigureCanvas(self.fig)
         self.drift_canvas.setParent(self)  
@@ -91,7 +91,7 @@ class drift_tracker(QtGui.QWidget):
     def create_spectrum_layout(self):
         layout = QtGui.QVBoxLayout()
         self.fig = Figure()
-        self.fig.patch.set_facecolor("moccasin")
+        #self.fig.patch.set_facecolor("moccasin") EWW
         #self.fig.patch.set_alpha(0.8)
         self.spec_canvas = FigureCanvas(self.fig)
         self.spec_canvas.setParent(self)  

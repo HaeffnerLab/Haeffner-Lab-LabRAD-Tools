@@ -3,7 +3,7 @@
 [info]
 name = ParameterVault
 version = 2.0
-description = 
+description =
 instancename = ParameterVault
 
 [startup]
@@ -30,23 +30,23 @@ class ParameterVault(LabradServer):
     def initServer(self):
         """Load all of the paramters from the registry."""
         self.listeners = set()
-        self.parameters = {}  
+        self.parameters = {}
         yield self.load_parameters()
-    
+
     def initContext(self, c):
         """Initialize a new context object."""
         self.listeners.add(c.ID)
-    
+
     def expireContext(self, c):
         """Expires the context object on disconnect."""
-        self.listeners.remove(c.ID)   
-        
+        self.listeners.remove(c.ID)
+
     def getOtherListeners(self,c):
         """Returns the set of all listeners excluding the provided context c."""
         notified = self.listeners.copy()
         notified.remove(c.ID)
         return notified
-    
+
     @inlineCallbacks
     def load_parameters(self):
         """Recursively add all parameters to the dictionary."""
@@ -83,7 +83,7 @@ class ParameterVault(LabradServer):
         for key in self.parameters.keys():
             names.add(key[0])
         return list(names)
-   
+
     @inlineCallbacks
     def save_parameters(self):
         """save the latest parameters into registry."""
@@ -102,8 +102,8 @@ class ParameterVault(LabradServer):
         regDir.extend([collection])
         yield self.client.registry.cd(regDir, True)
         yield self.client.registry.set(parameter_name, value)
-        
-        
+
+
     def _save_full(self, key, value):
         """
         Checks the type parameter if the value falls within range
@@ -145,9 +145,12 @@ class ParameterVault(LabradServer):
         elif t == 'line_selection':
             assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(name)
             return item[0]
+        elif t == 'int_list':
+            assert type(item[0]) == list
+            return item[0]
         else:#parameter type not known
             return value
-        
+
     @setting(0, "Set Parameter", collection = 's', parameter_name = 's', value = '?', full_info = 'b', returns = '')
     def setParameter(self, c, collection, parameter_name, value, full_info = False):
         """Set a parameter value"""
@@ -188,29 +191,29 @@ class ParameterVault(LabradServer):
             yield self.save_single_parameter(collection, parameter_name, value)
             notified = self.getOtherListeners(c)
             #self.onParameterChange((key[0], key[1]), notified)
-        
+
     @setting(3, "Get Parameter Names", collection = 's', returns = '*s')
     def getParameterNames(self, c, collection):
         """Get Parameter Names"""
         parameter_names = self._get_parameter_names(collection)
         return parameter_names
-    
+
     @setting(4, "Save Parameters To Registry", returns = '')
     def saveParametersToRegistry(self, c):
         """Get Experiment Parameter Names"""
         yield self.save_parameters()
-    
+
     @setting(5, "Get Collections", returns = '*s')
     def get_collection_names(self, c):
         collections = self._get_collections()
-        return collections    
-        
+        return collections
+
     @setting(6, "Refresh Parameters", returns = '')
     def refresh_parameters(self, c):
         """Saves Parameters To Registry, then realods them"""
         yield self.save_parameters()
         yield self.load_parameters()
-    
+
     @setting(7, "Reload Parameters", returns = '')
     def reload_parameters(self, c):
         """Discards current parameters and reloads them from registry"""
@@ -239,7 +242,7 @@ class ParameterVault(LabradServer):
         except AttributeError:
             #if values don't exist yet, i.e stopServer was called due to an Identification Error
             pass
-      
+
 if __name__ == "__main__":
     from labrad import util
     util.runServer(ParameterVault())

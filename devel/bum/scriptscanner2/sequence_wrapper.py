@@ -61,6 +61,7 @@ class pulse_sequence_wrapper(object):
 
 
     def set_scan(self, settings):
+        #not used currently?? - sara
         self.scans = {}
 
         for sequence_name, sc in settings:
@@ -94,8 +95,8 @@ class pulse_sequence_wrapper(object):
             scan_submit = [U(pt, submit_unit) for pt in scan_submit]
             
             self.scans[sequence_name] = (param, unit, scan, submit_unit, scan_submit)
-            print " this is the submit_unit "
-            print submit_unit
+            #print " this is the submit_unit "
+            #print submit_unit
         #try:
         #    self.window = self.module.scannable_params[scan_param][1]
         #except:
@@ -121,7 +122,9 @@ class pulse_sequence_wrapper(object):
                 
         ds = dv.new( timetag ,[(parameter_to_scan, unit)],dependents, context = data_save_context_extra )
         
-        
+        if self.do_shift:
+            pv = cxn.parametervault
+            shift = pv.get_parameter('Display','shift') # where shift is set in the experiment. 
         if grapher is not None:           
             grapher.plot_with_axis(ds, window, scan) # -> plot_with_axis
         
@@ -142,7 +145,7 @@ class pulse_sequence_wrapper(object):
             # i.e. {5:[10,20]} means scan two sequences for 5 times, 
             # sequence1 contains 10 repititions, sequence2 contains 20 repititions
             self.scan_structure = self.get_scan_structure(self.module)
-            print "Scan tructure: ", self.scan_structure
+            print "Scan structure: ", self.scan_structure
 
             # calculate total repititions from scan structure
             self.total_scan = self.calc_total_scan(self.scan_structure)
@@ -304,9 +307,14 @@ class pulse_sequence_wrapper(object):
         else:
             self.parameter_to_scan, self.scan_unit, self.scan, self.submit_unit, self.scan_submit = self.scans[module.__name__]
             try:
+                self.do_shift = module.scannable_params[self.parameter_to_scan][2]
+            except:
+                self.do_shift = False
+            try:
                 self.window = module.scannable_params[self.parameter_to_scan][1]
             except:
                 self.window = 'current'
+
 
             # non-overwrite update
             self.update_fixed_params(module.fixed_params, overwrite = False)
@@ -322,16 +330,13 @@ class pulse_sequence_wrapper(object):
             return result
 
     def run_single(self, module, lis):
+
         
         cxn = labrad.connect()
         pulser = cxn.pulser
-        
-        print "!!!!!readout mode:",self.parameters_dict.StateReadout.readout_mode
-            
-        self.setup_data_vault(cxn, module.__name__)
 
-       
-               
+        print "!!!!!readout mode:",self.parameters_dict.StateReadout.readout_mode
+          
         if 'camera' in self.parameters_dict.StateReadout.readout_mode: 
             self.use_camera = True
             self.initialize_camera(cxn)
@@ -339,16 +344,15 @@ class pulse_sequence_wrapper(object):
         else:
             self.use_camera = False
 
-
-
+        sleep(1)
         module.run_initial(cxn, self.parameters_dict)
+        self.setup_data_vault(cxn, module.__name__)
+
         self.readout_save_iteration = 0
 
         data_x = []
         data = [] 
         
-        
-
         for index, x in enumerate(self.scan):
 
             print " scan param.{}".format(x)
@@ -358,8 +362,7 @@ class pulse_sequence_wrapper(object):
             self.update_params(update)
             self.update_scan_param(update)
             seq = module(self.parameters_dict)
-            seq.programSequence(pulser)
-            print "programmed pulser"          
+            seq.programSequence(pulser)         
             self.plot_current_sequence(cxn)
             
             repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
@@ -374,7 +377,7 @@ class pulse_sequence_wrapper(object):
             print "started {} sequences".format(int(self.parameters_dict.StateReadout.repeat_each_measurement))
             pulser.wait_sequence_done()
             pulser.stop_sequence()
-            
+
             if not self.use_camera:
                 readout_mode=self.parameters_dict.StateReadout.readout_mode 
                 rds = pulser.get_readout_counts()
@@ -404,7 +407,7 @@ class pulse_sequence_wrapper(object):
                 
                 #useful for debugging, saving the images
                 #numpy.save('readout {}'.format(int(time.time())), images)
-            x_shift=self.Scan_shift()
+            x_shift=self.Scan_shift(cxn)
             
             submission = [x[self.submit_unit]+x_shift[self.submit_unit]]  # + center_frequency[self.submit_unit]]
             submission.extend(ion_state)
@@ -445,7 +448,7 @@ class pulse_sequence_wrapper(object):
 #            t1 = time.time()
 #            print "TIME", t1-t0
         
-        else:    
+        else:   
 #            t0 = time.time()
             dvParameters.saveParameters(self.dv, dict(self.parameters_dict), self.data_save_context)
 #            t1 = time.time()
@@ -459,8 +462,7 @@ class pulse_sequence_wrapper(object):
             camera.set_exposure_time(self.initial_exposure)
             camera.set_image_region(self.initial_region)
             if self.camera_initially_live_display:
-                camera.start_live_display()
-                
+                camera.start_live_display()      
         cxn.disconnect()
 
 
@@ -468,7 +470,7 @@ class pulse_sequence_wrapper(object):
     @inlineCallbacks
     def update_params(self, update, overwrite = True):
         # also update from the drift tracker here?
-#        print "UPDATING"
+        print "UPDATING"
         carrier_translation = {'S+1/2D-3/2':'Carriers.c0',
                                'S-1/2D-5/2':'Carriers.c1',
                                'S+1/2D-1/2':'Carriers.c2',
@@ -495,8 +497,8 @@ class pulse_sequence_wrapper(object):
         self.parameters_dict.update(update_dict, overwrite = overwrite)
         
         # using global sd 
-        print 'using global sd'
         # there was a problem connecting in the regular sync was we had to establish a
+        #print "trying"
         carriers = yield self.get_lines_from_global_dt()
         if carriers:
             for c, f in carriers:
@@ -642,7 +644,14 @@ class pulse_sequence_wrapper(object):
         localtime = time.localtime()
         self.dv = cxn.data_vault
         self.timetag = time.strftime('%H%M_%S', localtime)
-        directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), name, self.timetag]
+        print self.parameters_dict.global_scan_options.save_folder
+        if self.parameters_dict.global_scan_options.save_folder == 'date':
+            directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), name, self.timetag]
+        elif self.parameters_dict.global_scan_options.save_folder == 'experiment':
+            directory = ['','Experiments',name,time.strftime('%Y%m%d', localtime),self.timetag]
+        else:
+            directory = []
+            print "saving convention not recognized. check global_scan_options.save_folder"
         self.data_save_context = cxn.context()
         self.readout_save_context = cxn.context()
         self.histogram_save_context = cxn.context()
@@ -656,77 +665,76 @@ class pulse_sequence_wrapper(object):
         
         shift=U(0,self.submit_unit)
 
-
+        if self.do_shift:
+            pv = cxn.parametervault
+            shift = pv.get_parameter('Display','shift') # where shift is set in the experiment.
         
-        if not self.parameters_dict.Display.relative_frequencies:
-            # using global sd 
-            print 'using global sd'
-            # cannot use asynchrounous connection here
-            # from labrad.wrappers import connectAsync
-            try:
-                print "connecting synchronous to global sd"
-                global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
-                # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
-            except:
-                print "cannot connect to global sd tracker"
-            else:
-                if self.window == "car1":
-                    line = self.parameters_dict.DriftTracker.line_selection_1
-                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                elif self.window == "car2":
-                    line = self.parameters_dict.DriftTracker.line_selection_2
-                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                elif 'sideband_detuning' in self.parameter_to_scan or self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-                    if self.name != 'RabiFloppingManual' :
-                        line = self.parameters_dict.Spectrum.line_selection 
-                        shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                        # adding the shift for the sideband  
-                        sideband= self.parameters_dict.Spectrum.selection_sideband
-                        if sideband == 'Ignore Me!':
-                            shift += self.calculate_spectrum_shift()
-                        else:
-                            order = int(self.parameters_dict.Spectrum.order)
-                            shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
-                global_sd_cxn.disconnect()
-                # sleep(0.05)
+        # if not self.parameters_dict.Display.relative_frequencies:
+        #     # using global sd 
+        #     print 'using global sd'
+        #     # cannot use asynchrounous connection here
+        #     # from labrad.wrappers import connectAsync
+        #     try:
+        #         print "connecting synchronous to global sd"
+        #         global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
+        #         # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
+        #     except:
+        #         print "cannot connect to global sd tracker"
+        #     else:
+        #         if self.window == "car1":
+        #             line = self.parameters_dict.DriftTracker.line_selection_1
+        #             shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+        #         elif self.window == "car2":
+        #             line = self.parameters_dict.DriftTracker.line_selection_2
+        #             shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+        #         elif 'sideband_detuning' in self.parameter_to_scan or self.window == "spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":  ## I don't think you want this
+        #             if self.name != 'RabiFloppingManual' :
+        #                 line = self.parameters_dict.Spectrum.line_selection 
+        #                 shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+        #                 # adding the shift for the sideband  
+ 
+        #                 sideband= self.parameters_dict.Spectrum.selection_sideband
+        #                 if sideband == 'Ignore Me!':
+        #                     shift += self.calculate_spectrum_shift()
+        #                 else:
+        #                     order = int(self.parameters_dict.Spectrum.order)
+        #                     shift += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
 
-        else:
-            try:
-                print "connecting synchronous to global sd"
-                global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
-                # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
-            except:
-                print "cannot connect to global sd tracker"
-            else:
-                if self.window == "car1":
-                    line = self.parameters_dict.DriftTracker.line_selection_1
-                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                elif self.window == "car2":
-                    line = self.parameters_dict.DriftTracker.line_selection_2
-                    shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
-                global_sd_cxn.disconnect()
-            # when we scan the sideband in spectrum we want to have thier offset from the carrier
-            if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
-                sideband= self.parameters_dict.Spectrum.selection_sideband
-                if sideband == 'Ignore Me!':
-                    shift = self.calculate_spectrum_shift()
-                else:
-                    order = int(self.parameters_dict.Spectrum.order)
-                    shift = 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+        #         global_sd_cxn.disconnect()
+        #         # sleep(0.05)
 
-            elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
-                # MotionAnalysisSpectrum is always on the 1st-order sideband
-                sideband = self.parameters_dict.Motion_Analysis.sideband_selection
-                shift = self.parameters_dict.TrapFrequencies[sideband]
+        # else:
+        #     try:
+        #         print "connecting synchronous to global sd"
+        #         global_sd_cxn = labrad.connect(dt_config.global_address, password = dt_config.global_password,tls_mode='off')
+        #         # global_sd_cxn = yield connectAsync('192.168.169.86' , password ='',tls_mode='off')
+        #     except:
+        #         print "cannot connect to global sd tracker"
+        #     else:
+        #         if self.window == "car1":
+        #             line = self.parameters_dict.DriftTracker.line_selection_1
+        #             shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+        #         elif self.window == "car2":
+        #             line = self.parameters_dict.DriftTracker.line_selection_2
+        #             shift = global_sd_cxn.sd_tracker_global.get_current_line(line, dt_config.client_name)
+        #         global_sd_cxn.disconnect()
+        #     # when we scan the sideband in spectrum we want to have thier offset from the carrier
+        #     if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
+        #         sideband= self.parameters_dict.Spectrum.selection_sideband
+        #         if sideband == 'Ignore Me!':
+        #             shift = self.calculate_spectrum_shift()
+        #         else:
+        #             order = int(self.parameters_dict.Spectrum.order)
+        #             shift = 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+
+        #     elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
+        #         # MotionAnalysisSpectrum is always on the 1st-order sideband
+        #         sideband = self.parameters_dict.Motion_Analysis.sideband_selection
+        #         shift = self.parameters_dict.TrapFrequencies[sideband]
                 
            
    
-        if self.grapher is not None:
-            
-            
-
-
-            
+        if self.grapher is not None:            
             self.grapher.plot_with_axis(self.ds, self.window, [x+shift for x in self.scan_submit]) # -> plot_with_axis
             
         self.readout_save_directory = directory
@@ -747,7 +755,7 @@ class pulse_sequence_wrapper(object):
 #         print "SETUP datavalut succeeded" 
         
     
-    def Scan_shift(self):
+    def Scan_shift(self,cxn):
         line=None
         sideband= None
         order = 0
@@ -769,49 +777,60 @@ class pulse_sequence_wrapper(object):
         
         #line='none'
         ## running in abs frequency mode
-        if not self.parameters_dict.Display.relative_frequencies:
-            if self.window == "car1":
-                line = self.parameters_dict.DriftTracker.line_selection_1
-            elif self.window == "car2":
-                line = self.parameters_dict.DriftTracker.line_selection_2
-            elif 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
-#                 print "scanning the Spectrum in a false relative freq"
-                line = self.parameters_dict.Spectrum.line_selection
-                if self.parameters_dict.Spectrum.selection_sideband == 'Ignore Me!':
-                    shift = self.calculate_spectrum_shift()
-                    shift += self.parameters_dict.Carriers[carrier_translation[line]]
-                    return shift 
-                else:
-                    order = int(self.parameters_dict.Spectrum.order)  
-                    if  order != 0 :
-                        sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
-                    
-        else:
-            # when we scan the sideband in spectrum we want to have thier offset from the carrier
-            if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
-                sideband= self.parameters_dict.Spectrum.selection_sideband
-                if sideband == 'Ignore Me!':
-                    shift = self.calculate_spectrum_shift()
-                else:
-                    order = int(self.parameters_dict.Spectrum.order)
-                    shift = 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
 
-                return shift
-            elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
-                # MotionAnalysisSpectrum is always on the 1st-order sideband
-                sideband = self.parameters_dict.Motion_Analysis.sideband_selection
-                shift = self.parameters_dict.TrapFrequencies[sideband]
-                return shift
+        if self.do_shift:
+            pv = cxn.parametervault
+            shift = pv.get_parameter('Display','shift') # where shift is set in the experiment.
+        else:
+            shift = U(0,self.submit_unit)
+
+#         if not self.parameters_dict.Display.relative_frequencies:
+#             if self.window == "car1":
+#                 line = self.parameters_dict.DriftTracker.line_selection_1
+#             elif self.window == "car2":
+#                 line = self.parameters_dict.DriftTracker.line_selection_2
+#             elif 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":# and self.parameters_dict.Spectrum.scan_selection == "auto":
+# #                 print "scanning the Spectrum in a false relative freq"
+#                 line = self.parameters_dict.Spectrum.line_selection
+#                 if self.parameters_dict.Spectrum.selection_sideband == 'Ignore Me!':
+#                     shift = self.calculate_spectrum_shift()
+#                     shift += self.parameters_dict.Carriers[carrier_translation[line]]
+#                     return shift 
+#                 else:
+#                     order = int(self.parameters_dict.Spectrum.order)  
+#                     if  order != 0 :
+#                         sideband= self.parameters_dict.Spectrum.selection_sideband#self.parameters_dict.Spectrum.selection_sideband
+                    
+#         else:
+#             # when we scan the sideband in spectrum we want to have thier offset from the carrier
+#             if 'sideband_detuning' in self.parameter_to_scan or self.name == "Spectrum":
+#                 sideband= self.parameters_dict.Spectrum.selection_sideband
+#                 if sideband == 'Ignore Me!':
+#                     shift = self.calculate_spectrum_shift()
+#                 else:
+#                     order = int(self.parameters_dict.Spectrum.order)
+#                     shift = 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+
+#                 return shift
+#             ## handling
+#             # elif 'frequency729' in self.parameter_to_scan:
+#                 ############BALAHDHGSDLFH:OSIH:SFg
+
+#             elif self.name == "MotionAnalysisSpectrum" or self.name == "MotionAnalysisSpectrumMulti":
+#                 # MotionAnalysisSpectrum is always on the 1st-order sideband
+#                 sideband = self.parameters_dict.Motion_Analysis.sideband_selection
+#                 shift = self.parameters_dict.TrapFrequencies[sideband]
+#                 return shift
                
 
-        if line != None:
-            center_frequency = self.parameters_dict.Carriers[carrier_translation[line]] 
-            if sideband != None:
-                center_frequency += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
+#         if line != None:
+#             center_frequency = self.parameters_dict.Carriers[carrier_translation[line]] 
+#             if sideband != None:
+#                 center_frequency += 1.0*order*self.parameters_dict.TrapFrequencies[sideband]
                 
-            shift=center_frequency
-        else:
-            shift = U(0, self.scan_unit) 
+#             shift=center_frequency
+#         else:
+#             shift = U(0, self.scan_unit) 
 
         
         return shift
@@ -856,7 +875,7 @@ class pulse_sequence_wrapper(object):
         
         
     def col_names(self):
-        mode = self.parameters_dict.StateReadout.readout_mode     
+        mode = self.parameters_dict.StateReadout.readout_mode  
         names = np.array(range(self.output_size())[::-1])+1
          
         if mode == 'pmt':
@@ -877,7 +896,10 @@ class pulse_sequence_wrapper(object):
             else:
                 dependents = [('', ' {} dark ions'.format(x-1), '') for x in names[1:] ]
                 
-            dependents.append(('', 'Parity', ''))        
+            dependents.append(('', 'Parity', ''))   
+
+        if mode == 'pmt_excitation':
+            dependents = [('', 'prob dark ','')]    
                 
         if mode == 'camera':
             dependents = [('', ' prob ion {}'.format(x), '') for x in range(self.output_size())]
@@ -919,6 +941,9 @@ class pulse_sequence_wrapper(object):
         if mode == 'pmt_parity':
             # cols for the states and plus one for the parity calculation 
             return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 2
+        if  mode == 'pmt_excitation':
+            # col for excitation only
+            return 1
         
         if mode == 'camera':
             return int(self.parameters_dict.IonsOnCamera.ion_number)

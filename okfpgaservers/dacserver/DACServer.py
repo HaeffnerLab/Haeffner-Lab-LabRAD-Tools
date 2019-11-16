@@ -16,7 +16,6 @@ timeout = 20
 
 ### END NODE INFO
 '''
-import matplotlib.pyplot as plt
 
 import sys
 from labrad.server import LabradServer, setting, Signal, inlineCallbacks
@@ -63,17 +62,16 @@ class Control(object):
     voltage_matrix = {}
     def __init__(self, Cfile_path):
         self.Cfile_path = Cfile_path
-        if Cfile_path == 'none_specified': self.setDefault()
+        if Cfile_path == 'none_specified': 
+            self.setDefault()
+            print "No C File specified, setting default"
         else: self.getInfo()
-        # self.setDefault()
 
     def getInfo(self):
         head = []
         body = []
         print "getting info"
-        Cfile_text = open(self.Cfile_path).read().split('\n')[:-1]
-        
-        print Cfile_text
+        Cfile_text = open(self.Cfile_path).read().split('\n')[:]
         
         for i in range(len(Cfile_text)):
             if Cfile_text[i].find(':') >= 0: head.append(Cfile_text[i])
@@ -83,7 +81,6 @@ class Control(object):
         try: self.position = int(head[1].split('osition:')[1])
         except: self.position = 0
         self.num_columns = len(body[0])
-        print self.num_columns
         self.multipole_matrix = {elec: {mult: [float(body[eindex + mindex*len(hc.elec_dict)][i]) for i in range(self.num_columns)] for mindex, mult in enumerate(self.multipoles)} for eindex, elec in enumerate(sorted(hc.elec_dict.keys()))}
         if sys.platform.startswith('linux'): self.Cfile_name = self.Cfile_path.split('/')[-1]        
         elif sys.platform.startswith('win'): self.Cfile_name = self.Cfile_path.split('\\')[-1]        
@@ -106,7 +103,8 @@ class Control(object):
         self.voltage_matrix = {elec: splineFit[elec](partition) for elec in hc.elec_dict.keys()}
 
     def getVoltages(self): 
-        return [(e, self.voltage_matrix[e][self.position]) for e in hc.elec_dict.keys()]
+        a = [(e, self.voltage_matrix[e][self.position]) for e in hc.elec_dict.keys()]
+        return a
 
     def getShuttleVoltages(self, new_position, step_size, duration, loop, loop_delay, overshoot):
         old_position = self.position
@@ -240,6 +238,7 @@ class DACServer(LabradServer):
                     c.append(e)
                 chan.calibration = c
             else:
+                # print "NO CLIBRTION"
                 (vMin, vMax) = chan.boardVoltageRange
                 prec = hc.PREC_BITS
                 chan.calibration = [2**(prec - 1), float(2**(prec))/(vMax - vMin) ]
@@ -285,7 +284,6 @@ class DACServer(LabradServer):
         """
         self.control.populateVoltageMatrix(multipole_vector)
         yield self.setIndividualAnalogVoltages(c, self.control.getVoltages())
-        print multipole_vector
         # Update registry
         if self.control.Cfile_name:
             yield self.registry.cd(self.registry_path + [self.control.Cfile_name], True)
@@ -338,7 +336,7 @@ class DACServer(LabradServer):
         for i in range(len(self.queue.set_dict[self.queue.current_set])):
             v = self.queue.get() 
             self.api.setDACVoltage(v.hex_rep)
-            #print v.channel.name, v.analog_voltage
+            print v.channel.name, v.analog_voltage
             if v.channel.name in dict(hc.elec_dict.items() + hc.sma_dict.items()).keys():
                 self.current_voltages[v.channel.name] = v.analog_voltage
         if c is not None:
@@ -381,8 +379,6 @@ class DACServer(LabradServer):
         """
         Return the current voltage
         """
-        #print 'in get analog voltages',
-        #print self.current_voltages.items()
         return self.current_voltages.items()        
 
     @setting( 10, "Get Multipole Values",returns='*(s, v)')

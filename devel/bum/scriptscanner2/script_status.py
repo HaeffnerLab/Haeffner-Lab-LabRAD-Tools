@@ -67,7 +67,7 @@ class script_semaphore(object):
     
     def set_percentage(self, perc):
         if not 0.0 <= perc <= 100.0: raise Exception ("Incorrect Percentage of Completion")
-        print 'percentage complete =', perc
+        #print 'percentage complete =', perc
         self.percentage_complete = perc
 
         self.status = 'Running'

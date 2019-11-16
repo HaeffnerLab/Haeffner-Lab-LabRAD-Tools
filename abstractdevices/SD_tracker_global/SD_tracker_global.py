@@ -19,8 +19,10 @@ from labrad.units import WithUnit
 from twisted.internet.defer import returnValue, inlineCallbacks
 from twisted.internet.task import LoopingCall
 import time
+import sys
 from SD_tracker_global_config import config as conf
 from SD_calculator import Transitions_SD, fitter
+sys.path.append("/home/lattice/LabRAD")
 from common.client_config import client_info as cl
 import numpy
 #from labrad.units import WithUnit

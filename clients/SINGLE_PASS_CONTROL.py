@@ -43,7 +43,8 @@ class DDS_CHAN(QCustomFreqPower):
             self.spinPower.valueChanged.connect(self.powerChanged)
             self.spinFreq.valueChanged.connect(self.freqChanged) 
             self.buttonSwitch.toggled.connect(self.switchChanged)
-    
+            self.buttonSwitch.setStyleSheet("QPushButton { background-color: gray }"
+                                            "QPushButton:On { background-color: green }")
     def setParamNoSignal(self, param, value):
         if param == 'amplitude':
             self.setPowerNoSignal(value)

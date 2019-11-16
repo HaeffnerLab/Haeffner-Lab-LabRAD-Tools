@@ -1,10 +1,10 @@
 from PyQt4 import QtGui
 from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
-from common.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 #from parameter_importer.script_explorer_widget import script_explorer_widget
 from scan_widget import scan_widget
+from pulse_sequence_visualizer import pulse_sequence_visualizer
 
 class script_scanner_gui(QtGui.QWidget):
     
@@ -96,7 +96,9 @@ class script_scanner_gui(QtGui.QWidget):
             self.ParametersEditor.add_collection_node(collection)
             self.scan_widget.PreferredParameters.add_collection_node(collection)
             parameters = yield pv.get_parameter_names(collection)
+            
             for param_name in parameters:
+                # print param_name
                 value = yield pv.get_parameter(collection, param_name, False)
                 self.ParametersEditor.add_parameter(collection, param_name, value)
                 self.scan_widget.PreferredParameters.add_parameter(collection, param_name, value)
@@ -379,7 +381,7 @@ class script_scanner_gui(QtGui.QWidget):
         topLevelLayout = QtGui.QGridLayout()
 
         tab = QtGui.QTabWidget()
-        control = QtGui.QWidget()
+        control = QtGui.QTabWidget()
         layout = QtGui.QHBoxLayout()
         
         # topLevelLayout.addStretch()
@@ -387,8 +389,10 @@ class script_scanner_gui(QtGui.QWidget):
         layout.addWidget(self.scan_widget)
         layout.addWidget(self.ParametersEditor)
         control.setLayout(layout)
+        self.pulse_seq_vis = pulse_sequence_visualizer(self)
         #self.script_explorer = script_explorer_widget(self)
         tab.addTab(control, 'Scan Control')
+        tab.addTab(self.pulse_seq_vis, 'Pulse Sequence Visualizer')
         tab.addTab(self.ParametersEditor, 'Parameters')
         #tab.addTab(self.script_explorer, 'Parameter Creator')
 
@@ -412,6 +416,7 @@ if __name__=="__main__":
     from common.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
+    from common.clients.connection import connection
     gui = script_scanner_gui(reactor)
     gui.show()
     reactor.run()

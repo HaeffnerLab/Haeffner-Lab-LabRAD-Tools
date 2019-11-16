@@ -367,7 +367,7 @@ class LineSelectionNode(Node):
 
 class SidebandElectorNode(Node):
     
-    columns = 6
+    columns = 7
     
     def __init__(self, name, info, parent=None):
         super(SidebandElectorNode, self).__init__(name, parent)
@@ -375,22 +375,23 @@ class SidebandElectorNode(Node):
         self.set_full_info(info)
         
     def set_full_info(self, info):
-        self._radial1, self._radial2, self._axial, self._micromotion = info
+        self._radial1, self._radial2, self._axial, self._micromotion, self._rotation = info
+        
     
     def filter_text(self):
         return self.parent().name() + self.name()
     
     def string_format(self):
         s = ''
-        labels = ['radial 1 : ', 'radial 2 : ', 'axial : ', 'micromotion : ']
-        values = [self._radial1, self._radial2, self._axial, self._micromotion]
+        labels = ['radial 1 : ', 'radial 2 : ', 'axial : ', 'micromotion : ','rotation : ']
+        values = [self._radial1, self._radial2, self._axial, self._micromotion, self._rotation]
         for name, sideband in zip(labels, values):
             if sideband:
                 s += '{0} {1:+d}'.format(name, sideband)
         return s
     
     def full_parameter(self):
-        return ('sideband_selection', [self._radial1, self._radial2, self._axial, self._micromotion])
+        return ('sideband_selection', [self._radial1, self._radial2, self._axial, self._micromotion, self._rotation])
     
     def path(self):
         return (self._collection, self.name())
@@ -410,6 +411,8 @@ class SidebandElectorNode(Node):
             return self._axial
         elif column == 6:
             return self._micromotion
+        elif column == 7:
+            return self._rotation
     
     def setData(self, column, value):
         value = value.toPyObject()
@@ -420,7 +423,11 @@ class SidebandElectorNode(Node):
         if column == 5:
             self._axial = value
         if column == 6:
+            print 'micromotion'
             self._micromotion = value
+        if column == 7:
+            print 'rotation'
+            self._rotation = value
 
 class DurationBandwidthNode(Node):
     

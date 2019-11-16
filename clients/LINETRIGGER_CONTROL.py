@@ -1,6 +1,6 @@
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
-from connection import connection
+#from connection import connection
 
 SIGNALID = 378903
 
@@ -46,6 +46,7 @@ class linetriggerWidget(QtGui.QFrame):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
+        print self.context
         from labrad.units import WithUnit
         self.WithUnit = WithUnit
         try:
@@ -82,6 +83,8 @@ class linetriggerWidget(QtGui.QFrame):
         #button
         self.button_linetrig = TextChangingButton()
         self.button_linetrig.setCheckable(True)
+        self.button_linetrig.setStyleSheet("QPushButton { background-color: gray }"
+                                           "QPushButton:On { background-color: green}")
         state = yield server.line_trigger_state(context = self.context)
         self.button_linetrig.setChecked(state)
         self.button_linetrig.toggled.connect(self.setState)
@@ -124,6 +127,7 @@ class linetriggerWidget(QtGui.QFrame):
     @inlineCallbacks
     def setState(self, state):
         server = yield self.cxn.get_server('Pulser')
+        print server
         yield server.line_trigger_state(state, context = self.context)
     
     @inlineCallbacks
@@ -132,7 +136,9 @@ class linetriggerWidget(QtGui.QFrame):
         yield server.signal__new_line_trigger_parameter(SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = SIGNALID, context = self.context)
     
-    def followSignal(self, x, (state, duration)):
+    def followSignal(self, x, ins):
+        state = ins[0]
+        duration = ins[1]
         self.spinbox.blockSignals(True)
         self.button_linetrig.set_value_no_signal(state)
         self.spinbox.setValue(duration)
@@ -150,6 +156,7 @@ if __name__=="__main__":
     a = QtGui.QApplication( [] )
     import qt4reactor
     qt4reactor.install()
+    from connection import connection
     from twisted.internet import reactor
     triggerWidget = linetriggerWidget(reactor)
     triggerWidget.show()

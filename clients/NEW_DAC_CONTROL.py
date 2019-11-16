@@ -28,7 +28,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     @inlineCallbacks    
     def makeGUI(self):
         self.multipoles = yield self.dacserver.get_multipole_names()
-        self.controls = {k: QCustomSpinBox(k, (-20.,20.)) for k in self.multipoles}
+        self.controls = {k: QCustomSpinBox(k, (-20.,20.),decimals=5,step_size=0.00001) for k in self.multipoles}
 #        for i,el in self.controls:
 #            el.spinLevel.setDecimals(4)
         self.multipoleValues = {k: 0.0 for k in self.multipoles}
@@ -54,7 +54,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
         from labrad.wrappers import connectAsync
         from labrad.types import Error
         self.cxn = yield connectAsync()
-        self.dacserver = yield self.cxn.dac_server
+        self.dacserver  = yield self.cxn.dac_server
         yield self.setupListeners()
         self.ctrlLayout = QtGui.QVBoxLayout()
         yield self.makeGUI()
@@ -62,7 +62,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     def inputHasUpdated(self):
         self.inputUpdated = True
         for k in self.multipoles:
-            self.multipoleValues[k] = round(self.controls[k].spinLevel.value(), 3)
+            self.multipoleValues[k] = round(self.controls[k].spinLevel.value(), 5)
         
     def sendToServer(self):
         if self.inputUpdated:
@@ -121,35 +121,13 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         elecList = hc.elec_dict.keys()
         elecList.sort()
             
-        for i,e in enumerate(elecList): #i is the number value of the elec, e is the name
-            if bool(hc.sma_dict):            
-                self.controls[s].setAutoFillBackground(True)
-            if int(i)==0:
-                elecLayout.addWidget(self.controls[e],1,4)
-            if int(i)==1:
-#                elecLayout.addWidget(QtGui.QLabel(e),0,6)
-                elecLayout.addWidget(self.controls[e],0,3)
-            if int(i)==2:
-#                elecLayout.addWidget(QtGui.QLabel(e),0,2)
-                elecLayout.addWidget(self.controls[e],0,1)
-            if int(i)==3:
-#                elecLayout.addWidget(QtGui.QLabel(e),2,0)
-                elecLayout.addWidget(self.controls[e],1,0)
-            if int(i)==4:
-#                elecLayout.addWidget(QtGui.QLabel(e),5,0)
-                elecLayout.addWidget(self.controls[e],3,0)
-            if int(i)==5:
-#                elecLayout.addWidget(QtGui.QLabel(e),7,2)
-                elecLayout.addWidget(self.controls[e],4,1)
-            if int(i)==6:
-#                elecLayout.addWidget(QtGui.QLabel(e),7,6)
-                elecLayout.addWidget(self.controls[e],4,3)
-            if int(i)==7:
-#                elecLayout.addWidget(QtGui.QLabel(e),5,8)
-                elecLayout.addWidget(self.controls[e],3,4)
-            if int(i)==8:
-#                elecLayout.addWidget(QtGui.QLabel(e),5,8)
-                elecLayout.addWidget(self.controls[e],2,1)
+        elecListHALF=range(0,len(elecList)-2,2)
+
+        for i in elecListHALF:
+            layout.addWidget(self.controls[elecList[i]],i+1,2,1,1)
+            layout.addWidget(self.controls[elecList[i+1]],i+1,3,1,1)
+        layout.addWidget(self.controls['Q39'],11,1,1,1)
+        layout.addWidget(self.controls['Q40'],11,4,1,1)
                         
         #elecLayout.addItem(QtGui.QLayoutItem.spacerItem(),1,0,1,8)    
         elecLayout.setRowMinimumHeight(0,20)
@@ -212,11 +190,86 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             self.controls[c].setValueNoSignal(v)
 
     def closeEvent(self, x):
-        self.reactor.stop()        
+        self.reactor.stop() 
 
 class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################################
     def __init__(self, reactor, parent=None):
         super(MULTIPOLE_MONITOR, self).__init__(parent)
+        self.reactor = reactor        
+        self.makeGUI()
+        self.connect()
+
+
+    def makeGUI(self): 
+        
+        self.multipolelist = hc.default_multipoles
+        self.displays = {k: QtGui.QLCDNumber() for k in self.multipolelist}  
+        layout = QtGui.QGridLayout()
+        Multipolebox = QtGui.QGroupBox('Multipoles')
+        multilayout = QtGui.QGridLayout()
+        
+        
+        Multipolebox.setLayout(multilayout)
+        layout.addWidget(Multipolebox,0,0)
+        
+        i = 0 
+        for e in self.multipolelist:
+            multilayout.addWidget(QtGui.QLabel(e),i,0)
+            multilayout.addWidget(self.displays[e],i,1)
+            i = i+1
+        
+        self.inputUpdated = False                
+        
+        self.setLayout(layout)      
+
+    def inputHasUpdated(self):
+        def iu():
+            self.inputUpdated = True
+        return iu
+    
+#######################################################
+
+    @inlineCallbacks    
+    def setmultipole(self, multipoles):    
+        list1 = [('Ex',multipoles[0]),('Ey',multipoles[1]),('Ez',multipoles[2]),('U3',10)]
+        print "setting multipoles"
+        yield self.dacserver.set_multipole_values(list1)
+        yield self.connect()
+                     
+            
+    @inlineCallbacks
+    def connect(self):
+        from labrad.wrappers import connectAsync
+        from labrad.types import Error
+        self.cxn = yield connectAsync()
+        self.dacserver = yield self.cxn.dac_server
+        self.ionInfo = {}
+        yield self.setupListeners()
+        yield self.followSignal(0, 0)    
+        for i in hc.notused_dict:        #Sets unused channels to about 0V
+            yield self.dacserver.set_individual_digital_voltages_u([(i, 32768)])     
+
+   
+    @inlineCallbacks    
+    def setupListeners(self):
+        yield self.dacserver.signal__ports_updated(SIGNALID2)
+        yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
+
+    @inlineCallbacks
+    def followSignal(self, x, s):        
+        av = yield self.dacserver.get_multipole_values()
+        brightness = 210
+        darkness = 255 - brightness           
+        for (k, v) in av:
+            print str(k)+", "+str(v)
+            self.displays[k].display(float(v)) 
+
+    def closeEvent(self, x):
+        self.reactor.stop()       
+
+class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  #######################################################
+    def __init__(self, reactor, parent=None):
+        super(MULTIPOLE_MONITOR_SCAN, self).__init__(parent)
         self.reactor = reactor        
         self.makeGUI()
         self.connect()
@@ -300,6 +353,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
     @inlineCallbacks    
     def setmultipole(self, multipoles):    
         list1 = [('Ex',multipoles[0]),('Ey',multipoles[1]),('Ez',multipoles[2]),('U3',10)]
+        print "setting multipoles"
         yield self.dacserver.set_multipole_values(list1)
         yield self.connect()
                      
@@ -328,8 +382,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
-     #       print k
-            print v
+            print str(k)+", "+str(v)
             self.displays[k].display(float(v)) 
 
     def closeEvent(self, x):
@@ -370,38 +423,19 @@ class CHANNEL_MONITOR(QtGui.QWidget):
 
         elecList = hc.elec_dict.keys()
         elecList.sort()
-        if bool(hc.centerElectrode):
-            elecList.pop(hc.centerElectrode-1)
-        for i,e in enumerate(elecList): #i is the number value of the elec, e is the name
-            if bool(hc.sma_dict):            
-                self.displays[k].setAutoFillBackground(True)
-            if int(i)==0:
-                elecLayout.addWidget(QtGui.QLabel(e),2,8)
-                elecLayout.addWidget(self.displays[e],2,7)
-            if int(i)==1:
-                elecLayout.addWidget(QtGui.QLabel(e),0,6)
-                elecLayout.addWidget(self.displays[e],0,5)
-            if int(i)==2:
-                elecLayout.addWidget(QtGui.QLabel(e),0,2)
-                elecLayout.addWidget(self.displays[e],0,3)
-            if int(i)==3:
-                elecLayout.addWidget(QtGui.QLabel(e),2,0)
-                elecLayout.addWidget(self.displays[e],2,1)
-            if int(i)==4:
-                elecLayout.addWidget(QtGui.QLabel(e),5,0)
-                elecLayout.addWidget(self.displays[e],5,1)
-            if int(i)==5:
-                elecLayout.addWidget(QtGui.QLabel(e),7,2)
-                elecLayout.addWidget(self.displays[e],7,3)
-            if int(i)==6:
-                elecLayout.addWidget(QtGui.QLabel(e),7,6)
-                elecLayout.addWidget(self.displays[e],7,5)
-            if int(i)==7:
-                elecLayout.addWidget(QtGui.QLabel(e),5,8)
-                elecLayout.addWidget(self.displays[e],5,7)
-            if int(i)==8:
-                elecLayout.addWidget(QtGui.QLabel(e),3,3)
-                elecLayout.addWidget(self.displays[e],3,4)
+
+        elecListHALF=range(0,len(elecList)-2,2)
+
+        for i in elecListHALF:
+            elecLayout.addWidget(QtGui.QLabel(elecList[i]),i+1,3,1,1)
+            elecLayout.addWidget(self.displays[elecList[i]],i+1,4,1,1)
+            elecLayout.addWidget(QtGui.QLabel(elecList[i+1]),i+1,5,1,1)
+            elecLayout.addWidget(self.displays[elecList[i+1]],i+1,6,1,1)
+        elecLayout.addWidget(QtGui.QLabel('Q39'),11,1,1,1)
+        elecLayout.addWidget(self.displays['Q39'],11,2,1,1)
+        elecLayout.addWidget(QtGui.QLabel('Q40'),11,7,1,1)
+        elecLayout.addWidget(self.displays['Q40'],11,8,1,1)
+
         #elecLayout.addItem(QtGui.QLayoutItem.spacerItem(),1,0,1,8)    
         elecLayout.setRowMinimumHeight(1,20)
         elecLayout.setRowMinimumHeight(3,20)
@@ -436,13 +470,12 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         yield self.dacserver.addListener(listener = self.followSignal, source = None, ID = SIGNALID2)
     
     @inlineCallbacks
-    def followSignal(self, x, s):        
+    def followSignal(self, x, s):       
         av = yield self.dacserver.get_analog_voltages()
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
-     #       print k
-     #       print v
+            print str(k)+", "+str(v)
             self.displays[k].display(float(v)) 
             if abs(v) > 30:
                 self.displays[k].setStyleSheet("QWidget {background-color: orange }")
@@ -463,12 +496,12 @@ class DAC_Control(QtGui.QMainWindow):
 
         channelControlTab = self.buildChannelControlTab()        
         multipoleControlTab = self.buildMultipoleControlTab()
-        multipoleScanTab = self.buildMultipoleScanTab()
+        #multipoleScanTab = self.buildMultipoleScanTab()
         # scanTab = self.buildScanTab()
         tab = QtGui.QTabWidget()
         tab.addTab(multipoleControlTab,'&Multipoles')
         tab.addTab(channelControlTab, '&Channels')
-        tab.addTab(multipoleScanTab, '&Multipole Scan')
+        #tab.addTab(multipoleScanTab, '&Multipole Scan')
         # tab.addTab(scanTab, '&Scans')
         self.setWindowTitle('DAC Control')
         self.setCentralWidget(tab)
@@ -485,6 +518,7 @@ class DAC_Control(QtGui.QMainWindow):
         widget = QtGui.QWidget()
         gridLayout = QtGui.QGridLayout()
         gridLayout.addWidget(CHANNEL_CONTROL(self.reactor),0,0)
+        gridLayout.addWidget(MULTIPOLE_MONITOR(self.reactor),0,1)
         widget.setLayout(gridLayout)
         return widget
     
@@ -492,7 +526,7 @@ class DAC_Control(QtGui.QMainWindow):
         widget =QtGui.QWidget()
         gridLayout = QtGui.QGridLayout()
         gridLayout.addWidget(CHANNEL_MONITOR(self.reactor),0,0)
-        gridLayout.addWidget(MULTIPOLE_MONITOR(self.reactor),0,1) ##WE MUST BUILD
+        gridLayout.addWidget(MULTIPOLE_MONITOR_SCAN(self.reactor),0,1) ##WE MUST BUILD
         widget.setLayout(gridLayout)
         return widget    
         

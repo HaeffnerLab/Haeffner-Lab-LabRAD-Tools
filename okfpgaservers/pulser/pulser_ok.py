@@ -33,6 +33,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
     
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
+    sequenceProgrammed = Signal(611052, 'signal: sequence programmed', '(ii)')
     
     @inlineCallbacks
     def initServer(self):
@@ -114,6 +115,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
         if dds is not None: yield self._programDDSSequence(dds)
         self.inCommunication.release()
         self.isProgrammed = True
+        self.sequenceProgrammed(c.ID)
         #print "Pulser programed"
     
     @setting(2, "Start Infinite", returns = '')
@@ -557,7 +559,9 @@ class Pulser(DDS, LineTrigger, LabradServer):
     
     def expireContext(self, c):
         self.listeners.remove(c.ID)
-     
+
+
 if __name__ == "__main__":
+    __server__ = Pulser()
     from labrad import util
-    util.runServer( Pulser() )
+    util.runServer(__server__)

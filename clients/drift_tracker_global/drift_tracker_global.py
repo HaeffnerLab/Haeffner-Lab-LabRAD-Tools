@@ -19,7 +19,10 @@ from helper_widgets.switch_button import TextChangingButton
 import numpy
 import time
 from drift_tracker_global_config import config_729_tracker as c
-from common.client_config import client_info as cl
+try:
+    from common.client_config import client_info as cl
+except:
+    from client_config import client_info as cl
 
 '''
 Drift Tracker GUI. 
@@ -73,7 +76,9 @@ class drift_tracker_global(QtGui.QWidget):
         self.fig = Figure()
         self.drift_canvas = FigureCanvas(self.fig)
         self.drift_canvas.setParent(self)  
-        gs = gridspec.GridSpec(1, 2, wspace=0.15, left = 0.05, right = 0.95)
+        self.fig.patch.set_facecolor((.96, .96, .96))
+        gs = gridspec.GridSpec(1, 2, wspace=0.2, left = 0.06, right = 0.94,
+                top=0.94, bottom=0.13)
         line_drift = self.fig.add_subplot(gs[0, 0])
         line_drift.set_xlabel('Time (min)')
         line_drift.set_ylabel('KHz')
@@ -99,9 +104,11 @@ class drift_tracker_global(QtGui.QWidget):
     def create_spectrum_layout(self):
         layout = QtGui.QVBoxLayout()
         self.fig = Figure()
+        self.fig.patch.set_facecolor((.96, .96, .96))
         self.spec_canvas = FigureCanvas(self.fig)
         self.spec_canvas.setParent(self)  
-        gs = gridspec.GridSpec(1, 1, wspace=0.15, left = 0.08, right = 0.92)
+        gs = gridspec.GridSpec(1, 1, wspace=0.15, left = 0.1, right = 0.98,
+                bottom=0.15, top=0.94)
         spec = self.fig.add_subplot(gs[0, 0])
         spec.set_xlim(left = c.frequency_limit[0], right = c.frequency_limit[1])
         spec.set_ylim(bottom = 0, top = 1)
