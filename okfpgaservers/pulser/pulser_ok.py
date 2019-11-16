@@ -418,7 +418,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
         inFIFO = self.api.getNormalTotal()
         reading = self.api.getNormalCounts(inFIFO)
         split = self.split_len(reading, 4)
-        countlist = map(self.infoFromBuf, split)
+        countlist = map(self.infoFromBuf, split) #sometimes empty after this
         countlist = map(self.convertKCperSec, countlist)
         countlist = self.appendTimes(countlist, time.time())
         countlist = self.clear_pmt_counts(countlist)
