@@ -6,6 +6,7 @@ from ParameterListWidget import ParameterList
 from DataVaultListWidget import DataVaultList
 from FitWindowWidget import FitWindow
 from GUIConfig import traceListConfig
+from PredictSpectrumWidget import PredictSpectrum
 
 class TraceList(QtGui.QListWidget):
     def __init__(self, parent):
@@ -46,6 +47,8 @@ class TraceList(QtGui.QListWidget):
         if (item == None): 
             dataaddAction = menu.addAction('Add Data Set')
             uncheckallAction = menu.addAction('Uncheck All')
+            spectrumaddAction = menu.addAction('Add Predicted Spectrum')
+
             action = menu.exec_(self.mapToGlobal(pos))
             if action == dataaddAction:
                 dvlist = DataVaultList(self.parent.name)
@@ -55,6 +58,10 @@ class TraceList(QtGui.QListWidget):
                 pass
                 for item in self.trace_dict.values():
                     item.setCheckState(QtCore.Qt.Unchecked)
+            if action == spectrumaddAction:
+                ps = PredictSpectrum(self)
+                self.windows.append(ps)
+                ps.show()
         else:
             ident = str(item.text())
             parametersAction = menu.addAction('Parameters')
@@ -103,3 +110,5 @@ class TraceList(QtGui.QListWidget):
                 plot_num = dataset[-7:-3] + "." + dataset[-2:]
                 plot_address = "#data " + year + month + day + "/" + plot_num + "#"
                 pyperclip.copy(plot_address)
+
+
