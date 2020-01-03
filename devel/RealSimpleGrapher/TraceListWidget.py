@@ -25,7 +25,7 @@ class TraceList(QtGui.QListWidget):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.popupMenu)
 
-    def addTrace(self, ident):
+    def addTrace(self, ident , color = (255,255,255) ):
         item = QtGui.QListWidgetItem(ident)
 
         item.setForeground(QtGui.QColor(255, 255, 255))
@@ -34,6 +34,10 @@ class TraceList(QtGui.QListWidget):
         item.setCheckState(QtCore.Qt.Checked)
         self.addItem(item)
         self.trace_dict[ident] = item
+        # print "adding color" ,color 
+        # making the traces have the same color as the plot
+        item.setForeground(QtGui.QColor(color[0], color[1], color[2]))
+
 
     def removeTrace(self, ident):
         item  = self.trace_dict[ident]
@@ -64,6 +68,8 @@ class TraceList(QtGui.QListWidget):
                 ps.show()
         else:
             ident = str(item.text())
+    
+
             parametersAction = menu.addAction('Parameters')
             togglecolorsAction = menu.addAction('Toggle colors')
             fitAction = menu.addAction('Fit')
@@ -81,6 +87,9 @@ class TraceList(QtGui.QListWidget):
             if action == togglecolorsAction:               
                 # option to change color of line
                 new_color = self.parent.colorChooser.next()
+                # print " changing color tp ", new_color
+                item.setForeground(QtGui.QColor(new_color[0],new_color[1], new_color[2]))
+
                 #self.parent.artists[ident].artist.setData(color = new_color, symbolBrush = new_color)
                 if self.parent.show_points:
                     self.parent.artists[ident].artist.setData(pen = new_color, symbolBrush = new_color)
