@@ -52,10 +52,7 @@ class ScriptScanner(ParameterVault, Signals, LabradServer):
         '''
         self.modules = [] # collection of modules for reloading
         for import_path, class_name in config.sequences:
-<<<<<<< HEAD
-            print import_path, class_name
-=======
->>>>>>> 2d84138b260b729fcc9b7b2ebc01a8a1034585dd
+
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
