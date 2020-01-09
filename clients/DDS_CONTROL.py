@@ -49,6 +49,8 @@ class DDS_CHAN(QCustomFreqPower):
                       "QPushButton:On { background-color: green }" )
 
     def setParamNoSignal(self, param, value):
+        from labrad.units import WithUnit
+
         if param == 'amplitude':
             self.setPowerNoSignal(WithUnit(value,'dBm'))
         elif param == 'frequency':

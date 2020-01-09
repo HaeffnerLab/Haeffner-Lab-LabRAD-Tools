@@ -556,12 +556,14 @@ class drift_tracker_global(QtGui.QWidget):
         self.WithUnit = WithUnit
         self.Error = Error
         self.cxn_global = connection()
+        print cl.global_address, cl.global_password
         yield self.cxn_global.connect(cl.global_address, password = cl.global_password, tls_mode = 'off')
         self.context_global = yield self.cxn_global.context()
         try:
             yield self.subscribe_tracker()
         except Exception as e:
             self.setDisabled(True)
+            print "error ", e
             yield None
         self.cxn_global.add_on_connect('SD Tracker Global', self.reinitialize_tracker)
         self.cxn_global.add_on_disconnect('SD Tracker Global', self.disable)

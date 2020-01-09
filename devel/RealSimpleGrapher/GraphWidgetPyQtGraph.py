@@ -109,7 +109,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
 	if self.grid_on:
 	   self.pw.showGrid(x=True, y=True)
         self.artists[ident] = artistParameters(line, dataset, index, True)
-        self.tracelist.addTrace(ident)
+        self.tracelist.addTrace(ident , color = new_color )
 
     def remove_artist(self, ident):
         try:
