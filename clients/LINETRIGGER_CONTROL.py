@@ -1,6 +1,7 @@
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
-#from connection import connection
+#from labrad.units import WithUnit
+from connection import connection
 
 SIGNALID = 378903
 
@@ -34,7 +35,7 @@ class TextChangingButton(QtGui.QPushButton):
 
 class linetriggerWidget(QtGui.QFrame):
     def __init__(self, reactor, cxn = None, parent=None):
-        super(linetriggerWidget, self).__init__(parent)
+        super(linetriggerWidget, self).__init__()
         self.initialized = False
         self.reactor = reactor
         self.cxn = cxn
@@ -46,9 +47,6 @@ class linetriggerWidget(QtGui.QFrame):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        print self.context
-        from labrad.units import WithUnit
-        self.WithUnit = WithUnit
         try:
             yield self.initializeGUI()
             yield self.setupListeners()
