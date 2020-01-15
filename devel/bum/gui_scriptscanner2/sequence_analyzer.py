@@ -1,6 +1,8 @@
 
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 
 """
 This file defines a class called sequence_analyzer, whose purpose is to take raw information from the pulser server,
@@ -209,6 +211,7 @@ class sequence_analyzer():
                 if is_same_laser(channel, other_channel):
                     same_laser.append(other_channel)
 
+        
         # Create a "squarified" plot of the DDS amplitude as a function of time, normalized to the largest amplitude present for this channel.
         (freqs_normlzd, amps_normlzd) = self.normalized_freqsandamps(channel, other_channels=same_laser)
         (times_sqr, amps_sqr) = squarify(times, amps_normlzd)
@@ -222,16 +225,17 @@ class sequence_analyzer():
         amp_changes = different_from_last(amps_normlzd)
         either_changes = np.logical_or(freq_changes, amp_changes)
         change_indices = [i for i in range(len(either_changes[:-1])) if either_changes[i]]
-        
+    
         # Add a fill_between object to the axes for every pulse, and also create a dds_box object to store in the present sequence_analyzer object.
         cmap = plt.get_cmap('jet_r')
+
         for i_ch in range(len(change_indices)-1):
             i_curr = change_indices[i_ch]
             i_next = change_indices[i_ch+1]
             if amps_normlzd[i_curr]:
                 box = axes.fill_between([1e3*times[i_curr], 1e3*times[i_next]], [offset, offset], [offset+scale*amps_normlzd[i_curr], offset+scale*amps_normlzd[i_curr]], facecolor=cmap(freqs_normlzd[i_curr]))
                 self.dds_boxes.append(dds_box(box, self, channel, i_curr, i_next, offset, scale))
-
+    
 
     def get_dds_freqs_ampls(self, channel):
         # Returns frequencies and amplitudes of the specified DDS channel, for all times

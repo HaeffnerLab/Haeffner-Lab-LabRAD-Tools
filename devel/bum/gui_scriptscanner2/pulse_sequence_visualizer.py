@@ -130,6 +130,8 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         yield deferToThread(self.on_new_seq, dds, ttl, channels, signal_time)
 
     def on_new_seq(self, dds, ttl, channels, signal_time):
+
+        
         # Temporary stop tracking mouse movement
         if self.mpl_connection:
             self.canvas.mpl_disconnect(self.mpl_connection)
@@ -137,11 +139,14 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         # Create sequence_analyzer object instance
         self.sequence = sequence_analyzer(ttl, dds, channels)
         # Clear the plot of all drawn objects
+
         self.clear_plot()
+
         # Call the sequence_analyzer object's create_full_plot method to draw the plot on the GUI's axes.
         self.sequence.create_full_plot(self.axes)
         self.axes.set_title('Most Recent Pulse Sequence, ' + time.strftime('%Y-%m-%d %H:%M:%S', signal_time))
         # Draw and reconnect to mouse hover events
+        
         self.canvas.draw_idle()
         self.mpl_connection = self.canvas.mpl_connect("motion_notify_event", self.hover)
 
@@ -207,7 +212,7 @@ class pulse_sequence_visualizer(QtGui.QWidget):
     
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from common.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = pulse_sequence_visualizer(reactor)
