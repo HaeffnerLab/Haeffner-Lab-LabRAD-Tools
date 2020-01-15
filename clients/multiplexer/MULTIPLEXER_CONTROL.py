@@ -3,6 +3,7 @@ import os
 import RGBconverter as RGB
 from twisted.internet.defer import inlineCallbacks
 from MULTIPLEXER_CONTROL_config import multiplexer_control_config as config
+from labrad.wrappers import connectAsync
 
 SIGNALID1 = 187567
 SIGNALID2 = 187568
@@ -61,7 +62,7 @@ class multiplexerWidget(QtGui.QWidget):
     
     @inlineCallbacks
     def connect(self):
-        from labrad.wrappers import connectAsync
+        
         try:
             self.cxn = yield connectAsync('192.168.169.49',password='lab',tls_mode='off')
         except:

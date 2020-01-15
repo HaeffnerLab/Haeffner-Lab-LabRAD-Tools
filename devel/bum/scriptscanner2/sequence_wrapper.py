@@ -366,6 +366,7 @@ class pulse_sequence_wrapper(object):
             self.plot_current_sequence(cxn)
             
             repetitions=int(self.parameters_dict.StateReadout.repeat_each_measurement)
+            print str(repetitions)+" repetitions"
             if self.use_camera:
                 
                 exposures = repetitions 
