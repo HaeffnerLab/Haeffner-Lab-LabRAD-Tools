@@ -27,7 +27,7 @@ dependencies:
   - openssl=1.0.2r=h0c8e037_0
   - pip=19.0.3=py27_0
   - pyparsing=2.4.0=py_0
-  - pyqt=5.6.0=py27h4cbc711_1008
+  - pyqt
   - python=2.7.15=h2880e7c_1008
   - python-dateutil=2.8.0=py_0
   - pytz=2019.1=py_0
@@ -36,7 +36,7 @@ dependencies:
   - singledispatch=3.4.0.3=py27_1000
   - sip=4.18.1=py27hc56fc5f_1000
   - tornado=5.1.1=py27h0c8e037_1000
-  - vc=9=0
+  - vc
   - vs2008_runtime=9.0.30729.6161=0
   - wheel=0.33.1=py27_0
   - wincertstore=0.2=py27_1002
