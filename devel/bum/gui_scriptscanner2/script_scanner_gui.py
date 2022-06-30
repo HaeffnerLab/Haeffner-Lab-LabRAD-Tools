@@ -6,6 +6,10 @@ from tree_view.Controllers import ParametersEditor
 from scan_widget import scan_widget
 from pulse_sequence_visualizer import pulse_sequence_visualizer
 
+import sys
+sys.path.append('/home/space-time/LabRAD/common/clients')
+from LINETRIGGER_CONTROL import linetriggerWidget
+
 class script_scanner_gui(QtGui.QWidget):
     
     SIGNALID = 319245
@@ -376,6 +380,7 @@ class script_scanner_gui(QtGui.QWidget):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
         self.scan_widget = scan_widget(self.reactor, self)
+        self.linetriggerWidget = linetriggerWidget(self.reactor, self.cxn, self)
 
         
         topLevelLayout = QtGui.QGridLayout()
@@ -388,6 +393,7 @@ class script_scanner_gui(QtGui.QWidget):
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.scan_widget)
         layout.addWidget(self.ParametersEditor)
+        layout.addWidget(self.linetriggerWidget)
         control.setLayout(layout)
         self.pulse_seq_vis = pulse_sequence_visualizer(self)
         #self.script_explorer = script_explorer_widget(self)

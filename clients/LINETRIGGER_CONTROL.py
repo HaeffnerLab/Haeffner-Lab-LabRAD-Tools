@@ -104,7 +104,7 @@ class linetriggerWidget(QtGui.QFrame):
         label = QtGui.QLabel("Line Triggering")
         layout.addWidget(label, 0, 0)
         layout.addWidget(self.button_linetrig, 0, 1)
-        label = QtGui.QLabel("Offset Duration")
+        label = QtGui.QLabel("Offset Duration (broken)")
         layout.addWidget(label, 1, 0)
         layout.addWidget(self.spinbox, 1, 1)
         label = QtGui.QLabel("Clear DDS Lock")
