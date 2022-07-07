@@ -1,7 +1,6 @@
 from qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui
-from labrad.units import WithUnit
 
 
 

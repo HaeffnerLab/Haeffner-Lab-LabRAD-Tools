@@ -1,7 +1,5 @@
 from PyQt4 import QtGui
 from twisted.internet.defer import inlineCallbacks
-from labrad.wrappers import connectAsync
-from labrad.wrappers import connectAsync
 
 
 class InjectionLock_Control(QtGui.QFrame):
@@ -71,7 +69,8 @@ class InjectionLock_Control(QtGui.QFrame):
 
     @inlineCallbacks
     def connect(self):
-        
+        from labrad.wrappers import connectAsync
+        from labrad.types import Error
         try:
             self.cxn = yield connectAsync('192.168.169.49', password='lab', tls_mode='off')
         except:

@@ -1,7 +1,6 @@
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
-#from labrad.units import WithUnit
-from connection import connection
+#from connection import connection
 
 SIGNALID = 378903
 
@@ -35,7 +34,7 @@ class TextChangingButton(QtGui.QPushButton):
 
 class linetriggerWidget(QtGui.QFrame):
     def __init__(self, reactor, cxn = None, parent=None):
-        super(linetriggerWidget, self).__init__()
+        super(linetriggerWidget, self).__init__(parent)
         self.initialized = False
         self.reactor = reactor
         self.cxn = cxn
@@ -47,6 +46,9 @@ class linetriggerWidget(QtGui.QFrame):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
+        print self.context
+        from labrad.units import WithUnit
+        self.WithUnit = WithUnit
         try:
             yield self.initializeGUI()
             yield self.setupListeners()
@@ -102,7 +104,7 @@ class linetriggerWidget(QtGui.QFrame):
         label = QtGui.QLabel("Line Triggering")
         layout.addWidget(label, 0, 0)
         layout.addWidget(self.button_linetrig, 0, 1)
-        label = QtGui.QLabel("Offset Duration")
+        label = QtGui.QLabel("Offset Duration (broken)")
         layout.addWidget(label, 1, 0)
         layout.addWidget(self.spinbox, 1, 1)
         label = QtGui.QLabel("Clear DDS Lock")

@@ -278,6 +278,60 @@ class pulse_sequence(object):
         return [scale * calc_ramsey_exc(c_ls, delta_ls, Omega, T) for T in times]
 
     @classmethod
+    def rabi_fit(cls, time, excitation, trap_frequency_MHz, return_all_params = False, init_guess = None):
+        if init_guess == "stop":
+            return None
+
+        import scipy.constants as scc
+        from scipy.special.orthogonal import eval_genlaguerre as laguerre
+        
+        def rabi_model(times_us, Omega_kHz, delta_kHz, f_trap_MHz, nbar, scale):
+            m = 40*scc.atomic_mass
+
+            times = 1e-6 * times_us
+            Omega = 1e3 * 2*np.pi * Omega_kHz
+            delta = 1e3 * 2*np.pi * delta_kHz
+            w_trap = 1e6 * 2*np.pi * f_trap_MHz
+
+
+            eta = 2*np.pi/(729e-9)*np.sqrt(scc.hbar/(2*m*w_trap))
+
+            nmax = 1000
+            ns = np.arange(nmax)
+
+            rabi_coupling = lambda n: np.exp(-1./2*eta**2) * laguerre(n, 0, eta**2)
+            omega_n = Omega*rabi_coupling(ns)
+            p_n = 1.0/ (nbar + 1.0) * (nbar / (nbar + 1.0))**ns
+            exc_n = np.outer(p_n * omega_n**2/(omega_n**2+delta**2), np.ones_like(times)) * np.sin(np.outer(np.sqrt(omega_n**2 + delta**2), times/2.0))**2
+            exc = scale * np.sum(exc_n, axis = 0)
+
+            return exc
+
+        def guess_omega_rabi(x, y):
+            step = x[1] - x[0]
+            mean = np.mean(y)
+            for x0, y0 in zip(x,y):
+                if y0 > mean: break
+            t_2pi  = 4*(x0-step/2.0)
+            return 1e3 * 1.0/(t_2pi)
+
+        model = lambda t, Omega, nbar: rabi_model(t, Omega, 0.0, trap_frequency_MHz, nbar, 1.0)
+        guess_Omega = guess_omega_rabi(time, excitation)
+        guess_nbar = 20.0
+
+        try:
+            popt, copt = curve_fit(model, time, excitation, p0=(guess_Omega, guess_nbar))
+            print popt
+            if return_all_params:
+                return popt[0], popt[1] # Omega, nbar
+            else:
+                return popt[1] # return only nbar
+        except:
+            print "problem with the fit"
+            return None
+
+
+    @classmethod
     def execute_external(cls, scan, fun = None):
         '''
         scan  = (scan_param, minim, maxim, seps, unit)

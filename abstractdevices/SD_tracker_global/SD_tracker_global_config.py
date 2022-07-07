@@ -5,8 +5,8 @@ class config(object):
     
     fit_order = 1 #order of polynomial for fitting
     
-    default_keep_line_center_measurements_local = 100*60
-    default_keep_line_center_measurements_global = 100*60
+    default_keep_line_center_measurements_local = 180*60
+    default_keep_line_center_measurements_global = 180*60
     default_keep_B_measurements_local = 1*60
     auto_update_rate = 10 #'s'
     clear_all_duration = 7*24*60*60
