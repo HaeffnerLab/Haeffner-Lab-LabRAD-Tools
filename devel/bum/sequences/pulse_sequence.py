@@ -278,15 +278,15 @@ class pulse_sequence(object):
         return [scale * calc_ramsey_exc(c_ls, delta_ls, Omega, T) for T in times]
 
     @classmethod
-    def rabi_fit(cls, time, excitation, trap_frequency_MHz, return_all_params = False, init_guess = None):
+    def rabi_fit(cls, time, excitation, trap_frequency_MHz, n_ions, return_all_params = False, init_guess = None):
         if init_guess == "stop":
             return None
 
         import scipy.constants as scc
         from scipy.special.orthogonal import eval_genlaguerre as laguerre
         
-        def rabi_model(times_us, Omega_kHz, delta_kHz, f_trap_MHz, nbar, scale):
-            m = 40*scc.atomic_mass
+        def rabi_model(times_us, Omega_kHz, delta_kHz, f_trap_MHz, n, nbar, scale):
+            m = 40 * scc.atomic_mass * n
 
             times = 1e-6 * times_us
             Omega = 1e3 * 2*np.pi * Omega_kHz
@@ -315,7 +315,7 @@ class pulse_sequence(object):
             t_2pi  = 4*(x0-step/2.0)
             return 1e3 * 1.0/(t_2pi)
 
-        model = lambda t, Omega, nbar: rabi_model(t, Omega, 0.0, trap_frequency_MHz, nbar, 1.0)
+        model = lambda t, Omega, nbar: rabi_model(t, Omega, 0.0, trap_frequency_MHz, n_ions, nbar, 1.0)
         guess_Omega = guess_omega_rabi(time, excitation)
         guess_nbar = 20.0
 
