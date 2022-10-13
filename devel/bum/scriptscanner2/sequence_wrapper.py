@@ -95,8 +95,8 @@ class pulse_sequence_wrapper(object):
             scan_submit = [U(pt, submit_unit) for pt in scan_submit]
             
             self.scans[sequence_name] = (param, unit, scan, submit_unit, scan_submit)
-            #print " this is the submit_unit "
-            #print submit_unit
+            # print " this is the submit_unit "
+            # print submit_unit
         #try:
         #    self.window = self.module.scannable_params[scan_param][1]
         #except:
@@ -648,7 +648,7 @@ class pulse_sequence_wrapper(object):
         if self.parameters_dict.global_scan_options.save_folder == 'date':
             directory = ['', 'Experiments', time.strftime('%Y%m%d', localtime), name, self.timetag]
         elif self.parameters_dict.global_scan_options.save_folder == 'experiment':
-            directory = ['','Experiments',name,time.strftime('%Y%m%d', localtime),self.timetag]
+            directory = ['', 'Experiments', name, time.strftime('%Y%m%d', localtime), self.timetag]
         else:
             directory = []
             print "saving convention not recognized. check global_scan_options.save_folder"

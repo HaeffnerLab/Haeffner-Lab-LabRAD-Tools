@@ -142,7 +142,7 @@ class pulse_sequence(object):
         except:
             raise Exception('carrier not found') 
         trapfreq = self.parameters.TrapFrequencies
-        sideband_frequencies = [trapfreq.radial_frequency_1, trapfreq.radial_frequency_2, trapfreq.axial_frequency, trapfreq.rf_drive_frequency]
+        sideband_frequencies = [trapfreq.radial_frequency_1, trapfreq.radial_frequency_2, trapfreq.axial_frequency, trapfreq.rf_drive_frequency, trapfreq.rotation_frequency]
         for order,sideband_frequency in zip(sideband_selection, sideband_frequencies):
             freq += order * sideband_frequency
         return freq

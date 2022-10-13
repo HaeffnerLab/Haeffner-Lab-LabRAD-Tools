@@ -19,7 +19,7 @@ class ParameterList(QtGui.QWidget):
     @inlineCallbacks
     def populate(self):
         dsn = self.dataset.dataset_location
-        folder = "/home/staq/data/" + ".dir/".join(dsn[0][1:]) + ".dir/"
+        folder = "/home/space-time/data/" + ".dir/".join(dsn[0][1:]) + ".dir/"
         file =  dsn[1] + ".pickle"
         
         if file in os.listdir(folder):
