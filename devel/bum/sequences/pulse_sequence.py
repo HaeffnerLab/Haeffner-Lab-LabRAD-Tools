@@ -187,8 +187,7 @@ class pulse_sequence(object):
         if init_guess is None:
             guess = cls.peak_guess(f, p, force_guess)
             if guess is None:
-                return None
-                    
+                return None   
         else:
             guess = init_guess
         #print "1234"
@@ -227,58 +226,58 @@ class pulse_sequence(object):
             return None
 
     @classmethod
-    def rot_ramsey_fit(cls, phase, excitation, return_all_params = False, init_guess = None):
+    def rot_ramsey_fit(cls, time, excitation, params, y_is_contrast=False, return_all_params=False, init_guess=None):
         if init_guess == "stop":
             return None
 
         force_guess = False
         
-        guess = [60,10,5,0.845,100]
-        #print "1234"
-        #print f,p, guess
-        print time,excitation
-        try:
-            popt, copt = curve_fit(self.rot_ramsey_decay, phase, excitation, p0=guess,bounds=((0,-np.inf,-1),(1,np.inf,1)))
+        def rot_ramsey_decay(times_us, sigma_l, delta_kHz, Delta_l, f_trap_MHz, f_rot_kHz, scale, contrast, phase):
+            import scipy.constants as scc
 
-            return popt[0], popt[1] # sigma_l, omega_khz, delta_kHz, _f_trap_MHz, f_rot_kHz
+            # convert inputs to SI
+            times = 1e-6 * times_us
+            delta = 1e3 * 2*np.pi * delta_kHz
+            w_trap = 1e6 * 2*np.pi * f_trap_MHz
+            w_rot = 1e3 * 2*np.pi * f_rot_kHz
 
-        except:
-            print "problem with the fit"
-            return None
+            # calculate moment of inertia
+            m = 40*scc.atomic_mass
+            r = 1/2.0 * (scc.e**2/(4*np.pi*scc.epsilon_0) * 2.0/(m*(w_trap**2 - w_rot**2)))**(1/3.0) #rotor radius
+            omega_r = scc.hbar/(4*m*r**2)
 
-    def rot_ramsey_decay(self, times_us, sigma_l, Omega_kHz, delta_kHz, f_trap_MHz, f_rot_kHz):
-        # convert inputs to SI
-        times = 1e-6 * times_us
-        Omega = 1e3 * 2*np.pi * Omega_kHz
-        delta = 1e3 * 2*np.pi * delta_kHz
-        w_trap = 1e6 * 2*np.pi * f_trap_MHz
-        w_rot = 1e3 * 2*np.pi * f_rot_kHz
-        #fix parameters for diffusion measurment
-        scale = 1
-        Delta_l = 1
-        # calculate moment of inertia
-        m = 40*scc.atomic_mass
-        r = 1/2.0 * (scc.e**2/(4*np.pi*scc.epsilon_0) * 2.0/(m*(w_trap**2 - w_rot**2)))**(1/3.0) #rotor radius
-        I = 2*m*r**2  # moment of inertia
-
-        # calculate l distribution and detunings
-        l_0 = I*w_rot/scc.hbar
-        ls = np.arange(int(l_0-3*sigma_l), int(l_0+3*sigma_l))
-        c_ls_unnorm = np.exp(-(ls-l_0)**2/(4.0*sigma_l**2))
-        c_ls = c_ls_unnorm/np.linalg.norm(c_ls_unnorm)
-        delta_ls = scc.hbar*Delta_l/I*(l_0-ls) + delta
-
-        def calc_ramsey_exc(c_ls, delta_ls, Omega, T):
-            Omega_gens = np.sqrt(Omega**2 + delta_ls**2) #generalized Rabi frequency
-            u1s = np.pi*Omega_gens/(4*Omega)
-            u2s = delta_ls*T/2.0
-            return sum(np.abs(c_ls)**2 * (2*Omega/Omega_gens**2*np.sin(u1s) * (Omega_gens*np.cos(u1s)*np.cos(u2s) - delta_ls*np.sin(u1s)*np.sin(u2s)))**2)
+            # compute contrast vs Ramsey time
+            sigma_f = 2*omega_r*Delta_l*sigma_l               # Frequency-space standard deviation of the line
+            Ct = contrast*np.exp(-(sigma_f*times)**2/2.0)        # Inverse Fourier transform of Gaussian lineshape from frequency domain to time domain
             
+            exc =  scale * (Ct*np.cos(delta*times-phase) + 1.0)/2.0
+            return exc
 
-        return [scale * calc_ramsey_exc(c_ls, delta_ls, Omega, T) for T in times]
+        Delta_l = params['Delta_l']
+        f_trap_MHz = params['f_trap_MHz']
+        f_rot_kHz = params['f_rot_kHz']
+
+        if y_is_contrast:
+            rot_ramsey_decay_forfit = lambda times_us, sigma_l, scale, contrast: rot_ramsey_decay(times_us, sigma_l, 0.0, Delta_l, f_trap_MHz, f_rot_kHz, scale, contrast, 0.0)
+            guess = [50.0, 1.0, 1.0] # sigma_l, scale, contrast
+            try:
+                popt, copt = curve_fit(rot_ramsey_decay_forfit, time, excitation, p0=guess,bounds=((10.0, 0.0, 0.0), (1000.0, 1.0, 1.0)))
+                return popt # sigma_l, scale, contrast
+            except:
+                print "problem with the fit"
+                return None
+        else:
+            rot_ramsey_decay_forfit = lambda times_us, sigma_l, delta_kHz, scale, contrast, phase: rot_ramsey_decay(times_us, sigma_l, delta_kHz, Delta_l, f_trap_MHz, f_rot_kHz, scale, contrast, phase)
+            guess = [50.0, 8.0, 1.0, 1.0, 0.0] # sigma_l, delta_kHz, scale, contrast, phase
+            try:
+                popt, copt = curve_fit(rot_ramsey_decay_forfit, time, excitation, p0=guess,bounds=((10.0, 0.0, 0.0, 0.0, 0.0), (1000.0, 25.0, 1.0, 1.0, 2*np.pi)))
+                return popt # sigma_l, delta_kHz, scale, contrast, phase
+            except:
+                print "problem with the fit"
+                return None
 
     @classmethod
-    def rabi_fit(cls, time, excitation, trap_frequency_MHz, n_ions, return_all_params = False, init_guess = None):
+    def rabi_fit(cls, time, excitation, eta, return_all_params = False, init_guess = None):
         if init_guess == "stop":
             return None
 
@@ -292,9 +291,6 @@ class pulse_sequence(object):
             Omega = 1e3 * 2*np.pi * Omega_kHz
             delta = 1e3 * 2*np.pi * delta_kHz
             w_trap = 1e6 * 2*np.pi * f_trap_MHz
-
-
-            eta = 2*np.pi/(729e-9)*np.sqrt(scc.hbar/(2*m*w_trap))
 
             nmax = 1000
             ns = np.arange(nmax)
@@ -330,6 +326,22 @@ class pulse_sequence(object):
             print "problem with the fit"
             return None
 
+    @classmethod
+    def polyfit_maximize(cls, x, y, order, decimals=1):
+        try:
+            # Get polyfit parameters
+            p = np.polyfit(x, y, order)
+            # Create a smooth function of x and use the polyfit parameters to find the max of that
+            x_fit = np.linspace(min(x), max(x), 200)
+            y_fit = 0
+            for (i, a) in enumerate(p[::-1]):
+                y_fit += a*x_fit**i
+            i_opt = np.argmax(y_fit)
+            x_opt = x_fit[i_opt]
+            return np.round(x_opt, decimals=decimals)
+        except:
+            print "problem with the fit"
+            return None
 
     @classmethod
     def execute_external(cls, scan, fun = None):

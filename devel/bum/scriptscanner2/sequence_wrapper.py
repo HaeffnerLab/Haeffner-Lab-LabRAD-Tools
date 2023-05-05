@@ -200,7 +200,7 @@ class pulse_sequence_wrapper(object):
                     # check if should stop
                     self.should_stop = self.sc._pause_or_stop(self.ident)
                     if self.should_stop:
-                        print " stoping the scan and not proceeding to the next "
+                        print " stopping the scan and not proceeding to the next "
                         break
 
                     # if elements in sequence list is tuple, it contains fixed parameters
