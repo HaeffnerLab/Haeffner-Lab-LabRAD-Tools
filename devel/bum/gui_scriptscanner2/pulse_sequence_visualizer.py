@@ -2,16 +2,16 @@ from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 except:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 import matplotlib
 from matplotlib.figure import Figure
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 import time
-from sequence_analyzer import sequence_analyzer
+from .sequence_analyzer import sequence_analyzer
 
 
 """
@@ -85,8 +85,8 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         self.context = yield self.cxn.context()
         try:
             yield self.subscribe_pulser()
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             self.setDisabled(True)
         yield self.cxn.add_on_connect('Pulser', self.reinitialize_pulser)
         yield self.cxn.add_on_disconnect('Pulser', self.disable)

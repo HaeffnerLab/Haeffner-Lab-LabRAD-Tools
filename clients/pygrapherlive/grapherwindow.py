@@ -3,24 +3,24 @@ The plot and all relevant plot options are managed by the Grapher Window.
 '''
 
 from PyQt4 import QtGui, QtCore
-from canvas import Qt4MplCanvas
+from .canvas import Qt4MplCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-from datavault import DataVaultWidget
-from analysis import AnalysisWidget
-from analysiswindow import AnalysisWindow
+from .datavault import DataVaultWidget
+from .analysis import AnalysisWidget
+from .analysiswindow import AnalysisWindow
 import time
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 # added 8/13/14 by William for publish option
 import pylab
 #import pyperperclip
-import xmlrpclib 
-import publish_parameters as pp
+import xmlrpc.client 
+from . import publish_parameters as pp
 import os
 try: 
     import paramiko
 except:
-    print "paramiko not installed"
+    print("paramiko not installed")
 class GrapherWindow(QtGui.QWidget):
     """Creates the window for the new plot"""
     def __init__(self, parent, context, windowName):
@@ -236,7 +236,7 @@ class GrapherWindow(QtGui.QWidget):
         self.parent.removeWindowFromWinDict(self.windowName)
 #        self.parent.removeWindowFromWinList(self)
         self.parent.cleanUp()
-        for window in self.datasetCheckboxListWidget.analysisWindows.keys():
+        for window in list(self.datasetCheckboxListWidget.analysisWindows.keys()):
             try:
                 self.datasetCheckboxListWidget.analysisWindows[window].close()
             except:
@@ -351,7 +351,7 @@ class PublishWindow(QtGui.QWidget):
         wp_blogid = "1"
         status_draft = 0
         status_published = 1 
-        server = xmlrpclib.ServerProxy(wp_url) 
+        server = xmlrpc.client.ServerProxy(wp_url) 
         title = self.title
         content = self.content
         # later add in an option for the user to add comments and tags
@@ -359,7 +359,7 @@ class PublishWindow(QtGui.QWidget):
         tags = pp.tags
         data = {'title': title, 'description': content,'categories': categories, 'mt_keywords': tags} 
         post_id = server.metaWeblog.newPost(wp_blogid, wp_username, wp_password, data, status_published)
-        print 'Content published successfully.'
+        print('Content published successfully.')
 
     @inlineCallbacks
     def buildLayout(self):
@@ -483,13 +483,13 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
     def removeItem(self, item, pos):
         itemNumberToRemove = self.parent.itemDatasetCheckboxPositionDict[self.itemAt(pos)]
         # now clean up the mess you made
-        for item in self.parent.itemDatasetCheckboxPositionDict.keys():
+        for item in list(self.parent.itemDatasetCheckboxPositionDict.keys()):
             if (self.parent.itemDatasetCheckboxPositionDict[item] == itemNumberToRemove):
                 self.parent.itemDatasetCheckboxPositionDict.pop(item)
             elif (self.parent.itemDatasetCheckboxPositionDict[item] > itemNumberToRemove):
                 self.parent.itemDatasetCheckboxPositionDict[item] -= 1
 
-        for dataset, directory, index in self.parent.datasetCheckboxPositionDict.keys():
+        for dataset, directory, index in list(self.parent.datasetCheckboxPositionDict.keys()):
             if (self.parent.datasetCheckboxPositionDict[dataset, directory, index] == itemNumberToRemove):
                 self.parent.datasetCheckboxPositionDict.pop((dataset, directory, index))
                 self.parent.datasetCheckboxes.pop((dataset, directory, index))

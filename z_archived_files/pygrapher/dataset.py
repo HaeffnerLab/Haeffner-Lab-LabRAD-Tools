@@ -55,7 +55,7 @@ class Dataset(QtCore.QObject):
 
     # signal for new data avalable
     def updateData(self, x, y):
-        print "data updated"
+        print("data updated")
         self.updateCounter += 1
         self.getData()
 

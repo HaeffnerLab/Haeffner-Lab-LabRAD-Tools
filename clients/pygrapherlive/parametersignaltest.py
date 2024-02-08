@@ -3,7 +3,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, D
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
 from twisted.internet.error import ConnectionRefusedError
-from connections import CONNECTIONS
+from .connections import CONNECTIONS
 
 
 class CONNECTIONS(QtGui.QGraphicsObject):
@@ -30,13 +30,13 @@ class CONNECTIONS(QtGui.QGraphicsObject):
         yield self.server.addListener(listener = self.updateDataset, source = None, ID = 99999)#, context = context)    
 
     def updateDataset(self, x, y):
-        print x
-        print y
+        print(x)
+        print(y)
 
 
 if __name__ == '__main__':
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     Connections = CONNECTIONS(reactor)

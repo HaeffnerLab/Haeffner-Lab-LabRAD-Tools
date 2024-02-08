@@ -16,7 +16,7 @@ class line_selection_delegate(QtGui.QAbstractItemDelegate):
         if editor == self.parent.uiName or editor == self.parent.uiCollection:
             editor.setText(node.data(index.column()))
         if index.column() == 3:
-            for data,display in node.data(4).iteritems():
+            for data,display in node.data(4).items():
                 if self.parent.uiValue.findText(display) == -1:
                     self.parent.uiValue.addItem(display, userData = data)
             index = self.parent.uiValue.findData(node.data(index.column()))

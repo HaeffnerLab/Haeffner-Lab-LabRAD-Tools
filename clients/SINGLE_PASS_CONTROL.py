@@ -1,6 +1,6 @@
-from qtui.QCustomFreqPower import QCustomFreqPower
+from .qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
-from connection import connection
+from .connection import connection
 from PyQt4 import QtGui
 
 '''
@@ -203,7 +203,7 @@ class DDS_CONTROL(QtGui.QFrame):
             #update any changes in the parameters
             yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
             #iterating over all setup channels
-            for widget in self.widgets.values():
+            for widget in list(self.widgets.values()):
                 if widget is not None:
                     yield widget.setupWidget(connect = False)
     
@@ -224,7 +224,7 @@ class DDS_CONTROL(QtGui.QFrame):
     
     def followSignal(self, x, y):
         chan, param, val = y
-        if chan in self.widgets.keys():
+        if chan in list(self.widgets.keys()):
             #this check is neeed in case signal comes in about a channel that is not displayed
             self.widgets[chan].setParamNoSignal(param, val)
 
@@ -233,7 +233,7 @@ class DDS_CONTROL(QtGui.QFrame):
         
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     trapdriveWidget = DDS_CONTROL(reactor)

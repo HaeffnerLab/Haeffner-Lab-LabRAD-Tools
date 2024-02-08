@@ -3,10 +3,10 @@ Window for holding Graphs
 '''
 import sys
 from PyQt4 import QtGui
-import GUIConfig
-from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
-from ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
-from GridGraphWindow import GridGraphWindow
+from . import GUIConfig
+from .GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
+from .ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
+from .GridGraphWindow import GridGraphWindow
 
 class GraphWindow(QtGui.QTabWidget):
     def __init__(self, reactor, parent=None):
@@ -29,7 +29,7 @@ class GraphWindow(QtGui.QTabWidget):
                 if config.isScrolling:
                     g = ScrollingGraph(config, reactor)
                 else:
-                    print "config: ", config 
+                    print("config: ", config) 
                     g = Graph(config, reactor)
                 g.set_ylimits(config.ylim)
                 self.graphDict[name] = g
@@ -50,7 +50,7 @@ class GraphWindow(QtGui.QTabWidget):
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     main = GraphWindow(reactor)

@@ -63,16 +63,16 @@ class Keithly6487Client(QtGui.QWidget):
 
     @inlineCallbacks    
     def measure(self, evt = None):
-        print 'Starting Measurement'
+        print('Starting Measurement')
         yield self.cxn.data_vault.cd(['', 'QuickMeasurements', 'Keithly 6487 Current Monitoring', str(time.strftime("%Y%b%d",time.localtime()))], True)
         yield self.cxn.data_vault.new('Current',[('Time', 'sec')],[('Current','Amp','Arb')] )
         yield self.cxn.data_vault.add_parameter('plotLive', True)
         
         for i in range(self.iterationsSpinBox.value()):
-            print 'iteration: ', i + 1
+            print('iteration: ', i + 1)
             data = yield self.server.measure_current(self.dataPointsSpinBox.value())
             Data = [data]
-            print Data
+            print(Data)
 #            Data2 = [Data[0], Data[1]]
 #            print Data2
             yield self.cxn.data_vault.add(Data)
@@ -83,7 +83,7 @@ class Keithly6487Client(QtGui.QWidget):
 
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     keithly6487Client = Keithly6487Client(reactor)

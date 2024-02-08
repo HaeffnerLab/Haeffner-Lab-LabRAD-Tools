@@ -5,7 +5,7 @@ import numpy as np
 class pmt_simu():
 
     def __init__(self):
-        print "Initializing pmt ..."
+        print("Initializing pmt ...")
         self.state = 0
         self.mu_dark = 2
         self.mu_bright = 100

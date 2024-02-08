@@ -3,9 +3,9 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, D
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
 from twisted.internet.error import ConnectionRefusedError
-from grapherwindow import FirstWindow, GrapherWindow
-from dataset import Dataset
-from histogram import HistWindow
+from .grapherwindow import FirstWindow, GrapherWindow
+from .dataset import Dataset
+from .histogram import HistWindow
 import sys
 import time
 import gc
@@ -111,7 +111,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
         context = yield self.cxn.context() # create a new context
         self.introWindow = FirstWindow(self, context, self.reactor)
         self.introWindow.show()
-        print 'Connection established: now listening dataset.'
+        print('Connection established: now listening dataset.')
         self.communicate.connectionReady.emit()
         
         
@@ -151,7 +151,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
             try:
                 self.datasetDict[dataset, directory].fit()
             except:
-                print 'Was plotLive set for this dataset?'
+                print('Was plotLive set for this dataset?')
 
     def updateDataset(self, x, y):
 #        dataset = int(y[0][0:5]) # retrieve dataset number
@@ -197,7 +197,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
 #        yield datasetObject.checkForPlotParameter()
         datasetLabels = yield datasetObject.getYLabels()
         windowName = []
-        if (len(self.winDict.values()) < MAXWINDOWS):
+        if (len(list(self.winDict.values())) < MAXWINDOWS):
             # if the dataset was loaded manually, it does not require the 'Window' parameter 
             if (manuallyLoaded == True):
                 try:
@@ -222,7 +222,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
 #                    datasetObject.endTimer()
 #                    del datasetObject
         else:
-            print 'Too many windows open!'
+            print('Too many windows open!')
             datasetObject.endTimer()
             del datasetObject
 
@@ -234,7 +234,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
         overlayWindowNames = []
         if overlayWindows:
             # if the dataset is already in the window
-            overlayWindows = [x for x in overlayWindows if ((dataset, directory) not in x.qmc.dataDict.keys())]
+            overlayWindows = [x for x in overlayWindows if ((dataset, directory) not in list(x.qmc.dataDict.keys()))]
             for overlayWindow in overlayWindows:
                 overlayWindow.qmc.initializeDataset(dataset, directory, datasetLabels)
 #                overlayWindow.createDatasetCheckbox(dataset, directory)
@@ -256,7 +256,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
             if windowName in overlayWindowNames:
                 pass
             # if the window is open and it isn't asking for overlay    
-            elif windowName in self.winDict.keys():
+            elif windowName in list(self.winDict.keys()):
                 try:
                     self.dwDict[datasetObject].append(self.winDict[windowName])
                 except KeyError:
@@ -292,7 +292,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
     @inlineCallbacks
     def timerEvent(self):
 #        print 'in connections: {0}'.format( len(self.dwDict.keys()) )
-        for datasetObject in self.dwDict.keys():
+        for datasetObject in list(self.dwDict.keys()):
             windowsToDrawOn = self.dwDict[datasetObject]
             if (datasetObject.data != None):
                 data = datasetObject.data
@@ -304,7 +304,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
     # ...with the overlay button checked
     def getOverlayingWindows(self):
         self.overlaidWindows = []
-        for i in self.dwDict.keys():
+        for i in list(self.dwDict.keys()):
             values = self.dwDict[i]
             for j in values:
                 if j.cb2.isChecked():
@@ -338,7 +338,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
     def removeWindowFromDictionary(self, win):
 #        print sys.getrefcount(win)
         #objgraph.show_most_common_types(limit=20)
-        for i in self.dwDict.keys():
+        for i in list(self.dwDict.keys()):
             values = self.dwDict[i]
             for j in values:
                 if j == win:
@@ -347,7 +347,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
                     if (len(values) == 1):
                         #self.dwDict[i].remove(j)
                         i.endTimer()
-                        print 'disconnecting data signal'
+                        print('disconnecting data signal')
                         yield i.disconnectDataSignal()
                         del self.dwDict[i]
                     else:
@@ -366,7 +366,7 @@ class CONNECTIONS(QtGui.QGraphicsObject):
     
     @inlineCallbacks
     def cleanUp(self):
-        print 'clean!'
+        print('clean!')
         yield deferToThread(time.sleep, 5)
         gc.collect()
                 

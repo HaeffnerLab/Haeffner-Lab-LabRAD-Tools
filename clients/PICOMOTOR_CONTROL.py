@@ -2,7 +2,7 @@
 Control for Newport picomotor stages
 '''
 from twisted.internet.defer import inlineCallbacks, returnValue
-from connection import connection
+from .connection import connection
 from PICOMOTOR_CONTROL_config import *
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -120,7 +120,7 @@ class PICOMOTOR_CONTROL(QtGui.QWidget):
         yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
 
         # update the positions
-        for key in self.axes.keys():
+        for key in list(self.axes.keys()):
             yield server.get_position(key)
         
     def initUI(self):
@@ -146,7 +146,7 @@ class PICOMOTOR_CONTROL(QtGui.QWidget):
 if __name__ == '__main__':
 
     app = QtGui.QApplication([])
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     window = PICOMOTOR_CONTROL(reactor)

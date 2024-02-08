@@ -86,7 +86,7 @@ class queued_list(QtGui.QTableWidget):
         self.resizeColumnsToContents()
 
     def cancel_all(self):
-        for ident in self.d.keys():
+        for ident in list(self.d.keys()):
             self.on_cancel.emit(ident)
         
     def remove(self, ident):

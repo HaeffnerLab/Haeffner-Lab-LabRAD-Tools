@@ -1,5 +1,5 @@
 from PyQt4 import QtGui, QtCore
-from helper_widgets import dropdown
+from .helper_widgets import dropdown
 
 class table_dropdowns_with_entry(QtGui.QTableWidget):
     """

@@ -6,15 +6,15 @@ from twisted.internet.defer import inlineCallbacks
 import numpy as np
 from matplotlib import pylab
 
-import getfrabiwindow
+from . import getfrabiwindow
 
-from fitgaussian import FitGaussian
-from fitline import FitLine
-from fitlorentzian import FitLorentzian
-from fitparabola import FitParabola
-from fitcosine import FitCosine
-from fitramseyfringe import FitRamseyFringe
-from fitrabiflop import FitRabiflop
+from .fitgaussian import FitGaussian
+from .fitline import FitLine
+from .fitlorentzian import FitLorentzian
+from .fitparabola import FitParabola
+from .fitcosine import FitCosine
+from .fitramseyfringe import FitRamseyFringe
+from .fitrabiflop import FitRabiflop
 
 class AnalysisWindow(QtGui.QWidget):
     
@@ -54,7 +54,7 @@ class AnalysisWindow(QtGui.QWidget):
 
         self.combo = QtGui.QComboBox(self)
         i = 0
-        for curveName in self.fitCurveDictionary.keys():
+        for curveName in list(self.fitCurveDictionary.keys()):
             self.curveComboIndexDict[curveName] = i
             self.combo.addItem(curveName)
             self.combo.itemText(1)
@@ -172,9 +172,9 @@ class AnalysisWindow(QtGui.QWidget):
                 trap_frequency = yield self.parent.parent.parent.cxn.data_vault.get_parameter(str(np.array(trap_frequencies)[sb.nonzero()][0]), context = self.context)
             elif len(sb[sb.nonzero()])==0: #NO SIDEBAND SELECTED -> CARRIER
                 sideband=0
-                print 'Warning: Carrier Rabi Flops will be represented in a 1D model using the first radial trap frequency as initial fit parameter!'
+                print('Warning: Carrier Rabi Flops will be represented in a 1D model using the first radial trap frequency as initial fit parameter!')
                 trap_frequency = yield self.parent.parent.parent.cxn.data_vault.get_parameter('TrapFrequencies.radial_frequency_1', context = self.context)
-            else: print 'Higher order sidebands not supported'
+            else: print('Higher order sidebands not supported')
             #Set initial parameters
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['Sideband']=sideband
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['Trap Frequency']=trap_frequency['MHz']
@@ -182,7 +182,7 @@ class AnalysisWindow(QtGui.QWidget):
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][1]['Trap Frequency']=trap_frequency['MHz']
             self.onActivated()
         except:
-            print 'No Rabi Flop data found'
+            print('No Rabi Flop data found')
         
     def setPiTimes(self):
         xmin, xmax = self.parent.parent.qmc.getDataXLimits()
@@ -249,7 +249,7 @@ class AnalysisWindow(QtGui.QWidget):
                     self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][parameterName] = parameterValue
                     self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = parameterValue
                 except:
-                    print 'Parameters must have a default fitting value!'
+                    print('Parameters must have a default fitting value!')
                     
         i = 0
 
@@ -283,8 +283,8 @@ class AnalysisWindow(QtGui.QWidget):
             self.parameterTable.setItem(i,0,self.FitParameterBox[parameterName])
             i += 1
         
-        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
-        self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
+        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(list(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values())) + '\']')
+        self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(list(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values())) + '\']')
 #        self.connect(self.parameterTable,QtCore.SIGNAL('itemClicked(QListWidgetItem*)'),self.test)
         self.parameterTable.itemClicked.connect(self.updateParameterFit)
         if self.curveName not in ['Cosine','Ramsey Fringes','Rabi Flop']:
@@ -347,7 +347,7 @@ class AnalysisWindow(QtGui.QWidget):
                 sideband_order=self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['Sideband']
                 nmax=self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['nmax']
                 # call time evolution via fitRabiflop to get lamb-dicke parameter
-                import timeevolution as te
+                from . import timeevolution as te
                 from labrad import units as U
                 eta=te.time_evolution(U.WithUnit(trap_frequency,'MHz'),sideband_order,nmax).eta
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0]['Rabi Frequency']=1.0/((2.0*eta)**np.abs(sideband_order)*twopitime*10**-6)
@@ -360,13 +360,13 @@ class AnalysisWindow(QtGui.QWidget):
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0]['Frequency']=1.0/(twopitime*10**-6)
                 self.fitCurves(parameters = self.getParameter(),drawCurves = True)
                 self.onActivated()
-            elif self.curveName == 'Rabi Flop': print 'Please use Estimate f_Rabi Button to guess f_Rabi from Pi-Time'
-            else: print 'These spin boxes should be hidden if any curve other than Rabi Flop/Cosine/Ramsey Fringe is selected'
+            elif self.curveName == 'Rabi Flop': print('Please use Estimate f_Rabi Button to guess f_Rabi from Pi-Time')
+            else: print('These spin boxes should be hidden if any curve other than Rabi Flop/Cosine/Ramsey Fringe is selected')
         
     def drawCurvesSignal(self, evt):
         sender = self.sender()
         self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][self.parameterSpinBoxDict[sender]] = sender.value()
-        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
+        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(list(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values())) + '\']')
         self.fitCurves(drawCurves = True)
 
     def setPiTimeBoxes(self,which):

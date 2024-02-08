@@ -49,7 +49,7 @@ class AndorVideo(QtGui.QWidget):
         mingain, maxgain = self.emrange
         self.emccdSpinBox.setMinimum(mingain)#mingain)
         self.emccdSpinBox.setMaximum(maxgain)#maxgain)
-        print maxgain
+        print(maxgain)
         self.emccdSpinBox.setKeyboardTracking(False)
         layout.addWidget(emccd_label, 2, 4,)
         layout.addWidget(self.emccdSpinBox, 2, 5)

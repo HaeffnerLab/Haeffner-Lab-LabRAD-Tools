@@ -57,7 +57,7 @@ class dropdown(QtGui.QComboBox):
                 linename = values
             display_name = self.favorites.get(linename, linename)
             #the name to be display is provided through the dictionary of favorites. if not in the dictionary display the name of the line.
-            if not linename in self.favorites.keys() and self.only_show_favorites:
+            if not linename in list(self.favorites.keys()) and self.only_show_favorites:
                 #if linename was not in the favorites, and we are only showing the favorites, don't add the item
                 pass
             else:

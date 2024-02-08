@@ -140,7 +140,7 @@ class InjectionLock_Control(QtGui.QFrame):
         if(relock_supervisor_alive == False and relock_slave_alive== False):
             self.getback1()
             #self.stopBtn.setEnabled(True)
-            print 'supervisor start'
+            print('supervisor start')
         elif(relock_supervisor_alive == False and relock_slave_alive== True):            
             msg_box5 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Slave is relocking now!")
             msg_box5.exec_()
@@ -154,7 +154,7 @@ class InjectionLock_Control(QtGui.QFrame):
         relock_slave_alive = yield self.inj.get_slave_status()
         if(relock_supervisor_alive == True and relock_slave_alive== False):
             self.inj.stop_supervisor()
-            print 'supervisor stop'
+            print('supervisor stop')
             
         elif(relock_supervisor_alive == False and relock_slave_alive == True):
             msg_box7 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Supervisor is not relocking")
@@ -175,7 +175,7 @@ class InjectionLock_Control(QtGui.QFrame):
         if(relock_supervisor_alive == False and relock_slave_alive== False):
             self.getback2()
             #self.stopBtn.setEnabled(True)
-            print 'slave start'
+            print('slave start')
         elif(relock_supervisor_alive == False and relock_slave_alive== True):            
             msg_box9 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Slave is relocking now!")
             msg_box9.exec_()
@@ -190,7 +190,7 @@ class InjectionLock_Control(QtGui.QFrame):
         relock_slave_alive = yield self.inj.get_slave_status()
         if(relock_supervisor_alive == False and relock_slave_alive== True):
             self.inj.stop_slave()
-            print 'supervisor stop'
+            print('supervisor stop')
             
         elif(relock_supervisor_alive == True and relock_slave_alive == False):
             msg_box11 = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Alert", "Slave is not relocking")
@@ -245,7 +245,7 @@ class InjectionLock_Control(QtGui.QFrame):
 
 if __name__ == '__main__':
     a = QtGui.QApplication([])
-    import qt4reactor
+    from . import qt4reactor
 
     qt4reactor.install()
     from twisted.internet import reactor

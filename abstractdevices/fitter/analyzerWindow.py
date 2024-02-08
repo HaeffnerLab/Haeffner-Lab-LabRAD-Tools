@@ -138,7 +138,7 @@ class parameterTable(QtGui.QTableWidget):
             spin_manual.valueChanged.connect(self.onNewGuess.emit, True)
             last_fit = QtGui.QLineEdit()
             last_fit.setReadOnly(True)
-            last_fit.setText(u'{0:<10.5f} ± {1:.5f}'.format(last_fit_value, stderror))
+            last_fit.setText('{0:<10.5f} ± {1:.5f}'.format(last_fit_value, stderror))
             self.setCellWidget(row,3, last_fit)
         #set size policy and selection policy
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
@@ -192,4 +192,4 @@ class parameterTable(QtGui.QTableWidget):
             last_fit = self.cellWidget(row, 3)
             last_fit_value = fitting_parameters[label][3]
             stderror = fitting_parameters[label][4]
-            last_fit.setText(u'{0:<10.5f} ± {1:.5f}'.format(last_fit_value, stderror))
+            last_fit.setText('{0:<10.5f} ± {1:.5f}'.format(last_fit_value, stderror))

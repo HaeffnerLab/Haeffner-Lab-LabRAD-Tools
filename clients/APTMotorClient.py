@@ -119,7 +119,7 @@ class DevicePanel(QtGui.QWidget):
             if (ok == True):
                 self.getPositionSignal(BLOCKSIGNAL)
         else:
-            print "The specified move is outside the current limits."
+            print("The specified move is outside the current limits.")
 
     @inlineCallbacks
     def moveRelativeRightSignal(self, evt):
@@ -130,7 +130,7 @@ class DevicePanel(QtGui.QWidget):
             if (ok == True):
                 self.getPositionSignal(BLOCKSIGNAL)
         else:
-            print "The specified move is outside the current limits."
+            print("The specified move is outside the current limits.")
     
     @inlineCallbacks
     def moveAbsoluteSignal(self, evt):
@@ -262,7 +262,7 @@ class ParameterWindow(QtGui.QWidget):
     @inlineCallbacks
     def setVelParamsSignal(self, evt):
         if (self.minVelocityDoubleSpinBox.value() > self.maxVelocityDoubleSpinBox.value()):
-            print 'Minimum velocity exceeds maximum velocity!'
+            print('Minimum velocity exceeds maximum velocity!')
         else:
             ok = yield self.parent.parent.server.set_velocity_parameters(self.minVelocityDoubleSpinBox.value(),self.accDoubleSpinBox.value(), self.maxVelocityDoubleSpinBox.value(), context = self.context)
     
@@ -300,7 +300,7 @@ class APTMotorClient(QtGui.QWidget):
         try:
             self.connect()
         except Exception:
-            print 'excepting'
+            print('excepting')
             self.setDisabled(True)
         
     @inlineCallbacks
@@ -311,8 +311,8 @@ class APTMotorClient(QtGui.QWidget):
         try:
             self.server = yield self.cxn.apt_motor_server
             availableDevices = yield self.server.get_available_devices()
-        except Exception ,e:
-            print 'server not connected: {}'.format(e)
+        except Exception as e:
+            print('server not connected: {}'.format(e))
             availableDevices = []
         self.setupUI(availableDevices)
 
@@ -342,7 +342,7 @@ class APTMotorClient(QtGui.QWidget):
     
 if __name__ == "__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     mainPanel = APTMotorClient(reactor)

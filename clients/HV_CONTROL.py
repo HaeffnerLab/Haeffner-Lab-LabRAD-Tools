@@ -61,7 +61,7 @@ class hvWidget(QtGui.QFrame):
             
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     hvWidget = hvWidget(reactor)

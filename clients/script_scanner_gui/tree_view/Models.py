@@ -1,8 +1,8 @@
 from PyQt4 import QtCore
-from Data import ParameterNode, CollectionNode, ScanNode, BoolNode
-from Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode
-from Data import DurationBandwidthNode, SpectrumSensitivityNode
-from Data import UndefinedParameterNode
+from .Data import ParameterNode, CollectionNode, ScanNode, BoolNode
+from .Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode
+from .Data import DurationBandwidthNode, SpectrumSensitivityNode
+from .Data import UndefinedParameterNode
 
 class ParametersTreeModel(QtCore.QAbstractItemModel):
     

@@ -1,7 +1,7 @@
 from PyQt4 import QtGui, QtCore, uic
 from numpy import *
 # from qtui.QCustomSpinBoxION import QCustomSpinBoxION
-from qtui.QCustomSpinBox import QCustomSpinBox
+from .qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks, returnValue
 import sys
 import time
@@ -66,7 +66,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
         
     def sendToServer(self):
         if self.inputUpdated:
-            self.dacserver.set_multipole_values(self.multipoleValues.items())
+            self.dacserver.set_multipole_values(list(self.multipoleValues.items()))
             self.inputUpdated = False
     
     @inlineCallbacks        
@@ -102,8 +102,8 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         self.connect()
      
     def makeGUI(self):
-        self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
-        self.controls = {k: QCustomSpinBox(k, self.dacDict[k].allowedVoltageRange) for k in self.dacDict.keys()}
+        self.dacDict = dict(list(hc.elec_dict.items()) + list(hc.sma_dict.items()))
+        self.controls = {k: QCustomSpinBox(k, self.dacDict[k].allowedVoltageRange) for k in list(self.dacDict.keys())}
         layout = QtGui.QGridLayout()
         if bool(hc.sma_dict):
             smaBox = QtGui.QGroupBox('SMA Out')
@@ -118,10 +118,10 @@ class CHANNEL_CONTROL (QtGui.QWidget):
 
         for s in hc.sma_dict:
             smaLayout.addWidget(self.controls[s], alignment = QtCore.Qt.AlignRight)
-        elecList = hc.elec_dict.keys()
+        elecList = list(hc.elec_dict.keys())
         elecList.sort()
             
-        elecListHALF=range(0,len(elecList)-2,2)
+        elecListHALF=list(range(0,len(elecList)-2,2))
 
         for i in elecListHALF:
             layout.addWidget(self.controls[elecList[i]],i+1,2,1,1)
@@ -151,7 +151,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         self.timer.timeout.connect(self.sendToServer)
         self.timer.start(UpdateTime)
         
-        for k in self.dacDict.keys():
+        for k in list(self.dacDict.keys()):
             self.controls[k].onNewValues.connect(self.inputHasUpdated(k))
 
         layout.setColumnStretch(1, 1)                   
@@ -232,7 +232,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
     @inlineCallbacks    
     def setmultipole(self, multipoles):    
         list1 = [('Ex',multipoles[0]),('Ey',multipoles[1]),('Ez',multipoles[2]),('U3',10)]
-        print "setting multipoles"
+        print("setting multipoles")
         yield self.dacserver.set_multipole_values(list1)
         yield self.connect()
                      
@@ -261,7 +261,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
-            print str(k)+", "+str(v)
+            print(str(k)+", "+str(v))
             self.displays[k].display(float(v)) 
 
     def closeEvent(self, x):
@@ -343,7 +343,7 @@ class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  ##################################
             el = self.fields[self.counter]
             yield self.setmultipole(el)
             self.counter = self.counter + 1
-            print(str((n**3- self.counter)*ScanWait/1000/60) + ' minutes left')
+            print((str((n**3- self.counter)*ScanWait/1000/60) + ' minutes left'))
             if self.counter == len(self.fields):
                 self.counter = 0
                 self.scan = False
@@ -353,7 +353,7 @@ class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  ##################################
     @inlineCallbacks    
     def setmultipole(self, multipoles):    
         list1 = [('Ex',multipoles[0]),('Ey',multipoles[1]),('Ez',multipoles[2]),('U3',10)]
-        print "setting multipoles"
+        print("setting multipoles")
         yield self.dacserver.set_multipole_values(list1)
         yield self.connect()
                      
@@ -382,7 +382,7 @@ class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  ##################################
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
-            print str(k)+", "+str(v)
+            print(str(k)+", "+str(v))
             self.displays[k].display(float(v)) 
 
     def closeEvent(self, x):
@@ -398,8 +398,8 @@ class CHANNEL_MONITOR(QtGui.QWidget):
        
         
     def makeGUI(self):      
-        self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
-        self.displays = {k: QtGui.QLCDNumber() for k in self.dacDict.keys()}               
+        self.dacDict = dict(list(hc.elec_dict.items()) + list(hc.sma_dict.items()))
+        self.displays = {k: QtGui.QLCDNumber() for k in list(self.dacDict.keys())}               
         layout = QtGui.QGridLayout()
         if bool(hc.sma_dict):        
             smaBox = QtGui.QGroupBox('SMA Out')
@@ -421,10 +421,10 @@ class CHANNEL_MONITOR(QtGui.QWidget):
                 smaLayout.addWidget(self.displays[k], self.dacDict[k].smaOutNumber, 1)
                 s = hc.sma_dict[k].smaOutNumber+1
 
-        elecList = hc.elec_dict.keys()
+        elecList = list(hc.elec_dict.keys())
         elecList.sort()
 
-        elecListHALF=range(0,len(elecList)-2,2)
+        elecListHALF=list(range(0,len(elecList)-2,2))
 
         for i in elecListHALF:
             elecLayout.addWidget(QtGui.QLabel(elecList[i]),i+1,3,1,1)
@@ -475,7 +475,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         brightness = 210
         darkness = 255 - brightness           
         for (k, v) in av:
-            print str(k)+", "+str(v)
+            print(str(k)+", "+str(v))
             self.displays[k].display(float(v)) 
             if abs(v) > 30:
                 self.displays[k].setStyleSheet("QWidget {background-color: orange }")
@@ -545,7 +545,7 @@ class DAC_Control(QtGui.QMainWindow):
 
 if __name__ == "__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     DAC_Control = DAC_Control(reactor)

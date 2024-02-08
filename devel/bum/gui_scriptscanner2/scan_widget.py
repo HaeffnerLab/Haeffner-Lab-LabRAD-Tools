@@ -1,5 +1,5 @@
 import sys
-from tree_view.Controllers import ParametersEditor
+from .tree_view.Controllers import ParametersEditor
 from PyQt4 import QtCore, QtGui, uic
 
 class ScanItem(QtGui.QWidget):
@@ -125,7 +125,7 @@ class sequence_widget(QtGui.QWidget):
         all of the other options in the GUI
         """
         self.scan_parameter = parameter
-        for par in self.parameters.keys():
+        for par in list(self.parameters.keys()):
             if par != parameter:
                 self.parameters[par].uncheck_no_signal()
 
@@ -213,7 +213,7 @@ class scan_widget(QtGui.QWidget):
                 sequence_params = [x for x in params if x[2] == seq]
                 sequences_dict[seq] = sequence_widget(sequence_params, seq, single_seq=False)
         
-        multi = multi_sequence_widget(sequences_dict.values())
+        multi = multi_sequence_widget(list(sequences_dict.values()))
         
         #self.scan_box.addWidget(sw)
         #self.widgets[experiment] = sw
@@ -265,7 +265,7 @@ class scan_widget(QtGui.QWidget):
 
 
     def show_none(self):
-        for exp in self.widgets.keys():
+        for exp in list(self.widgets.keys()):
             self.widgets[exp].setVisible(False)
 
 if __name__=="__main__":

@@ -2,11 +2,11 @@ import pyperclip
 import datetime
 from PyQt4 import QtGui
 from PyQt4 import QtCore
-from ParameterListWidget import ParameterList
-from DataVaultListWidget import DataVaultList
-from FitWindowWidget import FitWindow
-from GUIConfig import traceListConfig
-from PredictSpectrumWidget import PredictSpectrum
+from .ParameterListWidget import ParameterList
+from .DataVaultListWidget import DataVaultList
+from .FitWindowWidget import FitWindow
+from .GUIConfig import traceListConfig
+from .PredictSpectrumWidget import PredictSpectrum
 
 class TraceList(QtGui.QListWidget):
     def __init__(self, parent):
@@ -60,7 +60,7 @@ class TraceList(QtGui.QListWidget):
                 dvlist.show()
             if action == uncheckallAction:
                 pass
-                for item in self.trace_dict.values():
+                for item in list(self.trace_dict.values()):
                     item.setCheckState(QtCore.Qt.Unchecked)
             if action == spectrumaddAction:
                 ps = PredictSpectrum(self)
@@ -86,7 +86,7 @@ class TraceList(QtGui.QListWidget):
 
             if action == togglecolorsAction:               
                 # option to change color of line
-                new_color = self.parent.colorChooser.next()
+                new_color = next(self.parent.colorChooser)
                 # print " changing color tp ", new_color
                 item.setForeground(QtGui.QColor(new_color[0],new_color[1], new_color[2]))
 

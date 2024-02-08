@@ -46,15 +46,15 @@ class linetriggerWidget(QtGui.QFrame):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        print self.context
+        print(self.context)
         from labrad.units import WithUnit
         self.WithUnit = WithUnit
         try:
             yield self.initializeGUI()
             yield self.setupListeners()
-        except Exception, e:
-            print e
-            print 'linetriggerWidget: Pulser not available'
+        except Exception as e:
+            print(e)
+            print('linetriggerWidget: Pulser not available')
             self.setDisabled(True)
         yield self.cxn.add_on_connect('Pulser',self.reinitialize)
         yield self.cxn.add_on_disconnect('Pulser',self.reinitialize)
@@ -127,7 +127,7 @@ class linetriggerWidget(QtGui.QFrame):
     @inlineCallbacks
     def setState(self, state):
         server = yield self.cxn.get_server('Pulser')
-        print server
+        print(server)
         yield server.line_trigger_state(state, context = self.context)
     
     @inlineCallbacks
@@ -154,9 +154,9 @@ class linetriggerWidget(QtGui.QFrame):
             
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
-    from connection import connection
+    from .connection import connection
     from twisted.internet import reactor
     triggerWidget = linetriggerWidget(reactor)
     triggerWidget.show()

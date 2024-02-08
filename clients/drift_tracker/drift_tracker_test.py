@@ -218,7 +218,7 @@ class drift_tracker_test(QtGui.QWidget):
             excluded_line_center = yield server.get_excluded_points()
             fit_f = yield server.get_fit_parameters()
         except Exception as e:
-            print e
+            print(e)
             pass
         else:
             inunits_f = [(t['min'], freq['kHz']) for (t,freq) in history_line_center]

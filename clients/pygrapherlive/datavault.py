@@ -96,7 +96,7 @@ class DataVaultWidget(QtGui.QListWidget):
                     self.parent.parent.newDataset(dataset, self.currentDirectory, manuallyLoaded, datasetName)       
                 elif (button == 2):
                     #keys = self.parent.parent.datasetDict.keys()    
-                    if self.parent.parent.datasetDict.has_key((dataset, self.currentDirectory)):
+                    if (dataset, self.currentDirectory) in self.parent.parent.datasetDict:
                         self.parent.newParameterWindow(dataset, self.currentDirectory)
                     
 

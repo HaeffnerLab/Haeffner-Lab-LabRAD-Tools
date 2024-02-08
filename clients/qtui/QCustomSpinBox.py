@@ -7,7 +7,7 @@ class QCustomSpinBox(QtGui.QWidget):
     onNewValues = QtCore.pyqtSignal()
     def __init__(self, title, levelRange, parent=None,decimals=3,step_size=0.001):
         QtGui.QWidget.__init__(self, parent)
-	basepath = os.path.dirname(__file__)
+        basepath = os.path.dirname(__file__)
         path = os.path.join(basepath,'titlespin.ui')
         uic.loadUi(path,self)
         self.title.setText(title)
@@ -54,14 +54,14 @@ class QCustomSpinBox(QtGui.QWidget):
             return False
     
     def checkBounds(self, val):
-    	if val < self.levelRange[0]:
-    	      output = self.levelRange[0]
-    	elif val > self.levelRange[1]:
-    	      output = self.levelRange[1]
-    	else:
-    	      output = val
-    	return output
-	
+        if val < self.levelRange[0]:
+              output = self.levelRange[0]
+        elif val > self.levelRange[1]:
+              output = self.levelRange[1]
+        else:
+              output = val
+        return output
+    
     def disconnectAll(self):
         self.spinLevel.blockSignals(True)
     
@@ -74,9 +74,9 @@ class QCustomSpinBox(QtGui.QWidget):
         self.spinLevel.blockSignals(False)
         
 if __name__=='__main__':
-	app = QtGui.QApplication(sys.argv)
-	icon = QCustomLevelSpin('Control',(0.0,100.0))
-	icon.show()
-	app.exec_()
+    app = QtGui.QApplication(sys.argv)
+    icon = QCustomLevelSpin('Control',(0.0,100.0))
+    icon.show()
+    app.exec_()
 
  

@@ -3,9 +3,9 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 except:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
@@ -13,16 +13,16 @@ import matplotlib.cm as cm
 from matplotlib import pyplot as plt
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
-from helper_widgets.helper_widgets import saved_frequencies_table
-from helper_widgets.compound_widgets import table_dropdowns_with_entry
-from helper_widgets.switch_button import TextChangingButton
+from .helper_widgets.helper_widgets import saved_frequencies_table
+from .helper_widgets.compound_widgets import table_dropdowns_with_entry
+from .helper_widgets.switch_button import TextChangingButton
 import numpy
 import time
-from drift_tracker_global_config import config_729_tracker as c
+from .drift_tracker_global_config import config_729_tracker as c
 try:
     from common.client_config import client_info as cl
 except:
-    from client_config import client_info as cl
+    from .client_config import client_info as cl
 
 '''
 Drift Tracker GUI. 
@@ -556,14 +556,14 @@ class drift_tracker_global(QtGui.QWidget):
         self.WithUnit = WithUnit
         self.Error = Error
         self.cxn_global = connection()
-        print cl.global_address, cl.global_password
+        print(cl.global_address, cl.global_password)
         yield self.cxn_global.connect(cl.global_address, password = cl.global_password, tls_mode = 'off')
         self.context_global = yield self.cxn_global.context()
         try:
             yield self.subscribe_tracker()
         except Exception as e:
             self.setDisabled(True)
-            print "error ", e
+            print("error ", e)
             yield None
         self.cxn_global.add_on_connect('SD Tracker Global', self.reinitialize_tracker)
         self.cxn_global.add_on_disconnect('SD Tracker Global', self.disable)
@@ -588,10 +588,10 @@ class drift_tracker_global(QtGui.QWidget):
         # should find a better way to do this 
         exe_str = "yield server." + "signal__new_save_" + client_name.replace(' ', '_') + "(c.ID + 1, context = context)"
         try:
-            exec "@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n"
+            exec("@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n")
             yield receive_save_signal(server, c, self.context_global)
         except Exception as e:
-            print e
+            print(e)
         # should find a better way to do this
         yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
         yield self.initialize_layout()
@@ -605,10 +605,10 @@ class drift_tracker_global(QtGui.QWidget):
         # should find a better way to do this
         exe_str = "yield server." + "signal__new_save_" + client_name.replace(' ', '_') + "(c.ID + 1, context = context)"
         try:
-            exec "@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n"
+            exec("@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n")
             yield receive_save_signal(server, c, self.context_global)
         except Exception as e:
-            print e
+            print(e)
         # should find a better way to do this
         if not self.subscribed:
             yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
@@ -682,7 +682,7 @@ class drift_tracker_global(QtGui.QWidget):
             elif y == 'linecenter':
                 line_center = yield server_sd.get_last_line_center_local(client_name)
         except Exception as e:
-            print "Cannot get last data point"
+            print("Cannot get last data point")
             pass
         else:
             if y == 'linecenter_bfield':
@@ -693,7 +693,7 @@ class drift_tracker_global(QtGui.QWidget):
                     yield server_dv.open_appendable(self.line_center_Bfield_dataset[1])
                     yield server_dv.add((time.time(), line_center, b_field))
                 except:
-                    print 'Data Vault Not Available, not saving'
+                    print('Data Vault Not Available, not saving')
                     yield None
             elif y == 'bfield':
                 self.Bfield_entry.setValue(b_field*1.0e3)
@@ -702,7 +702,7 @@ class drift_tracker_global(QtGui.QWidget):
                     yield server_dv.open_appendable(self.Bfield_dataset[1])
                     yield server_dv.add((time.time(), b_field))
                 except:
-                    print 'Data Vault Not Available, not saving'
+                    print('Data Vault Not Available, not saving')
                     yield None
             elif y == 'linecenter':
                 self.linecenter_entry.setValue(line_center*1.0e3)
@@ -711,7 +711,7 @@ class drift_tracker_global(QtGui.QWidget):
                     yield server_dv.open_appendable(self.line_center_dataset[1])
                     yield server_dv.add((time.time(), line_center))
                 except:
-                    print 'Data Vault Not Available, not saving'
+                    print('Data Vault Not Available, not saving')
                     yield None
 
     @inlineCallbacks
@@ -763,7 +763,7 @@ class drift_tracker_global(QtGui.QWidget):
 
         except Exception as e:
             #no fit available
-            print e
+            print(e)
             pass
         else:
             inunits_b = [(t['min'], b['mgauss']) for (t,b) in history_B]
@@ -985,15 +985,15 @@ class drift_tracker_global(QtGui.QWidget):
             self.frequency_table.fill_out_widget(listing)
         
     def calc_zeeman(self, listing):
-    	line1 = 'S+1/2D+1/2'
-    	line2 = 'S-1/2D+1/2'
-    	for line,freq in listing:
-    		if line == line1:
-    			freq1 = freq['MHz']
-    		if line == line2:
-    			freq2 = freq['MHz']
-    	zeeman = ('Zeeman Splitting',self.WithUnit(-freq1+freq2, 'MHz'))
-    	return zeeman
+        line1 = 'S+1/2D+1/2'
+        line2 = 'S-1/2D+1/2'
+        for line,freq in listing:
+            if line == line1:
+                freq1 = freq['MHz']
+            if line == line2:
+                freq2 = freq['MHz']
+        zeeman = ('Zeeman Splitting',self.WithUnit(-freq1+freq2, 'MHz'))
+        return zeeman
     
     # @inlineCallbacks
     # def resize_spec_graph(self):

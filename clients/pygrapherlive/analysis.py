@@ -6,10 +6,10 @@ from twisted.internet.defer import inlineCallbacks
 import numpy as np
 from scipy import optimize
 
-from fitgaussian import FitGaussian
-from fitline import FitLine
-from fitlorentzian import FitLorentzian
-from fitparabola import FitParabola
+from .fitgaussian import FitGaussian
+from .fitline import FitLine
+from .fitlorentzian import FitLorentzian
+from .fitparabola import FitParabola
 
 class AnalysisWidget(QtGui.QWidget):
     """Creates the window for the new plot"""
@@ -47,7 +47,7 @@ class AnalysisWidget(QtGui.QWidget):
         dummyLayout.addWidget(title, QtCore.Qt.AlignCenter)
 
         i = 0;
-        for key in self.fitCurveDictionary.keys():
+        for key in list(self.fitCurveDictionary.keys()):
             self.analysisCheckboxes[key] = QtGui.QCheckBox(key, self)
             if (i % 2 == 0): #even
                 self.grid.addWidget(self.analysisCheckboxes[key], (i / 2), 0, QtCore.Qt.AlignLeft)
@@ -99,7 +99,7 @@ class AnalysisWidget(QtGui.QWidget):
         # create the parameter window upstairs, spinboxes will be part of it
 
     def togglePointsSignal(self, evt):
-        for dataset,directory,index in self.parent.datasetAnalysisCheckboxes.keys():
+        for dataset,directory,index in list(self.parent.datasetAnalysisCheckboxes.keys()):
             # if dataset is intended to be drawn (a checkbox governs this)
             if self.parent.datasetAnalysisCheckboxes[dataset, directory, index].isChecked():
                 self.parent.qmc.togglePoints(dataset, directory, index)
@@ -116,10 +116,10 @@ class AnalysisWidget(QtGui.QWidget):
 
     def fitCurves(self, parameters = None, drawCurves = False):
         self.solutionsDictionary = {}
-        for dataset,directory,index in self.parent.datasetAnalysisCheckboxes.keys():
+        for dataset,directory,index in list(self.parent.datasetAnalysisCheckboxes.keys()):
             # if dataset is intended to be drawn (a checkbox governs this)
             if self.parent.datasetAnalysisCheckboxes[dataset, directory, index].isChecked():
-                for key in self.analysisCheckboxes.keys():
+                for key in list(self.analysisCheckboxes.keys()):
                     if self.analysisCheckboxes[key].isChecked():
                         labels = self.parent.qmc.datasetLabelsDict[dataset, directory]
 #                        print dataset, directory, index, key
@@ -151,7 +151,7 @@ class ParameterWindow(QtGui.QWidget):
         self.grid.setSpacing(5)
         
         # okay here we go:
-        for key in self.parent.fitCurveDictionary.keys():
+        for key in list(self.parent.fitCurveDictionary.keys()):
             j = 0
             self.parameterWidgets[key] = []
             for parameterName in self.parent.fitCurveDictionary[key].parameterNames:
@@ -168,7 +168,7 @@ class ParameterWindow(QtGui.QWidget):
                 j += 1
         
         i = 0             
-        for key in self.parameterWidgets.keys():
+        for key in list(self.parameterWidgets.keys()):
             curveLabel = QtGui.QLabel(key)
             self.grid.addWidget(curveLabel, i, 0, QtCore.Qt.AlignCenter)
             for j in range(len(self.parameterWidgets[key])):
@@ -196,7 +196,7 @@ class ParameterWindow(QtGui.QWidget):
         self.maxRange.setKeyboardTracking(False)  
         self.connect(self.maxRange, QtCore.SIGNAL('valueChanged(double)'), self.maxRangeSignal)
         
-        i = len(self.parameterWidgets.keys())
+        i = len(list(self.parameterWidgets.keys()))
         self.grid.addWidget(fitRangeLabel, i, 0, QtCore.Qt.AlignCenter)
         self.grid.addWidget(self.minRange, i, 1, QtCore.Qt.AlignCenter)
         self.grid.addWidget(self.maxRange, i, 2, QtCore.Qt.AlignCenter)             
@@ -239,7 +239,7 @@ class SolutionsWindow(QtGui.QWidget):
         self.grid = QtGui.QGridLayout()
         self.grid.setSpacing(5)        
         
-        for dataset, directory, label, curve, parameters, index in self.solutionsDictionary.keys():
+        for dataset, directory, label, curve, parameters, index in list(self.solutionsDictionary.keys()):
             datasetLabel = QtGui.QLabel(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             self.labels.append(datasetLabel)
             textBox = QtGui.QLineEdit(readOnly=True)

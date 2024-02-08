@@ -1,17 +1,17 @@
 from PyQt4 import  uic
-from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode
-from Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
-from Data import UndefinedParameterNode
-from editors.parameter_editor import ParameterEditor
-from editors.scan_editor import ScanEditor
-from editors.bool_editor import BoolEditor
-from editors.string_editor import StringEditor
-from editors.selection_editor import SelectionSimpleEditor
-from editors.line_selection_editor import line_selection_editor
-from editors.sideband_selection_editor import sideband_selection_editor
-from editors.duration_bandwidth_editor import DurationBandwidthEditor
-from editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
-from editors.undefined_parameter_editor import UndefinedParameterEditor
+from .Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode
+from .Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
+from .Data import UndefinedParameterNode
+from .editors.parameter_editor import ParameterEditor
+from .editors.scan_editor import ScanEditor
+from .editors.bool_editor import BoolEditor
+from .editors.string_editor import StringEditor
+from .editors.selection_editor import SelectionSimpleEditor
+from .editors.line_selection_editor import line_selection_editor
+from .editors.sideband_selection_editor import sideband_selection_editor
+from .editors.duration_bandwidth_editor import DurationBandwidthEditor
+from .editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
+from .editors.undefined_parameter_editor import UndefinedParameterEditor
 
 import os
 basepath =  os.path.dirname(__file__)

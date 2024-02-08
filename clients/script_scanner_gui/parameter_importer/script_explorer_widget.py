@@ -1,5 +1,5 @@
 from PyQt4 import QtGui, QtCore
-from ParameterImporter import ParameterImportWidget
+from .ParameterImporter import ParameterImportWidget
 
 class script_explorer_widget(QtGui.QWidget):
 

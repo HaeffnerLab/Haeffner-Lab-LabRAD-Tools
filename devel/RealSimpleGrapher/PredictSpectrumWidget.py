@@ -102,7 +102,7 @@ class PredictSpectrum(QtGui.QWidget):
 
             all_carriers = self.Ca_data.get_transition_energies(b_field*1e-4,line_center) #to Tesla and MHz
 
-            print all_carriers
+            print(all_carriers)
 
             #choose which carriers to include
             included_lines = []
@@ -207,7 +207,7 @@ class EnergyLevel(object):
         J = total_angular_momentum_j
         lande_factor =  self.lande_factor(S, L, J)
         #sublevels are found, 2* self.J is always an integer, so can use numerator
-        self.sublevels_m =  [-J + i for i in xrange( 1 + (2 * J).numerator)]
+        self.sublevels_m =  [-J + i for i in range( 1 + (2 * J).numerator)]
         self.energy_scale = (lande_factor * 9.274e-24 / 6.626e-34) #1.4 MHz / gauss
     
     def lande_factor(self, S, L ,J):
@@ -219,7 +219,7 @@ class EnergyLevel(object):
         '''given the magnitude of the magnetic field, returns all energies of all zeeman sublevels'''
         energies = [(self.energy_scale * m * B) *1e-6 for m in self.sublevels_m] #put in MHz
         representations = [self.frac_to_string(m) for m in self.sublevels_m]
-        return zip(self.sublevels_m,energies,representations)
+        return list(zip(self.sublevels_m,energies,representations))
     
     def frac_to_string(self, sublevel):
         #helper class for converting energy levels to strings

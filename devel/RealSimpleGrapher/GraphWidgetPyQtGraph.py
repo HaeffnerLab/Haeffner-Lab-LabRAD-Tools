@@ -1,13 +1,13 @@
 import sys
 from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
-from TraceListWidget import TraceList
+from .TraceListWidget import TraceList
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 import itertools
-from Dataset import Dataset
+from .Dataset import Dataset
 from random import shuffle
-import Queue
+import queue
 
 import numpy as np
 from numpy import random
@@ -30,9 +30,9 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.should_stop = False
         self.name = config.name
         self.show_points = config.show_points
-    	self.grid_on = config.grid_on
+        self.grid_on = config.grid_on
  
-        self.dataset_queue = Queue.Queue(config.max_datasets)
+        self.dataset_queue = queue.Queue(config.max_datasets)
         
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
@@ -76,7 +76,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.pw.sigRangeChanged.connect(self.rangeChanged)
 
     def update_figure(self):
-        for ident, params in self.artists.iteritems():
+        for ident, params in self.artists.items():
             if params.shown:
                 try:
                     ds = params.dataset
@@ -101,15 +101,15 @@ class Graph_PyQtGraph(QtGui.QWidget):
         no_points is an override parameter to the global show_points setting.
         It is to allow data fits to be plotted without points
         '''
-        new_color = self.colorChooser.next()
+        new_color = next(self.colorChooser)
         if self.show_points and not no_points:
             line = self.pw.plot([0], [0], symbol='o', symbolBrush = new_color, pen = new_color, name = ident)
         else:
             line = self.pw.plot([0], [0], pen = new_color, name = ident)
-	if self.grid_on:
-	   self.pw.showGrid(x=True, y=True)
-        self.artists[ident] = artistParameters(line, dataset, index, True)
-        self.tracelist.addTrace(ident , color = new_color )
+    if self.grid_on:
+       self.pw.showGrid(x=True, y=True)
+       self.artists[ident] = artistParameters(line, dataset, index, True)
+       self.tracelist.addTrace(ident , color = new_color )
 
     def remove_artist(self, ident):
         try:
@@ -123,7 +123,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
             except KeyError:
                 pass
         except:
-            print "remove failed"
+            print("remove failed")
 
     def display(self, ident, shown):
         try:
@@ -139,7 +139,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
             raise Exception('404 Artist not found')
 
     def checkboxChanged(self):
-        for ident, item in self.tracelist.trace_dict.iteritems():
+        for ident, item in self.tracelist.trace_dict.items():
             try:
                 if item.checkState() and not self.artists[ident].shown:
                     self.display(ident, True)
@@ -149,16 +149,15 @@ class Graph_PyQtGraph(QtGui.QWidget):
                 pass
 
     def rangeChanged(self):
-	
-	lims = self.pw.viewRange()
-	self.pointsToKeep =  lims[0][1] - lims[0][0]
-	self.current_limits = [lims[0][0], lims[0][1]]
+        lims = self.pw.viewRange()
+        self.pointsToKeep =  lims[0][1] - lims[0][0]
+        self.current_limits = [lims[0][0], lims[0][1]]
 
     @inlineCallbacks
     def add_dataset(self, dataset):
         try:
             self.dataset_queue.put(dataset, block=False)
-        except Queue.Full:
+        except queue.Full:
             remove_ds = self.dataset_queue.get()
             self.remove_dataset(remove_ds)
             self.dataset_queue.put(dataset, block=False)
@@ -187,7 +186,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     main = Graph_PyQtGraph('example', reactor)

@@ -72,7 +72,7 @@ class pmtWidget(QtGui.QWidget):
             self.lineEdit.setText(val)
             self.lineEdit.blockSignals(False)
         if setting == 'state':
-            print "this shit is on"
+            print("this shit is on")
             self.pushButton.blockSignals(True)
             if val =='on':
                 self.pushButton.setChecked(True)
@@ -128,7 +128,7 @@ class pmtWidget(QtGui.QWidget):
 
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from . import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     pmtWidget = pmtWidget(reactor)

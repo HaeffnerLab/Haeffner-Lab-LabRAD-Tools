@@ -12,7 +12,7 @@ class pmt_simu(LabradServer):
     name = 'PMT Simulator'
 
     def initServer(self):
-        print "Initializing pmt ..."
+        print("Initializing pmt ...")
         self.state = 0
         pass
 
@@ -29,7 +29,7 @@ class pmt_simu(LabradServer):
         buf += "\x00"
 
         self.state = self.state + 1
-        print self.state
+        print(self.state)
         return buf
 
     def get_excitation(self):

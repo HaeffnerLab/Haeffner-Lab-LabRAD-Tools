@@ -55,7 +55,7 @@ class cavityWidget(QtGui.QWidget):
     @inlineCallbacks
     def loadDict(self):
         #sets the range and makes widgets
-        for widgetWrapper in self.d.values():
+        for widgetWrapper in list(self.d.values()):
             range = yield self.getRangefromReg( widgetWrapper.regName )
             widgetWrapper.range = range
             widgetWrapper.makeWidget()
@@ -65,7 +65,8 @@ class cavityWidget(QtGui.QWidget):
         yield self.server.signal__channel_has_been_updated(SIGNALID)
         yield self.server.addListener(listener = self.followSignal, source = None, ID = SIGNALID)
     
-    def followSignal(self, x, (chanName,voltage)):
+    def followSignal(self, x, xxx_todo_changeme):
+        (chanName,voltage) = xxx_todo_changeme
         widget = self.d[chanName].widget
         widget.setValueNoSignal(voltage)
     
@@ -75,7 +76,7 @@ class cavityWidget(QtGui.QWidget):
     @inlineCallbacks
     def initializeGUI(self):
         #get voltages
-        for chanName in self.d.keys():
+        for chanName in list(self.d.keys()):
             voltage =  yield self.server.getvoltage(chanName)
             self.d[chanName].widget.spin.setValue(voltage)
         #lay out the widget
@@ -84,7 +85,7 @@ class cavityWidget(QtGui.QWidget):
         for name in ['866','422','854','397', '729inject', '397D']: #sets the order of appearance
             layout.addWidget(self.d[name].widget)
         #connect functions
-        for widgetWrapper in self.d.values():
+        for widgetWrapper in list(self.d.values()):
             widgetWrapper.widget.spin.valueChanged.connect(widgetWrapper.onUpdate)
             widgetWrapper.widget.minrange.valueChanged.connect(self.saveNewRange)
             widgetWrapper.widget.maxrange.valueChanged.connect(self.saveNewRange)
@@ -96,7 +97,7 @@ class cavityWidget(QtGui.QWidget):
     @inlineCallbacks
     def saveNewRange(self, val):
         yield self.registry.cd(['','Clients','Cavity Control'],True)
-        for widgetWrapper in self.d.values():
+        for widgetWrapper in list(self.d.values()):
             widget = widgetWrapper.widget
             #from labrad.units import WithUnit
             #[minim,maxim] = [WithUnit(widget.minrange.value(),'mV'), WithUnit(widget.maxrange.value(),'mV')]
@@ -116,22 +117,22 @@ class cavityWidget(QtGui.QWidget):
             #print range
             #exit()
         except:
-            print 'problem with acquiring range from registry'
+            print('problem with acquiring range from registry')
             range = [0,2500]
         returnValue( range )
     
     #if inputs are updated by user, send the values to server
     @inlineCallbacks
     def sendToServer(self):
-        for widgetWrapper in self.d.values():
+        for widgetWrapper in list(self.d.values()):
             if widgetWrapper.updated:
                 from labrad.units import WithUnit
                 #import labrad.units as U
                 #val = WithUnit(widgetWrapper.widget.spin.value(),'mV')
                 #print widgetWrapper.serverName.range
-                print 'trying to send to server'
+                print('trying to send to server')
                 yield self.server.setvoltage(widgetWrapper.serverName, widgetWrapper.widget.spin.value())
-                print 'sent to server'
+                print('sent to server')
                 exit()
                 #yield self.server.setvoltage(widgetWrapper.serverName, widgetWrapper.widget.spin.value())
                 widgetWrapper.updated = False

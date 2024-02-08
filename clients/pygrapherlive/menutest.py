@@ -48,7 +48,7 @@ class MyWindow(QWidget):
 
     def popup(self, pos):
         for i in self.tv.selectionModel().selection().indexes():
-            print i.row(), i.column()
+            print(i.row(), i.column())
         menu = QMenu()
         quitAction = menu.addAction("Quit")
         action = menu.exec_(self.mapToGlobal(pos))
@@ -90,7 +90,7 @@ class MyWindow(QWidget):
 
         # set row height
         nrows = len(self.tabledata)
-        for row in xrange(nrows):
+        for row in range(nrows):
             self.tv.setRowHeight(row, 18)
 
         # enable sorting

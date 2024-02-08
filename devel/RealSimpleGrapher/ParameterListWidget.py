@@ -1,5 +1,5 @@
 import os
-import cPickle as pickle
+import pickle as pickle
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 

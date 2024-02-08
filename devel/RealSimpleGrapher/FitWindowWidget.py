@@ -1,7 +1,7 @@
 import pyperclip
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
-from analysis.fitting import FitWrapper
+from .analysis.fitting import FitWrapper
 
 class RowInfo():
     '''

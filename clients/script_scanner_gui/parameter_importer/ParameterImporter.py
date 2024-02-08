@@ -1,13 +1,13 @@
 from PyQt4 import  uic
 from twisted.internet.defer import inlineCallbacks
-from editors.parameterEditor import ParameterEditor
-from editors.boolEditor import BoolEditor
-from editors.scanEditor import ScanEditor
-from editors.selectionEditor import SelectionEditor
-from editors.lineSelectionEditor import LineSelectionEditor
-from editors.sidebandSelectionEditor import SidebandSelectionEditor
-from editors.spectrumSensitivityEditor import SpectrumSensitivityEditor
-from editors.stringEditor import StringEditor
+from .editors.parameterEditor import ParameterEditor
+from .editors.boolEditor import BoolEditor
+from .editors.scanEditor import ScanEditor
+from .editors.selectionEditor import SelectionEditor
+from .editors.lineSelectionEditor import LineSelectionEditor
+from .editors.sidebandSelectionEditor import SidebandSelectionEditor
+from .editors.spectrumSensitivityEditor import SpectrumSensitivityEditor
+from .editors.stringEditor import StringEditor
 import os
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"editors", "Editors.ui")
@@ -47,7 +47,7 @@ class ParameterImportWidget(propBase, propForm):
             'string':StringEditor(self)
             }
 
-        for e in self._editors.keys():
+        for e in list(self._editors.keys()):
             w = self._editors[e]
             self.stackedWidget.addWidget(w)
 
@@ -68,7 +68,7 @@ class ParameterImportWidget(propBase, propForm):
         self.show_only_editor(str(new_editor))        
 
     def show_none(self):
-        for editor in self._editors.keys():
+        for editor in list(self._editors.keys()):
             self._editors[editor].setVisible(False)
 
     def new_parameter(self, collection, parameter):

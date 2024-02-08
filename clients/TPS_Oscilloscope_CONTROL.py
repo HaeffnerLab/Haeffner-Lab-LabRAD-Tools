@@ -79,7 +79,7 @@ tps = cxn.tektronixtps_server()
 tps.select_device()
 
 while(1):
-    optstr=raw_input('taking data on pressing return, enter string to be added to filename:\n')
+    optstr=input('taking data on pressing return, enter string to be added to filename:\n')
     answer=tps.getcurve()
     outstring = ''
     for x in range(len(answer)):

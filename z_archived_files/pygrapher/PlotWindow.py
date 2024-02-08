@@ -1,9 +1,9 @@
 from PyQt4 import QtCore, QtGui
 # import pyqtgraph as pg
 import numpy as np
-from DatasetList import DatasetList
-from util import color_chooser
-from basic_plotter import Basic_Matplotlib_Plotter
+from .DatasetList import DatasetList
+from .util import color_chooser
+from .basic_plotter import Basic_Matplotlib_Plotter
 from twisted.internet.threads import deferToThread
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
@@ -40,7 +40,7 @@ class PlotWindow(QtGui.QWidget):
     def new_dataset(self, dataset):
         self.datasets[dataset.datasetName] = dataset
         self.plot_widget.add_artist(dataset.datasetName)
-        print "added artist " + dataset.datasetName
+        print("added artist " + dataset.datasetName)
         self.dataset_list.add_dataset(dataset)
         #ip.embed()
         #dataset.getData()
@@ -104,7 +104,7 @@ class PlotWindow(QtGui.QWidget):
                                   
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor as qt4reactor
+    from . import qt4reactor as qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     latticeGUI = PlotWindow(reactor)

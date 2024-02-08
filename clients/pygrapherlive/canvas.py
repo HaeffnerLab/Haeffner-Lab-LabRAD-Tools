@@ -304,7 +304,7 @@ class Qt4MplCanvas(FigureCanvas):
                 self.dataDict[dataset, directory][FIRST][DEPENDENT][i][dataIndex:(dataIndex + numberOfDataPoints)] = data.transpose()[i+1] # (i + 1) -> in data, the y axes start with the second column
             self.plotParametersDict[dataset, directory][DATAINDEX] = self.plotParametersDict[dataset, directory][DATAINDEX] + numberOfDataPoints
         except ValueError:
-            print 'Incoming data size is greater than MAXDATASETSIZE. Consider Increasing MAXDATASETSIZE'
+            print('Incoming data size is greater than MAXDATASETSIZE. Consider Increasing MAXDATASETSIZE')
 #        if ((dataIndex + numberOfDataPoints) == MAXDATASETSIZE):
 #            self.switchArray(dataset, directory)
         
@@ -328,7 +328,7 @@ class Qt4MplCanvas(FigureCanvas):
                     # Switch the array to plot
                     self.plotParametersDict[dataset, directory][ARRAYTOPLOT] = abs(self.plotParametersDict[dataset, directory][ARRAYTOPLOT] - 1)
         except ValueError:
-            print 'Incoming data size is greater than MAXDATASETSIZE. Consider Increasing MAXDATASETSIZE'
+            print('Incoming data size is greater than MAXDATASETSIZE. Consider Increasing MAXDATASETSIZE')
             
     def constantUpdate(self):
         self.drawCounter = self.drawCounter + 1
@@ -347,7 +347,7 @@ class Qt4MplCanvas(FigureCanvas):
 #        handles, labels = self.ax.get_legend_handles_labels()
         handles = []
         labels = []
-        for dataset,directory, index in self.parent.datasetCheckboxes.keys():
+        for dataset,directory, index in list(self.parent.datasetCheckboxes.keys()):
             if self.parent.datasetCheckboxes[dataset, directory, index].isChecked():
                 handles.append(self.plotDict[dataset, directory][index])
                 labels.append(str(dataset) + ' - ' + self.plotDict[dataset, directory][index].get_label())
@@ -357,7 +357,7 @@ class Qt4MplCanvas(FigureCanvas):
     def drawGraph(self):
 #        tstartupdate = time.clock()
 #        for dataset, directory in self.dataDict:
-        for dataset,directory,index in self.parent.datasetCheckboxes.keys():
+        for dataset,directory,index in list(self.parent.datasetCheckboxes.keys()):
             # if dataset is intended to be drawn (a checkbox governs this)
             if self.parent.datasetCheckboxes[dataset, directory, index].isChecked():
                 self.drawPlot(dataset, directory, index)
@@ -393,7 +393,7 @@ class Qt4MplCanvas(FigureCanvas):
             try:
                 self.ax.draw_artist(self.plotDict[dataset, directory][index])
             except AssertionError:
-                print 'failed to draw!'
+                print('failed to draw!')
         
             self.blit(self.ax.bbox)
             
@@ -480,7 +480,7 @@ class Qt4MplCanvas(FigureCanvas):
     def getDataXLimits(self):
         xmin = None
         xmax = None
-        for dataset, directory, index in self.parent.datasetCheckboxes.keys():
+        for dataset, directory, index in list(self.parent.datasetCheckboxes.keys()):
             if (self.plotParametersDict[dataset, directory][ARRAYTOPLOT] == 0):
                 drawRange = self.plotParametersDict[dataset, directory][DATAINDEX]%MAXDATASETSIZE
             else:
@@ -501,7 +501,7 @@ class Qt4MplCanvas(FigureCanvas):
     def getDataYLimits(self):
         ymin = None
         ymax = None
-        for dataset, directory, index in self.parent.datasetCheckboxes.keys():
+        for dataset, directory, index in list(self.parent.datasetCheckboxes.keys()):
             if (self.plotParametersDict[dataset, directory][ARRAYTOPLOT] == 0):
                 drawRange = self.plotParametersDict[dataset, directory][DATAINDEX]%MAXDATASETSIZE
             else:
@@ -520,32 +520,32 @@ class Qt4MplCanvas(FigureCanvas):
         return ymin, ymax
 
     def autofitDataY(self, currentY, minmax):
-        print 'Autofitting in Y'
+        print('Autofitting in Y')
         ymin, ymax = self.ax.get_ylim()
         dataymin, dataymax = self.getDataYLimits()
         if (minmax == MAX):
             newmaxY = ((1.0/AUTOFITSCROLLFRACTION)*(dataymax - ymin) + ymin)
             self.ax.set_ylim(ymin, newmaxY)
-            print 'Y maximum reached, new y limits: ', ymin, newmaxY
+            print('Y maximum reached, new y limits: ', ymin, newmaxY)
         elif (minmax == MIN):
             newminY = (ymax - (1.0/AUTOFITSCROLLFRACTION)*(ymax - dataymin))
             self.ax.set_ylim(newminY, ymax) 
-            print 'Y minimum reached, new y limits: ', newminY, ymax
+            print('Y minimum reached, new y limits: ', newminY, ymax)
         self.draw()
     
     # update boundaries to fit all the data and leave room for more               
     def autofitDataX(self, currentX, minmax):
-        print 'Autofitting in X'
+        print('Autofitting in X')
         xmin, xmax = self.ax.get_xlim()
         dataxmin, dataxmax = self.getDataXLimits()
         if (minmax == MAX):
             newmaxX = ((1.0/AUTOFITSCROLLFRACTION)*(dataxmax - xmin) + xmin)
             self.ax.set_xlim(xmin, newmaxX)
-            print 'X maximum reached, new x limits: ', xmin, newmaxX
+            print('X maximum reached, new x limits: ', xmin, newmaxX)
         elif (minmax == MIN):
             newminX = (xmax - (1.0/AUTOFITSCROLLFRACTION)*(xmax - dataxmin))
             self.ax.set_xlim(newminX, xmax)
-            print 'X minimum reached, new x limits: ', newminX, xmax
+            print('X minimum reached, new x limits: ', newminX, xmax)
         self.draw()
         
     

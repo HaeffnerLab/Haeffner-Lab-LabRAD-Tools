@@ -3,19 +3,19 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 except:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
-from helper_widgets.helper_widgets import saved_frequencies_table
-from helper_widgets.compound_widgets import table_dropdowns_with_entry
+from .helper_widgets.helper_widgets import saved_frequencies_table
+from .helper_widgets.compound_widgets import table_dropdowns_with_entry
 import numpy
 import time
-from drift_tracker_config import config_729_tracker as c
+from .drift_tracker_config import config_729_tracker as c
 
 '''
 Drift Tracker GUI. 
@@ -396,7 +396,7 @@ class drift_tracker(QtGui.QWidget):
             fit_f = yield server.get_fit_parameters('linecenter')
         except Exception as e:
             #no fit available
-            print e
+            print(e)
             pass
         else:
             inunits_b = [(t['min'], b['mgauss']) for (t,b) in history_B]
@@ -529,15 +529,15 @@ class drift_tracker(QtGui.QWidget):
         self.frequency_table.fill_out_widget(listing)
         
     def calc_zeeman(self, listing):
-    	line1 = 'S+1/2D+1/2'
-    	line2 = 'S-1/2D+1/2'
-    	for line,freq in listing:
-    		if line == line1:
-    			freq1 = freq['MHz']
-    		if line == line2:
-    			freq2 = freq['MHz']
-    	zeeman = ('Zeeman Splitting',self.WithUnit(-freq1+freq2, 'MHz'))
-    	return zeeman
+        line1 = 'S+1/2D+1/2'
+        line2 = 'S-1/2D+1/2'
+        for line,freq in listing:
+            if line == line1:
+                freq1 = freq['MHz']
+            if line == line2:
+                freq2 = freq['MHz']
+        zeeman = ('Zeeman Splitting',self.WithUnit(-freq1+freq2, 'MHz'))
+        return zeeman
     
     @inlineCallbacks
     def resize_spec_graph(self):
@@ -547,8 +547,8 @@ class drift_tracker(QtGui.QWidget):
             curr_lines = yield server.get_current_lines()
 
             curr_lines = dict(curr_lines)
-            hlp, my_min = min(curr_lines.iteritems(), key = lambda x: x[1])
-            hlp, my_max = max(curr_lines.iteritems(), key = lambda x: x[1])
+            hlp, my_min = min(iter(curr_lines.items()), key = lambda x: x[1])
+            hlp, my_max = max(iter(curr_lines.items()), key = lambda x: x[1])
             self.spec.set_xlim(left = my_min.value - 1.0, right = my_max.value + 1.0)
 
         except Exception as e:

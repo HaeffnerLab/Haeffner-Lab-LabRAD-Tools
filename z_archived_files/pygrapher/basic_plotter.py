@@ -45,7 +45,7 @@ class Basic_Matplotlib_Plotter(QtGui.QWidget):
     
     def update_figure(self, _input = None):
         updated_artists = []
-        for name, (artist, updated, data) in self.artists.iteritems():
+        for name, (artist, updated, data) in self.artists.items():
             if updated:
                 artist.set_data(data)
                 self.artists[name][1] = False
