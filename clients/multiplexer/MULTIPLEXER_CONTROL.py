@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, uic
+from PyQt5 import QtGui, QtWidgets, uic
 import os
 from . import RGBconverter as RGB
 from twisted.internet.defer import inlineCallbacks
@@ -47,7 +47,7 @@ class widgetWrapper(object):
         else:
             self.widget.setLCDDisplay(-1)
             
-class multiplexerWidget(QtGui.QWidget):
+class multiplexerWidget(QtWidgets.QWidget):
     def __init__(self, reactor, parent = None):
         super(multiplexerWidget, self).__init__(parent)
         self.reactor = reactor
@@ -206,9 +206,9 @@ class multiplexerWidget(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()  
 
-class multiplexerChannel(QtGui.QWidget):
+class multiplexerChannel(QtWidgets.QWidget):
     def __init__(self, wavelength, hint, name, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         basepath =  os.path.dirname(__file__)
         path = os.path.join(basepath,'..','qtui','MultiplexerChannel.ui')
         uic.loadUi(path,self)
@@ -251,9 +251,9 @@ class multiplexerChannel(QtGui.QWidget):
             print('Error: lockedState is something other than -1, 0, or 1.')
 
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from . import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     multiplexerWidget = multiplexerWidget(reactor)
     multiplexerWidget.show()

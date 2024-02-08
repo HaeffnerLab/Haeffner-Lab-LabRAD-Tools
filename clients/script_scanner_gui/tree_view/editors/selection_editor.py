@@ -1,11 +1,11 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import os
 
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"..","..","Views", "SelectionEditor.ui")
 base, form = uic.loadUiType(path)
 
-class simple_selection_delegate(QtGui.QAbstractItemDelegate):
+class simple_selection_delegate(QtWidgets.QAbstractItemDelegate):
     def __init__(self, parent):
         super(simple_selection_delegate, self).__init__()
         self.parent = parent
@@ -33,7 +33,7 @@ class SelectionSimpleEditor(base, form):
     def __init__(self, parent=None):
         super(SelectionSimpleEditor, self).__init__(parent)
         self.setupUi(self)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QtWidgets.QDataWidgetMapper(self)
         self._dataMapper.setItemDelegate(simple_selection_delegate(self))
 
     def setModel(self, proxyModel):

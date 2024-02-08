@@ -1,47 +1,47 @@
 import sys
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
-class SliderSpin(QtGui.QFrame):
+class SliderSpin(QtWidgets.QFrame):
     def __init__(self, title, unit, initrange, absrange , parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.constructLayout(title, unit, initrange, absrange)
         self.connectWidgets()
     
     def constructLayout(self, titleName, unitName, initrange, absrange):
         #setting qframe properties
-        self.setFrameShape(QtGui.QFrame.StyledPanel)
-        self.setFrameShadow(QtGui.QFrame.Sunken)
+        self.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.setFrameShadow(QtWidgets.QFrame.Sunken)
         #title and unit
         titleFont = QtGui.QFont('MS Shell Dlg 2',pointSize=12)
         titleFont.setBold(True)
-        title = QtGui.QLabel(titleName)
+        title = QtWidgets.QLabel(titleName)
         title.setAlignment(QtCore.Qt.AlignCenter)
         title.setFont(titleFont)
-        unit = QtGui.QLabel(unitName)
+        unit = QtWidgets.QLabel(unitName)
         unit.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom)
         #spin and slider
-        self.spin = QtGui.QSpinBox()
+        self.spin = QtWidgets.QSpinBox()
         self.spin.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         self.spin.setMinimumWidth(75)
-        self.spin.setSizePolicy(QtGui.QSizePolicy.Fixed,QtGui.QSizePolicy.MinimumExpanding)
+        self.spin.setSizePolicy(QtWidgets.QSizePolicy.Fixed,QtWidgets.QSizePolicy.MinimumExpanding)
         self.spin.setRange(*initrange)
         self.spin.setKeyboardTracking(False)
-        self.slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.slider.setRange(*initrange)
         self.slider.setMinimumWidth(250)
         #min and max ranges
-        self.minrange = QtGui.QSpinBox()
-        self.maxrange = QtGui.QSpinBox()
+        self.minrange = QtWidgets.QSpinBox()
+        self.maxrange = QtWidgets.QSpinBox()
         for range in [self.minrange, self.maxrange]:
             range.setMinimumWidth(50)
             range.setRange(*absrange)
-            range.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            range.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             range.setKeyboardTracking(False)
         self.minrange.setValue(initrange[0])
         self.maxrange.setValue(initrange[1])
         #adding widgets to layout
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.addWidget(title, 0, 0, 1, 3)
         layout.addWidget(unit, 0, 3)
         layout.addWidget(self.slider, 1, 0, 1, 3)
@@ -71,7 +71,7 @@ class SliderSpin(QtGui.QFrame):
         self.slider.blockSignals(False)        
 
 if __name__=="__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     icon = SliderSpin('Control','mV',(100,1100),(0,2500))
     icon.show()
     app.exec_()

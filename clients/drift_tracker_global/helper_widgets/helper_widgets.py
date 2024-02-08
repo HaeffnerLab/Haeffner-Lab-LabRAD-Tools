@@ -1,6 +1,6 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class dropdown(QtGui.QComboBox):
+class dropdown(QtWidgets.QComboBox):
 
     '''
     dropdown is a QComboBox used for selecting of 729 line names
@@ -21,8 +21,8 @@ class dropdown(QtGui.QComboBox):
         self.initial_selection = initial_selection
         if font is not None:
             self.setFont(font)
-        self.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
-        self.SizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
+        self.setInsertPolicy(QtWidgets.QComboBox.InsertAlphabetically)
+        self.SizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
         self.set_dropdown(names)
         self.currentIndexChanged[int].connect(self.on_user_selection)
         #select the item set in the config file
@@ -71,7 +71,7 @@ class dropdown(QtGui.QComboBox):
         self.blockSignals(False)
 
 
-class saved_frequencies_table(QtGui.QTableWidget):
+class saved_frequencies_table(QtWidgets.QTableWidget):
     def __init__(self, reactor, sig_figs = 4, suffix = '', parent=None):
         super(saved_frequencies_table, self).__init__(parent)
         self.font = QtGui.QFont('MS Shell Dlg 2',pointSize=12)
@@ -81,7 +81,7 @@ class saved_frequencies_table(QtGui.QTableWidget):
         self.initializeGUI()
 
     def initializeGUI(self):
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setColumnCount(2)
 
@@ -97,10 +97,10 @@ class saved_frequencies_table(QtGui.QTableWidget):
                 sample = self.cellWidget(enum, 1)
                 sample.setText(val_name)
             except AttributeError:
-                label = QtGui.QTableWidgetItem(name)
+                label = QtWidgets.QTableWidgetItem(name)
                 label.setFont(self.font)
                 self.setItem(enum , 0 , label)
-                sample = QtGui.QTableWidgetItem(val_name)
+                sample = QtWidgets.QTableWidgetItem(val_name)
                 sample.setFont(self.font)
                 self.setItem(enum , 1 , sample)
         for col in range(self.columnCount()):
@@ -114,9 +114,9 @@ class saved_frequencies_table(QtGui.QTableWidget):
         self.reactor.stop()
 
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from common.clients import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     widget = saved_frequencies_table(reactor)
     widget.show()

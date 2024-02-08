@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, uic
+from PyQt5 import QtGui, QtWidgets, uic
 import os
 
 basepath =  os.path.dirname(__file__)
@@ -9,7 +9,7 @@ class spectrum_sensitivity_editor(base, form):
     def __init__(self, parent=None):
         super(spectrum_sensitivity_editor, self).__init__(parent)
         self.setupUi(self)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QtWidgets.QDataWidgetMapper(self)
 
     def setModel(self, proxyModel):
         self._proxyModel = proxyModel

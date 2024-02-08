@@ -3,7 +3,7 @@ Created on Mar 12, 2013
 
 @author: Lab-user
 '''
-from PyQt4 import QtCore, uic
+from PyQt5 import QtCore, uic
 import os
 
 basepath =  os.path.dirname(__file__)
@@ -23,7 +23,7 @@ class GuessRabiFrequency(base, form):
         self.PiTimeSpinBox.setValue(self.twopitime)
         self.PiTimeSpinBox.setDecimals(6)
         self.PiTimeSpinBox.setRange(0,1000000000000)
-        self.connect(self.PiTimeSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.SpinBoxChanged)
+        self.PiTimeSpinBox.valueChanged[double].connect(self.SpinBoxChanged)
         self.show()
         
         self.comboBox.activated[str].connect(self.onActivated)

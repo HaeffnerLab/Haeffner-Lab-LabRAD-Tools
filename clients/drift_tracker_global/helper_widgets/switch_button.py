@@ -1,12 +1,12 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class TextChangingButton(QtGui.QPushButton):
+class TextChangingButton(QtWidgets.QPushButton):
     """Button that changes its text to ON or OFF and colors when it's pressed""" 
     def __init__(self, parent = None):
         super(TextChangingButton, self).__init__(parent)
         self.setCheckable(True)
         self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         #connect signal for appearance changing
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())

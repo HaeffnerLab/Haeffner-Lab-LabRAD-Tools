@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from numpy import *
 # from qtui.QCustomSpinBoxION import QCustomSpinBoxION
 from .qtui.QCustomSpinBox import QCustomSpinBox
@@ -18,7 +18,7 @@ n = 3
 SIGNALID = 270836
 SIGNALID2 = 270835
 
-class MULTIPOLE_CONTROL(QtGui.QWidget):
+class MULTIPOLE_CONTROL(QtWidgets.QWidget):
     def __init__(self, reactor, parent=None):
         super(MULTIPOLE_CONTROL, self).__init__(parent)
         self.updating = False
@@ -35,7 +35,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
         
         for k in self.multipoles:
             self.ctrlLayout.addWidget(self.controls[k])        
-        self.multipoleFileSelectButton = QtGui.QPushButton('Set C File')
+        self.multipoleFileSelectButton = QtWidgets.QPushButton('Set C File')
         self.ctrlLayout.addWidget(self.multipoleFileSelectButton)
 
         self.inputUpdated = False
@@ -56,7 +56,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
         self.cxn = yield connectAsync()
         self.dacserver  = yield self.cxn.dac_server
         yield self.setupListeners()
-        self.ctrlLayout = QtGui.QVBoxLayout()
+        self.ctrlLayout = QtWidgets.QVBoxLayout()
         yield self.makeGUI()
         
     def inputHasUpdated(self):
@@ -71,7 +71,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     
     @inlineCallbacks        
     def selectCFile(self):
-        fn = QtGui.QFileDialog().getOpenFileName()
+        fn = QtWidgets.QFileDialog().getOpenFileName()[0]
         self.updating = True
         yield self.dacserver.set_control_file(str(fn))
         for i in range(self.ctrlLayout.count()): self.ctrlLayout.itemAt(i).widget().close()
@@ -94,7 +94,7 @@ class MULTIPOLE_CONTROL(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()  
 
-class CHANNEL_CONTROL (QtGui.QWidget):
+class CHANNEL_CONTROL (QtWidgets.QWidget):
     def __init__(self, reactor, parent=None):
         super(CHANNEL_CONTROL, self).__init__(parent)
         self.reactor = reactor
@@ -104,13 +104,13 @@ class CHANNEL_CONTROL (QtGui.QWidget):
     def makeGUI(self):
         self.dacDict = dict(list(hc.elec_dict.items()) + list(hc.sma_dict.items()))
         self.controls = {k: QCustomSpinBox(k, self.dacDict[k].allowedVoltageRange) for k in list(self.dacDict.keys())}
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         if bool(hc.sma_dict):
-            smaBox = QtGui.QGroupBox('SMA Out')
-            smaLayout = QtGui.QVBoxLayout()
+            smaBox = QtWidgets.QGroupBox('SMA Out')
+            smaLayout = QtWidgets.QVBoxLayout()
             smaBox.setLayout(smaLayout)
-        elecBox = QtGui.QGroupBox('Electrodes')
-        elecLayout = QtGui.QGridLayout()
+        elecBox = QtWidgets.QGroupBox('Electrodes')
+        elecLayout = QtWidgets.QGridLayout()
         elecBox.setLayout(elecLayout)
         if bool(hc.sma_dict):
             layout.addWidget(smaBox, 0, 0)
@@ -143,7 +143,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         
        
 
-        spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
+        spacer = QtWidgets.QSpacerItem(20,40,QtWidgets.QSizePolicy.Minimum,QtWidgets.QSizePolicy.MinimumExpanding)
         if bool(hc.sma_dict):
             smaLayout.addItem(spacer)        
         self.inputUpdated = False                
@@ -192,7 +192,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop() 
 
-class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################################
+class MULTIPOLE_MONITOR(QtWidgets.QWidget):  #######################################################
     def __init__(self, reactor, parent=None):
         super(MULTIPOLE_MONITOR, self).__init__(parent)
         self.reactor = reactor        
@@ -203,10 +203,10 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
     def makeGUI(self): 
         
         self.multipolelist = hc.default_multipoles
-        self.displays = {k: QtGui.QLCDNumber() for k in self.multipolelist}  
-        layout = QtGui.QGridLayout()
-        Multipolebox = QtGui.QGroupBox('Multipoles')
-        multilayout = QtGui.QGridLayout()
+        self.displays = {k: QtWidgets.QLCDNumber() for k in self.multipolelist}  
+        layout = QtWidgets.QGridLayout()
+        Multipolebox = QtWidgets.QGroupBox('Multipoles')
+        multilayout = QtWidgets.QGridLayout()
         
         
         Multipolebox.setLayout(multilayout)
@@ -214,7 +214,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
         
         i = 0 
         for e in self.multipolelist:
-            multilayout.addWidget(QtGui.QLabel(e),i,0)
+            multilayout.addWidget(QtWidgets.QLabel(e),i,0)
             multilayout.addWidget(self.displays[e],i,1)
             i = i+1
         
@@ -267,7 +267,7 @@ class MULTIPOLE_MONITOR(QtGui.QWidget):  #######################################
     def closeEvent(self, x):
         self.reactor.stop()       
 
-class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  #######################################################
+class MULTIPOLE_MONITOR_SCAN(QtWidgets.QWidget):  #######################################################
     def __init__(self, reactor, parent=None):
         super(MULTIPOLE_MONITOR_SCAN, self).__init__(parent)
         self.reactor = reactor        
@@ -285,12 +285,12 @@ class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  ##################################
         self.timer.start(ScanWait)   
         
         self.multipolelist = hc.default_multipoles
-        self.displays = {k: QtGui.QLCDNumber() for k in self.multipolelist}  
-        layout = QtGui.QGridLayout()
-        Multipolebox = QtGui.QGroupBox('Multipoles')
-        multilayout = QtGui.QGridLayout()
-        self.startscanbutton = QtGui.QPushButton('Start Scan')
-        self.stopscanbutton = QtGui.QPushButton('Stop Scan')
+        self.displays = {k: QtWidgets.QLCDNumber() for k in self.multipolelist}  
+        layout = QtWidgets.QGridLayout()
+        Multipolebox = QtWidgets.QGroupBox('Multipoles')
+        multilayout = QtWidgets.QGridLayout()
+        self.startscanbutton = QtWidgets.QPushButton('Start Scan')
+        self.stopscanbutton = QtWidgets.QPushButton('Stop Scan')
         self.counterdisplay = QCustomSpinBox('counter',[0, n**3])
         
         
@@ -299,7 +299,7 @@ class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  ##################################
         
         i = 0 
         for e in self.multipolelist:
-            multilayout.addWidget(QtGui.QLabel(e),i,0)
+            multilayout.addWidget(QtWidgets.QLabel(e),i,0)
             multilayout.addWidget(self.displays[e],i,1)
             i = i+1
         multilayout.addWidget(self.startscanbutton,i,1)  
@@ -389,7 +389,7 @@ class MULTIPOLE_MONITOR_SCAN(QtGui.QWidget):  ##################################
         self.reactor.stop()
         
 
-class CHANNEL_MONITOR(QtGui.QWidget):  
+class CHANNEL_MONITOR(QtWidgets.QWidget):  
     def __init__(self, reactor, parent=None):
         super(CHANNEL_MONITOR, self).__init__(parent)
         self.reactor = reactor        
@@ -399,14 +399,14 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         
     def makeGUI(self):      
         self.dacDict = dict(list(hc.elec_dict.items()) + list(hc.sma_dict.items()))
-        self.displays = {k: QtGui.QLCDNumber() for k in list(self.dacDict.keys())}               
-        layout = QtGui.QGridLayout()
+        self.displays = {k: QtWidgets.QLCDNumber() for k in list(self.dacDict.keys())}               
+        layout = QtWidgets.QGridLayout()
         if bool(hc.sma_dict):        
-            smaBox = QtGui.QGroupBox('SMA Out')
-            smaLayout = QtGui.QGridLayout()
+            smaBox = QtWidgets.QGroupBox('SMA Out')
+            smaLayout = QtWidgets.QGridLayout()
             smaBox.setLayout(smaLayout)       
-        elecBox = QtGui.QGroupBox('Electrodes')
-        elecLayout = QtGui.QGridLayout()
+        elecBox = QtWidgets.QGroupBox('Electrodes')
+        elecLayout = QtWidgets.QGridLayout()
     
     
         elecBox.setLayout(elecLayout)
@@ -417,7 +417,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         if bool(hc.sma_dict):
             for k in hc.sma_dict:
                 self.displays[k].setAutoFillBackground(True)
-                smaLayout.addWidget(QtGui.QLabel(k), self.dacDict[k].smaOutNumber, 0)
+                smaLayout.addWidget(QtWidgets.QLabel(k), self.dacDict[k].smaOutNumber, 0)
                 smaLayout.addWidget(self.displays[k], self.dacDict[k].smaOutNumber, 1)
                 s = hc.sma_dict[k].smaOutNumber+1
 
@@ -427,13 +427,13 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         elecListHALF=list(range(0,len(elecList)-2,2))
 
         for i in elecListHALF:
-            elecLayout.addWidget(QtGui.QLabel(elecList[i]),i+1,3,1,1)
+            elecLayout.addWidget(QtWidgets.QLabel(elecList[i]),i+1,3,1,1)
             elecLayout.addWidget(self.displays[elecList[i]],i+1,4,1,1)
-            elecLayout.addWidget(QtGui.QLabel(elecList[i+1]),i+1,5,1,1)
+            elecLayout.addWidget(QtWidgets.QLabel(elecList[i+1]),i+1,5,1,1)
             elecLayout.addWidget(self.displays[elecList[i+1]],i+1,6,1,1)
-        elecLayout.addWidget(QtGui.QLabel('Q39'),11,1,1,1)
+        elecLayout.addWidget(QtWidgets.QLabel('Q39'),11,1,1,1)
         elecLayout.addWidget(self.displays['Q39'],11,2,1,1)
-        elecLayout.addWidget(QtGui.QLabel('Q40'),11,7,1,1)
+        elecLayout.addWidget(QtWidgets.QLabel('Q40'),11,7,1,1)
         elecLayout.addWidget(self.displays['Q40'],11,8,1,1)
 
         #elecLayout.addItem(QtGui.QLayoutItem.spacerItem(),1,0,1,8)    
@@ -446,7 +446,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
         elecLayout.setColumnMinimumWidth(4,20)
         elecLayout.setColumnMinimumWidth(6,20)
         if bool(hc.sma_dict):
-            spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
+            spacer = QtWidgets.QSpacerItem(20,40,QtWidgets.QSizePolicy.Minimum,QtWidgets.QSizePolicy.MinimumExpanding)
             smaLayout.addItem(spacer, s, 0,10, 2)  
 
         self.setLayout(layout)  
@@ -489,7 +489,7 @@ class CHANNEL_MONITOR(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-class DAC_Control(QtGui.QMainWindow):
+class DAC_Control(QtWidgets.QMainWindow):
     def __init__(self, reactor, parent=None):
         super(DAC_Control, self).__init__(parent)
         self.reactor = reactor   
@@ -498,7 +498,7 @@ class DAC_Control(QtGui.QMainWindow):
         multipoleControlTab = self.buildMultipoleControlTab()
         #multipoleScanTab = self.buildMultipoleScanTab()
         # scanTab = self.buildScanTab()
-        tab = QtGui.QTabWidget()
+        tab = QtWidgets.QTabWidget()
         tab.addTab(multipoleControlTab,'&Multipoles')
         tab.addTab(channelControlTab, '&Channels')
         #tab.addTab(multipoleScanTab, '&Multipole Scan')
@@ -507,24 +507,24 @@ class DAC_Control(QtGui.QMainWindow):
         self.setCentralWidget(tab)
     
     def buildMultipoleControlTab(self):
-        widget = QtGui.QWidget()
-        gridLayout = QtGui.QGridLayout()
+        widget = QtWidgets.QWidget()
+        gridLayout = QtWidgets.QGridLayout()
         gridLayout.addWidget(CHANNEL_MONITOR(self.reactor),0,0)
         gridLayout.addWidget(MULTIPOLE_CONTROL(self.reactor),0,1)
         widget.setLayout(gridLayout)
         return widget
 
     def buildChannelControlTab(self):
-        widget = QtGui.QWidget()
-        gridLayout = QtGui.QGridLayout()
+        widget = QtWidgets.QWidget()
+        gridLayout = QtWidgets.QGridLayout()
         gridLayout.addWidget(CHANNEL_CONTROL(self.reactor),0,0)
         gridLayout.addWidget(MULTIPOLE_MONITOR(self.reactor),0,1)
         widget.setLayout(gridLayout)
         return widget
     
     def buildMultipoleScanTab(self):
-        widget =QtGui.QWidget()
-        gridLayout = QtGui.QGridLayout()
+        widget =QtWidgets.QWidget()
+        gridLayout = QtWidgets.QGridLayout()
         gridLayout.addWidget(CHANNEL_MONITOR(self.reactor),0,0)
         gridLayout.addWidget(MULTIPOLE_MONITOR_SCAN(self.reactor),0,1) ##WE MUST BUILD
         widget.setLayout(gridLayout)
@@ -532,8 +532,8 @@ class DAC_Control(QtGui.QMainWindow):
         
     def buildScanTab(self):
         from SCAN_CONTROL import Scan_Control_Tickle
-        widget = QtGui.QWidget()
-        gridLayout = QtGui.QGridLayout()
+        widget = QtWidgets.QWidget()
+        gridLayout = QtWidgets.QGridLayout()
         gridLayout.addWidget(Scan_Control_Tickle(self.reactor, 'Ex1'), 0, 0)
         gridLayout.addWidget(Scan_Control_Tickle(self.reactor, 'Ey1'), 0, 1)
         widget.setLayout(gridLayout)
@@ -544,9 +544,9 @@ class DAC_Control(QtGui.QMainWindow):
         
 
 if __name__ == "__main__":
-    a = QtGui.QApplication( [] )
-    from . import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     DAC_Control = DAC_Control(reactor)
     DAC_Control.show()

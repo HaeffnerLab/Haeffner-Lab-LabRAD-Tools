@@ -1,4 +1,4 @@
-from PyQt4 import  uic
+from PyQt5 import uic
 from .Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode
 from .Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
 from .Data import UndefinedParameterNode

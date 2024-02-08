@@ -1,7 +1,7 @@
 '''
 Analysis Widget
 '''
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 from scipy import optimize
@@ -11,10 +11,10 @@ from .fitline import FitLine
 from .fitlorentzian import FitLorentzian
 from .fitparabola import FitParabola
 
-class AnalysisWidget(QtGui.QWidget):
+class AnalysisWidget(QtWidgets.QWidget):
     """Creates the window for the new plot"""
     def __init__(self, parent):
-        QtGui.QWidget.__init__(self)  
+        QtWidgets.QWidget.__init__(self)  
         self.parent = parent     
         self.cxn = self.parent.parent.cxn
         self.createContext()
@@ -34,21 +34,21 @@ class AnalysisWidget(QtGui.QWidget):
         self.solutionsDictionary = {}
         self.setMaximumWidth(200)
 
-        mainLayout = QtGui.QVBoxLayout()
+        mainLayout = QtWidgets.QVBoxLayout()
                 
-        self.grid = QtGui.QGridLayout()
+        self.grid = QtWidgets.QGridLayout()
         self.grid.setSpacing(5)
         
-        title = QtGui.QLabel()
+        title = QtWidgets.QLabel()
         title.setText('Analysis')
               
-        dummyLayout = QtGui.QHBoxLayout()
+        dummyLayout = QtWidgets.QHBoxLayout()
         mainLayout.addLayout(dummyLayout)
         dummyLayout.addWidget(title, QtCore.Qt.AlignCenter)
 
         i = 0;
         for key in list(self.fitCurveDictionary.keys()):
-            self.analysisCheckboxes[key] = QtGui.QCheckBox(key, self)
+            self.analysisCheckboxes[key] = QtWidgets.QCheckBox(key, self)
             if (i % 2 == 0): #even
                 self.grid.addWidget(self.analysisCheckboxes[key], (i / 2), 0, QtCore.Qt.AlignLeft)
             else:
@@ -58,31 +58,31 @@ class AnalysisWidget(QtGui.QWidget):
         mainLayout.addLayout(self.grid)
         
         # Layout for keeping track of datasets on a graph and analysis
-        self.datasetCheckboxListWidget = QtGui.QListWidget()
+        self.datasetCheckboxListWidget = QtWidgets.QListWidget()
         self.datasetCheckboxListWidget.setMaximumWidth(180)
         self.datasetCheckboxListWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         mainLayout.addWidget(self.datasetCheckboxListWidget)
 
         # button to fit data on screen
-        parametersButton = QtGui.QPushButton("Parameters", self)
+        parametersButton = QtWidgets.QPushButton("Parameters", self)
         parametersButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         parametersButton.clicked.connect(self.setParameters)        
         mainLayout.addWidget(parametersButton)
         
         # button to fit data on screen
-        fitButton = QtGui.QPushButton("Fit Curves", self)
+        fitButton = QtWidgets.QPushButton("Fit Curves", self)
         fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         fitButton.clicked.connect(self.fitCurvesSignal)        
         mainLayout.addWidget(fitButton)
         
         # button to fit data on screen
-        drawButton = QtGui.QPushButton("Draw Curves", self)
+        drawButton = QtWidgets.QPushButton("Draw Curves", self)
         drawButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         drawButton.clicked.connect(self.drawCurvesSignal)        
         mainLayout.addWidget(drawButton)        
         
         # button to fit data on screen
-        togglePointsButton = QtGui.QPushButton("Toggle Points", self)
+        togglePointsButton = QtWidgets.QPushButton("Toggle Points", self)
         togglePointsButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         togglePointsButton.clicked.connect(self.togglePointsSignal)        
         mainLayout.addWidget(togglePointsButton)        
@@ -131,11 +131,11 @@ class AnalysisWidget(QtGui.QWidget):
             self.solutionsWindow.show()
 
 
-class ParameterWindow(QtGui.QWidget):
+class ParameterWindow(QtWidgets.QWidget):
     """Creates the fitting parameter window"""
 
     def __init__(self, parent):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.setWindowTitle('Analysis Parameters')
 #        self.parameterLabels = [] # a list of lists maybe? [['Gaussian', 'Height', 'Sigma'...], ['Lorentzian', ...]..]
@@ -146,7 +146,7 @@ class ParameterWindow(QtGui.QWidget):
     def setupUI(self):
         
                 # Layout
-        self.grid = QtGui.QGridLayout()
+        self.grid = QtWidgets.QGridLayout()
         self.setLayout(self.grid)
         self.grid.setSpacing(5)
         
@@ -156,20 +156,20 @@ class ParameterWindow(QtGui.QWidget):
             self.parameterWidgets[key] = []
             for parameterName in self.parent.fitCurveDictionary[key].parameterNames:
                 # Create things
-                self.parameterWidgets[key].append(QtGui.QLabel(parameterName))
-                self.parameterWidgets[key].append(QtGui.QDoubleSpinBox())
+                self.parameterWidgets[key].append(QtWidgets.QLabel(parameterName))
+                self.parameterWidgets[key].append(QtWidgets.QDoubleSpinBox())
                 self.parameterWidgets[key][j*2+1].setDecimals(6)
                 self.parameterWidgets[key][j*2+1].setRange(-1000000000, 1000000000)
                 self.parameterWidgets[key][j*2+1].setValue(1)
                 self.parameterWidgets[key][j*2+1].setSingleStep(.1)
-                self.parameterWidgets[key][j*2+1].setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+                self.parameterWidgets[key][j*2+1].setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
                 self.parameterWidgets[key][j*2+1].setKeyboardTracking(False)
-                self.connect(self.parameterWidgets[key][j*2+1], QtCore.SIGNAL('valueChanged(double)'), self.parent.drawCurvesSignal)
+                self.parameterWidgets[key][j*2+1].valueChanged[double].connect(self.parent.drawCurvesSignal)
                 j += 1
         
         i = 0             
         for key in list(self.parameterWidgets.keys()):
-            curveLabel = QtGui.QLabel(key)
+            curveLabel = QtWidgets.QLabel(key)
             self.grid.addWidget(curveLabel, i, 0, QtCore.Qt.AlignCenter)
             for j in range(len(self.parameterWidgets[key])):
                 self.grid.addWidget(self.parameterWidgets[key][j], i, j+1, QtCore.Qt.AlignCenter)
@@ -177,24 +177,24 @@ class ParameterWindow(QtGui.QWidget):
 
     def setRanges(self):
         xmin, xmax = self.parent.parent.qmc.getDataXLimits()
-        fitRangeLabel = QtGui.QLabel('Fit Range: ')
-        self.minRange = QtGui.QDoubleSpinBox()
+        fitRangeLabel = QtWidgets.QLabel('Fit Range: ')
+        self.minRange = QtWidgets.QDoubleSpinBox()
         self.minRange.setDecimals(6)
         self.minRange.setRange(xmin, xmax)
         self.minRange.setValue(xmin)
         self.minRange.setSingleStep(.1)
-        self.minRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.minRange.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.minRange.setKeyboardTracking(False)
-        self.connect(self.minRange, QtCore.SIGNAL('valueChanged(double)'), self.minRangeSignal)
-        self.maxRange = QtGui.QDoubleSpinBox()
-        self.maxRange = QtGui.QDoubleSpinBox()
+        self.minRange.valueChanged[double].connect(self.minRangeSignal)
+        self.maxRange = QtWidgets.QDoubleSpinBox()
+        self.maxRange = QtWidgets.QDoubleSpinBox()
         self.maxRange.setDecimals(6)
         self.maxRange.setRange(xmin, xmax)
         self.maxRange.setValue(xmax)
         self.maxRange.setSingleStep(.1)
-        self.maxRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.maxRange.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.maxRange.setKeyboardTracking(False)  
-        self.connect(self.maxRange, QtCore.SIGNAL('valueChanged(double)'), self.maxRangeSignal)
+        self.maxRange.valueChanged[double].connect(self.maxRangeSignal)
         
         i = len(list(self.parameterWidgets.keys()))
         self.grid.addWidget(fitRangeLabel, i, 0, QtCore.Qt.AlignCenter)
@@ -218,11 +218,11 @@ class ParameterWindow(QtGui.QWidget):
     def closeEvent(self, evt):
         self.hide()        
 
-class SolutionsWindow(QtGui.QWidget):
+class SolutionsWindow(QtWidgets.QWidget):
     """Creates the fitting parameter window"""
 
     def __init__(self, parent, context, solutionsDictionary):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.context = context
         self.solutionsDictionary = solutionsDictionary
@@ -236,13 +236,13 @@ class SolutionsWindow(QtGui.QWidget):
         self.setupUI()
    
     def setupUI(self):
-        self.grid = QtGui.QGridLayout()
+        self.grid = QtWidgets.QGridLayout()
         self.grid.setSpacing(5)        
         
         for dataset, directory, label, curve, parameters, index in list(self.solutionsDictionary.keys()):
-            datasetLabel = QtGui.QLabel(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
+            datasetLabel = QtWidgets.QLabel(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             self.labels.append(datasetLabel)
-            textBox = QtGui.QLineEdit(readOnly=True)
+            textBox = QtWidgets.QLineEdit(readOnly=True)
             textBox.setText('\'Fit\', [\'['+str(index)+']\', \''+ str(curve) + '\', ' + '\'' + str(self.solutionsDictionary[dataset, directory, label, curve, parameters, index]) + '\']')
             textBox.setMinimumWidth(550)
             self.textBoxes.append(textBox)
@@ -251,7 +251,7 @@ class SolutionsWindow(QtGui.QWidget):
 #            refitButton.clicked.connect(self.refitSignal)    
 #            self.refitButtons.append(refitButton)
 #            self.refitButtonIndexDict[refitButton] = [dataset, directory, index, curve, str(self.solutionsDictionary[dataset, directory, label, curve, parameters, index])]        
-            acceptButton = QtGui.QPushButton("Accept", self)
+            acceptButton = QtWidgets.QPushButton("Accept", self)
             acceptButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
             acceptButton.clicked.connect(self.acceptSignal)  
             self.acceptButtons.append(acceptButton)          

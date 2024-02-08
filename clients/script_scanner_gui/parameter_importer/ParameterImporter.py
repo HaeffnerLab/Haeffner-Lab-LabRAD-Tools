@@ -1,4 +1,4 @@
-from PyQt4 import  uic
+from PyQt5 import uic
 from twisted.internet.defer import inlineCallbacks
 from .editors.parameterEditor import ParameterEditor
 from .editors.boolEditor import BoolEditor

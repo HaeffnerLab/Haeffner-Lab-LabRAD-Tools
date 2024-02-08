@@ -212,8 +212,8 @@ class pulse_sequence_visualizer(QtGui.QWidget):
     
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    from common.clients import qt4reactor
-    qt4reactor.install()
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     widget = pulse_sequence_visualizer(reactor)
     widget.show()

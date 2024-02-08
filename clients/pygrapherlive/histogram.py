@@ -1,5 +1,5 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.figure import Figure
 from matplotlib import cm
 import matplotlib.pyplot as plt
@@ -53,16 +53,16 @@ class HistCanvas(FigureCanvas):
         self.thresholdLine = self.ax.axvline(threshold, ymin=0, ymax= 200, linewidth=3.0, color = 'r', label = 'Threshold')
         self.draw()
         
-class HistWindow(QtGui.QWidget):        
+class HistWindow(QtWidgets.QWidget):        
     """Creates the window for the new plot"""
     def __init__(self, parent, data, threshold, title):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         
         self.parent = parent
         self.threshold = threshold
         self.setWindowTitle(title)
         
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
 
 #        self.binSpinBox = QtGui.QSpinBox()
@@ -73,13 +73,13 @@ class HistWindow(QtGui.QWidget):
 #        self.binSpinBox.setKeyboardTracking(False)
 #        self.connect(self.binSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.binChange)
         
-        self.thresholdSpinBox = QtGui.QSpinBox()
+        self.thresholdSpinBox = QtWidgets.QSpinBox()
         self.thresholdSpinBox.setMinimum(-100)
         self.thresholdSpinBox.setMaximum(100000)
         self.thresholdSpinBox.setSingleStep(1)  
         self.thresholdSpinBox.setValue(self.threshold)     
         self.thresholdSpinBox.setKeyboardTracking(False)
-        self.connect(self.thresholdSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.thresholdChange)  
+        self.thresholdSpinBox.valueChanged[int].connect(self.thresholdChange)
         
         #try:
         self.canvas = HistCanvas(self, data, self.thresholdSpinBox.value())
@@ -97,7 +97,7 @@ class HistWindow(QtGui.QWidget):
         
               
         
-        self.bottomPanel = QtGui.QHBoxLayout()
+        self.bottomPanel = QtWidgets.QHBoxLayout()
         
         layout.addLayout(self.bottomPanel)
 #        self.bottomPanel.addWidget(self.binSpinBox)

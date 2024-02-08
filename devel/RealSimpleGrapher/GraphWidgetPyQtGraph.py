@@ -186,8 +186,8 @@ class Graph_PyQtGraph(QtGui.QWidget):
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    from . import qt4reactor
-    qt4reactor.install()
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     main = Graph_PyQtGraph('example', reactor)
     main.show()

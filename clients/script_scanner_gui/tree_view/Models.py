@@ -1,4 +1,4 @@
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from .Data import ParameterNode, CollectionNode, ScanNode, BoolNode
 from .Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode
 from .Data import DurationBandwidthNode, SpectrumSensitivityNode

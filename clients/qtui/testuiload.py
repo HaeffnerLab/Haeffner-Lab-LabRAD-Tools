@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from PyQt4 import QtGui
-from PyQt4 import QtCore,uic
+from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets, uic
 
-class DC_CONTROL(QtGui.QWidget):
+class DC_CONTROL(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         uic.loadUi('dconrf.ui',self)
 
-app = QtGui.QApplication(sys.argv)
+app = QtWidgets.QApplication(sys.argv)
 icon = DC_CONTROL()
 icon.show()
 app.exec_()

@@ -1,10 +1,10 @@
-from PyQt4 import QtGui, uic
+from PyQt5 import QtGui, QtWidgets, uic
 from twisted.internet.defer import inlineCallbacks
 import os
 
 SIGNALID = 874193
 
-class pmtWidget(QtGui.QWidget):
+class pmtWidget(QtWidgets.QWidget):
     def __init__(self, reactor, parent=None):
         super(pmtWidget, self).__init__(parent)
         self.reactor = reactor
@@ -127,9 +127,9 @@ class pmtWidget(QtGui.QWidget):
         self.reactor.stop()   
 
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from . import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     pmtWidget = pmtWidget(reactor)
     pmtWidget.show()

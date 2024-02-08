@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, uic
+from PyQt5 import QtGui, QtWidgets, uic
 import os
 
 basepath =  os.path.dirname(__file__)
@@ -8,7 +8,7 @@ base, form = uic.loadUiType(path)
 class UndefinedParameterEditor(base, form):
     def __init__(self, parent = None):
         super(UndefinedParameterEditor, self).__init__(parent)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QtWidgets.QDataWidgetMapper(self)
         self.setupUi(self)
 
     def setModel(self, proxyModel):

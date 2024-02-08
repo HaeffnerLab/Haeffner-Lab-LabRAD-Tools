@@ -2,12 +2,12 @@
 DataVault browser widget
 '''
 from twisted.internet.defer import inlineCallbacks
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class DataVaultWidget(QtGui.QListWidget):
+class DataVaultWidget(QtWidgets.QListWidget):
 
     def __init__(self, parent, context):
-        QtGui.QListWidget.__init__(self)
+        QtWidgets.QListWidget.__init__(self)
         self.parent = parent
         self.context = context
 

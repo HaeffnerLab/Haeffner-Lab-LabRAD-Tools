@@ -1,8 +1,8 @@
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 
 
-class InjectionLock_Control(QtGui.QFrame):
+class InjectionLock_Control(QtWidgets.QFrame):
     def __init__(self, reactor, parent=None):
 
         self.reactor = reactor
@@ -11,54 +11,54 @@ class InjectionLock_Control(QtGui.QFrame):
 
         super(InjectionLock_Control, self).__init__(parent)
 
-        grid = QtGui.QGridLayout()
-        self.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        grid = QtWidgets.QGridLayout()
+        self.setFrameStyle(QtWidgets.QFrame.Panel | QtWidgets.QFrame.Sunken)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
 
-        self.q1Edit = QtGui.QDoubleSpinBox()
+        self.q1Edit = QtWidgets.QDoubleSpinBox()
         self.q1Edit.setSingleStep(0.01)
         self.q1Edit.setValue(0.1)
         self.q1Edit.setSuffix(' V')
         self.q1Edit.setMinimum(0.1)
         self.q1Edit.setMaximum(10.0)
 
-        self.q2Edit = QtGui.QDoubleSpinBox()
+        self.q2Edit = QtWidgets.QDoubleSpinBox()
         self.q2Edit.setSingleStep(0.01)
         self.q2Edit.setValue(4.0)
         self.q2Edit.setSuffix(' V')
         self.q2Edit.setMinimum(0.1)
         self.q2Edit.setMaximum(10.0)
 
-        self.q3Edit = QtGui.QDoubleSpinBox()
+        self.q3Edit = QtWidgets.QDoubleSpinBox()
         self.q3Edit.setSingleStep(0.01)
         self.q3Edit.setValue(0.1)
         self.q3Edit.setSuffix(' V')
         self.q3Edit.setMinimum(0.1)
         self.q3Edit.setMaximum(10.0)
 
-        self.q4Edit = QtGui.QDoubleSpinBox()
+        self.q4Edit = QtWidgets.QDoubleSpinBox()
         self.q4Edit.setSingleStep(0.01)
         self.q4Edit.setValue(5.0)
         self.q4Edit.setSuffix(' V')
         self.q4Edit.setMinimum(0.1)
         self.q4Edit.setMaximum(10.0)
 
-        grid.addWidget(QtGui.QLabel('729super  Scan Range:'), 1, 0)
+        grid.addWidget(QtWidgets.QLabel('729super  Scan Range:'), 1, 0)
         grid.addWidget(self.q1Edit, 1, 1)
 
-        grid.addWidget(QtGui.QLabel('729inject  Scan Range:'), 2, 0)
+        grid.addWidget(QtWidgets.QLabel('729inject  Scan Range:'), 2, 0)
         grid.addWidget(self.q2Edit, 1, 2)
 
         grid.addWidget(self.q3Edit, 2, 1)
 
         grid.addWidget(self.q4Edit, 2, 2)
 
-        self.applyBtn = QtGui.QPushButton('Relock', self)
+        self.applyBtn = QtWidgets.QPushButton('Relock', self)
         self.applyBtn.clicked.connect(self.getback1)
 
         grid.addWidget(self.applyBtn, 1, 3)
 
-        self.applyBtn2 = QtGui.QPushButton('Relock', self)
+        self.applyBtn2 = QtWidgets.QPushButton('Relock', self)
         self.applyBtn2.clicked.connect(self.getback2)
 
         grid.addWidget(self.applyBtn2, 2, 3)
@@ -119,10 +119,10 @@ class InjectionLock_Control(QtGui.QFrame):
 
 
 if __name__ == '__main__':
-    a = QtGui.QApplication([])
-    from . import qt4reactor
+    a = QtWidgets.QApplication([])
+    import qt5reactor
 
-    qt4reactor.install()
+    qt5reactor.install()
     from twisted.internet import reactor
 
     injectionlock_control = InjectionLock_Control(reactor)

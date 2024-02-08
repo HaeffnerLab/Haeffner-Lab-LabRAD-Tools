@@ -1,15 +1,15 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class fixed_width_button(QtGui.QPushButton):
+class fixed_width_button(QtWidgets.QPushButton):
     def __init__(self, text, size):
         super(fixed_width_button, self).__init__(text)
         self.size = size
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
     
     def sizeHint(self):
         return QtCore.QSize(*self.size)
         
-class scheduled_widget(QtGui.QWidget):
+class scheduled_widget(QtWidgets.QWidget):
     
     def __init__(self, reactor, ident, name, duration, font = None, parent = None):
         super(scheduled_widget, self).__init__(parent)
@@ -24,18 +24,18 @@ class scheduled_widget(QtGui.QWidget):
         self.setup_layout()
 
     def setup_layout(self):
-        layout = QtGui.QHBoxLayout()
-        self.id_label = QtGui.QLabel('{0}'.format(self.ident))
+        layout = QtWidgets.QHBoxLayout()
+        self.id_label = QtWidgets.QLabel('{0}'.format(self.ident))
         self.id_label.setFont(self.font)
         self.id_label.setMinimumWidth(30)
         self.id_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.id_label.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        self.name_label = QtGui.QLabel(self.name)
+        self.id_label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.name_label = QtWidgets.QLabel(self.name)
         self.name_label.setFont(self.font)
         self.name_label.setAlignment(QtCore.Qt.AlignLeft)
-        self.name_label.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        self.name_label.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
-        self.scheduled_duration = QtGui.QSpinBox()
+        self.scheduled_duration = QtWidgets.QSpinBox()
         self.scheduled_duration.setRange(1, 3600)
         self.scheduled_duration.setKeyboardTracking(False)
         self.scheduled_duration.setSuffix(' sec')
@@ -50,7 +50,7 @@ class scheduled_widget(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-class scheduled_list(QtGui.QTableWidget):
+class scheduled_list(QtWidgets.QTableWidget):
     
     on_cancel = QtCore.pyqtSignal(int)
     on_new_duration = QtCore.pyqtSignal(int,float)
@@ -62,7 +62,7 @@ class scheduled_list(QtGui.QTableWidget):
         self.font = font
         if self.font is None:
             self.font = QtGui.QFont('MS Shell Dlg 2',pointSize=12)
-        self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.setupLayout()
         self.d = {}#stores identification: corresponding widget
         self.mapper_cancel = QtCore.QSignalMapper()
@@ -79,12 +79,12 @@ class scheduled_list(QtGui.QTableWidget):
         self.on_new_duration.emit(ident, duration)
     
     def setupLayout(self):
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setColumnCount(1)
         self.setShowGrid(False)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
         
     def add(self, ident, name, duration):
         ident = int(ident)
@@ -130,7 +130,7 @@ class scheduled_list(QtGui.QTableWidget):
     def closeEvent(self, x):
         self.reactor.stop()
         
-class scheduled_combined(QtGui.QWidget):
+class scheduled_combined(QtWidgets.QWidget):
     def __init__(self, reactor, font = None, parent = None):
         super(scheduled_combined, self).__init__(parent)
         self.reactor = reactor
@@ -154,11 +154,11 @@ class scheduled_combined(QtGui.QWidget):
         self.sl.update_duration(ident, duration)
     
     def setupLayout(self):
-        layout = QtGui.QGridLayout()
-        title = QtGui.QLabel("Scheduled", font = self.font)
+        layout = QtWidgets.QGridLayout()
+        title = QtWidgets.QLabel("Scheduled", font = self.font)
         title.setAlignment(QtCore.Qt.AlignLeft)
         self.sl = scheduled_list(self.reactor, self.parent)
-        self.cancel_all = QtGui.QPushButton("Cancel All")
+        self.cancel_all = QtWidgets.QPushButton("Cancel All")
         layout.addWidget(title, 0, 0, 1, 2 )
         layout.addWidget(self.cancel_all, 0, 2, 1, 1 )
         layout.addWidget(self.sl, 1, 0, 3, 3 )

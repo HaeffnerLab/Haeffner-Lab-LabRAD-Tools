@@ -1,5 +1,5 @@
 # Config Editor
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import sys
 import os
 import subprocess
@@ -8,15 +8,14 @@ from .CONFIG_EDITOR_config import labrad_folders
 
 from . import syntax
 
-class CONFIG_EDITOR(QtGui.QMainWindow):
+class CONFIG_EDITOR(QtWidgets.QMainWindow):
 
     def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
         super(CONFIG_EDITOR, self).__init__(parent)
-
-    self.reactor = reactor
-    self.current_file = None
-    self.get_config_files(labrad_folders)
-    self.initUI()
+        self.reactor = reactor
+        self.current_file = None
+        self.get_config_files(labrad_folders)
+        self.initUI()
 
 
     def get_config_files(self, folders = '.'):
@@ -41,29 +40,29 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
                             self.config_file_list.append(file)
 
     def initUI(self):
-        newAction = QtGui.QPushButton('New')
+        newAction = QtWidgets.QPushButton('New')
         newAction.setShortcut('Ctrl+N')
         newAction.setStatusTip('Create new file')
         newAction.pressed.connect(self.newFile)
 
-        saveAction = QtGui.QPushButton('Save')
+        saveAction = QtWidgets.QPushButton('Save')
         saveAction.setShortcut('Ctrl+S')
         saveAction.setStatusTip('Save current file')
         saveAction.pressed.connect(self.saveFile)
         
-        openAction = QtGui.QPushButton('Open')
+        openAction = QtWidgets.QPushButton('Open')
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Open a file')
         openAction.pressed.connect(partial(self.openFile, None))
         
-        buttonWidget = QtGui.QWidget()
-        buttons_layout = QtGui.QHBoxLayout()
+        buttonWidget = QtWidgets.QWidget()
+        buttons_layout = QtWidgets.QHBoxLayout()
         buttons_layout.addWidget(newAction)
         buttons_layout.addWidget(saveAction)
         buttons_layout.addWidget(openAction)
         buttonWidget.setLayout(buttons_layout)
         
-        self.comboBoxWidget = QtGui.QComboBox()
+        self.comboBoxWidget = QtWidgets.QComboBox()
         self.comboBoxWidget.addItem('Choose a file')
         for k, path in sorted(zip(self.config_file_list, self.config_path_list)):
             self.comboBoxWidget.addItem(os.path.join(path, k))
@@ -71,13 +70,13 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
         self.comboBoxWidget.currentIndexChanged.connect(self.open_config_file)
 
         #self.text = QtGui.QTextEdit(self)
-        self.text = QtGui.QPlainTextEdit(self)
+        self.text = QtWidgets.QPlainTextEdit(self)
 
         self.setGeometry(300,300,800,600)
         self.setWindowTitle('Config Editor')
         
-        centralWidget = QtGui.QWidget()
-        mylayout = QtGui.QVBoxLayout()
+        centralWidget = QtWidgets.QWidget()
+        mylayout = QtWidgets.QVBoxLayout()
         mylayout.addWidget(buttonWidget)
         mylayout.addWidget(self.comboBoxWidget)
         mylayout.addWidget(self.text)
@@ -101,7 +100,7 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
     def saveFile(self):
         if self.current_file is None:
             # dialog appears only for non-config files
-            filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', os.getenv('HOME'))
+            filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', os.getenv('HOME'))[0]
 
         to_save_filename = self.current_file
         f = open(to_save_filename, 'w')
@@ -115,7 +114,7 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
             self.text.clear()
             return
         if filename is None:
-            filename = QtGui.QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))
+            filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File', os.getenv('HOME'))[0]
 
         try:
             f = open(filename, 'r')
@@ -138,10 +137,10 @@ class CONFIG_EDITOR(QtGui.QMainWindow):
 
 if __name__ == '__main__':
 
-    a = QtGui.QApplication( [] )
+    a = QtWidgets.QApplication( [] )
     clipboard = a.clipboard()
-    from . import qt4reactor
-    qt4reactor.install()
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     CONFIG_EDITOR = CONFIG_EDITOR(reactor, clipboard)
     CONFIG_EDITOR.show()

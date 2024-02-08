@@ -419,8 +419,8 @@ class script_scanner_gui(QtGui.QWidget):
 
 if __name__=="__main__":
     a = QtGui.QApplication( ["Script Scanner"] )
-    from common.clients import qt4reactor
-    qt4reactor.install()
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     from common.clients.connection import connection
     gui = script_scanner_gui(reactor)

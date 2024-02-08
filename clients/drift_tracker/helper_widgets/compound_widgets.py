@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .helper_widgets import dropdown
 
-class table_dropdowns_with_entry(QtGui.QTableWidget):
+class table_dropdowns_with_entry(QtWidgets.QTableWidget):
     """
     this widgets consists of rows where each row is a frequency dropdown and an editable frequency field
     this is used for entering frequences of 729 lines into the drift tracker
@@ -30,7 +30,7 @@ class table_dropdowns_with_entry(QtGui.QTableWidget):
         self.initializeGUI()
         
     def initializeGUI(self):
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setColumnCount(2)
         self.setRowCount(self.entries)
@@ -45,7 +45,7 @@ class table_dropdowns_with_entry(QtGui.QTableWidget):
             else:
                 drop = dropdown(self.reactor, names = self.names, font=self.font, favorites = self.favorites, initial_selection = self.initial_selection[i])
             self.setCellWidget(i , 0, drop)
-            sample = QtGui.QDoubleSpinBox()
+            sample = QtWidgets.QDoubleSpinBox()
             sample.setFont(self.font)
             sample.setRange(*self.limits)
             sample.setDecimals(self.sig_figs)

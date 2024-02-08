@@ -1,12 +1,12 @@
 import sys
 import os
-from PyQt4 import QtGui
-from PyQt4 import QtCore,uic
+from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets, uic
 
-class QCustomSpinBox(QtGui.QWidget):
+class QCustomSpinBox(QtWidgets.QWidget):
     onNewValues = QtCore.pyqtSignal()
     def __init__(self, title, levelRange, parent=None,decimals=3,step_size=0.001):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         basepath = os.path.dirname(__file__)
         path = os.path.join(basepath,'titlespin.ui')
         uic.loadUi(path,self)
@@ -74,7 +74,7 @@ class QCustomSpinBox(QtGui.QWidget):
         self.spinLevel.blockSignals(False)
         
 if __name__=='__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     icon = QCustomLevelSpin('Control',(0.0,100.0))
     icon.show()
     app.exec_()

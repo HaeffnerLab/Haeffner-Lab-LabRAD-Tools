@@ -18,8 +18,8 @@ timeout = 5
 #install qt4 reactor for the GUI
 from PyQt4 import QtGui
 a = QtGui.QApplication( [])
-import qt4reactor
-qt4reactor.install()
+import qt5reactor
+qt5reactor.install()
 from twisted.internet import reactor
 from labrad.server import setting, LabradServer
 from labrad.types import Error

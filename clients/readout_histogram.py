@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
@@ -22,9 +22,9 @@ class config_729_hist(object):
     #readout_threshold_dir =  ('StateReadout','state_readout_threshold')
     readout_threshold_dir =  ('StateReadout','threshold_list')
 
-class readout_histogram(QtGui.QWidget):
+class readout_histogram(QtWidgets.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.reactor = reactor
         self.cxn = cxn
         self.thresholdVal = None
@@ -35,13 +35,13 @@ class readout_histogram(QtGui.QWidget):
         self.connect_labrad()
     
     def create_layout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         plot_layout = self.create_plot_layout()
         layout.addLayout(plot_layout)
         self.setLayout(layout)
    
     def create_plot_layout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
         self.fig.patch.set_facecolor((.96, .96, .96))
@@ -210,9 +210,9 @@ class readout_histogram(QtGui.QWidget):
         self.reactor.stop()  
     
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from . import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     widget = readout_histogram(reactor)
     widget.show()

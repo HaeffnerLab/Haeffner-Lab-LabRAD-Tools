@@ -110,9 +110,9 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
-from matplotlib.widgets import RectangleSelector 
+from matplotlib.widgets import RectangleSelector
 from matplotlib import pyplot
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 import time
 import numpy as np
 from itertools import cycle
@@ -215,7 +215,7 @@ class Qt4MplCanvas(FigureCanvas):
             self.drawLegend()
             self.draw()
             self.timer = QtCore.QTimer()
-            QtCore.QObject.connect(self.timer, QtCore.SIGNAL("timeout()"), self.constantUpdate)
+            self.timer.timeout.connect(self.constantUpdate)
             self.timer.start(TIMERREFRESH)
 
             self.cidpress = self.mpl_connect('draw_event', self.on_draw)

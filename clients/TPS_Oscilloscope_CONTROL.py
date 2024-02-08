@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 
-class TPSClient (QtGui.QWidget):
+class TPSClient (QtWidgets.QWidget):
     def __init__(self, reactor, parent=None):
         QtGui.Qwidget.__init__(self)
         self.reactor = reactor
@@ -18,11 +18,11 @@ class TPSClient (QtGui.QWidget):
     def initializeGUI(self):
         self.d = {}
         #set layout
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
         self.setFrameStyle(0x0001 | 0x0030)
         #get switch names and add them to the layout, and connect their function
-        layout.addWidget(QtGui.QLabel('Switches'),0,0)
+        layout.addWidget(QtWidgets.QLabel('Switches'),0,0)
         switchNames = yield self.server.get_channels()
         switchNames = [el[0] for el in switchNames] #picking first of the tuple
         if self.channels is not None:
@@ -31,15 +31,15 @@ class TPSClient (QtGui.QWidget):
             channels = switchNames
         for order,name in enumerate(channels):
             #setting up physical container
-            groupBox = QtGui.QGroupBox(name) 
-            groupBoxLayout = QtGui.QVBoxLayout()
-            buttonOn = QtGui.QPushButton('ON')
+            groupBox = QtWidgets.QGroupBox(name) 
+            groupBoxLayout = QtWidgets.QVBoxLayout()
+            buttonOn = QtWidgets.QPushButton('ON')
             buttonOn.setAutoExclusive(True)
             buttonOn.setCheckable(True)
-            buttonOff = QtGui.QPushButton('OFF')
+            buttonOff = QtWidgets.QPushButton('OFF')
             buttonOff.setCheckable(True)
             buttonOff.setAutoExclusive(True)
-            buttonAuto = QtGui.QPushButton('Auto')
+            buttonAuto = QtWidgets.QPushButton('Auto')
             buttonAuto.setCheckable(True)
             buttonAuto.setAutoExclusive(True)
             groupBoxLayout.addWidget(buttonOn)

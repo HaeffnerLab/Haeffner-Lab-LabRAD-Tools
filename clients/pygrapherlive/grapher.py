@@ -13,13 +13,13 @@ grapher facilitates the transfer of old and live data to the grapher window.
 
 '''
 
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from .connections import CONNECTIONS
 
 if __name__ == '__main__':
-    a = QtGui.QApplication( [] )
-    from . import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     Connections = CONNECTIONS(reactor)
     reactor.run()

@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
@@ -30,9 +30,9 @@ client_name = cl.client_name
 
 colors = c.default_color_cycle[0:len(client_list)]
 
-class drift_tracker(QtGui.QWidget):
+class drift_tracker(QtWidgets.QWidget):
     def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.reactor = reactor
         self.clipboard = clipboard
         self.cxn = cxn
@@ -57,7 +57,7 @@ class drift_tracker(QtGui.QWidget):
         update_show.start(c.show_rate)
     
     def create_layout(self):
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         plot_layout = self.create_drift_layout()
         widget_layout = self.create_widget_layout()
         spectrum_layout = self.create_spectrum_layout()
@@ -67,7 +67,7 @@ class drift_tracker(QtGui.QWidget):
         self.setLayout(layout)
    
     def create_drift_layout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.fig = Figure()
         self.drift_canvas = FigureCanvas(self.fig)
         self.drift_canvas.setParent(self)  
@@ -95,7 +95,7 @@ class drift_tracker(QtGui.QWidget):
         return layout
     
     def create_spectrum_layout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.fig = Figure()
         self.spec_canvas = FigureCanvas(self.fig)
         self.spec_canvas.setParent(self)  
@@ -114,77 +114,77 @@ class drift_tracker(QtGui.QWidget):
         return layout
     
     def create_widget_layout(self):
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
         self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites, initial_selection = self.initial_selection, initial_values = self.initial_values)
         
         self.last_B = 0.0
-        self.Bfield_entry = QtGui.QDoubleSpinBox()
+        self.Bfield_entry = QtWidgets.QDoubleSpinBox()
         self.Bfield_entry.setRange(0.0, 10000.0)
         self.Bfield_entry.setDecimals(6)
         self.Bfield_entry.setSuffix(' mGauss')
         self.Bfield_entry.setValue(self.last_B)
 
         self.last_center = 0.0
-        self.linecenter_entry = QtGui.QDoubleSpinBox()
+        self.linecenter_entry = QtWidgets.QDoubleSpinBox()
         self.linecenter_entry.setRange(-50000.0, 0.0)
         self.linecenter_entry.setDecimals(6)
         self.linecenter_entry.setSuffix(' kHz')
         self.linecenter_entry.setValue(self.last_center)
         
-        self.entry_Bfield_and_center_button = QtGui.QPushButton("Submit B and Line Center")
+        self.entry_Bfield_and_center_button = QtWidgets.QPushButton("Submit B and Line Center")
 
-        self.entry_button = QtGui.QPushButton("Submit Lines")
-        self.copy_clipboard_button = QtGui.QPushButton("Copy Info to Clipboard")
+        self.entry_button = QtWidgets.QPushButton("Submit Lines")
+        self.copy_clipboard_button = QtWidgets.QPushButton("Copy Info to Clipboard")
 
-        self.remove_all_B_and_lines_button = QtGui.QPushButton("Remove all B and Line Centers")
+        self.remove_all_B_and_lines_button = QtWidgets.QPushButton("Remove all B and Line Centers")
         #self.remove_all_B_and_lines_button.setDisabled(True) # not programmed yet
 
-        self.remove_B_button = QtGui.QPushButton("Remove B")
-        self.remove_line_center_button = QtGui.QPushButton("Remove Line Center")
+        self.remove_B_button = QtWidgets.QPushButton("Remove B")
+        self.remove_line_center_button = QtWidgets.QPushButton("Remove Line Center")
 
-        self.remove_B_count = QtGui.QSpinBox()
+        self.remove_B_count = QtWidgets.QSpinBox()
         self.remove_B_count.setRange(-20,20)
-        self.remove_line_center_count = QtGui.QSpinBox()
+        self.remove_line_center_count = QtWidgets.QSpinBox()
         self.remove_line_center_count.setRange(-20,20)
         
-        self.track_B_duration = QtGui.QSpinBox()
+        self.track_B_duration = QtWidgets.QSpinBox()
         self.track_B_duration.setKeyboardTracking(False)
         self.track_B_duration.setSuffix('min')
         self.track_B_duration.setRange(1, 1000)
         
-        self.track_line_center_duration = QtGui.QSpinBox()
+        self.track_line_center_duration = QtWidgets.QSpinBox()
         self.track_line_center_duration.setKeyboardTracking(False)
         self.track_line_center_duration.setSuffix('min')
         self.track_line_center_duration.setRange(1, 1000)
 
-        self.track_global_line_center_duration = QtGui.QSpinBox()
+        self.track_global_line_center_duration = QtWidgets.QSpinBox()
         self.track_global_line_center_duration.setKeyboardTracking(False)
         self.track_global_line_center_duration.setSuffix('min')
         self.track_global_line_center_duration.setRange(1, 1000)
         self.track_global_line_center_duration.setEnabled(False)
 
-        self.global_checkbox = QtGui.QCheckBox("Global Line Center")
+        self.global_checkbox = QtWidgets.QCheckBox("Global Line Center")
         self.global_checkbox.setChecked(False)
 
         self.client_checkbox = dict.fromkeys(client_list)
         for client in client_list:
             if client == client_name:
-                self.client_checkbox[client] = QtGui.QCheckBox(client)
+                self.client_checkbox[client] = QtWidgets.QCheckBox(client)
                 self.client_checkbox[client_name].setChecked(True)
                 self.client_checkbox[client].setEnabled(False)
             else:
-                self.client_checkbox[client] = QtGui.QCheckBox(client)
+                self.client_checkbox[client] = QtWidgets.QCheckBox(client)
                 self.client_checkbox[client].setEnabled(False)
                 self.client_checkbox[client].setChecked(False)
 
-        self.current_line_center = QtGui.QLineEdit(readOnly = True)
+        self.current_line_center = QtWidgets.QLineEdit(readOnly = True)
         self.current_line_center.setAlignment(QtCore.Qt.AlignHCenter)
 
-        self.current_B = QtGui.QLineEdit(readOnly = True)
+        self.current_B = QtWidgets.QLineEdit(readOnly = True)
         self.current_B.setAlignment(QtCore.Qt.AlignHCenter)
 
-        self.current_time = QtGui.QLineEdit(readOnly = True)
+        self.current_time = QtWidgets.QLineEdit(readOnly = True)
         self.current_time.setAlignment(QtCore.Qt.AlignHCenter)
         
         layout.addWidget(self.frequency_table, 0, 0, 6, 1)
@@ -194,45 +194,45 @@ class drift_tracker(QtGui.QWidget):
         layout.addWidget(self.linecenter_entry, 4, 1, 1, 1)
         layout.addWidget(self.entry_Bfield_and_center_button, 5, 1, 1, 1)
 
-        hlp_layout = QtGui.QHBoxLayout()
+        hlp_layout = QtWidgets.QHBoxLayout()
         hlp_layout.addWidget(self.copy_clipboard_button)
         hlp_layout.addWidget(self.remove_all_B_and_lines_button)
         
-        remove_B_layout = QtGui.QHBoxLayout() 
+        remove_B_layout = QtWidgets.QHBoxLayout() 
         remove_B_layout.addWidget(self.remove_B_count)
         remove_B_layout.addWidget(self.remove_B_button)    
 
-        remove_line_center_layout = QtGui.QHBoxLayout() 
+        remove_line_center_layout = QtWidgets.QHBoxLayout() 
         remove_line_center_layout.addWidget(self.remove_line_center_count)
         remove_line_center_layout.addWidget(self.remove_line_center_button)    
 
-        keep_local_B_layout = QtGui.QHBoxLayout()
-        keep_local_B_layout.addWidget(QtGui.QLabel("Tracking Duration (Local B)"))
+        keep_local_B_layout = QtWidgets.QHBoxLayout()
+        keep_local_B_layout.addWidget(QtWidgets.QLabel("Tracking Duration (Local B)"))
         keep_local_B_layout.addWidget(self.track_B_duration)
 
 
-        keep_local_line_center_layout = QtGui.QHBoxLayout()
-        keep_local_line_center_layout.addWidget(QtGui.QLabel("Tracking Duration (Local Line Center)"))
+        keep_local_line_center_layout = QtWidgets.QHBoxLayout()
+        keep_local_line_center_layout.addWidget(QtWidgets.QLabel("Tracking Duration (Local Line Center)"))
         keep_local_line_center_layout.addWidget(self.track_line_center_duration)
 
-        keep_global_line_center_layout = QtGui.QHBoxLayout()
-        keep_global_line_center_layout.addWidget(QtGui.QLabel("Tracking Duration (Global Line Center)"))
+        keep_global_line_center_layout = QtWidgets.QHBoxLayout()
+        keep_global_line_center_layout.addWidget(QtWidgets.QLabel("Tracking Duration (Global Line Center)"))
         keep_global_line_center_layout.addWidget(self.track_global_line_center_duration)
 
-        client_checkbox_layout = QtGui.QHBoxLayout()
+        client_checkbox_layout = QtWidgets.QHBoxLayout()
         for client in client_list:
             client_checkbox_layout.addWidget(self.client_checkbox[client])
 
-        line_center_show = QtGui.QHBoxLayout()
-        line_center_show.addWidget(QtGui.QLabel("Current Line Center: "))
+        line_center_show = QtWidgets.QHBoxLayout()
+        line_center_show.addWidget(QtWidgets.QLabel("Current Line Center: "))
         line_center_show.addWidget(self.current_line_center)
 
-        B_field_show = QtGui.QHBoxLayout()
-        B_field_show.addWidget(QtGui.QLabel("Current B Field: "))
+        B_field_show = QtWidgets.QHBoxLayout()
+        B_field_show.addWidget(QtWidgets.QLabel("Current B Field: "))
         B_field_show.addWidget(self.current_B)
 
-        time_show = QtGui.QHBoxLayout()
-        time_show.addWidget(QtGui.QLabel("Current Time: "))
+        time_show = QtWidgets.QHBoxLayout()
+        time_show.addWidget(QtWidgets.QLabel("Current Time: "))
         time_show.addWidget(self.current_time)
       
         layout.addLayout(hlp_layout, 6, 0, 1, 1)
@@ -818,7 +818,7 @@ class drift_tracker(QtGui.QWidget):
         
     def displayError(self, text):
         #runs the message box in a non-blocking method
-        message = QtGui.QMessageBox(self)
+        message = QtWidgets.QMessageBox(self)
         message.setText(text)
         message.open()
         message.show()
@@ -828,7 +828,7 @@ class drift_tracker(QtGui.QWidget):
         self.reactor.stop()  
     
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
+    a = QtWidgets.QApplication( [] )
     clipboard = a.clipboard()
     from common.clients import qt4reactor
     qt4reactor.install()

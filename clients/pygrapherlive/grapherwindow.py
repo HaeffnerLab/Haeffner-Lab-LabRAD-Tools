@@ -2,7 +2,7 @@
 The plot and all relevant plot options are managed by the Grapher Window.
 '''
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .canvas import Qt4MplCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from .datavault import DataVaultWidget
@@ -14,18 +14,18 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 # added 8/13/14 by William for publish option
 import pylab
 #import pyperperclip
-import xmlrpc.client 
+import xmlrpc.client
 from . import publish_parameters as pp
 import os
 try: 
     import paramiko
 except:
     print("paramiko not installed")
-class GrapherWindow(QtGui.QWidget):
+class GrapherWindow(QtWidgets.QWidget):
     """Creates the window for the new plot"""
     def __init__(self, parent, context, windowName):
 #    def __init__(self, parent, context):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.context = context
         self.windowName = windowName
@@ -43,7 +43,7 @@ class GrapherWindow(QtGui.QWidget):
         self.setWindowTitle(self.windowName)
          
         # create a vertical box layout widget
-        grapherLayout = QtGui.QVBoxLayout()
+        grapherLayout = QtWidgets.QVBoxLayout()
         # instantiate our Matplotlib canvas widget
         self.qmc = Qt4MplCanvas(self)
         # instantiate the navigation toolbar
@@ -54,15 +54,15 @@ class GrapherWindow(QtGui.QWidget):
         grapherLayout.addWidget(self.qmc)
 
         # Main horizontal layout
-        mainLayout = QtGui.QHBoxLayout()
+        mainLayout = QtWidgets.QHBoxLayout()
         # Layout that controls datasets
-        datasetLayout = QtGui.QVBoxLayout() 
+        datasetLayout = QtWidgets.QVBoxLayout() 
 
         mainLayout.addLayout(datasetLayout)
         mainLayout.addLayout(grapherLayout)
         
         # Layout for keeping track of datasets on a graph and analysis
-        self.datasetCheckboxListWidget = DatasetCheckBoxListWidget(self)#QtGui.QListWidget()
+        self.datasetCheckboxListWidget = DatasetCheckBoxListWidget(self)#QtWidgets.QListWidget()
         self.datasetCheckboxListWidget.setMaximumWidth(180)
         self.datasetCheckboxListWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         datasetLayout.addWidget(self.datasetCheckboxListWidget)
@@ -76,33 +76,33 @@ class GrapherWindow(QtGui.QWidget):
         self.setLayout(mainLayout)
 
         # checkbox to change boundaries
-        self.cb1 = QtGui.QCheckBox('AutoScroll', self)
+        self.cb1 = QtWidgets.QCheckBox('AutoScroll', self)
         #self.cb1.move(290, 23)
         self.cb1.clicked.connect(self.autoscrollSignal) 
         # checkbox to overlay new dataset
-        self.cb2 = QtGui.QCheckBox('Overlay', self)
+        self.cb2 = QtWidgets.QCheckBox('Overlay', self)
         #self.cb2.move(500, 35)
         # checkbox to toggle AutoFit
-        self.cb3 = QtGui.QCheckBox('AutoFit', self)
+        self.cb3 = QtWidgets.QCheckBox('AutoFit', self)
         #self.cb3.move(290, 39)
 #        self.cb3.toggle()
         self.cb3.clicked.connect(self.autofitSignal) 
 
-        self.cb4 = QtGui.QCheckBox('Probability mode', self)
+        self.cb4 = QtWidgets.QCheckBox('Probability mode', self)
 
         # button to fit data on screen
-        fitButton = QtGui.QPushButton("Fit", self)
+        fitButton = QtWidgets.QPushButton("Fit", self)
         fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         fitButton.clicked.connect(self.fitDataSignal)
         
-        windowNameButton = QtGui.QPushButton("Change Window Name", self)
+        windowNameButton = QtWidgets.QPushButton("Change Window Name", self)
         windowNameButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         windowNameButton.clicked.connect(self.changeWindowName)
         
         
         
         # Layout that controls graph options
-        buttonBox = QtGui.QHBoxLayout()
+        buttonBox = QtWidgets.QHBoxLayout()
         buttonBox.addWidget(self.cb1) 
         buttonBox.addWidget(self.cb3)
         buttonBox.addWidget(self.cb2)
@@ -115,7 +115,7 @@ class GrapherWindow(QtGui.QWidget):
     # adds a checkbox when a new dataset is overlaid on the graph
     
     def createDatasetCheckbox(self, dataset, directory, label, index):
-        datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
+        datasetCheckbox = QtWidgets.QCheckBox(str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label, self)
 #        datasetCheckbox = QtGui.QCheckBox(str(dataset) + ' - ' + label, self)
         datasetCheckbox.toggle()
         datasetCheckbox.clicked.connect(self.datasetCheckboxSignal)
@@ -129,7 +129,7 @@ class GrapherWindow(QtGui.QWidget):
             self.datasetCheckboxes[dataset, directory, index] = datasetCheckbox
             # The trick here is to create an item with enough text to activate the scrollbar, and then hide the text.
             # This must be done because a checkbox, even with a lot of text, does not activate the scroll bar horizontally
-            item = QtGui.QListWidgetItem()
+            item = QtWidgets.QListWidgetItem()
             self.datasetCheckboxesItems[item] = [dataset, directory, index]
             item.setText('        ' + str(dataset) + ' - ' + str(directory[-1]) + ' - ' + label)
             item.setTextColor(QtGui.QColor(255, 255, 255))
@@ -200,7 +200,7 @@ class GrapherWindow(QtGui.QWidget):
         self.qmc.fitData()
     
     def changeWindowName(self):
-        text, ok = QtGui.QInputDialog.getText(self, 'Change Window Name', 'Enter a name:')        
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Change Window Name', 'Enter a name:')        
         if ok:
             text = str(text)
             self.parent.changeWindowName(self.windowName, text)
@@ -243,17 +243,17 @@ class GrapherWindow(QtGui.QWidget):
                 pass
         self.fileQuit()
 
-class FirstWindow(QtGui.QWidget):
+class FirstWindow(QtWidgets.QWidget):
     """Creates the opening window"""
     def __init__(self, parent, context, reactor):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.context = context
         self.reactor = reactor
         self.parameterWindows = {}
         self.manuallyLoaded = True
         self.setWindowTitle("Live Grapher!")
-        hbl = QtGui.QHBoxLayout()
+        hbl = QtWidgets.QHBoxLayout()
         self.setLayout(hbl)
         self.datavaultwidget = DataVaultWidget(self, context)
         self.datavaultwidget.populateList()
@@ -272,16 +272,16 @@ class FirstWindow(QtGui.QWidget):
     def closeEvent(self, event):
         self.reactor.stop()                   
 
-class ParameterWindow(QtGui.QWidget):
+class ParameterWindow(QtWidgets.QWidget):
     """Creates the dataset-specific parameter window"""
     def __init__(self, parent, dataset, directory):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.dataset = dataset
         self.directory = directory
         self.setWindowTitle(str(dataset) + " " + str(directory))
-        mainLayout = QtGui.QVBoxLayout() 
-        self.parameterListWidget = QtGui.QListWidget()
+        mainLayout = QtWidgets.QVBoxLayout() 
+        self.parameterListWidget = QtWidgets.QListWidget()
         mainLayout.addWidget(self.parameterListWidget)
         self.populateList()
         self.setLayout(mainLayout)
@@ -292,11 +292,11 @@ class ParameterWindow(QtGui.QWidget):
         self.parameterListWidget.clear()
         self.parameterListWidget.addItems([str(x) for x in sorted(parameters)])
         
-class PublishWindow(QtGui.QWidget):
+class PublishWindow(QtWidgets.QWidget):
     """Creates the dataset-specific parameter window - with checkboxes.
     Then it lets you submit the selected data to the clipboard."""
     def __init__(self, parent, dataset, directory):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.dataset = dataset
         self.directory = directory
@@ -310,7 +310,7 @@ class PublishWindow(QtGui.QWidget):
         self.buildLayout()
         
     def addDialog(self):
-        text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog','Enter your comment:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Input Dialog','Enter your comment:')
         # note that text is not a true string yet
         if ok:
             self.content = str(text)+' ~ '
@@ -364,35 +364,35 @@ class PublishWindow(QtGui.QWidget):
     @inlineCallbacks
     def buildLayout(self):
         # create general layout
-        l=QtGui.QVBoxLayout(self)
+        l=QtWidgets.QVBoxLayout(self)
         parameters = yield self.parent.getParameters(self.dataset, self.directory) # this must be done here
-        s=QtGui.QScrollArea()
+        s=QtWidgets.QScrollArea()
         l.addWidget(s)
  
         # add secondary layout for scrolling capabilities
-        w=QtGui.QWidget(self)        
-        vbox=QtGui.QVBoxLayout(w)
+        w=QtWidgets.QWidget(self)        
+        vbox=QtWidgets.QVBoxLayout(w)
         
         # button to add a comment, repetition replaces
-        dialog = QtGui.QPushButton('Add Comment', self)
+        dialog = QtWidgets.QPushButton('Add Comment', self)
         dialog.clicked.connect(self.addDialog)  
         vbox.addWidget(dialog)
         
         # button to select all parameters
-        allb = QtGui.QPushButton('Submit All') 
+        allb = QtWidgets.QPushButton('Submit All') 
         allb.clicked.connect(self.selectAll)
         vbox.addWidget(allb)
          
         # button to only submit the selected parameters only
-        subb = QtGui.QPushButton('Submit Selected')
+        subb = QtWidgets.QPushButton('Submit Selected')
         subb.clicked.connect(self.clipboard)
         vbox.addWidget(subb)
         self.all += self.title + ': '
 
         # options to add each individual parameter
         for x in sorted(parameters):
-            _l=QtGui.QHBoxLayout()
-            pw = QtGui.QCheckBox(str(x))
+            _l=QtWidgets.QHBoxLayout()
+            pw = QtWidgets.QCheckBox(str(x))
             _l.addWidget(pw)
             pw.stateChanged.connect(self.addParam)
             self.all += str(x)+', '
@@ -401,9 +401,9 @@ class PublishWindow(QtGui.QWidget):
         # set the layout as a widget
         s.setWidget(w)
     
-class DatasetCheckBoxListWidget(QtGui.QListWidget):
+class DatasetCheckBoxListWidget(QtWidgets.QListWidget):
     def __init__(self, parent):
-        QtGui.QListWidget.__init__(self)
+        QtWidgets.QListWidget.__init__(self)
         self.parent = parent
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.popup)
@@ -420,7 +420,7 @@ class DatasetCheckBoxListWidget(QtGui.QListWidget):
             item.setSelected(True)
 
     def popup(self, pos):
-        menu = QtGui.QMenu()
+        menu = QtWidgets.QMenu()
 #        fitAction = menu.addAction("Fit")
 #        removeAction = menu.addAction("Remove")
         item = self.itemAt(pos)

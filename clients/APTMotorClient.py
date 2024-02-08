@@ -1,11 +1,11 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 BLOCKSIGNAL = 1
 
-class DevicePanel(QtGui.QWidget):
+class DevicePanel(QtWidgets.QWidget):
     def __init__(self, parent, cxn, context, deviceName):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.cxn = cxn
         self.context = context
@@ -19,30 +19,30 @@ class DevicePanel(QtGui.QWidget):
            
     def setupUI(self):
         # Labels
-        position = QtGui.QLabel()
+        position = QtWidgets.QLabel()
         position.setText(position.tr('Position (\265m)'))
-        deviceName = QtGui.QLabel(self.deviceName)
+        deviceName = QtWidgets.QLabel(self.deviceName)
         deviceName.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
-        stepSize = QtGui.QLabel('Step Size (\265m)')
+        stepSize = QtWidgets.QLabel('Step Size (\265m)')
         # Buttons
         
-        setVelParamsButton = QtGui.QPushButton("Parameters", self)
+        setVelParamsButton = QtWidgets.QPushButton("Parameters", self)
         setVelParamsButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         setVelParamsButton.clicked.connect(self.parametersSignal)
-        setVelParamsButton.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        setVelParamsButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         
-        stepLeftButton = QtGui.QPushButton("<", self)
+        stepLeftButton = QtWidgets.QPushButton("<", self)
         stepLeftButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         stepLeftButton.clicked.connect(self.moveRelativeLeftSignal)
-        stepLeftButton.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        stepLeftButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         
-        stepRightButton = QtGui.QPushButton(">", self)
+        stepRightButton = QtWidgets.QPushButton(">", self)
         stepRightButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         stepRightButton.clicked.connect(self.moveRelativeRightSignal)
-        stepRightButton.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        stepRightButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
                
-        self.positionDoubleSpinBox = QtGui.QDoubleSpinBox()
-        self.connect(self.positionDoubleSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.moveAbsoluteSignal)
+        self.positionDoubleSpinBox = QtWidgets.QDoubleSpinBox()
+        self.positionDoubleSpinBox.valueChanged[double].connect(self.moveAbsoluteSignal)
         
         self.positionDoubleSpinBox.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         self.positionDoubleSpinBox.setDecimals(1)
@@ -50,18 +50,18 @@ class DevicePanel(QtGui.QWidget):
         self.positionDoubleSpinBox.setMinimum(-6500)
         self.positionDoubleSpinBox.setMaximum(6500)
         self.positionDoubleSpinBox.setKeyboardTracking(False)
-        self.positionDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.positionDoubleSpinBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        self.stepSizeDoubleSpinBox = QtGui.QDoubleSpinBox()
+        self.stepSizeDoubleSpinBox = QtWidgets.QDoubleSpinBox()
         self.stepSizeDoubleSpinBox.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         self.stepSizeDoubleSpinBox.setDecimals(1)
         self.stepSizeDoubleSpinBox.setSingleStep(1)
         self.stepSizeDoubleSpinBox.setMinimum(0)
         self.stepSizeDoubleSpinBox.setKeyboardTracking(False)
-        self.stepSizeDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.stepSizeDoubleSpinBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
         # Layout
-        self.grid = QtGui.QGridLayout()
+        self.grid = QtWidgets.QGridLayout()
         self.grid.setSpacing(5)
         
 
@@ -77,7 +77,7 @@ class DevicePanel(QtGui.QWidget):
         self.grid.addWidget(stepSize, 1, 1)
 
         self.setLayout(self.grid)
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.show()
         
     @inlineCallbacks
@@ -89,7 +89,7 @@ class DevicePanel(QtGui.QWidget):
     @inlineCallbacks
     def setSerialNumber(self):
         self.serialNumber = yield self.parent.server.get_serial_number(context = self.context)
-        serialNumberLabel = QtGui.QLabel("ID: " + str(self.serialNumber))
+        serialNumberLabel = QtWidgets.QLabel("ID: " + str(self.serialNumber))
         self.grid.addWidget(serialNumberLabel, 1, 2, QtCore.Qt.AlignCenter)
         
     @inlineCallbacks
@@ -168,11 +168,11 @@ class DevicePanel(QtGui.QWidget):
     def positionChange(self, x, y):
         self.getPositionSignal(1)
 
-class ParameterWindow(QtGui.QWidget):
+class ParameterWindow(QtWidgets.QWidget):
     """Creates the device parameter window"""
 
     def __init__(self, parent, deviceName, context):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
         self.deviceName = deviceName
         self.context = context
@@ -182,51 +182,51 @@ class ParameterWindow(QtGui.QWidget):
     
     def setupUI(self):
         # Labels
-        minVelocity = QtGui.QLabel('Min Velocity')
-        acceleration = QtGui.QLabel('Acceleration')
-        maxVelocity = QtGui.QLabel('Max Velocity')
+        minVelocity = QtWidgets.QLabel('Min Velocity')
+        acceleration = QtWidgets.QLabel('Acceleration')
+        maxVelocity = QtWidgets.QLabel('Max Velocity')
         
-        hardwareModel = QtGui.QLabel('Hardware Model')
-        softwareVersion = QtGui.QLabel('Software Version')
-        hardwareNotes = QtGui.QLabel('Hardware Notes')
+        hardwareModel = QtWidgets.QLabel('Hardware Model')
+        softwareVersion = QtWidgets.QLabel('Software Version')
+        hardwareNotes = QtWidgets.QLabel('Hardware Notes')
         
-        parameterLimits = QtGui.QLabel('Max Limits')
-        accLimit = QtGui.QLabel('Max Acceleration')
-        velocityLimit = QtGui.QLabel('Max Velocity')
+        parameterLimits = QtWidgets.QLabel('Max Limits')
+        accLimit = QtWidgets.QLabel('Max Acceleration')
+        velocityLimit = QtWidgets.QLabel('Max Velocity')
 
         # Buttons
-        setVelParamsButton = QtGui.QPushButton("Set Velocity Parameters", self)
+        setVelParamsButton = QtWidgets.QPushButton("Set Velocity Parameters", self)
         setVelParamsButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         setVelParamsButton.clicked.connect(self.setVelParamsSignal)
-        setVelParamsButton.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        setVelParamsButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         
         # Spin Boxes
-        self.minVelocityDoubleSpinBox = QtGui.QDoubleSpinBox()
+        self.minVelocityDoubleSpinBox = QtWidgets.QDoubleSpinBox()
         self.minVelocityDoubleSpinBox.setDecimals(4)
         self.minVelocityDoubleSpinBox.setMinimum(0)
         self.minVelocityDoubleSpinBox.setSingleStep(.01)
-        self.minVelocityDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        self.accDoubleSpinBox = QtGui.QDoubleSpinBox()
+        self.minVelocityDoubleSpinBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.accDoubleSpinBox = QtWidgets.QDoubleSpinBox()
         self.accDoubleSpinBox.setDecimals(4)
         self.accDoubleSpinBox.setMinimum(0)
         self.accDoubleSpinBox.setSingleStep(.01)
-        self.accDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        self.maxVelocityDoubleSpinBox = QtGui.QDoubleSpinBox()
+        self.accDoubleSpinBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.maxVelocityDoubleSpinBox = QtWidgets.QDoubleSpinBox()
         self.maxVelocityDoubleSpinBox.setDecimals(4)
         self.maxVelocityDoubleSpinBox.setMinimum(0)
         self.maxVelocityDoubleSpinBox.setSingleStep(.01)
-        self.maxVelocityDoubleSpinBox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.maxVelocityDoubleSpinBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         
         # Text boxes
-        self.hardwareModelEdit = QtGui.QLineEdit(readOnly=True)
-        self.softwareVersionEdit = QtGui.QLineEdit(readOnly=True)
-        self.hardwareNotesEdit = QtGui.QLineEdit(readOnly=True)
+        self.hardwareModelEdit = QtWidgets.QLineEdit(readOnly=True)
+        self.softwareVersionEdit = QtWidgets.QLineEdit(readOnly=True)
+        self.hardwareNotesEdit = QtWidgets.QLineEdit(readOnly=True)
 
-        self.accLimitEdit = QtGui.QLineEdit(readOnly=True)
-        self.velocityLimitEdit = QtGui.QLineEdit(readOnly=True)
+        self.accLimitEdit = QtWidgets.QLineEdit(readOnly=True)
+        self.velocityLimitEdit = QtWidgets.QLineEdit(readOnly=True)
 
         # Layout
-        self.grid = QtGui.QGridLayout()
+        self.grid = QtWidgets.QGridLayout()
         self.setLayout(self.grid)
         self.grid.setSpacing(5)
         
@@ -292,9 +292,9 @@ class ParameterWindow(QtGui.QWidget):
     def closeEvent(self, evt):
         self.hide()
         
-class APTMotorClient(QtGui.QWidget):
+class APTMotorClient(QtWidgets.QWidget):
     def __init__(self, reactor):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.reactor = reactor
         self.devDict = {}
         try:
@@ -319,7 +319,7 @@ class APTMotorClient(QtGui.QWidget):
     @inlineCallbacks
     def setupUI(self, availableDevices):
         self.setWindowTitle("APT Motor Control Panel")
-        grid = QtGui.QGridLayout()
+        grid = QtWidgets.QGridLayout()
         grid.setSpacing(10)
         self.setLayout(grid)
 
@@ -341,9 +341,9 @@ class APTMotorClient(QtGui.QWidget):
             
     
 if __name__ == "__main__":
-    a = QtGui.QApplication( [] )
-    from . import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     mainPanel = APTMotorClient(reactor)
     reactor.run()

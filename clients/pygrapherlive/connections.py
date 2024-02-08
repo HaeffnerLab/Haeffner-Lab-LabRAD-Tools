@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
@@ -17,7 +17,7 @@ class COMMUNICATE(QtCore.QObject):
     
     connectionReady = QtCore.pyqtSignal()
 
-class CONNECTIONS(QtGui.QGraphicsObject):
+class CONNECTIONS(QtWidgets.QGraphicsObject):
     '''
     The CONNECTIONS serves as a mediator between the Dataset class and the GrapherWindow  class. 
     
@@ -370,9 +370,9 @@ class CONNECTIONS(QtGui.QGraphicsObject):
         yield deferToThread(time.sleep, 5)
         gc.collect()
                 
-class RetryConnectingDialog(QtGui.QDialog):
+class RetryConnectingDialog(QtWidgets.QDialog):
     def __init__(self, parent, destination):
-        QtGui.QDialog.__init__(self)
+        QtWidgets.QDialog.__init__(self)
         self.parent = parent
         self.destination = destination
         self.setupUi(self)
@@ -380,14 +380,14 @@ class RetryConnectingDialog(QtGui.QDialog):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(400, 300)
-        self.gridLayout = QtGui.QGridLayout(Dialog)
-        self.confirmButton = QtGui.QPushButton(Dialog)
+        self.gridLayout = QtWidgets.QGridLayout(Dialog)
+        self.confirmButton = QtWidgets.QPushButton(Dialog)
         self.confirmButton.setText('Retry')
         self.gridLayout.addWidget(self.confirmButton,1,0)
-        self.declineButton = QtGui.QPushButton(Dialog)
+        self.declineButton = QtWidgets.QPushButton(Dialog)
         self.declineButton.setText('Exit')
         self.gridLayout.addWidget(self.declineButton,1,1)
-        self.label = QtGui.QLabel('Could not connect to ' + str(self.destination) + '!')
+        self.label = QtWidgets.QLabel('Could not connect to ' + str(self.destination) + '!')
         self.font = QtGui.QFont()
         self.font.setPointSize(20)
         self.label.setFont(self.font)
