@@ -4,9 +4,9 @@ import sys
 import os
 import subprocess
 from functools import partial
-from .CONFIG_EDITOR_config import labrad_folders
+from CONFIG_EDITOR_config import labrad_folders
 
-from . import syntax
+import syntax
 
 class CONFIG_EDITOR(QtWidgets.QMainWindow):
 

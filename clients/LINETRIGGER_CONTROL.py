@@ -156,7 +156,7 @@ if __name__=="__main__":
     a = QtWidgets.QApplication( [] )
     import qt5reactor
     qt5reactor.install()
-    from .connection import connection
+    from connection import connection
     from twisted.internet import reactor
     triggerWidget = linetriggerWidget(reactor)
     triggerWidget.show()
