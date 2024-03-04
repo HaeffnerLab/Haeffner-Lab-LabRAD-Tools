@@ -1,15 +1,15 @@
 import os
 import pickle as pickle
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 
-class ParameterList(QtGui.QWidget):
+class ParameterList(QtWidgets.QWidget):
     
     def __init__(self, dataset):
         super(ParameterList, self).__init__()
         self.dataset = dataset
-        mainLayout = QtGui.QVBoxLayout() 
-        self.parameterListWidget = QtGui.QListWidget()
+        mainLayout = QtWidgets.QVBoxLayout() 
+        self.parameterListWidget = QtWidgets.QListWidget()
         mainLayout.addWidget(self.parameterListWidget)        
         self.setWindowTitle(str(dataset.dataset_name))# + " " + str(dataset.directory))
         self.populate()

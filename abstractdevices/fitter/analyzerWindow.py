@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 # from twisted.internet.defer import inlineCallbacks
 # from twisted.internet.task import LoopingCall
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (FigureCanvasQTAgg as FigureCanvas,NavigationToolbar2QT as NavigationToolbar)
 
-class AnalyzerWindow(QtGui.QWidget):
+class AnalyzerWindow(QtWidgets.QWidget):
        
     def __init__(self, fitting_parameters, auto_accept, interface):
         super(AnalyzerWindow, self).__init__()
@@ -34,14 +34,14 @@ class AnalyzerWindow(QtGui.QWidget):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         mpl_toolbar = NavigationToolbar(self.canvas, self)
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(mpl_toolbar)
         vbox.addWidget(self.canvas)
         if not auto_accept:
-            self.accept_button = QtGui.QPushButton('Accept')
-            self.reject_button = QtGui.QPushButton('Reject')
-            self.fit_button = QtGui.QPushButton("Fit")
-            button_row = QtGui.QHBoxLayout()
+            self.accept_button = QtWidgets.QPushButton('Accept')
+            self.reject_button = QtWidgets.QPushButton('Reject')
+            self.fit_button = QtWidgets.QPushButton("Fit")
+            button_row = QtWidgets.QHBoxLayout()
             button_row.addWidget(self.accept_button)
             button_row.addWidget(self.reject_button)
             button_row.addWidget(self.fit_button)
@@ -98,7 +98,7 @@ class AnalyzerWindow(QtGui.QWidget):
     def set_last_fit(self, fitting_parameters):
         self.grid.set_last_fit(fitting_parameters)
         
-class parameterTable(QtGui.QTableWidget):
+class parameterTable(QtWidgets.QTableWidget):
     
     onNewGuess = QtCore.pyqtSignal(bool)
     
@@ -118,14 +118,14 @@ class parameterTable(QtGui.QTableWidget):
         #populate information
         for row, parameter in enumerate(labels):
             to_fit, auto_guess, manual_value, last_fit_value, stderror = fitting_parameters[parameter]
-            cb_to_fit = QtGui.QCheckBox()
+            cb_to_fit = QtWidgets.QCheckBox()
             cb_to_fit.setCheckable(True)
             cb_to_fit.setChecked(to_fit)
             self.setCellWidget(row,0, cb_to_fit)
-            cb_auto_guess = QtGui.QCheckBox()
+            cb_auto_guess = QtWidgets.QCheckBox()
             cb_auto_guess.setCheckable(True)
             cb_auto_guess.setChecked(auto_guess)
-            spin_manual = QtGui.QDoubleSpinBox()
+            spin_manual = QtWidgets.QDoubleSpinBox()
             spin_manual.setKeyboardTracking(False)
             spin_manual.setRange(-10000000, 10000000)
             spin_manual.setDecimals(5)
@@ -136,15 +136,15 @@ class parameterTable(QtGui.QTableWidget):
             self.setCellWidget(row,1, cb_auto_guess)
             self.setCellWidget(row,2, spin_manual)
             spin_manual.valueChanged.connect(self.onNewGuess.emit, True)
-            last_fit = QtGui.QLineEdit()
+            last_fit = QtWidgets.QLineEdit()
             last_fit.setReadOnly(True)
             last_fit.setText('{0:<10.5f} ± {1:.5f}'.format(last_fit_value, stderror))
             self.setCellWidget(row,3, last_fit)
         #set size policy and selection policy
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
-        self.horizontalHeader().setResizeMode(2, QtGui.QHeaderView.Stretch)
-        self.horizontalHeader().setResizeMode(3, QtGui.QHeaderView.Stretch)
-        self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        self.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
     
     def connect_disabling(self, cb, spin):
         if cb.isChecked():

@@ -1,10 +1,10 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .scheduled_widget import scheduled_combined
 from .running_scans_widget import running_combined
 from .queued_widget import queued_combined
 from .experiment_selector_widget import experiment_selector_widget
 
-class scripting_widget(QtGui.QWidget):
+class scripting_widget(QtWidgets.QWidget):
     
     on_run = QtCore.pyqtSignal(str)
     on_run_cont = QtCore.pyqtSignal(str)
@@ -25,7 +25,7 @@ class scripting_widget(QtGui.QWidget):
         self.setupLayout()
     
     def setupLayout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         # layout.setSizeConstraint(1)
         self.selector = experiment_selector_widget(self.reactor, parent = self)
         self.running = running_combined(self.reactor)

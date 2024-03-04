@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
@@ -29,9 +29,9 @@ class config_visualizer(object):
     #ID for signaling
     ID = 99995
 
-class pulse_sequence_visualizer(QtGui.QWidget):
+class pulse_sequence_visualizer(QtWidgets.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         # Initialize
         self.reactor = reactor
         self.cxn = cxn
@@ -45,14 +45,14 @@ class pulse_sequence_visualizer(QtGui.QWidget):
     
     def create_layout(self):
         # Creates GUI layout
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         plot_layout = self.create_plot_layout()
         layout.addLayout(plot_layout)
         self.setLayout(layout)
    
     def create_plot_layout(self):
         # Creates empty matplotlib plot layout
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
@@ -211,7 +211,7 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         self.reactor.stop()  
     
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
+    a = QtWidgets.QApplication( [] )
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor

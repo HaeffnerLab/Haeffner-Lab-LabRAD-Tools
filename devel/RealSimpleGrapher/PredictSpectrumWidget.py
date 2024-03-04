@@ -1,12 +1,14 @@
 # import qt4reactor
 # qt4reactor.install()
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 from fractions import Fraction
 # from labrad import units as U
 # from labrad.units import WithUnit
 import numpy as np
 # from common.abstractdevices.SD_tracker.SD_calculator import Transitions_SD as tracker 
+
+QStringList = list
 
 class ParamInfo():
     '''
@@ -16,7 +18,7 @@ class ParamInfo():
     def __init__(self, value):
         self.value = value
 
-class PredictSpectrum(QtGui.QWidget):
+class PredictSpectrum(QtWidgets.QWidget):
 
     def __init__(self, parent):
         super(PredictSpectrum, self).__init__()
@@ -29,31 +31,31 @@ class PredictSpectrum(QtGui.QWidget):
 
     def initUI(self):
         self.setWindowTitle(self.ident)
-        mainLayout = QtGui.QVBoxLayout()
-        buttons = QtGui.QHBoxLayout()
+        mainLayout = QtWidgets.QVBoxLayout()
+        buttons = QtWidgets.QHBoxLayout()
 
-        self.parameterTable = QtGui.QTableWidget()
+        self.parameterTable = QtWidgets.QTableWidget()
         self.parameterTable.setColumnCount(2)
 
-        self.plotButton = QtGui.QPushButton('Plot', self)
+        self.plotButton = QtWidgets.QPushButton('Plot', self)
 
         mainLayout.addWidget(self.parameterTable)
         mainLayout.addLayout(buttons)
         buttons.addWidget(self.plotButton)
 
-        self.OPpos = QtGui.QCheckBox("Positive Manifold")
+        self.OPpos = QtWidgets.QCheckBox("Positive Manifold")
         self.OPpos.setChecked(True)
         mainLayout.addWidget(self.OPpos)
-        self.OPneg = QtGui.QCheckBox("Negative Manifold")
+        self.OPneg = QtWidgets.QCheckBox("Negative Manifold")
         self.OPneg.setChecked(True)
         mainLayout.addWidget(self.OPneg)
-        self.deltam0 = QtGui.QCheckBox("Delta m=0")
+        self.deltam0 = QtWidgets.QCheckBox("Delta m=0")
         self.deltam0.setChecked(True)
         mainLayout.addWidget(self.deltam0)
-        self.deltam1 = QtGui.QCheckBox("Delta m=1")
+        self.deltam1 = QtWidgets.QCheckBox("Delta m=1")
         self.deltam1.setChecked(True)
         mainLayout.addWidget(self.deltam1)
-        self.deltam2 = QtGui.QCheckBox("Delta m=2")
+        self.deltam2 = QtWidgets.QCheckBox("Delta m=2")
         self.deltam2.setChecked(True)
         mainLayout.addWidget(self.deltam2)
 
@@ -67,7 +69,7 @@ class PredictSpectrum(QtGui.QWidget):
 
         self.parameterTable.clear()
         
-        headerLabels = QtCore.QStringList(['Parameter', 'Value'])
+        headerLabels = QStringList(['Parameter', 'Value'])
         self.parameterTable.setHorizontalHeaderLabels(headerLabels)
         self.parameterTable.horizontalHeader().setStretchLastSection(True)
 
@@ -75,8 +77,8 @@ class PredictSpectrum(QtGui.QWidget):
         self.parameterTable.setRowCount(len(params))
         for i,p in enumerate(params):
 
-            label = QtGui.QLabel(p)
-            value = QtGui.QDoubleSpinBox()
+            label = QtWidgets.QLabel(p)
+            value = QtWidgets.QDoubleSpinBox()
 
             self.value_dict[p] = ParamInfo(value)
 

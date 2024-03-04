@@ -1,6 +1,12 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore
 
-class FilterModel(QtGui.QSortFilterProxyModel):
+try:
+    QString = unicode
+except NameError:
+    # Python 3
+    QString = str
+
+class FilterModel(QtCore.QSortFilterProxyModel):
     def __init__(self, parent):
         super(FilterModel, self).__init__(parent)
         #filtering
@@ -13,7 +19,7 @@ class FilterModel(QtGui.QSortFilterProxyModel):
     
     def filterAcceptsRow(self, row, index):
         model_index = self.sourceModel().index(row, 0, index)
-        filter_text = QtCore.QString(self.sourceModel().data(model_index, self.filterRole()))
+        filter_text = QString(self.sourceModel().data(model_index, self.filterRole()))
         contains_filter = filter_text.contains(self.filterRegExp())
         in_show_only = self._is_in_show_only(filter_text)
         return contains_filter and in_show_only

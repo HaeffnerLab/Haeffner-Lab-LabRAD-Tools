@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 from .scripting_widget import scripting_widget
 from .tree_view.Controllers import ParametersEditor
@@ -10,7 +10,7 @@ import sys
 sys.path.append('/home/space-time/LabRAD/common/clients')
 from LINETRIGGER_CONTROL import linetriggerWidget
 
-class script_scanner_gui(QtGui.QWidget):
+class script_scanner_gui(QtWidgets.QWidget):
     
     SIGNALID = 319245
     
@@ -383,11 +383,11 @@ class script_scanner_gui(QtGui.QWidget):
         self.linetriggerWidget = linetriggerWidget(self.reactor, self.cxn, self)
 
         
-        topLevelLayout = QtGui.QGridLayout()
+        topLevelLayout = QtWidgets.QGridLayout()
 
-        tab = QtGui.QTabWidget()
-        control = QtGui.QTabWidget()
-        layout = QtGui.QHBoxLayout()
+        tab = QtWidgets.QTabWidget()
+        control = QtWidgets.QTabWidget()
+        layout = QtWidgets.QHBoxLayout()
         
         # topLevelLayout.addStretch()
         layout.addWidget(self.scripting_widget)
@@ -408,7 +408,7 @@ class script_scanner_gui(QtGui.QWidget):
     
     def displayError(self, text):
         #runs the message box in a non-blocking method
-        message = QtGui.QMessageBox(self.scripting_widget)
+        message = QtWidgets.QMessageBox(self.scripting_widget)
         message.setText(text)
         message.open()
         message.show()
@@ -418,7 +418,7 @@ class script_scanner_gui(QtGui.QWidget):
         self.reactor.stop()
 
 if __name__=="__main__":
-    a = QtGui.QApplication( ["Script Scanner"] )
+    a = QtWidgets.QApplication( ["Script Scanner"] )
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor

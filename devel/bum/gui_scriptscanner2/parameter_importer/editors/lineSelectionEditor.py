@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, uic
 import os
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"selection.ui")

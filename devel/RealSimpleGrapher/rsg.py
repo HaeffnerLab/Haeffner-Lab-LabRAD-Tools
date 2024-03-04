@@ -4,8 +4,8 @@ The Real Simple Grapher
 
 from .GraphWindow import GraphWindow
 from .Dataset import Dataset
-from PyQt4 import QtGui
-a = QtGui.QApplication( [])
+from PyQt5 import QtGui, QtWidgets
+a = QtWidgets.QApplication( [])
 import qt5reactor
 qt5reactor.install()
 #import server libraries

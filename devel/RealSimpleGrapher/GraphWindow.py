@@ -2,13 +2,13 @@
 Window for holding Graphs
 '''
 import sys
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from . import GUIConfig
 from .GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 from .ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
 from .GridGraphWindow import GridGraphWindow
 
-class GraphWindow(QtGui.QTabWidget):
+class GraphWindow(QtWidgets.QTabWidget):
     def __init__(self, reactor, parent=None):
         super(GraphWindow, self).__init__(parent)
         self.reactor = reactor        
@@ -49,7 +49,7 @@ class GraphWindow(QtGui.QTabWidget):
         self.reactor.stop()
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor

@@ -1,10 +1,10 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 import numpy as np
 import pyqtgraph as pg
 
-class AndorVideo(QtGui.QWidget):
+class AndorVideo(QtWidgets.QWidget):
     def __init__(self, server):
         super(AndorVideo, self).__init__()
         from labrad.units import WithUnit
@@ -20,7 +20,7 @@ class AndorVideo(QtGui.QWidget):
     def setup_layout(self):
         self.setWindowTitle("Andor")
         #layout
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         self.plt = plt = pg.PlotItem()
         self.img_view = pg.ImageView(view = self.plt)
         plt.showAxis('top')
@@ -28,9 +28,9 @@ class AndorVideo(QtGui.QWidget):
         plt.setAspectLocked(True)
         layout.addWidget(self.img_view, 0, 0, 1, 6)
         self.img_view.getHistogramWidget().setHistogramRange(0, 1000)
-        exposure_label = QtGui.QLabel("Exposure")
+        exposure_label = QtWidgets.QLabel("Exposure")
         exposure_label.setAlignment(QtCore.Qt.AlignRight| QtCore.Qt.AlignVCenter)
-        self.exposureSpinBox = QtGui.QDoubleSpinBox()
+        self.exposureSpinBox = QtWidgets.QDoubleSpinBox()
         self.exposureSpinBox.setDecimals(3)
         self.exposureSpinBox.setSingleStep(0.001)
         self.exposureSpinBox.setMinimum(0.0)
@@ -40,9 +40,9 @@ class AndorVideo(QtGui.QWidget):
         layout.addWidget(exposure_label, 1, 4,)
         layout.addWidget(self.exposureSpinBox, 1, 5)
         #EMCCD Gain
-        emccd_label = QtGui.QLabel("EMCCD Gain")
+        emccd_label = QtWidgets.QLabel("EMCCD Gain")
         emccd_label.setAlignment(QtCore.Qt.AlignRight| QtCore.Qt.AlignVCenter)
-        self.emccdSpinBox = QtGui.QSpinBox()
+        self.emccdSpinBox = QtWidgets.QSpinBox()
         self.emccdSpinBox.setSingleStep(1)
         #emrange= yield self.server.getemrange(None)
         self.emrange= yield self.server.getemrange(None)
@@ -54,28 +54,28 @@ class AndorVideo(QtGui.QWidget):
         layout.addWidget(emccd_label, 2, 4,)
         layout.addWidget(self.emccdSpinBox, 2, 5)
         #Live Video Button
-        self.live_button = QtGui.QPushButton("Live Video")
+        self.live_button = QtWidgets.QPushButton("Live Video")
         self.live_button.setCheckable(True)
         layout.addWidget(self.live_button, 1, 0)
         #set image region button
-        self.set_image_region_button = QtGui.QPushButton("Set Image Region")
+        self.set_image_region_button = QtWidgets.QPushButton("Set Image Region")
         layout.addWidget(self.set_image_region_button, 2, 0)
         #controlling the display buttons
-        self.view_all_button = QtGui.QPushButton("View All")
+        self.view_all_button = QtWidgets.QPushButton("View All")
         layout.addWidget(self.view_all_button, 1, 1)
-        self.auto_levels_button = QtGui.QPushButton("Auto Levels")
+        self.auto_levels_button = QtWidgets.QPushButton("Auto Levels")
         layout.addWidget(self.auto_levels_button, 2, 1)
         #display mode buttons
-        self.trigger_mode = QtGui.QLineEdit()
-        self.acquisition_mode = QtGui.QLineEdit()
-        self.trigger_mode.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        self.acquisition_mode.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.trigger_mode = QtWidgets.QLineEdit()
+        self.acquisition_mode = QtWidgets.QLineEdit()
+        self.trigger_mode.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.acquisition_mode.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.trigger_mode.setReadOnly(True)
         self.acquisition_mode.setReadOnly(True)
-        label = QtGui.QLabel("Trigger Mode")
+        label = QtWidgets.QLabel("Trigger Mode")
         label.setAlignment(QtCore.Qt.AlignRight| QtCore.Qt.AlignVCenter)
         layout.addWidget(label, 1, 2)
-        label = QtGui.QLabel("Acquisition Mode")
+        label = QtWidgets.QLabel("Acquisition Mode")
         label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         layout.addWidget(label, 2, 2)
         layout.addWidget(self.trigger_mode, 1, 3)
@@ -212,13 +212,13 @@ class AndorVideo(QtGui.QWidget):
     def closeEvent(self, event):
         self.server.stop()
     
-class image_region_selection_dialog(QtGui.QDialog):
+class image_region_selection_dialog(QtWidgets.QDialog):
     def __init__(self, parent, server):
         super(image_region_selection_dialog, self).__init__(parent)
         self.server = server
         self.parent = parent
         self.setWindowTitle("Select Region")
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.setupLayout()
     
     def sizeHint(self):
@@ -233,24 +233,24 @@ class image_region_selection_dialog(QtGui.QDialog):
         self.hor_max, self.ver_max =  yield self.server.get_detector_dimensions(None)
         self.hor_min, self.ver_min = [1, 1]
         cur_bin_hor, cur_bin_ver, cur_start_hor, cur_stop_hor, cur_start_ver, cur_stop_ver = yield self.server.getImageRegion(None)
-        layout = QtGui.QGridLayout()
-        default_button = QtGui.QPushButton("Default")
-        start_label = QtGui.QLabel("Start")
-        stop_label = QtGui.QLabel("Stop")
-        bin_label = QtGui.QLabel("Bin")
-        hor_label = QtGui.QLabel("Horizontal")
-        ver_label = QtGui.QLabel("Vertical")
-        self.start_hor = QtGui.QSpinBox()
-        self.stop_hor = QtGui.QSpinBox()
-        self.bin_hor = QtGui.QSpinBox()
+        layout = QtWidgets.QGridLayout()
+        default_button = QtWidgets.QPushButton("Default")
+        start_label = QtWidgets.QLabel("Start")
+        stop_label = QtWidgets.QLabel("Stop")
+        bin_label = QtWidgets.QLabel("Bin")
+        hor_label = QtWidgets.QLabel("Horizontal")
+        ver_label = QtWidgets.QLabel("Vertical")
+        self.start_hor = QtWidgets.QSpinBox()
+        self.stop_hor = QtWidgets.QSpinBox()
+        self.bin_hor = QtWidgets.QSpinBox()
         for button in [self.start_hor, self.stop_hor, self.bin_hor]:
             button.setRange(self.hor_min, self.hor_max)
         self.start_hor.setValue(cur_start_hor)
         self.stop_hor.setValue(cur_stop_hor)
         self.bin_hor.setValue(cur_bin_hor)
-        self.start_ver = QtGui.QSpinBox()
-        self.stop_ver = QtGui.QSpinBox()
-        self.bin_ver = QtGui.QSpinBox()
+        self.start_ver = QtWidgets.QSpinBox()
+        self.stop_ver = QtWidgets.QSpinBox()
+        self.bin_ver = QtWidgets.QSpinBox()
         for button in [self.start_ver, self.stop_ver, self.bin_ver]:
             button.setRange(self.ver_min, self.ver_max)
         self.start_ver.setValue(cur_start_ver)
@@ -268,9 +268,9 @@ class image_region_selection_dialog(QtGui.QDialog):
         layout.addWidget(self.start_ver, 2, 1)
         layout.addWidget(self.stop_ver, 2, 2)
         layout.addWidget(self.bin_ver, 2, 3)
-        submit_button = QtGui.QPushButton("Submit")
+        submit_button = QtWidgets.QPushButton("Submit")
         layout.addWidget(submit_button, 3, 0, 1, 2)
-        cancel_button = QtGui.QPushButton("Cancel")
+        cancel_button = QtWidgets.QPushButton("Cancel")
         layout.addWidget(cancel_button, 3, 2, 1, 2)
         default_button.clicked.connect(self.on_default)
         submit_button.clicked.connect(self.on_submit)

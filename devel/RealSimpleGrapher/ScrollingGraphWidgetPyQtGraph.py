@@ -1,5 +1,5 @@
 from .GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class ScrollingGraph_PyQtGraph(Graph):
     def __init__(self, name, reactor, parent = None, ylim=[0,1]):
@@ -20,7 +20,7 @@ class ScrollingGraph_PyQtGraph(Graph):
                 
             
         try:
-            mousepressed =  QtGui.qApp.mouseButtons()
+            mousepressed =  QtWidgets.QApplication.mouseButtons()
             if (mousepressed == QtCore.Qt.LeftButton) or (mousepressed == QtCore.Qt.RightButton):
                 return 
                 # see if we need to redraw

@@ -1,8 +1,8 @@
 import sys
 from .tree_view.Controllers import ParametersEditor
-from PyQt4 import QtCore, QtGui, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
-class ScanItem(QtGui.QWidget):
+class ScanItem(QtWidgets.QWidget):
     """ Item for parameter scanning """
     def __init__(self, p, sequence_name, parent):
         super(ScanItem, self).__init__(parent)
@@ -15,16 +15,16 @@ class ScanItem(QtGui.QWidget):
     def makeLayout(self, p, sequence_name):
         parameter, minim, maxim, steps, unit = p
         self.unit = unit
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
 
-        self.select = QtGui.QCheckBox()
+        self.select = QtWidgets.QCheckBox()
         layout.addWidget(self.select)
-        label = QtGui.QLabel(parameter.split(".")[-1])
+        label = QtWidgets.QLabel(parameter.split(".")[-1])
         layout.addWidget(label)
         
-        self.minim = QtGui.QDoubleSpinBox()
-        self.maxim = QtGui.QDoubleSpinBox()
-        self.steps = QtGui.QDoubleSpinBox()
+        self.minim = QtWidgets.QDoubleSpinBox()
+        self.maxim = QtWidgets.QDoubleSpinBox()
+        self.steps = QtWidgets.QDoubleSpinBox()
         
         # adding resolution to the params
         self.minim.setDecimals(4)
@@ -43,9 +43,9 @@ class ScanItem(QtGui.QWidget):
         layout.addWidget(self.minim)
         layout.addWidget(self.maxim)
         layout.addWidget(self.steps)
-        unitLabel = QtGui.QLabel(unit)
+        unitLabel = QtWidgets.QLabel(unit)
         layout.addWidget(unitLabel)
-        layout.addWidget( QtGui.QLabel(sequence_name))
+        layout.addWidget( QtWidgets.QLabel(sequence_name))
         self.setLayout(layout)
 
     def connect_layout(self):
@@ -80,7 +80,7 @@ class ScanItem(QtGui.QWidget):
         steps = float(self.steps.value())
         return (mn, mx, steps, self.unit)
 
-class sequence_widget(QtGui.QWidget):
+class sequence_widget(QtWidgets.QWidget):
     def __init__(self, params, seq, single_seq = True):
         super(sequence_widget, self).__init__()
         self.parameters = {}
@@ -89,18 +89,18 @@ class sequence_widget(QtGui.QWidget):
         self.sequence_name = seq # name of the sequence this sequence widget refers to
 
     def makeLayout(self, params, single_seq = True):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         # layout.setSizeConstraint(1)
         self.setLayout(layout)
         
-        scroll = QtGui.QScrollArea(self)
+        scroll = QtWidgets.QScrollArea(self)
         layout.addWidget(scroll)
         scroll.setWidgetResizable(True)
         scroll.setMaximumHeight(250)
         # scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        scrollContent = QtGui.QWidget(scroll)
+        scrollContent = QtWidgets.QWidget(scroll)
         
-        scrollLayout = QtGui.QVBoxLayout(scrollContent)
+        scrollLayout = QtWidgets.QVBoxLayout(scrollContent)
         scrollContent.setLayout(scrollLayout)
         for par, x, sequence_name in params:
             minim, maxim, steps, unit = x
@@ -141,20 +141,20 @@ class sequence_widget(QtGui.QWidget):
     def get_scan_settings(self, scan):
         return self.parameters[scan].get_scan_settings()
     
-class multi_sequence_widget(QtGui.QWidget):
+class multi_sequence_widget(QtWidgets.QWidget):
     def __init__(self, widgets):
         super(multi_sequence_widget, self).__init__()
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
         
-        scroll = QtGui.QScrollArea(self)
+        scroll = QtWidgets.QScrollArea(self)
         layout.addWidget(scroll)
         scroll.setWidgetResizable(True)
         scroll.setMinimumHeight(100)
         scroll.setMaximumHeight(250)
         # scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        scrollContent = QtGui.QWidget(scroll)
-        scrollLayout = QtGui.QVBoxLayout(scrollContent)
+        scrollContent = QtWidgets.QWidget(scroll)
+        scrollLayout = QtWidgets.QVBoxLayout(scrollContent)
         scrollContent.setLayout(scrollLayout)
         self.widgets = widgets
         for widget in widgets:
@@ -172,11 +172,11 @@ class multi_sequence_widget(QtGui.QWidget):
         raise Exception('sequence name not found')
         
     
-class scan_box(QtGui.QStackedWidget):
+class scan_box(QtWidgets.QStackedWidget):
     def __init__(self):
         super(scan_box, self).__init__()
         
-class scan_widget(QtGui.QWidget):
+class scan_widget(QtWidgets.QWidget):
 
     def __init__(self, reactor, parent):
         super(scan_widget, self).__init__()
@@ -189,7 +189,7 @@ class scan_widget(QtGui.QWidget):
         self.preferreds = {}
 
     def setupLayout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.scan_box)
         layout.addWidget(self.PreferredParameters)
 
@@ -269,7 +269,7 @@ class scan_widget(QtGui.QWidget):
             self.widgets[exp].setVisible(False)
 
 if __name__=="__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     params = [(0, 6, 2, 'kHz'), ('p2', 0, 8, 2, 'us')]
     #icon = sequence_widget(params)
     icon = scan_widget(None, None)

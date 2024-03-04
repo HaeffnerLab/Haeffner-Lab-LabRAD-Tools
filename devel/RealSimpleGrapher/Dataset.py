@@ -2,7 +2,7 @@
 Parent class for datasets
 '''
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from twisted.internet.threads import deferToThread
 import numpy as np
 

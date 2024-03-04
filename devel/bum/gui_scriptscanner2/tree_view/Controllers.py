@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, uic
+from PyQt5 import QtCore, uic
 from .Data import Node, ParameterNode, CollectionNode, ScanNode, SidebandElectorNode
 from .FilterModel import FilterModel
 from .Models import ParametersTreeModel

@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .ParameterImporter import ParameterImportWidget
 
-class script_explorer_widget(QtGui.QWidget):
+class script_explorer_widget(QtWidgets.QWidget):
 
     def __init__(self, parent, font = None):
         super(script_explorer_widget, self).__init__(parent)
@@ -17,17 +17,17 @@ class script_explorer_widget(QtGui.QWidget):
 
     def setupLayout(self):
 
-        layout = QtGui.QGridLayout()
-        label = QtGui.QLabel('Undefined parameters', font = self.font)
+        layout = QtWidgets.QGridLayout()
+        label = QtWidgets.QLabel('Undefined parameters', font = self.font)
 
-        self.tree_view = QtGui.QTreeView()
+        self.tree_view = QtWidgets.QTreeView()
         self.tree_model = QtGui.QStandardItemModel()
         self.tree_view.setModel(self.tree_model)
 
         self.parameter_importer = ParameterImportWidget(self)
 
-        self.tree_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.tree_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.tree_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tree_view.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addWidget(self.tree_view, 1, 0, 2, 1)

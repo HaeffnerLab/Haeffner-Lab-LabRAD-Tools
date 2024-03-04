@@ -1,5 +1,5 @@
 import sys
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
@@ -15,7 +15,7 @@ from Dataset import Dataset
 import numpy as np
 
 
-class Graph(QtGui.QWidget):
+class Graph(QtWidgets.QWidget):
     def __init__(self, name, reactor, parent=None, ylim=[0,1]):
         super(Graph, self).__init__(parent)
         self.reactor = reactor
@@ -39,9 +39,9 @@ class Graph(QtGui.QWidget):
         self.ax.set_ylim(ylim)
         self.ax.set_title(self.name)
 
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.tracelist)
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.toolbar)
         vbox.addWidget(self.canvas)
         hbox.addLayout(vbox)
@@ -110,7 +110,7 @@ class Graph(QtGui.QWidget):
         self.canvas.draw()
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor

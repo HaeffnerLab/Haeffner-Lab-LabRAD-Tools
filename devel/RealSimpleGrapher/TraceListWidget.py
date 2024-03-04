@@ -1,14 +1,14 @@
 import pyperclip
 import datetime
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from .ParameterListWidget import ParameterList
 from .DataVaultListWidget import DataVaultList
 from .FitWindowWidget import FitWindow
 from .GUIConfig import traceListConfig
 from .PredictSpectrumWidget import PredictSpectrum
 
-class TraceList(QtGui.QListWidget):
+class TraceList(QtWidgets.QListWidget):
     def __init__(self, parent):
         super(TraceList, self).__init__()
         self.parent = parent
@@ -20,13 +20,13 @@ class TraceList(QtGui.QListWidget):
 
     def initUI(self):
         self.trace_dict = {}
-        item = QtGui.QListWidgetItem('Traces')
+        item = QtWidgets.QListWidgetItem('Traces')
         item.setCheckState(QtCore.Qt.Checked)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.popupMenu)
 
     def addTrace(self, ident , color = (255,255,255) ):
-        item = QtGui.QListWidgetItem(ident)
+        item = QtWidgets.QListWidgetItem(ident)
 
         item.setForeground(QtGui.QColor(255, 255, 255))
         item.setBackground(QtGui.QColor(0, 0, 0))
@@ -46,7 +46,7 @@ class TraceList(QtGui.QListWidget):
         item = None
 
     def popupMenu(self, pos):
-        menu = QtGui.QMenu()
+        menu = QtWidgets.QMenu()
         item = self.itemAt(pos)
         if (item == None): 
             dataaddAction = menu.addAction('Add Data Set')

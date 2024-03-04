@@ -1,5 +1,5 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 from .TraceListWidget import TraceList
 from twisted.internet.defer import inlineCallbacks
@@ -22,7 +22,7 @@ class artistParameters():
                              # only redraw if the dataset has a higher
                              # update count
 
-class Graph_PyQtGraph(QtGui.QWidget):
+class Graph_PyQtGraph(QtWidgets.QWidget):
     def __init__(self, config, reactor, parent=None):
         super(Graph_PyQtGraph, self).__init__(parent)
         self.reactor = reactor
@@ -52,13 +52,13 @@ class Graph_PyQtGraph(QtGui.QWidget):
     def initUI(self):
         self.tracelist = TraceList(self)
         self.pw = pg.PlotWidget()
-        self.coords = QtGui.QLabel('')
-        self.title = QtGui.QLabel(self.name)
-        frame = QtGui.QFrame()
-        splitter = QtGui.QSplitter()
+        self.coords = QtWidgets.QLabel('')
+        self.title = QtWidgets.QLabel(self.name)
+        frame = QtWidgets.QFrame()
+        splitter = QtWidgets.QSplitter()
         splitter.addWidget(self.tracelist)
-        hbox = QtGui.QHBoxLayout()
-        vbox = QtGui.QVBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.title)
         vbox.addWidget(self.pw)
         vbox.addWidget(self.coords)
@@ -185,7 +185,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.coords.setText(string)
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor

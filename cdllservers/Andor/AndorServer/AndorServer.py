@@ -1,7 +1,7 @@
 #install qt4 reactor for the GUI
 from AndorVideo import AndorVideo
-from PyQt4 import QtGui
-a = QtGui.QApplication( [])
+from PyQt5 import QtGui, QtWidgets
+a = QtWidgets.QApplication( [])
 import qt5reactor
 qt5reactor.install()
 #import server libraries
