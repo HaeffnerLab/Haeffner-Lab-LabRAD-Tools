@@ -1,8 +1,5 @@
-
 import numpy as np
-
 import matplotlib.pyplot as plt
-
 
 """
 This file defines a class called sequence_analyzer, whose purpose is to take raw information from the pulser server,
@@ -11,9 +8,6 @@ process it, and create a plot of it.
 The dds_box class is essentially a wrapper for a matplotlib.collections.PolyCollection object, which is created when plotting
 the pulse sequence when fill_between is called to produce the colored boxes which represent the frequency of a pulse.
 """
-
-
-
 
 ###########################################
 # Functions to be used by the classes below
@@ -97,8 +91,8 @@ class sequence_analyzer():
     """
     def __init__(self, human_readable_ttl, human_readable_dds, channels):
         self.raw_ttl = human_readable_ttl
-        print self.raw_ttl
-        print len(self.raw_ttl[0][1])
+        print(self.raw_ttl)
+        print(len(self.raw_ttl[0][1]))
 
         self.raw_dds = human_readable_dds
         self.raw_channels = channels
@@ -128,12 +122,12 @@ class sequence_analyzer():
 
         # Create list of channels, ordered by the channel number
         channel_list = [None]*32
-        print self.raw_channels
-        print 'channel_list length:', len(channel_list)
+        print(self.raw_channels)
+        print('channel_list length:', len(channel_list))
         for channel in self.raw_channels:
-            print channel[1]
+            print(channel[1])
             channel_list[channel[1]] = channel[0]
-        print channel_list
+        print(channel_list)
 
         # Organize the raw info in raw_ttl into the dictionary ttl_dict
         ttl_array_full = np.array([[int(channel_setting) for channel_setting in time[1]] for time in self.raw_ttl[:-1]])
@@ -142,7 +136,7 @@ class sequence_analyzer():
             if np.any(ttl_array_full[:, i]):
                 ttl_dict[channel] = ttl_array_full[:, i]
 
-        print ttl_dict
+        print(ttl_dict)
         return ttl_dict
 
 
@@ -175,17 +169,25 @@ class sequence_analyzer():
                 dds_dict[channel_name] = [[], []]
             dds_dict[channel_name][0].extend([setting[1]])
             dds_dict[channel_name][1].extend([setting[2]])
+
+        
+        # Exclude unused channels
+        channels_to_remove = []
         for channel_name in dds_dict.keys():
             if channel_name is not 'times':
-                #Exclude unused channels
-                if not np.any(dds_dict[channel_name][0]) or len(set(dds_dict[channel_name][1]))<=1:
-                    del dds_dict[channel_name]
+                channel_freqs = dds_dict[channel_name][0]
+                channel_amps = [float(item) for item in dds_dict[channel_name][1]]
+                if (not np.any(channel_freqs)) or (len(set(channel_amps))<=1):
+                    channels_to_remove.append(channel_name)
                 else:
                     dds_dict[channel_name][0].extend([dds_dict[channel_name][0][-1]])
                     dds_dict[channel_name][1].extend([dds_dict[channel_name][1][-1]])
                     assert len(dds_dict[channel_name][0]) == len(dds_dict['times']), 'Number of frequencies for channel {} does not match number of times.'.format(channel_name)
                     assert len(dds_dict[channel_name][1]) == len(dds_dict['times']), 'Number of amplitudes for channel {} does not match number of times.'.format(channel_name)
-
+        
+        for channel_name in channels_to_remove:
+            del dds_dict[channel_name]
+        
         return dds_dict
 
 

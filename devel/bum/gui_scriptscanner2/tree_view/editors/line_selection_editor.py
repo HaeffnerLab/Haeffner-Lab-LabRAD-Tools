@@ -28,7 +28,7 @@ class line_selection_delegate(QtWidgets.QAbstractItemDelegate):
     def setModelData(self, editor, model, index):
         if index.column() == 3:
             data = self.parent.uiValue.itemData(self.parent.uiValue.currentIndex() )
-            model.setData(index, QtCore.QVariant(data.toString()))
+            model.setData(index, QtCore.QVariant(str(data)))
 
 class line_selection_editor(base, form):
     def __init__(self, parent=None):

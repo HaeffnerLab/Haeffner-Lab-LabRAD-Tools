@@ -44,7 +44,7 @@ class dropdown(QtWidgets.QComboBox):
         self.favorites = favorites
     
     def on_user_selection(self,index):
-        text = self.itemData(index).toString()
+        text = str(self.itemData(index))
         self.selected = text
         self.new_selection.emit(text)
     
@@ -67,7 +67,7 @@ class dropdown(QtWidgets.QComboBox):
         if self.selected is not None:
             self.set_selected(self.selected)
         elif self.count():
-            self.selected = self.itemData(1).toString()
+            self.selected = str(self.itemData(1))
         self.blockSignals(False)
 
 

@@ -1,10 +1,10 @@
 from PyQt5 import QtGui, QtWidgets
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 except:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 
 from matplotlib.figure import Figure
@@ -27,7 +27,7 @@ class readout_histogram(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent)
         self.reactor = reactor
         self.cxn = cxn
-        self.thresholdVal = None
+        self.thresholdVal = 0
         self.last_data = None
         self.last_hist = None
         self.subscribed = [False,False]

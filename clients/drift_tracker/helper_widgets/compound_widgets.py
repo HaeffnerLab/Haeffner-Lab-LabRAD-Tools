@@ -65,7 +65,7 @@ class table_dropdowns_with_entry(QtWidgets.QTableWidget):
         for i in range(self.entries):
             dropdown = self.cellWidget(i, 0)
             index = dropdown.currentIndex()
-            text = str(dropdown.itemData(index).toString())
+            text = str(dropdown.itemData(index))
             spin = self.cellWidget( i, 1)
             val = spin.value()
             info.append((text, val))

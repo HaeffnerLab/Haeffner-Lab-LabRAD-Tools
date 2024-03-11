@@ -95,8 +95,8 @@ class linetriggerWidget(QtWidgets.QFrame):
         duration = yield server.line_trigger_duration(context = self.context)
         limits = yield server.get_line_trigger_limits()
         limits = [l['us'] for l in limits]
-        self.spinbox.setRange(*limits)
-        self.spinbox.setValue(duration['us'])
+        self.spinbox.setRange(int(limits[0]), int(limits[1]))
+        self.spinbox.setValue(int(duration['us']))
         self.spinbox.valueChanged.connect(self.setDuration)
         #putton for dds Reset
         button_reset_dds = QtWidgets.QPushButton()

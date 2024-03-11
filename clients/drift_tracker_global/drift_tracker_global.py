@@ -1,11 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 except:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
@@ -305,13 +305,13 @@ class drift_tracker_global(QtWidgets.QWidget):
         duration_B, duration_line_center = yield server.history_duration_local(client_name)
         self.track_B_duration.blockSignals(True)
         self.track_line_center_duration.blockSignals(True)
-        self.track_B_duration.setValue(duration_B['min'])
-        self.track_line_center_duration.setValue(duration_line_center['min'])
+        self.track_B_duration.setValue(int(duration_B['min']))
+        self.track_line_center_duration.setValue(int(duration_line_center['min']))
         self.track_B_duration.blockSignals(False)
         self.track_line_center_duration.blockSignals(False)
         duration_line_center_global = yield server.history_duration_global_line_center(client_name)
         self.track_global_line_center_duration.blockSignals(True)
-        self.track_global_line_center_duration.setValue(duration_line_center_global['min'])
+        self.track_global_line_center_duration.setValue(int(duration_line_center_global['min']))
         self.track_global_line_center_duration.blockSignals(False)
         bool_keep_last_point = yield server.bool_keep_last_point(client_name)
         self.bool_keep_last_button.set_value_no_signal(bool_keep_last_point)
@@ -585,14 +585,13 @@ class drift_tracker_global(QtWidgets.QWidget):
         server = yield self.cxn_global.get_server('SD Tracker Global')
         yield server.signal__new_fit(c.ID, context = self.context_global)
         yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
-        # should find a better way to do this 
-        exe_str = "yield server." + "signal__new_save_" + client_name.replace(' ', '_') + "(c.ID + 1, context = context)"
         try:
-            exec("@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n")
+            @inlineCallbacks
+            def receive_save_signal(server, c, context):
+                yield server.signal__new_save_space_time(c.ID + 1, context = context) # Should be defined in some config file instead
             yield receive_save_signal(server, c, self.context_global)
         except Exception as e:
             print(e)
-        # should find a better way to do this
         yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
         yield self.initialize_layout()
         self.subscribed = True
@@ -602,14 +601,13 @@ class drift_tracker_global(QtWidgets.QWidget):
         self.setDisabled(False)
         server = yield self.cxn_global.get_server('SD Tracker Global')
         yield server.signal__new_fit(c.ID, context = self.context_global)
-        # should find a better way to do this
-        exe_str = "yield server." + "signal__new_save_" + client_name.replace(' ', '_') + "(c.ID + 1, context = context)"
         try:
-            exec("@inlineCallbacks\ndef receive_save_signal(server, c, context):\n\t" + exe_str + "\n")
+            @inlineCallbacks
+            def receive_save_signal(server, c, context):
+                yield server.signal__new_save_space_time(c.ID + 1, context = context) # Should be defined in some config file instead
             yield receive_save_signal(server, c, self.context_global)
         except Exception as e:
             print(e)
-        # should find a better way to do this
         if not self.subscribed:
             yield server.addListener(listener = self.on_new_fit, source = None, ID = c.ID, context = self.context_global)
             yield server.addListener(listener = self.on_new_save, source = None, ID = c.ID + 1, context = self.context_global)
@@ -1003,8 +1001,8 @@ class drift_tracker_global(QtWidgets.QWidget):
     #         curr_lines = yield server.get_current_lines(client_name)
 
     #         curr_lines = dict(curr_lines)
-    #         hlp, my_min = min(curr_lines.iteritems(), key = lambda x: x[1])
-    #         hlp, my_max = max(curr_lines.iteritems(), key = lambda x: x[1])
+    #         hlp, my_min = min(curr_lines.items(), key = lambda x: x[1])
+    #         hlp, my_max = max(curr_lines.items(), key = lambda x: x[1])
     #         self.spec.set_xlim(left = my_min.value - 1.0, right = my_max.value + 1.0)
 
     #     except Exception as e:
