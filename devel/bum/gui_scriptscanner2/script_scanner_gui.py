@@ -96,6 +96,7 @@ class script_scanner_gui(QtGui.QWidget):
             self.ParametersEditor.add_collection_node(collection)
             self.scan_widget.PreferredParameters.add_collection_node(collection)
             parameters = yield pv.get_parameter_names(collection)
+            print collection
             
             for param_name in parameters:
                 # print param_name

@@ -1,6 +1,6 @@
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
-#from connection import connection
+from connection import connection
 
 SIGNALID = 378903
 
@@ -24,7 +24,7 @@ class TextChangingButton(QtGui.QPushButton):
     def setAppearance(self, down):
         if down:
             self.setText('I')
-            self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
+            self.setPalette(QtGui.QPalette(QtCore.Qt.black))
         else:
             self.setText('O')
             self.setPalette(QtGui.QPalette(QtCore.Qt.black))
@@ -84,7 +84,7 @@ class linetriggerWidget(QtGui.QFrame):
         self.button_linetrig = TextChangingButton()
         self.button_linetrig.setCheckable(True)
         self.button_linetrig.setStyleSheet("QPushButton { background-color: gray }"
-                                           "QPushButton:On { background-color: green}")
+                                           "QPushButton:On { background-color: blue; border: none;}")
         state = yield server.line_trigger_state(context = self.context)
         self.button_linetrig.setChecked(state)
         self.button_linetrig.toggled.connect(self.setState)
@@ -156,7 +156,7 @@ if __name__=="__main__":
     a = QtGui.QApplication( [] )
     import qt4reactor
     qt4reactor.install()
-    from connection import connection
+    # from connection import connection
     from twisted.internet import reactor
     triggerWidget = linetriggerWidget(reactor)
     triggerWidget.show()

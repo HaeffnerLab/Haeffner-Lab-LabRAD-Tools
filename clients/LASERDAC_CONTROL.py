@@ -33,7 +33,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
 
         layout = QtGui.QGridLayout()
         elecBox = QtGui.QGroupBox('Laser Control')
-        elecLayout = QtGui.QVBoxLayout()
+        elecLayout = QtGui.QGridLayout()
         elecBox.setLayout(elecLayout)
         layout.addWidget(elecBox, 0, 1)
 
@@ -41,11 +41,9 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         elecList.sort()
         if bool(hc.centerElectrode):
             elecList.pop(hc.centerElectrode-1)
+        widgets_per_row = 2
         for i,e in enumerate(elecList):
-            if int(e) <= len(elecList)/2:
-                elecLayout.addWidget(self.controls[e])
-            elif int(e) > len(elecList)/2:
-                elecLayout.addWidget(self.controls[e])
+            elecLayout.addWidget(self.controls[e], i // widgets_per_row, i % widgets_per_row)
 
         spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
       

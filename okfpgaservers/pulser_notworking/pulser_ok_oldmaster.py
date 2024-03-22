@@ -33,7 +33,6 @@ class Pulser(DDS, LineTrigger, LabradServer):
     
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
-    sequenceProgrammed = Signal(611052, 'signal: sequence programmed', '(ii)')
     
     @inlineCallbacks
     def initServer(self):
@@ -115,7 +114,6 @@ class Pulser(DDS, LineTrigger, LabradServer):
         if dds is not None: yield self._programDDSSequence(dds)
         self.inCommunication.release()
         self.isProgrammed = True
-        self.sequenceProgrammed(c.ID)
         #print "Pulser programed"
     
     @setting(2, "Start Infinite", returns = '')
@@ -522,13 +520,6 @@ class Pulser(DDS, LineTrigger, LabradServer):
         countlist = yield deferToThread(self.doGetAllSecondaryCounts)
         self.inCommunication.release()
         returnValue(countlist)
-
-    # @setting(37, 'Get Secondary Readout Counts', returns = '*v')
-    # def getSecondaryReadoutCounts(self, c):
-    #     yield self.inCommunication.acquire()
-    #     countlist = yield deferToThread(self.doGetSecondaryReadoutCounts)
-    #     self.inCommunication.release()
-    #     returnValue(countlist)
             
     def doGetAllSecondaryCounts(self):
         if not self.haveSecondPMT: raise Exception ("No Second PMT")
@@ -538,14 +529,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
         countlist = map(self.infoFromBuf, split)
         countlist = map(self.convertKCperSec, countlist)
         countlist = self.appendTimes(countlist, time.time())
-        return countlist
-
-    # def doGetSecondaryReadoutCounts(self):
-    #     inFIFO = self.api.getSecondaryReadoutTotal()
-    #     reading = self.api.getSecondaryReadoutCounts(inFIFO)
-    #     split = self.split_len(reading, 4)
-    #     countlist = map(self.infoFromBuf_readout, split)
-    #     return countlist
+        return countlist        
 
 
     def wait(self, seconds, result=None):
@@ -573,9 +557,7 @@ class Pulser(DDS, LineTrigger, LabradServer):
     
     def expireContext(self, c):
         self.listeners.remove(c.ID)
-
-
+     
 if __name__ == "__main__":
-    __server__ = Pulser()
     from labrad import util
-    util.runServer(__server__)
+    util.runServer( Pulser() )

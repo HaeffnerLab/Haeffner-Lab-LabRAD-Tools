@@ -1,7 +1,8 @@
 from qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui
-
+from connection import connection
+from labrad.units import WithUnit
 
 
 '''
@@ -10,7 +11,7 @@ The DDS Control GUI lets the user control the DDS channels of the Pulser
 class DDS_CHAN(QCustomFreqPower):
     def __init__(self, chan, step_size, reactor, cxn, context, parent=None):
         super(DDS_CHAN, self).__init__('DDS: {}'.format(chan), True, parent, step_size)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.context = context
         self.chan = chan
@@ -45,7 +46,7 @@ class DDS_CHAN(QCustomFreqPower):
             self.spinFreq.valueChanged.connect(self.freqChanged) 
             self.buttonSwitch.toggled.connect(self.switchChanged)
             self.buttonSwitch.setStyleSheet("QPushButton { background-color: gray }"
-                      "QPushButton:On { background-color: green }" )
+                      "QPushButton:On { background-color: blue; border: none; }" )
 
     def setParamNoSignal(self, param, value):
         if param == 'amplitude':
@@ -103,7 +104,7 @@ class DDS_CONTROL(QtGui.QFrame):
     def __init__(self, reactor, cxn = None):
         super(DDS_CONTROL, self).__init__()
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.cxn = cxn
         self.initialized = False
@@ -241,8 +242,8 @@ if __name__=="__main__":
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    from connection import connection
-    from labrad.units import WithUnit
+    # from connection import connection
+    # from labrad.units import WithUnit
     trapdriveWidget = DDS_CONTROL(reactor)
     trapdriveWidget.show()
     reactor.run()

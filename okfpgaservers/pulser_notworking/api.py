@@ -208,15 +208,3 @@ class api(object):
         buf = "\x00"* ( number * 2 )
         self.xem.ReadFromBlockPipeOut(0xa3,2,buf)
         return buf
-
-    # def getSecondaryReadoutTotal(self):
-    #     self.xem.SetWireInValue(0x00,0xe0,0xf0)
-    #     self.xem.UpdateWireIns()
-    #     self.xem.UpdateWireOuts()
-    #     done = self.xem.GetWireOutValue(0x21)
-    #     return done
-        
-    # def getSecondaryReadoutCounts(self, number):
-    #     buf = "\x00"* ( number * 2 )
-    #     self.xem.ReadFromBlockPipeOut(0xa4,2,buf)
-    #     return buf

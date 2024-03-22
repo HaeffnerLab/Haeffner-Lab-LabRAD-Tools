@@ -1,13 +1,13 @@
 #Created on Aug 12, 2011
-#@author: Michael Ramm
+#@author: Chi Chi An
 
 """
 ### BEGIN NODE INFO
 [info]
-name = NormalPMTFlow
+name = NormalPMTFlow_2
 version = 1.32
 description = 
-instancename = NormalPMTFlow
+instancename = NormalPMTFlow_2
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -25,18 +25,18 @@ from twisted.internet.defer import Deferred, returnValue, inlineCallbacks
 from twisted.internet.task import LoopingCall
 import time
 
-SIGNALID = 331483
+SIGNALID = 331493
 
-class NormalPMTFlow( LabradServer):
+class NormalPMTFlow_2( LabradServer):
     
-    name = 'NormalPMTFlow'
-    onNewCount = Signal(SIGNALID, 'signal: new count', 'v')
-    onNewSetting = Signal(SIGNALID+1, 'signal: new setting', '(ss)')
+    name = 'NormalPMTFlow_2'
+    onNewCount = Signal(SIGNALID, 'signal: new count 2', 'v')
+    onNewSetting = Signal(SIGNALID+1, 'signal: new setting 2', '(ss)')
     
     @inlineCallbacks
     def initServer(self):
-        self.saveFolder = ['','PMT Counts']
-        self.dataSetName = 'PMT Counts'
+        self.saveFolder = ['','PMT2 Counts']
+        self.dataSetName = 'PMT2 Counts'
         self.modes = ['Normal', 'Differential']
         self.collection_period= T.Value(0.100,'s')
         self.lastDifferential = {'ON': 0, 'OFF': 0}
@@ -146,7 +146,7 @@ class NormalPMTFlow( LabradServer):
         yield self.addParameters(self.startTime)
         try:
             self.grapher = yield self.client.grapher
-            self.grapher.plot(ds, 'pmt',False)
+            self.grapher.plot(ds, 'pmt2',False)
         except AttributeError:
             self.grapher = None
             #print "no grapher"
@@ -155,7 +155,7 @@ class NormalPMTFlow( LabradServer):
     
     @inlineCallbacks
     def addParameters(self, start):
-        yield self.dv.add_parameter("Window", ["PMT Counts"])
+        yield self.dv.add_parameter("Window", ["PMT2 Counts"])
         #yield self.dv.add_parameter('plotLive',True)
         yield self.dv.add_parameter('startTime',start)
     
@@ -318,8 +318,7 @@ class NormalPMTFlow( LabradServer):
         #print "new sequence"
         yield self.pulser.add_ttl_pulse('DiffCountTrigger', T.Value(0.0,'us'), T.Value(10.0,'us'))
         yield self.pulser.add_ttl_pulse('DiffCountTrigger', self.collection_period, T.Value(10.0,'us'))
-        # yield self.pulser.add_ttl_pulse('866DP', T.Value(0.0,'us'), self.collection_period)
-        yield self.pulser.add_ttl_pulse('866_diff', T.Value(0.0,'us'), self.collection_period)
+        yield self.pulser.add_ttl_pulse('866DP', T.Value(0.0,'us'), self.collection_period)
         yield self.pulser.add_ttl_pulse('Internal866', T.Value(0.0,'us'), self.collection_period)
         yield self.pulser.extend_sequence_length(2 * self.collection_period)
         yield self.pulser.program_sequence()
@@ -358,7 +357,7 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def _record(self):
         try:
-            rawdata = yield self.pulser.get_pmt_counts()
+            rawdata = yield self.pulser.get_secondary_pmt_counts()
         except:
             #print 'Not Able to Get PMT Counts'
             rawdata = []
@@ -391,4 +390,4 @@ class NormalPMTFlow( LabradServer):
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer( NormalPMTFlow() )
+    util.runServer( NormalPMTFlow_2() )

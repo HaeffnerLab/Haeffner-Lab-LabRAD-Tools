@@ -353,7 +353,6 @@ class pulse_sequence_wrapper(object):
         data = [] 
         
         for index, x in enumerate(self.scan):
-
             print " scan param.{}".format(x)
             self.should_stop = self.sc._pause_or_stop(self.ident)
             if self.should_stop: break
@@ -378,8 +377,15 @@ class pulse_sequence_wrapper(object):
             pulser.stop_sequence()
 
             if not self.use_camera:
-                readout_mode=self.parameters_dict.StateReadout.readout_mode 
+                readout_mode = self.parameters_dict.StateReadout.readout_mode
+                # if readout_mode == "pmt":
                 rds = pulser.get_readout_counts()
+                #     print 'ATTN CHICHI'
+                #     print rds
+                # elif readout_mode == "pmt2":
+                #     rds = pulser.get_secondary_readout_counts()
+                #     print 'ATTN CHICHI'
+                #     print rds
                 ion_state = readouts.pmt_simple(rds, self.parameters_dict.StateReadout.threshold_list,readout_mode)
                 self.save_data(rds)
                 data.append(ion_state)
@@ -877,7 +883,7 @@ class pulse_sequence_wrapper(object):
         mode = self.parameters_dict.StateReadout.readout_mode  
         names = np.array(range(self.output_size())[::-1])+1
          
-        if mode == 'pmt':
+        if mode == 'pmt' or mode == 'pmt2':
             if self.output_size==1:
                 dependents = [('', 'prob dark ', '')]
             else:
@@ -933,7 +939,7 @@ class pulse_sequence_wrapper(object):
       
         # Temporary fix
         # n_temp = 2
-        if mode == 'pmt':
+        if mode == 'pmt' or mode == 'pmt2':
             return len(self.parameters_dict.StateReadout.threshold_list.split(','))
         if mode == 'pmt_states':
             return len(self.parameters_dict.StateReadout.threshold_list.split(',')) + 1

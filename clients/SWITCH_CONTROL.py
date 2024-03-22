@@ -1,6 +1,6 @@
 from PyQt4 import QtGui
 from twisted.internet.defer import inlineCallbacks, returnValue
-#from connection import connection
+from connection import connection
 
 '''
 The Switch Control GUI lets the user control the TTL channels of the Pulser
@@ -96,7 +96,7 @@ class switchWidget(QtGui.QFrame):
         #set layout
         layout = QtGui.QGridLayout()
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         #get switch names and add them to the layout, and connect their function
         #layout.addWidget(QtGui.QLabel('Switches'),0,0)
         #print channels
@@ -113,18 +113,18 @@ class switchWidget(QtGui.QFrame):
             buttonOn = QtGui.QPushButton('ON')
             buttonOn.setAutoExclusive(True)
             buttonOn.setCheckable(True)
-            buttonOn.setStyleSheet("QPushButton { background-color: gray }" 
-                                   "QPushButton:On { background-color: green}") 
+            buttonOn.setStyleSheet("QPushButton { color: white; background-color: gray; border: 3px solid gray; }" 
+                                   "QPushButton:On { color: white; background-color: blue; border: 3px solid blue;}") 
             buttonOff = QtGui.QPushButton('OFF')
             buttonOff.setCheckable(True)
-            buttonOff.setStyleSheet("QPushButton { background-color: gray }"
-                                    "QPushButton:On { background-color: green}")
+            buttonOff.setStyleSheet("QPushButton { color: white; background-color: gray; border: 3px solid gray; }"
+                                    "QPushButton:On { color: white; background-color: blue; border: 3px solid blue;}")
             buttonOff.setAutoExclusive(True)
             buttonAuto = QtGui.QPushButton('Auto')
             buttonAuto.setCheckable(True)
             buttonAuto.setAutoExclusive(True)
-            buttonAuto.setStyleSheet("QPushButton { background-color: gray }"
-                                     "QPushButton:On { background-color: green}")
+            buttonAuto.setStyleSheet("QPushButton { color: white; background-color: gray; border: 3px solid gray; }"
+                                     "QPushButton:On { color: white; background-color: blue; border: 3px solid blue;}")
             
             #if len(name) <= 7:
             #    Name = QtGui.QLabel(" ")
@@ -217,7 +217,7 @@ if __name__=="__main__":
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    from connection import connection
+    # from connection import connection
     triggerWidget = switchWidget(reactor)
     triggerWidget.show()
     reactor.run()
