@@ -3,8 +3,8 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, D
 from twisted.internet.task import LoopingCall
 from twisted.internet.threads import deferToThread
 
-from listener import Listener
-from PlotWindow import PlotWindow
+from .listener import Listener
+from .PlotWindow import PlotWindow
 
 GraphRefreshTime = 0.1
 
@@ -32,9 +32,9 @@ class Plotter(Listener):
         '''
 
         windowName = datasetObject.windowName
-        print "preparing dataset " + datasetObject.datasetName
-        print windowName
-        if windowName in self.windowDict.keys():
+        print("preparing dataset " + datasetObject.datasetName)
+        print(windowName)
+        if windowName in list(self.windowDict.keys()):
             window = self.windowDict[windowName]
             self.dwDict[datasetObject] = window
             window.new_dataset(datasetObject)
@@ -56,7 +56,7 @@ class Plotter(Listener):
         Loop through the windows and does updates
         '''
 
-        for datasetObject in self.dwDict.keys():
+        for datasetObject in list(self.dwDict.keys()):
             window = self.dwDict[datasetObject]
             if (datasetObject.data != None):
                 yield window.new_data(datasetObject)

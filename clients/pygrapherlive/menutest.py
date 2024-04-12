@@ -16,11 +16,12 @@
 #app.exec_()
 
 import re
+from PyQt5.QtWidgets import *
 import operator
 import os
 import sys
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 def main():
     app = QApplication(sys.argv)
@@ -48,12 +49,12 @@ class MyWindow(QWidget):
 
     def popup(self, pos):
         for i in self.tv.selectionModel().selection().indexes():
-            print i.row(), i.column()
+            print(i.row(), i.column())
         menu = QMenu()
         quitAction = menu.addAction("Quit")
         action = menu.exec_(self.mapToGlobal(pos))
         if action == quitAction:
-            qApp.quit()
+            QApplication.quit()
 
     def createTable(self):
         # create the view
@@ -90,7 +91,7 @@ class MyWindow(QWidget):
 
         # set row height
         nrows = len(self.tabledata)
-        for row in xrange(nrows):
+        for row in range(nrows):
             self.tv.setRowHeight(row, 18)
 
         # enable sorting
@@ -99,6 +100,9 @@ class MyWindow(QWidget):
         return self.tv
 
 class MyTableModel(QAbstractTableModel):
+    layoutAboutToBeChanged = pyqtSignal()
+    layoutChanged = pyqtSignal()
+
     def __init__(self, datain, headerdata, parent=None, *args):
         """ datain: a list of lists
             headerdata: a list of strings
@@ -128,11 +132,11 @@ class MyTableModel(QAbstractTableModel):
     def sort(self, Ncol, order):
         """Sort table by given column number.
         """
-        self.emit(SIGNAL("layoutAboutToBeChanged()"))
+        self.layoutAboutToBeChanged.emit()
         self.arraydata = sorted(self.arraydata, key=operator.itemgetter(Ncol))
         if order == Qt.DescendingOrder:
             self.arraydata.reverse()
-        self.emit(SIGNAL("layoutChanged()"))
+        self.layoutChanged.emit()
 
 if __name__ == "__main__":
     main()

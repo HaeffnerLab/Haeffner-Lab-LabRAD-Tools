@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
@@ -19,9 +19,9 @@ Drift Tracker GUI.
 Version 1.16
 '''
 
-class drift_tracker_test(QtGui.QWidget):
+class drift_tracker_test(QtWidgets.QWidget):
     def __init__(self, reactor, clipboard = None, cxn = None, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.reactor = reactor
         self.clipboard = clipboard
         self.cxn = cxn
@@ -33,7 +33,7 @@ class drift_tracker_test(QtGui.QWidget):
         updater.start(0.1)
 
     def create_layout(self):
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         plot_layout = self.create_drift_layout()
         widget_layout = self.create_widget_layout()
         layout.addLayout(plot_layout, 0, 0, 1, 2)
@@ -47,7 +47,7 @@ class drift_tracker_test(QtGui.QWidget):
         self.copy_clipboard_button.pressed.connect(self.do_copy_info_to_clipboard)
 
     def create_drift_layout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.fig = Figure()
         self.drift_canvas = FigureCanvas(self.fig)
         self.drift_canvas.setParent(self)  
@@ -65,41 +65,41 @@ class drift_tracker_test(QtGui.QWidget):
         return layout
 
     def create_widget_layout(self):
-        layout = QtGui.QGridLayout()
-        self.entry_center_button = QtGui.QPushButton("Submit Line Center")
-        self.remove_line_center_button = QtGui.QPushButton("Remove Line Center")
-        self.copy_clipboard_button = QtGui.QPushButton("Copy")
+        layout = QtWidgets.QGridLayout()
+        self.entry_center_button = QtWidgets.QPushButton("Submit Line Center")
+        self.remove_line_center_button = QtWidgets.QPushButton("Remove Line Center")
+        self.copy_clipboard_button = QtWidgets.QPushButton("Copy")
 
-        self.linecenter_entry = QtGui.QDoubleSpinBox()
+        self.linecenter_entry = QtWidgets.QDoubleSpinBox()
         self.linecenter_entry.setRange(-50000.0, 0.0)
         self.linecenter_entry.setDecimals(6)
         self.linecenter_entry.setSuffix(' kHz')
 
-        self.remove_line_center_count = QtGui.QSpinBox()
+        self.remove_line_center_count = QtWidgets.QSpinBox()
         self.remove_line_center_count.setRange(-20,20)
 
-        self.track_line_center_duration = QtGui.QSpinBox()
+        self.track_line_center_duration = QtWidgets.QSpinBox()
         self.track_line_center_duration.setKeyboardTracking(False)
         self.track_line_center_duration.setSuffix('min')
         self.track_line_center_duration.setRange(1, 1000)
 
-        self.current_line_center = QtGui.QLineEdit(readOnly = True)
+        self.current_line_center = QtWidgets.QLineEdit(readOnly = True)
         self.current_line_center.setAlignment(QtCore.Qt.AlignHCenter)
 
 
-        self.input_line_center_layout = QtGui.QHBoxLayout()
+        self.input_line_center_layout = QtWidgets.QHBoxLayout()
         self.input_line_center_layout.addWidget(self.linecenter_entry)
         self.input_line_center_layout.addWidget(self.entry_center_button)
 
-        self.remove_line_center_layout = QtGui.QHBoxLayout() 
+        self.remove_line_center_layout = QtWidgets.QHBoxLayout() 
         self.remove_line_center_layout.addWidget(self.remove_line_center_count)
         self.remove_line_center_layout.addWidget(self.remove_line_center_button)
 
-        self.keep_line_center_layout = QtGui.QHBoxLayout()
-        self.keep_line_center_layout.addWidget(QtGui.QLabel("Tracking Duration (Line Center)"))
+        self.keep_line_center_layout = QtWidgets.QHBoxLayout()
+        self.keep_line_center_layout.addWidget(QtWidgets.QLabel("Tracking Duration (Line Center)"))
         self.keep_line_center_layout.addWidget(self.track_line_center_duration)
 
-        self.show_current_center_layout = QtGui.QHBoxLayout()
+        self.show_current_center_layout = QtWidgets.QHBoxLayout()
         self.show_current_center_layout.addWidget(self.current_line_center)
         self.show_current_center_layout.addWidget(self.copy_clipboard_button)
 
@@ -294,7 +294,7 @@ class drift_tracker_test(QtGui.QWidget):
         
     def displayError(self, text):
         #runs the message box in a non-blocking method
-        message = QtGui.QMessageBox(self)
+        message = QtWidgets.QMessageBox(self)
         message.setText(text)
         message.open()
         message.show()
@@ -304,7 +304,7 @@ class drift_tracker_test(QtGui.QWidget):
         self.reactor.stop()   
     
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
+    a = QtWidgets.QApplication( [] )
     clipboard = a.clipboard()
     from common.clients import qt4reactor
     qt4reactor.install()

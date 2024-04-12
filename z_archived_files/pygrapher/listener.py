@@ -25,7 +25,7 @@ from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 from twisted.internet.threads import deferToThread
 import importlib
-from dataset import Dataset
+from .dataset import Dataset
 import pdb
 
 class Listener(QtGui.QGraphicsObject):
@@ -72,7 +72,7 @@ class Listener(QtGui.QGraphicsObject):
         '''
         
         if set(self.ignore).issubset(dir):
-            print "ignoring"
+            print("ignoring")
             return False
         elif set(self.filter).issubset(set(dir)): return True
         else: return False
@@ -82,7 +82,7 @@ class Listener(QtGui.QGraphicsObject):
         dataset = y[0]
         datasetName = y[1]
         dir = y[2]
-        print y[3]
+        print(y[3])
         if self.check_filter(dir):
             # This is a dataset we should care about
             if (y[3] == 'plotLive'):
@@ -99,7 +99,7 @@ class Listener(QtGui.QGraphicsObject):
         #from PyQt4.QtCore import pyqtRemoveInputHook
         #pyqtRemoveInputHook()
         #pdb.set_trace()
-        print datasetName
+        print(datasetName)
         context = yield self.cxn.context()
         yield self.cxn.data_vault.cd(dir, context = context)
         yield self.cxn.data_vault.open(dataset, context = context)

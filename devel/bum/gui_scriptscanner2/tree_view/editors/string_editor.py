@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, uic
+from PyQt5 import QtGui, QtWidgets, uic
 import os
 
 basepath =  os.path.dirname(__file__)
@@ -9,7 +9,7 @@ class StringEditor(base, form):
     def __init__(self, parent=None):
         super(StringEditor, self).__init__(parent)
         self.setupUi(self)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QtWidgets.QDataWidgetMapper(self)
         self.connect_layout()
         
     def connect_layout(self):

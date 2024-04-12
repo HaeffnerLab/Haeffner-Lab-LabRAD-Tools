@@ -17,6 +17,9 @@ class connection(object):
     @inlineCallbacks
     def connect(self, host = C.MANAGER_HOST, password = C.PASSWORD, tls_mode = 'off'):
         from labrad.wrappers import connectAsync
+        if password is None:
+            raise Exception("LabRAD password not set. Try setting the LABRADPASSWORD environment variable, "
+                            "for example by adding the line `export LABRADPASSWORD=\"\"` to your ~/.profile file.")
         self.cxn = yield connectAsync(host, password = password, tls_mode = tls_mode)
         yield self.setupListeners()
         returnValue(self)

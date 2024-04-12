@@ -1,17 +1,17 @@
-from PyQt4 import QtGui
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt5 import QtGui, QtWidgets
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 # this try and except avoids the error "RuntimeError: wrapped C/C++ object of type QWidget has been deleted"
 try:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 except:
-	from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
 
 import matplotlib
 from matplotlib.figure import Figure
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 import time
-from sequence_analyzer import sequence_analyzer
+from .sequence_analyzer import sequence_analyzer
 
 
 """
@@ -29,9 +29,9 @@ class config_visualizer(object):
     #ID for signaling
     ID = 99995
 
-class pulse_sequence_visualizer(QtGui.QWidget):
+class pulse_sequence_visualizer(QtWidgets.QWidget):
     def __init__(self, reactor, cxn = None, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         # Initialize
         self.reactor = reactor
         self.cxn = cxn
@@ -45,14 +45,14 @@ class pulse_sequence_visualizer(QtGui.QWidget):
     
     def create_layout(self):
         # Creates GUI layout
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         plot_layout = self.create_plot_layout()
         layout.addLayout(plot_layout)
         self.setLayout(layout)
    
     def create_plot_layout(self):
         # Creates empty matplotlib plot layout
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
@@ -85,8 +85,8 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         self.context = yield self.cxn.context()
         try:
             yield self.subscribe_pulser()
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             self.setDisabled(True)
         yield self.cxn.add_on_connect('Pulser', self.reinitialize_pulser)
         yield self.cxn.add_on_disconnect('Pulser', self.disable)
@@ -211,9 +211,9 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         self.reactor.stop()  
     
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from common.clients import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     widget = pulse_sequence_visualizer(reactor)
     widget.show()

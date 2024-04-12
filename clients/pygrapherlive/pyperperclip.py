@@ -44,6 +44,7 @@
 # 1.3 Changed ctypes.windll.user32.OpenClipboard(None) to ctypes.windll.user32.OpenClipboard(0), after some people ran into some TypeError
 
 import platform, os
+from PyQt5.QtWidgets import *
 from subprocess import call, Popen, PIPE
 
 def winGetClipboard():
@@ -162,13 +163,13 @@ elif os.name == 'posix' or platform.system() == 'Linux':
             setcb = gtkSetClipboard
         except Exception:
             try:
-                import PyQt4.QtCore
-                import PyQt4.QtGui
-                app = PyQt4.QApplication([])
-                cb = PyQt4.QtGui.QApplication.clipboard()
+                import PyQt5.QtCore
+                import PyQt5.QtGui
+                app = PyQt5.QApplication([])
+                cb = PyQt5.QtWidgets.QApplication.clipboard()
                 getcb = qtGetClipboard
                 setcb = qtSetClipboard
             except:
-                raise Exception('Pyperclip requires the gtk or PyQt4 module installed, or the xclip command.')
+                raise Exception('Pyperclip requires the gtk or PyQt5 module installed, or the xclip command.')
 copy = setcb
 paste = getcb

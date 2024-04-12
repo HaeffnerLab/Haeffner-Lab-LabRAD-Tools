@@ -121,7 +121,7 @@ class ParameterNode(Node):
         return '{0} {1}'.format(self._value, self._units)
         
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._min = value
         elif column == 4:
@@ -166,7 +166,8 @@ class BoolNode(Node):
             return self._value
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        # New comment since upgrading GUI to python 3: Apparently value is now already just a simple python object to begin with?
+        # value = value.value()
         if column == 3:
             self._value = value
 
@@ -205,7 +206,7 @@ class StringNode(Node):
             return self._value
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._value = value
 
@@ -262,7 +263,7 @@ class ScanNode(Node):
         return 'Scan {0} {3} to {1} {3} in {2} steps'.format(self._scan_start, self._scan_stop, self._scan_points, self._units)
         
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._min = value
         elif column == 4:
@@ -314,7 +315,7 @@ class SelectionSimpleNode(Node):
             return self._options
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._value = value
         elif column == 4:
@@ -341,7 +342,7 @@ class LineSelectionNode(Node):
         return '{0}   ( {1} )'.format(show, self._value)
     
     def full_parameter(self):
-        return ('line_selection', (str(self._value), list(self._dict.iteritems() ) ) )
+        return ('line_selection', (str(self._value), list(self._dict.items() ) ) )
     
     def path(self):
         return (self._collection, self.name())
@@ -359,7 +360,7 @@ class LineSelectionNode(Node):
             return self._dict
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._value = str(value)
         elif column == 4:
@@ -415,7 +416,8 @@ class SidebandElectorNode(Node):
             return self._rotation
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        # New comment since upgrading GUI to python 3: Apparently value is now already just a simple python object to begin with?
+        # value = value.value()
         if column == 3:
             self._radial1 = value
         if column == 4:
@@ -423,10 +425,10 @@ class SidebandElectorNode(Node):
         if column == 5:
             self._axial = value
         if column == 6:
-            print 'micromotion'
+            print('micromotion')
             self._micromotion = value
         if column == 7:
-            print 'rotation'
+            print('rotation')
             self._rotation = value
 
 class DurationBandwidthNode(Node):
@@ -484,7 +486,7 @@ class DurationBandwidthNode(Node):
         return '{0} {1}'.format(self._value, self._units)
         
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._min = value
         elif column == 4:
@@ -543,7 +545,7 @@ class SpectrumSensitivityNode(Node):
             return self._amplitude
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._span = value
         if column == 4:
@@ -582,6 +584,6 @@ class UndefinedParameterNode(Node):
             return self._value
 
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._value = value

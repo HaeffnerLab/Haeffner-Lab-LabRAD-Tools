@@ -1,7 +1,7 @@
-from qtui.QCustomFreqPower import QCustomFreqPower
+from .qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
-from connection import connection
-from PyQt4 import QtGui
+from .connection import connection
+from PyQt5 import QtGui, QtWidgets
 
 '''
 User control for the CW dds boards.
@@ -9,7 +9,7 @@ User control for the CW dds boards.
 class DDS_CHAN(QCustomFreqPower):
     def __init__(self, chan, step_size, reactor, cxn, context, parent=None):
         super(DDS_CHAN, self).__init__('DDS: {}'.format(chan), True, parent, step_size)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.reactor = reactor
         self.context = context
         self.chan = chan
@@ -84,7 +84,7 @@ class DDS_CHAN(QCustomFreqPower):
     
     def displayError(self, text):
         #runs the message box in a non-blocking method
-        message = QtGui.QMessageBox(self)
+        message = QtWidgets.QMessageBox(self)
         message.setText(text)
         message.open()
         message.show()
@@ -93,14 +93,14 @@ class DDS_CHAN(QCustomFreqPower):
     def closeEvent(self, x):
         self.reactor.stop()
 
-class DDS_CONTROL(QtGui.QFrame):
+class DDS_CONTROL(QtWidgets.QFrame):
     
     SIGNALID = 319182
     
     def __init__(self, reactor, cxn = None):
         super(DDS_CONTROL, self).__init__()
-        self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setFrameStyle(QtWidgets.QFrame.Panel  | QtWidgets.QFrame.Sunken)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.reactor = reactor
         self.cxn = cxn
         self.initialized = False
@@ -203,12 +203,12 @@ class DDS_CONTROL(QtGui.QFrame):
             #update any changes in the parameters
             yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
             #iterating over all setup channels
-            for widget in self.widgets.values():
+            for widget in list(self.widgets.values()):
                 if widget is not None:
                     yield widget.setupWidget(connect = False)
     
     def do_layout(self):
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         item = 0
         for chan, step_size in zip(self.display_channels, self.step_sizes):
             widget = DDS_CHAN(chan, step_size, self.reactor, self.cxn, self.context)
@@ -224,7 +224,7 @@ class DDS_CONTROL(QtGui.QFrame):
     
     def followSignal(self, x, y):
         chan, param, val = y
-        if chan in self.widgets.keys():
+        if chan in list(self.widgets.keys()):
             #this check is neeed in case signal comes in about a channel that is not displayed
             self.widgets[chan].setParamNoSignal(param, val)
 
@@ -232,9 +232,9 @@ class DDS_CONTROL(QtGui.QFrame):
         self.reactor.stop()
         
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     trapdriveWidget = DDS_CONTROL(reactor)
     trapdriveWidget.show()

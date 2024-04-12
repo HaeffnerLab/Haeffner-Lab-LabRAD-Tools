@@ -1,11 +1,11 @@
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
-from scripting_widget import scripting_widget
+from .scripting_widget import scripting_widget
 from common.clients.connection import connection
-from tree_view.Controllers import ParametersEditor
-from parameter_importer.script_explorer_widget import script_explorer_widget
+from .tree_view.Controllers import ParametersEditor
+from .parameter_importer.script_explorer_widget import script_explorer_widget
 
-class script_scanner_gui(QtGui.QWidget):
+class script_scanner_gui(QtWidgets.QWidget):
     
     SIGNALID = 319245
     
@@ -34,10 +34,10 @@ class script_scanner_gui(QtGui.QWidget):
             yield self.setupListenersScriptScanner()
             yield self.setupListenersParameterVault()
             self.connect_layouts()
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             raise
-            print 'script_scanner_gui: servers not available'
+            print('script_scanner_gui: servers not available')
             self.disable(True)
         yield self.cxn.add_on_connect('ScriptScanner',self.reinitialize_scriptscanner)
         yield self.cxn.add_on_connect('ParameterVault',self.reinitialize_parameter_vault)
@@ -53,7 +53,7 @@ class script_scanner_gui(QtGui.QWidget):
             yield self.cxn.get_server('ScriptScanner')
             self.disable(False)
         except Exception as e:
-            print e
+            print(e)
             
     @inlineCallbacks
     def reinitialize_parameter_vault(self):
@@ -64,7 +64,7 @@ class script_scanner_gui(QtGui.QWidget):
             yield self.cxn.get_server('ParameterVault')
             self.disable(False)
         except Exception as e:
-            print e
+            print(e)
             
     
     def disable(self, should_disable = True):
@@ -252,7 +252,7 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
     
     @inlineCallbacks
     def running_stop(self, ident):
@@ -263,7 +263,7 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
     
     @inlineCallbacks
     def running_pause(self, ident, should_pause):
@@ -274,7 +274,7 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
     
     @inlineCallbacks
     def scheduled_duration(self, ident, duration):
@@ -295,7 +295,7 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
         
     @inlineCallbacks
     def schedule_script(self, name, duration, priority, start_now):
@@ -308,7 +308,7 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
         
     @inlineCallbacks
     def repeat_script(self, name, repeatitions, save):
@@ -319,7 +319,7 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
             
     @inlineCallbacks
     def on_cancel_queued(self, ident):
@@ -330,7 +330,7 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
         
     @inlineCallbacks
     def run_script(self, script):
@@ -341,17 +341,17 @@ class script_scanner_gui(QtGui.QWidget):
         except self.Error as e:
             self.displayError(e.msg)
         except Exception as e:
-            print e
+            print(e)
                
     def setupWidgets(self):
         self.scripting_widget = scripting_widget(self.reactor, self)
         self.ParametersEditor = ParametersEditor(self.reactor)
 
-        topLevelLayout = QtGui.QHBoxLayout()
+        topLevelLayout = QtWidgets.QHBoxLayout()
 
-        tab = QtGui.QTabWidget()
-        control = QtGui.QWidget()
-        layout = QtGui.QHBoxLayout()
+        tab = QtWidgets.QTabWidget()
+        control = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.scripting_widget)
         layout.addWidget(self.ParametersEditor)
         control.setLayout(layout)
@@ -366,7 +366,7 @@ class script_scanner_gui(QtGui.QWidget):
     
     def displayError(self, text):
         #runs the message box in a non-blocking method
-        message = QtGui.QMessageBox(self.scripting_widget)
+        message = QtWidgets.QMessageBox(self.scripting_widget)
         message.setText(text)
         message.open()
         message.show()
@@ -376,9 +376,9 @@ class script_scanner_gui(QtGui.QWidget):
         self.reactor.stop()
 
 if __name__=="__main__":
-    a = QtGui.QApplication( ["Script Scanner"] )
-    from common.clients import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( ["Script Scanner"] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     gui = script_scanner_gui(reactor)
     gui.show()

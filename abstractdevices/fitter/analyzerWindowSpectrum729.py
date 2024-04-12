@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore
 from analyzerWindow import AnalyzerWindow
 
 class analyzerWindow729(AnalyzerWindow):

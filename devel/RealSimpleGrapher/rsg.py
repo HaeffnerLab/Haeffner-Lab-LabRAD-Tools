@@ -2,12 +2,12 @@
 The Real Simple Grapher
 '''
 
-from GraphWindow import GraphWindow
-from Dataset import Dataset
-from PyQt4 import QtGui
-a = QtGui.QApplication( [])
-import qt4reactor
-qt4reactor.install()
+from .GraphWindow import GraphWindow
+from .Dataset import Dataset
+from PyQt5 import QtGui, QtWidgets
+a = QtWidgets.QApplication( [])
+import qt5reactor
+qt5reactor.install()
 #import server libraries
 from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
@@ -40,11 +40,11 @@ class RealSimpleGrapher(LabradServer):
     @inlineCallbacks
     def initServer(self):
         self.listeners = set()
-        print 'trying to make gui'
+        print('trying to make gui')
         self.gui = GraphWindow(reactor)
-        print "got this far"
+        print("got this far")
         self.gui.setWindowTitle('Real Simple Grapher')
-        print 'done making gui'
+        print('done making gui')
         self.dv = yield self.client.data_vault
 
     def make_dataset(self, dataset_location):
@@ -60,8 +60,8 @@ class RealSimpleGrapher(LabradServer):
             self.gui.graphDict['current'].add_dataset(ds)
         ds = self.make_dataset(dataset_location)
         self.gui.graphDict[graph].add_dataset(ds)
-	#tabindex = self.gui.indexOf(self.gui.tabDict[graph])
-	#self.gui.setCurrentIndex(tabindex)
+    #tabindex = self.gui.indexOf(self.gui.tabDict[graph])
+    #self.gui.setCurrentIndex(tabindex)
         
     @setting(1, 'Plot', dataset_location = ['(*s, s)', '(*s, i)'], graph = 's', send_to_current = 'b' ,returns = '')
     def plot(self, c,  dataset_location, graph, send_to_current = True):

@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks, returnValue
 #from connection import connection
 
@@ -10,7 +10,7 @@ Version 1.0
 
 SIGNALID = 378902
 
-class switchWidget(QtGui.QFrame):
+class switchWidget(QtWidgets.QFrame):
     def __init__(self, reactor, cxn = None, parent=None):
         super(switchWidget, self).__init__(parent)
         self.initialized = False
@@ -28,16 +28,16 @@ class switchWidget(QtGui.QFrame):
             self.Error = Error
         
         self.context = yield self.cxn.context()
-        print "connect"
+        print("connect")
         try:
             displayed_channels = yield self.get_displayed_channels()
             yield self.initializeGUI(displayed_channels)
             yield self.setupListeners()
-        except Exception, e:
-            print e
-            print 'SWTICH CONTROL: Pulser not available'
+        except Exception as e:
+            print(e)
+            print('SWTICH CONTROL: Pulser not available')
             self.setDisabled(True)
-        print "connect"
+        print("connect")
         self.cxn.add_on_connect('Pulser', self.reinitialize)
         self.cxn.add_on_disconnect('Pulser', self.disable)
     
@@ -78,7 +78,7 @@ class switchWidget(QtGui.QFrame):
         server = yield self.cxn.get_server('Pulser')
         if self.initialized:
             yield server.signal__switch_toggled(SIGNALID, context = self.context)
-            for name in self.d.keys():
+            for name in list(self.d.keys()):
                 self.setStateNoSignals(name, server)
         else:
             yield self.initializeGUI()
@@ -94,33 +94,33 @@ class switchWidget(QtGui.QFrame):
         server = yield self.cxn.get_server('Pulser')
         self.d = {}
         #set layout
-        layout = QtGui.QGridLayout()
-        self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        layout = QtWidgets.QGridLayout()
+        self.setFrameStyle(QtWidgets.QFrame.Panel  | QtWidgets.QFrame.Sunken)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
         #get switch names and add them to the layout, and connect their function
         #layout.addWidget(QtGui.QLabel('Switches'),0,0)
         #print channels
         for order,name in enumerate(channels):
             #setting up physical container
-            groupBox = QtGui.QGroupBox() 
+            groupBox = QtWidgets.QGroupBox() 
             if len(name) <= 8:
                 groupBox.setTitle(name)
             else:
                 groupBox.setTitle(name[:5] + "." + name[-3:])
             groupBox.setStyleSheet("font-size: 11pt")
 
-            groupBoxLayout = QtGui.QVBoxLayout()
-            buttonOn = QtGui.QPushButton('ON')
+            groupBoxLayout = QtWidgets.QVBoxLayout()
+            buttonOn = QtWidgets.QPushButton('ON')
             buttonOn.setAutoExclusive(True)
             buttonOn.setCheckable(True)
             buttonOn.setStyleSheet("QPushButton { background-color: gray }" 
                                    "QPushButton:On { background-color: green}") 
-            buttonOff = QtGui.QPushButton('OFF')
+            buttonOff = QtWidgets.QPushButton('OFF')
             buttonOff.setCheckable(True)
             buttonOff.setStyleSheet("QPushButton { background-color: gray }"
                                     "QPushButton:On { background-color: green}")
             buttonOff.setAutoExclusive(True)
-            buttonAuto = QtGui.QPushButton('Auto')
+            buttonAuto = QtWidgets.QPushButton('Auto')
             buttonAuto.setCheckable(True)
             buttonAuto.setAutoExclusive(True)
             buttonAuto.setStyleSheet("QPushButton { background-color: gray }"
@@ -194,8 +194,9 @@ class switchWidget(QtGui.QFrame):
         yield server.signal__switch_toggled(SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = SIGNALID, context = self.context)
     
-    def followSignal(self, x, (switchName, state)):
-        if switchName not in self.d.keys(): return None
+    def followSignal(self, x, xxx_todo_changeme):
+        (switchName, state) = xxx_todo_changeme
+        if switchName not in list(self.d.keys()): return None
         if state == 'Auto':
             button = self.d[switchName]['AUTO']
         elif state == 'ManualOn':
@@ -213,11 +214,11 @@ class switchWidget(QtGui.QFrame):
         yield None
             
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
-    from connection import connection
+    from .connection import connection
     triggerWidget = switchWidget(reactor)
     triggerWidget.show()
     reactor.run()

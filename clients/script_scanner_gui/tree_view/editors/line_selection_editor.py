@@ -1,11 +1,11 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import os
 
 basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"..","..","Views", "SelectionEditor.ui")
 base, form = uic.loadUiType(path)
 
-class line_selection_delegate(QtGui.QAbstractItemDelegate):
+class line_selection_delegate(QtWidgets.QAbstractItemDelegate):
     def __init__(self, parent):
         super(line_selection_delegate, self).__init__()
         self.parent = parent
@@ -16,7 +16,7 @@ class line_selection_delegate(QtGui.QAbstractItemDelegate):
         if editor == self.parent.uiName or editor == self.parent.uiCollection:
             editor.setText(node.data(index.column()))
         if index.column() == 3:
-            for data,display in node.data(4).iteritems():
+            for data,display in node.data(4).items():
                 if self.parent.uiValue.findText(display) == -1:
                     self.parent.uiValue.addItem(display, userData = data)
             index = self.parent.uiValue.findData(node.data(index.column()))
@@ -28,13 +28,13 @@ class line_selection_delegate(QtGui.QAbstractItemDelegate):
     def setModelData(self, editor, model, index):
         if index.column() == 3:
             data = self.parent.uiValue.itemData(self.parent.uiValue.currentIndex() )
-            model.setData(index, QtCore.QVariant(data.toString()))
+            model.setData(index, QtCore.QVariant(str(data)))
 
 class line_selection_editor(base, form):
     def __init__(self, parent=None):
         super(line_selection_editor, self).__init__(parent)
         self.setupUi(self)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QtWidgets.QDataWidgetMapper(self)
         self._dataMapper.setItemDelegate(line_selection_delegate(self))
 
     def setModel(self, proxyModel):

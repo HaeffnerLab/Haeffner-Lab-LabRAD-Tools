@@ -1,8 +1,8 @@
 # new paramter editor
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class newParameterEditor(QtGui.QWidget):
+class newParameterEditor(QtWidgets.QWidget):
 
     types = [
         'parameter',
@@ -23,9 +23,9 @@ class newParameterEditor(QtGui.QWidget):
 
     def setupLayout(self):
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
-        self.select = QtGui.QComboBox()
+        self.select = QtWidgets.QComboBox()
         for t in self.types:
             self.select.addItem(t)
 

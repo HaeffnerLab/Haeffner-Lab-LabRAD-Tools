@@ -1,15 +1,15 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class SpectrumSensitivityEditor(QtGui.QWidget):
+class SpectrumSensitivityEditor(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        super(QtGui.QWidget, self).__init__(parent)
+        super(QtWidgets.QWidget, self).__init__(parent)
         self.parent = parent
         self.setupUi()
     
     def setupUi(self):
         
-        label = QtGui.QLabel('Spectrum sensitivity')
-        layout = QtGui.QHBoxLayout()
+        label = QtWidgets.QLabel('Spectrum sensitivity')
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
 

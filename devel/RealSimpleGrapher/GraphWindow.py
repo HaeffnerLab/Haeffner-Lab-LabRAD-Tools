@@ -2,13 +2,13 @@
 Window for holding Graphs
 '''
 import sys
-from PyQt4 import QtGui
-import GUIConfig
-from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
-from ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
-from GridGraphWindow import GridGraphWindow
+from PyQt5 import QtGui, QtWidgets
+from . import GUIConfig
+from .GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
+from .ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingGraph
+from .GridGraphWindow import GridGraphWindow
 
-class GraphWindow(QtGui.QTabWidget):
+class GraphWindow(QtWidgets.QTabWidget):
     def __init__(self, reactor, parent=None):
         super(GraphWindow, self).__init__(parent)
         self.reactor = reactor        
@@ -29,7 +29,7 @@ class GraphWindow(QtGui.QTabWidget):
                 if config.isScrolling:
                     g = ScrollingGraph(config, reactor)
                 else:
-                    print "config: ", config 
+                    print("config: ", config) 
                     g = Graph(config, reactor)
                 g.set_ylimits(config.ylim)
                 self.graphDict[name] = g
@@ -49,9 +49,9 @@ class GraphWindow(QtGui.QTabWidget):
         self.reactor.stop()
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
-    import qt4reactor
-    qt4reactor.install()
+    app = QtWidgets.QApplication(sys.argv)
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     main = GraphWindow(reactor)
     main.show()

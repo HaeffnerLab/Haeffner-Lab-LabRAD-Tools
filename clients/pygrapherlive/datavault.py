@@ -2,12 +2,12 @@
 DataVault browser widget
 '''
 from twisted.internet.defer import inlineCallbacks
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class DataVaultWidget(QtGui.QListWidget):
+class DataVaultWidget(QtWidgets.QListWidget):
 
     def __init__(self, parent, context):
-        QtGui.QListWidget.__init__(self)
+        QtWidgets.QListWidget.__init__(self)
         self.parent = parent
         self.context = context
 
@@ -96,7 +96,7 @@ class DataVaultWidget(QtGui.QListWidget):
                     self.parent.parent.newDataset(dataset, self.currentDirectory, manuallyLoaded, datasetName)       
                 elif (button == 2):
                     #keys = self.parent.parent.datasetDict.keys()    
-                    if self.parent.parent.datasetDict.has_key((dataset, self.currentDirectory)):
+                    if (dataset, self.currentDirectory) in self.parent.parent.datasetDict:
                         self.parent.newParameterWindow(dataset, self.currentDirectory)
                     
 

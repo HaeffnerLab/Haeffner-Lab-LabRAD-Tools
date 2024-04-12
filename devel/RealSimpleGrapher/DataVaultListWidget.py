@@ -1,10 +1,10 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 #from labrad.wrappers import connectAsync
 import socket
 
-class DataVaultList(QtGui.QWidget):
+class DataVaultList(QtWidgets.QWidget):
 
     def __init__(self, tracename, parent = None):
         super(DataVaultList, self).__init__()
@@ -20,8 +20,8 @@ class DataVaultList(QtGui.QWidget):
         self.initializeGUI()
 
     def initializeGUI(self):
-        mainLayout = QtGui.QVBoxLayout() 
-        self.dataListWidget = QtGui.QListWidget()
+        mainLayout = QtWidgets.QVBoxLayout() 
+        self.dataListWidget = QtWidgets.QListWidget()
         self.dataListWidget.setSortingEnabled(True)
         self.dataListWidget.doubleClicked.connect(self.onDoubleclick)
         mainLayout.addWidget(self.dataListWidget)        

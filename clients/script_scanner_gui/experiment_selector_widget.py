@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from numpy import linspace
 import os
 
@@ -11,9 +11,9 @@ class dialog_ui(base, form):
         super(dialog_ui, self).__init__(parent)
         self.setupUi(self)
 
-class scan_dialog(QtGui.QDialog, dialog_ui):
+class scan_dialog(QtWidgets.QDialog, dialog_ui):
     def __init__(self, selected, experiment_list, parameter_info, parent = None):
-        QtGui.QDialog.__init__(self)
+        QtWidgets.QDialog.__init__(self)
         dialog_ui.__init__(self, parent)
         self.setWindowTitle('Scan')
         self.parameter_info = {}
@@ -24,7 +24,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         
     def get_parameter(self):
         index = self.parameter.currentIndex()
-        collection, parameter =  self.parameter.itemData(index).toPyObject()
+        collection, parameter =  self.parameter.itemData(index)
         return (collection, parameter)
         
     def keyPressEvent(self, event):
@@ -58,7 +58,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         self.buttons.rejected.connect(self.reject)
     
     def on_parameter_picked(self, index):
-        collection, parameter =  self.parameter.itemData(index).toPyObject()
+        collection, parameter =  self.parameter.itemData(index)
         minim,maxim,units = self.parameter_info[(collection,parameter)]
         self.set_suffix(units)
         self.uiMin.setValue(minim)
@@ -151,7 +151,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         steps = 1 +  max(0, steps) #make sure at least 1
         return steps
 
-class repeat_dialog(QtGui.QDialog):
+class repeat_dialog(QtWidgets.QDialog):
     def __init__(self):
         super(repeat_dialog, self).__init__()
         self.setWindowTitle('Repeat')
@@ -159,16 +159,16 @@ class repeat_dialog(QtGui.QDialog):
         self.connect_layout()
     
     def setupLayout(self):
-        layout = QtGui.QHBoxLayout()
-        rep_label = QtGui.QLabel("Repetitions")
-        self.repeat = QtGui.QSpinBox()
+        layout = QtWidgets.QHBoxLayout()
+        rep_label = QtWidgets.QLabel("Repetitions")
+        self.repeat = QtWidgets.QSpinBox()
         self.repeat.setKeyboardTracking(False)
         self.repeat.setRange(1, 10000)
-        save_label = QtGui.QLabel("Save Data")
-        self.should_save = QtGui.QCheckBox()
+        save_label = QtWidgets.QLabel("Save Data")
+        self.should_save = QtWidgets.QCheckBox()
         self.should_save.setChecked(True)
-        self.okay_button = QtGui.QPushButton('Okay')
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.okay_button = QtWidgets.QPushButton('Okay')
+        self.cancel_button = QtWidgets.QPushButton("Cancel")
         layout.addWidget(rep_label)
         layout.addWidget(self.repeat)
         layout.addWidget(save_label)
@@ -181,7 +181,7 @@ class repeat_dialog(QtGui.QDialog):
         self.okay_button.pressed.connect(self.accept)
         self.cancel_button.pressed.connect(self.reject)
 
-class schedule_dialog(QtGui.QDialog):
+class schedule_dialog(QtWidgets.QDialog):
     def __init__(self):
         super(schedule_dialog, self).__init__()
         self.setWindowTitle('Schedule')
@@ -189,25 +189,25 @@ class schedule_dialog(QtGui.QDialog):
         self.connect_layout()
     
     def setupLayout(self):
-        layout = QtGui.QHBoxLayout()
-        self.duration = QtGui.QSpinBox()
+        layout = QtWidgets.QHBoxLayout()
+        self.duration = QtWidgets.QSpinBox()
         self.duration.setSuffix(' sec')
         self.duration.setKeyboardTracking(False)
         self.duration.setRange(1, 10000)
-        self.okay_button = QtGui.QPushButton('Okay')
-        self.cancel_button = QtGui.QPushButton("Cancel")
-        self.priority = QtGui.QComboBox()
+        self.okay_button = QtWidgets.QPushButton('Okay')
+        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.priority = QtWidgets.QComboBox()
         self.priority.addItems(['Normal', 'First in Queue','Pause All Others'])
-        self.start_immediately = QtGui.QCheckBox()
+        self.start_immediately = QtWidgets.QCheckBox()
         self.start_immediately.setCheckable(True)
         self.start_immediately.setChecked(True)
-        label = QtGui.QLabel("Period")
+        label = QtWidgets.QLabel("Period")
         layout.addWidget(label)
         layout.addWidget(self.duration)
-        label = QtGui.QLabel("Priority")
+        label = QtWidgets.QLabel("Priority")
         layout.addWidget(label)
         layout.addWidget(self.priority)
-        label = QtGui.QLabel("Start Immediately")
+        label = QtWidgets.QLabel("Start Immediately")
         layout.addWidget(label)
         layout.addWidget(self.start_immediately)
         layout.addWidget(self.okay_button)
@@ -218,7 +218,7 @@ class schedule_dialog(QtGui.QDialog):
         self.okay_button.pressed.connect(self.accept)
         self.cancel_button.pressed.connect(self.reject)
 
-class experiment_selector_widget(QtGui.QWidget):
+class experiment_selector_widget(QtWidgets.QWidget):
     
     on_run = QtCore.pyqtSignal(str)
     on_repeat = QtCore.pyqtSignal(str, int, bool)
@@ -238,21 +238,21 @@ class experiment_selector_widget(QtGui.QWidget):
         self.connect_layout()
         
     def setupLayout(self):
-        layout = QtGui.QGridLayout()
-        label = QtGui.QLabel("Experiment", font = self.font)
-        self.dropdown = QtGui.QComboBox()
+        layout = QtWidgets.QGridLayout()
+        label = QtWidgets.QLabel("Experiment", font = self.font)
+        self.dropdown = QtWidgets.QComboBox()
         self.dropdown.setMaxVisibleItems(30)
         self.dropdown.addItem('')#add empty item for no selection state    
         #enable sorting
-        sorting_model = QtGui.QSortFilterProxyModel(self.dropdown)
+        sorting_model = QtCore.QSortFilterProxyModel(self.dropdown)
         sorting_model.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
         sorting_model.setSourceModel(self.dropdown.model())
         self.dropdown.model().setParent(sorting_model)
         self.dropdown.setModel(sorting_model)
-        self.run_button = QtGui.QPushButton("Run")
-        self.repeat_button = QtGui.QPushButton("Repeat")
-        self.scan_button = QtGui.QPushButton("Scan")
-        self.schedule_button = QtGui.QPushButton("Schedule")
+        self.run_button = QtWidgets.QPushButton("Run")
+        self.repeat_button = QtWidgets.QPushButton("Repeat")
+        self.scan_button = QtWidgets.QPushButton("Scan")
+        self.schedule_button = QtWidgets.QPushButton("Schedule")
         layout.addWidget(label, 0, 0, 1 , 1)
         layout.addWidget(self.dropdown, 0, 1, 1, 3)
         layout.addWidget(self.run_button, 1, 0, 1, 1)
@@ -260,7 +260,7 @@ class experiment_selector_widget(QtGui.QWidget):
         layout.addWidget(self.scan_button, 1, 2, 1, 1,)
         layout.addWidget(self.schedule_button, 1, 3, 1, 1)
         self.setLayout(layout)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         self.check_button_disable(self.dropdown.currentText())
     
     def clear_all(self):
@@ -273,8 +273,8 @@ class experiment_selector_widget(QtGui.QWidget):
         self.repeat_button.pressed.connect(self.on_repeat_button)
         self.schedule_button.pressed.connect(self.on_schedule_button)
         self.scan_button.pressed.connect(self.on_scan_button)
-        self.dropdown.currentIndexChanged[QtCore.QString].connect(self.on_experiment_selected)
-        self.dropdown.currentIndexChanged[QtCore.QString].connect(self.check_button_disable)
+        self.dropdown.currentIndexChanged['QString'].connect(self.on_experiment_selected)
+        self.dropdown.currentIndexChanged['QString'].connect(self.check_button_disable)
     
     def check_button_disable(self, selection):
         if not selection:

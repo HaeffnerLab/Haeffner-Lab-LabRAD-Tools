@@ -1,16 +1,16 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 #from connection import connection
 
 SIGNALID = 378903
 
-class TextChangingButton(QtGui.QPushButton):
+class TextChangingButton(QtWidgets.QPushButton):
     """Button that changes its text to ON or OFF and colors when it's pressed""" 
     def __init__(self, parent = None):
         super(TextChangingButton, self).__init__(parent)
         self.setCheckable(True)
         self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         #connect signal for appearance changing
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())
@@ -32,7 +32,7 @@ class TextChangingButton(QtGui.QPushButton):
     def sizeHint(self):
         return QtCore.QSize(37, 26)
 
-class linetriggerWidget(QtGui.QFrame):
+class linetriggerWidget(QtWidgets.QFrame):
     def __init__(self, reactor, cxn = None, parent=None):
         super(linetriggerWidget, self).__init__(parent)
         self.initialized = False
@@ -46,15 +46,15 @@ class linetriggerWidget(QtGui.QFrame):
             self.cxn = connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
-        print self.context
+        print(self.context)
         from labrad.units import WithUnit
         self.WithUnit = WithUnit
         try:
             yield self.initializeGUI()
             yield self.setupListeners()
-        except Exception, e:
-            print e
-            print 'linetriggerWidget: Pulser not available'
+        except Exception as e:
+            print(e)
+            print('linetriggerWidget: Pulser not available')
             self.setDisabled(True)
         yield self.cxn.add_on_connect('Pulser',self.reinitialize)
         yield self.cxn.add_on_disconnect('Pulser',self.reinitialize)
@@ -76,9 +76,9 @@ class linetriggerWidget(QtGui.QFrame):
     def initializeGUI(self):
         server = yield self.cxn.get_server('Pulser')
         #set layout
-        layout = QtGui.QGridLayout()
-        self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        layout = QtWidgets.QGridLayout()
+        self.setFrameStyle(QtWidgets.QFrame.Panel  | QtWidgets.QFrame.Sunken)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         #get initial parameters and use them to create the layout
         #button
         self.button_linetrig = TextChangingButton()
@@ -89,25 +89,25 @@ class linetriggerWidget(QtGui.QFrame):
         self.button_linetrig.setChecked(state)
         self.button_linetrig.toggled.connect(self.setState)
         #duration
-        self.spinbox = QtGui.QSpinBox()
+        self.spinbox = QtWidgets.QSpinBox()
         self.spinbox.setKeyboardTracking(False)
         self.spinbox.setSuffix(' us')
         duration = yield server.line_trigger_duration(context = self.context)
         limits = yield server.get_line_trigger_limits()
         limits = [l['us'] for l in limits]
-        self.spinbox.setRange(*limits)
-        self.spinbox.setValue(duration['us'])
+        self.spinbox.setRange(int(limits[0]), int(limits[1]))
+        self.spinbox.setValue(int(duration['us']))
         self.spinbox.valueChanged.connect(self.setDuration)
         #putton for dds Reset
-        button_reset_dds = QtGui.QPushButton()
+        button_reset_dds = QtWidgets.QPushButton()
         button_reset_dds.pressed.connect(self.resetDDS)
-        label = QtGui.QLabel("Line Triggering")
+        label = QtWidgets.QLabel("Line Triggering")
         layout.addWidget(label, 0, 0)
         layout.addWidget(self.button_linetrig, 0, 1)
-        label = QtGui.QLabel("Offset Duration (broken)")
+        label = QtWidgets.QLabel("Offset Duration (broken)")
         layout.addWidget(label, 1, 0)
         layout.addWidget(self.spinbox, 1, 1)
-        label = QtGui.QLabel("Clear DDS Lock")
+        label = QtWidgets.QLabel("Clear DDS Lock")
         layout.addWidget(label, 2, 0)
         layout.addWidget(button_reset_dds, 2, 1)
         self.setLayout(layout)
@@ -127,7 +127,7 @@ class linetriggerWidget(QtGui.QFrame):
     @inlineCallbacks
     def setState(self, state):
         server = yield self.cxn.get_server('Pulser')
-        print server
+        print(server)
         yield server.line_trigger_state(state, context = self.context)
     
     @inlineCallbacks
@@ -153,9 +153,9 @@ class linetriggerWidget(QtGui.QFrame):
         yield None
             
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from connection import connection
     from twisted.internet import reactor
     triggerWidget = linetriggerWidget(reactor)

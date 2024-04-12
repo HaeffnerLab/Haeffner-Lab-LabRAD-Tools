@@ -3,9 +3,9 @@
 import pyqtgraph as pg
 import numpy as np
 import random
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 
-class Graph(QtGui.QWidget):
+class Graph(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super(Graph, self).__init__(parent)
@@ -16,7 +16,7 @@ class Graph(QtGui.QWidget):
         y = [random.random() for k in x]
         y2 = [random.random() for k in x]
         self.pw = pg.PlotWidget()
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.pw)
         self.setLayout(layout)
         #self.pw = pg.plot([],[])
@@ -29,7 +29,7 @@ class Graph(QtGui.QWidget):
         self.legend.removeItem('plot2')
 if __name__ == '__main__':
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     main = Graph()
     main.show()
     sys.exit(app.exec_())

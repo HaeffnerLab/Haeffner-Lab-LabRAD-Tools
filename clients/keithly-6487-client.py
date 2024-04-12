@@ -2,11 +2,11 @@ import time
 import numpy as np
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Keithly6487Client(QtGui.QWidget):
+class Keithly6487Client(QtWidgets.QWidget):
     def __init__(self,reactor, parent=None):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.reactor = reactor
         self.connect()
         
@@ -19,30 +19,30 @@ class Keithly6487Client(QtGui.QWidget):
         
     def setupWidget(self):
         self.setGeometry(300, 300, 250, 150)
-        self.grid = QtGui.QGridLayout()
+        self.grid = QtWidgets.QGridLayout()
         self.grid.setSpacing(5)
         
-        measureButton = QtGui.QPushButton("Measure", self)
+        measureButton = QtWidgets.QPushButton("Measure", self)
         measureButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         measureButton.clicked.connect(self.measure)
 
-        dataPointsLabel = QtGui.QLabel('Data Points: ')
+        dataPointsLabel = QtWidgets.QLabel('Data Points: ')
         
-        self.dataPointsSpinBox = QtGui.QSpinBox()
+        self.dataPointsSpinBox = QtWidgets.QSpinBox()
         self.dataPointsSpinBox.setRange(0, 10000000)
         self.dataPointsSpinBox.setValue(1)
         self.dataPointsSpinBox.setSingleStep(1)
         
-        iterationsLabel = QtGui.QLabel('Iterations: ')
+        iterationsLabel = QtWidgets.QLabel('Iterations: ')
         
-        self.iterationsSpinBox = QtGui.QSpinBox()
+        self.iterationsSpinBox = QtWidgets.QSpinBox()
         self.iterationsSpinBox.setRange(0, 10000000)
         self.iterationsSpinBox.setValue(1)
         self.iterationsSpinBox.setSingleStep(1)
 
-        intervalLabel = QtGui.QLabel('Interval (sec): ')
+        intervalLabel = QtWidgets.QLabel('Interval (sec): ')
         
-        self.intervalDoubleSpinBox = QtGui.QDoubleSpinBox()
+        self.intervalDoubleSpinBox = QtWidgets.QDoubleSpinBox()
         self.intervalDoubleSpinBox.setRange(.25, 1000)
         self.intervalDoubleSpinBox.setValue(1)
         self.intervalDoubleSpinBox.setSingleStep(1)
@@ -57,22 +57,22 @@ class Keithly6487Client(QtGui.QWidget):
         self.grid.addWidget(self.intervalDoubleSpinBox, 2, 2, QtCore.Qt.AlignCenter)
 
         self.setLayout(self.grid)
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         
         self.show()
 
     @inlineCallbacks    
     def measure(self, evt = None):
-        print 'Starting Measurement'
+        print('Starting Measurement')
         yield self.cxn.data_vault.cd(['', 'QuickMeasurements', 'Keithly 6487 Current Monitoring', str(time.strftime("%Y%b%d",time.localtime()))], True)
         yield self.cxn.data_vault.new('Current',[('Time', 'sec')],[('Current','Amp','Arb')] )
         yield self.cxn.data_vault.add_parameter('plotLive', True)
         
         for i in range(self.iterationsSpinBox.value()):
-            print 'iteration: ', i + 1
+            print('iteration: ', i + 1)
             data = yield self.server.measure_current(self.dataPointsSpinBox.value())
             Data = [data]
-            print Data
+            print(Data)
 #            Data2 = [Data[0], Data[1]]
 #            print Data2
             yield self.cxn.data_vault.add(Data)
@@ -82,9 +82,9 @@ class Keithly6487Client(QtGui.QWidget):
         self.reactor.stop()
 
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     keithly6487Client = Keithly6487Client(reactor)
     reactor.run()

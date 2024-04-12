@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from numpy import *
 # from qtui.QCustomSpinBoxION import QCustomSpinBoxION
-from qtui.QCustomSpinBox import QCustomSpinBox
+from .qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks, returnValue
 import sys
 
@@ -9,17 +9,17 @@ import sys
 try:
     from common.okfpgaservers.laserdac.DacConfiguration import hardwareConfiguration as hc
 except:
-    sys.path.append('c:\Users\lab-user\LabRAD\common\okfpgaservers\laserdac')
+    sys.path.append('c:\\Users\lab-user\LabRAD\common\okfpgaservers\laserdac')
     from DacConfiguration import hardwareConfiguration as hc
 
-from qtui.SliderSpin import SliderSpin
+from .qtui.SliderSpin import SliderSpin
 
 UpdateTime = 100 # ms
 SIGNALID = 270836
 SIGNALID2 = 270835
 
 
-class CHANNEL_CONTROL (QtGui.QWidget):
+class CHANNEL_CONTROL (QtWidgets.QWidget):
     def __init__(self, reactor, parent=None):
         super(CHANNEL_CONTROL, self).__init__(parent)
         self.reactor = reactor
@@ -27,17 +27,17 @@ class CHANNEL_CONTROL (QtGui.QWidget):
         self.connect()
      
     def makeGUI(self):
-        self.dacDict = dict(hc.elec_dict.items() + hc.sma_dict.items())
+        self.dacDict = dict(list(hc.elec_dict.items()) + list(hc.sma_dict.items()))
         
-        self.controls = {k: QCustomSpinBox(hc.channel_name_dict[k], self.dacDict[k].allowedVoltageRange) for k in self.dacDict.keys()}
+        self.controls = {k: QCustomSpinBox(hc.channel_name_dict[k], self.dacDict[k].allowedVoltageRange) for k in list(self.dacDict.keys())}
 
-        layout = QtGui.QGridLayout()
-        elecBox = QtGui.QGroupBox('Laser Control')
-        elecLayout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QGridLayout()
+        elecBox = QtWidgets.QGroupBox('Laser Control')
+        elecLayout = QtWidgets.QVBoxLayout()
         elecBox.setLayout(elecLayout)
         layout.addWidget(elecBox, 0, 1)
 
-        elecList = hc.elec_dict.keys()
+        elecList = list(hc.elec_dict.keys())
         elecList.sort()
         if bool(hc.centerElectrode):
             elecList.pop(hc.centerElectrode-1)
@@ -47,14 +47,14 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             elif int(e) > len(elecList)/2:
                 elecLayout.addWidget(self.controls[e])
 
-        spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.MinimumExpanding)
+        spacer = QtWidgets.QSpacerItem(20,40,QtWidgets.QSizePolicy.Minimum,QtWidgets.QSizePolicy.MinimumExpanding)
       
         self.inputUpdated = False                
         self.timer = QtCore.QTimer(self)        
         self.timer.timeout.connect(self.sendToServer)
         self.timer.start(UpdateTime)
         
-        for k in self.dacDict.keys():
+        for k in list(self.dacDict.keys()):
             self.controls[k].onNewValues.connect(self.inputHasUpdated(k))
 
         layout.setColumnStretch(1, 1)                   
@@ -106,7 +106,7 @@ class CHANNEL_CONTROL (QtGui.QWidget):
     
     @inlineCallbacks
     def followSignal(self, x, s):
-        print 'notified here'
+        print('notified here')
         av = yield self.dacserver.get_analog_voltages()
         for (c, v) in av:
             self.controls[c].setValueNoSignal(v)
@@ -135,14 +135,14 @@ class CHANNEL_CONTROL (QtGui.QWidget):
             yield None
 
     def setEnabled(self, value):
-        for key in self.controls.keys():
+        for key in list(self.controls.keys()):
             self.controls[key].spinLevel.setEnabled(value)
 
     def closeEvent(self, x):
         self.reactor.stop()        
 
 
-class DAC_Control(QtGui.QMainWindow):
+class DAC_Control(QtWidgets.QMainWindow):
     def __init__(self, reactor, parent=None):
         super(DAC_Control, self).__init__(parent)
         self.reactor = reactor   
@@ -156,8 +156,8 @@ class DAC_Control(QtGui.QMainWindow):
         self.setCentralWidget(channelControlTab)
     
     def buildChannelControlTab(self):
-        widget = QtGui.QWidget()
-        gridLayout = QtGui.QGridLayout()
+        widget = QtWidgets.QWidget()
+        gridLayout = QtWidgets.QGridLayout()
         gridLayout.addWidget(CHANNEL_CONTROL(self.reactor),0,0)
         widget.setLayout(gridLayout)
         return widget
@@ -166,9 +166,9 @@ class DAC_Control(QtGui.QMainWindow):
         self.reactor.stop()  
 
 if __name__ == "__main__":
-    a = QtGui.QApplication( [] )
-    import qt4reactor
-    qt4reactor.install()
+    a = QtWidgets.QApplication( [] )
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     DAC_Control = DAC_Control(reactor)
     DAC_Control.show()

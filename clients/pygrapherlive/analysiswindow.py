@@ -1,22 +1,24 @@
 '''
 Analysis Window
 '''
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 import numpy as np
 from matplotlib import pylab
 
-import getfrabiwindow
+from . import getfrabiwindow
 
-from fitgaussian import FitGaussian
-from fitline import FitLine
-from fitlorentzian import FitLorentzian
-from fitparabola import FitParabola
-from fitcosine import FitCosine
-from fitramseyfringe import FitRamseyFringe
-from fitrabiflop import FitRabiflop
+from .fitgaussian import FitGaussian
+from .fitline import FitLine
+from .fitlorentzian import FitLorentzian
+from .fitparabola import FitParabola
+from .fitcosine import FitCosine
+from .fitramseyfringe import FitRamseyFringe
+from .fitrabiflop import FitRabiflop
 
-class AnalysisWindow(QtGui.QWidget):
+QStringList = list
+
+class AnalysisWindow(QtWidgets.QWidget):
     
     def __init__(self, parent, ident):
         super(AnalysisWindow, self).__init__()
@@ -52,9 +54,9 @@ class AnalysisWindow(QtGui.QWidget):
 
         self.setWindowTitle('Fitting of '+str(self.directory))
 
-        self.combo = QtGui.QComboBox(self)
+        self.combo = QtWidgets.QComboBox(self)
         i = 0
-        for curveName in self.fitCurveDictionary.keys():
+        for curveName in list(self.fitCurveDictionary.keys()):
             self.curveComboIndexDict[curveName] = i
             self.combo.addItem(curveName)
             self.combo.itemText(1)
@@ -71,7 +73,7 @@ class AnalysisWindow(QtGui.QWidget):
             
 #        self.setGeometry(300, 300, 500, 300)
         
-        self.parameterTable = QtGui.QTableWidget()
+        self.parameterTable = QtWidgets.QTableWidget()
         self.parameterTable.setColumnCount(4)
 #        self.parameterTable.setHorizontalHeaderLabels(QtCore.QStringList(['Parameters','Manual','Fitted']))
 #        self.parameterTable.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem('Parameters'))
@@ -80,10 +82,10 @@ class AnalysisWindow(QtGui.QWidget):
         self.FitParameterBox={}
         self.FitParameterBoxChecked={}
 
-        self.mainLayout = QtGui.QVBoxLayout()
-        self.parameterLayout = QtGui.QHBoxLayout()
-        self.buttonLayout = QtGui.QHBoxLayout()
-        self.pitimesLayout = QtGui.QHBoxLayout()
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.parameterLayout = QtWidgets.QHBoxLayout()
+        self.buttonLayout = QtWidgets.QHBoxLayout()
+        self.pitimesLayout = QtWidgets.QHBoxLayout()
        
         self.setLayout(self.mainLayout)
         self.mainLayout.addLayout(self.parameterLayout)
@@ -94,20 +96,20 @@ class AnalysisWindow(QtGui.QWidget):
         self.parameterLayout.addWidget(self.parameterTable)
 #        self.grid.addWidget(self.combo, 0, 0, QtCore.Qt.AlignCenter)
         
-        self.fitButton = QtGui.QPushButton("Fit", self)
+        self.fitButton = QtWidgets.QPushButton("Fit", self)
         self.fitButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         self.fitButton.clicked.connect(self.fitCurveSignal)        
 
-        self.acceptManualButton = QtGui.QPushButton("Accept Manual", self)
+        self.acceptManualButton = QtWidgets.QPushButton("Accept Manual", self)
         self.acceptManualButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         self.acceptManualButton.clicked.connect(self.acceptManualSignal) 
         
-        self.acceptFittedButton = QtGui.QPushButton("Accept Fitted", self)
+        self.acceptFittedButton = QtWidgets.QPushButton("Accept Fitted", self)
         self.acceptFittedButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         self.acceptFittedButton.clicked.connect(self.acceptFittedSignal)   
 
         self.setRanges()
-        fitRangeLabel = QtGui.QLabel('Fit Range: ')
+        fitRangeLabel = QtWidgets.QLabel('Fit Range: ')
         self.buttonLayout.addWidget(fitRangeLabel)
         self.buttonLayout.addWidget(self.minRange)
         self.buttonLayout.addWidget(self.maxRange)
@@ -117,9 +119,9 @@ class AnalysisWindow(QtGui.QWidget):
         self.buttonLayout.addWidget(self.acceptFittedButton)
         
         self.setPiTimes()
-        self.TwoPiLabel = QtGui.QLabel('2Pi Time: (us)')
-        self.PiLabel = QtGui.QLabel('Pi Time: (us)')
-        self.PiOverTwoLabel = QtGui.QLabel('Pi/2 Time: (us)')
+        self.TwoPiLabel = QtWidgets.QLabel('2Pi Time: (us)')
+        self.PiLabel = QtWidgets.QLabel('Pi Time: (us)')
+        self.PiOverTwoLabel = QtWidgets.QLabel('Pi/2 Time: (us)')
         self.pitimesLayout.addWidget(self.TwoPiLabel)
         self.pitimesLayout.addWidget(self.TwoPiTimeBox)
         self.pitimesLayout.addWidget(self.PiLabel)
@@ -127,22 +129,22 @@ class AnalysisWindow(QtGui.QWidget):
         self.pitimesLayout.addWidget(self.PiOverTwoLabel)
         self.pitimesLayout.addWidget(self.PiOverTwoTimeBox)
         
-        self.manualTextLayout = QtGui.QHBoxLayout()
-        manualLabel = QtGui.QLabel("Manual values: ")
-        self.manualTextBox = QtGui.QLineEdit(readOnly=True)
+        self.manualTextLayout = QtWidgets.QHBoxLayout()
+        manualLabel = QtWidgets.QLabel("Manual values: ")
+        self.manualTextBox = QtWidgets.QLineEdit(readOnly=True)
         self.manualTextLayout.addWidget(manualLabel)
         self.manualTextLayout.addWidget(self.manualTextBox)
         #self.mainLayout.addLayout(self.manualTextLayout)     ##TEMPORARILY COMMENTED OUT FOR CLARITY, WE RARELY USED THESE TEXT PANELS
 
-        self.fittedTextLayout = QtGui.QHBoxLayout()
-        fittedLabel = QtGui.QLabel("Fitted values: ")
-        self.fittedTextBox = QtGui.QLineEdit(readOnly=True)
+        self.fittedTextLayout = QtWidgets.QHBoxLayout()
+        fittedLabel = QtWidgets.QLabel("Fitted values: ")
+        self.fittedTextBox = QtWidgets.QLineEdit(readOnly=True)
         self.fittedTextLayout.addWidget(fittedLabel)
         self.fittedTextLayout.addWidget(self.fittedTextBox)
         #self.mainLayout.addLayout(self.fittedTextLayout)     ##TEMPORARILY COMMENTED OUT FOR CLARITY, WE RARELY USED THESE TEXT PANELS 
 
         #that additional 'guess f_Rabi button'
-        self.guessfrabiButton = QtGui.QPushButton("Estimate f_Rabi", self)
+        self.guessfrabiButton = QtWidgets.QPushButton("Estimate f_Rabi", self)
         self.guessfrabiButton.setGeometry(QtCore.QRect(0, 0, 30, 30))
         self.guessfrabiButton.clicked.connect(self.guessfrabiClicked) 
         self.pitimesLayout.addWidget(self.guessfrabiButton)
@@ -172,9 +174,9 @@ class AnalysisWindow(QtGui.QWidget):
                 trap_frequency = yield self.parent.parent.parent.cxn.data_vault.get_parameter(str(np.array(trap_frequencies)[sb.nonzero()][0]), context = self.context)
             elif len(sb[sb.nonzero()])==0: #NO SIDEBAND SELECTED -> CARRIER
                 sideband=0
-                print 'Warning: Carrier Rabi Flops will be represented in a 1D model using the first radial trap frequency as initial fit parameter!'
+                print('Warning: Carrier Rabi Flops will be represented in a 1D model using the first radial trap frequency as initial fit parameter!')
                 trap_frequency = yield self.parent.parent.parent.cxn.data_vault.get_parameter('TrapFrequencies.radial_frequency_1', context = self.context)
-            else: print 'Higher order sidebands not supported'
+            else: print('Higher order sidebands not supported')
             #Set initial parameters
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['Sideband']=sideband
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['Trap Frequency']=trap_frequency['MHz']
@@ -182,41 +184,41 @@ class AnalysisWindow(QtGui.QWidget):
             self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][1]['Trap Frequency']=trap_frequency['MHz']
             self.onActivated()
         except:
-            print 'No Rabi Flop data found'
+            print('No Rabi Flop data found')
         
     def setPiTimes(self):
         xmin, xmax = self.parent.parent.qmc.getDataXLimits()
-        self.TwoPiTimeBox = QtGui.QDoubleSpinBox()
+        self.TwoPiTimeBox = QtWidgets.QDoubleSpinBox()
         self.TwoPiTimeBox.setDecimals(6)
         self.TwoPiTimeBox.setRange(xmin,2.0*xmax)
-        self.connect(self.TwoPiTimeBox, QtCore.SIGNAL('editingFinished()'), self.TwoPiTimeChanged)
-        self.PiTimeBox = QtGui.QDoubleSpinBox()
+        self.TwoPiTimeBox.editingFinished.connect(self.TwoPiTimeChanged)
+        self.PiTimeBox = QtWidgets.QDoubleSpinBox()
         self.PiTimeBox.setDecimals(6)
         self.PiTimeBox.setRange(xmin,xmax)
-        self.connect(self.PiTimeBox, QtCore.SIGNAL('editingFinished()'), self.PiTimeChanged)
-        self.PiOverTwoTimeBox = QtGui.QDoubleSpinBox()
+        self.PiTimeBox.editingFinished.connect(self.PiTimeChanged)
+        self.PiOverTwoTimeBox = QtWidgets.QDoubleSpinBox()
         self.PiOverTwoTimeBox.setDecimals(6)
         self.PiOverTwoTimeBox.setRange(xmin,xmax)
-        self.connect(self.PiOverTwoTimeBox, QtCore.SIGNAL('editingFinished()'), self.PiOverTwoTimeChanged)
+        self.PiOverTwoTimeBox.editingFinished.connect(self.PiOverTwoTimeChanged)
                 
     def setRanges(self):
         xmin, xmax = self.parent.parent.qmc.getDataXLimits()
-        self.minRange = QtGui.QDoubleSpinBox()
+        self.minRange = QtWidgets.QDoubleSpinBox()
         self.minRange.setDecimals(6)
         self.minRange.setRange(xmin, xmax)
         self.minRange.setValue(xmin)
         self.minRange.setSingleStep(.1)
-        self.minRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.minRange.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.minRange.setKeyboardTracking(False)
-        self.connect(self.minRange, QtCore.SIGNAL('valueChanged(double)'), self.minRangeSignal)
-        self.maxRange = QtGui.QDoubleSpinBox()
+        self.minRange.valueChanged[double].connect(self.minRangeSignal)
+        self.maxRange = QtWidgets.QDoubleSpinBox()
         self.maxRange.setDecimals(6)
         self.maxRange.setRange(xmin, xmax)
         self.maxRange.setValue(xmax)
         self.maxRange.setSingleStep(.1)
-        self.maxRange.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.maxRange.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.maxRange.setKeyboardTracking(False)  
-        self.connect(self.maxRange, QtCore.SIGNAL('valueChanged(double)'), self.maxRangeSignal)
+        self.maxRange.valueChanged[double].connect(self.maxRangeSignal)
         
     def minRangeSignal(self, evt):
         self.minRange.setRange(self.minRange.minimum(), self.maxRange.value())
@@ -228,7 +230,7 @@ class AnalysisWindow(QtGui.QWidget):
         
         # clear the existing widgets      
         self.parameterTable.clear()
-        self.parameterTable.setHorizontalHeaderLabels(QtCore.QStringList(['Fit','Parameters','Manual','Fitted']))
+        self.parameterTable.setHorizontalHeaderLabels(QStringList(['Fit','Parameters','Manual','Fitted']))
         self.parameterTable.horizontalHeader().setStretchLastSection(True)
 #        self.parameterTable.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem('Parameters'))
 #        self.horizontalHeader = self.parameterTable.horizontalHeader()
@@ -249,32 +251,32 @@ class AnalysisWindow(QtGui.QWidget):
                     self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][parameterName] = parameterValue
                     self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = parameterValue
                 except:
-                    print 'Parameters must have a default fitting value!'
+                    print('Parameters must have a default fitting value!')
                     
         i = 0
 
         for parameterName in self.fitCurveDictionary[self.curveName].parameterNames:
             # Create things
-            self.parameterLabels[parameterName] = QtGui.QLabel(parameterName)
+            self.parameterLabels[parameterName] = QtWidgets.QLabel(parameterName)
             self.parameterLabels[parameterName].setAlignment(QtCore.Qt.AlignCenter)
-            self.parameterSpinBoxes[parameterName] = QtGui.QDoubleSpinBox()
+            self.parameterSpinBoxes[parameterName] = QtWidgets.QDoubleSpinBox()
             self.parameterSpinBoxDict[self.parameterSpinBoxes[parameterName]] = parameterName
             self.parameterSpinBoxes[parameterName].setDecimals(6)
             self.parameterSpinBoxes[parameterName].setRange(-1000000000, 1000000000)
             self.parameterSpinBoxes[parameterName].setValue(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][parameterName])                
             self.parameterSpinBoxes[parameterName].setSingleStep(.1)
-            self.parameterSpinBoxes[parameterName].setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+            self.parameterSpinBoxes[parameterName].setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             self.parameterSpinBoxes[parameterName].setKeyboardTracking(False)
-            self.connect(self.parameterSpinBoxes[parameterName], QtCore.SIGNAL('valueChanged(double)'), self.drawCurvesSignal)
+            self.parameterSpinBoxes[parameterName].valueChanged[double].connect(self.drawCurvesSignal)
             
             self.parameterTable.setCellWidget(i, 1, self.parameterLabels[parameterName])
             self.parameterTable.setCellWidget(i, 2, self.parameterSpinBoxes[parameterName])
-            item = QtGui.QTableWidgetItem()
+            item = QtWidgets.QTableWidgetItem()
             item.setText(str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName]))
             item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.parameterTable.setItem(i, 3, item)
             
-            self.FitParameterBox[parameterName] = QtGui.QTableWidgetItem()
+            self.FitParameterBox[parameterName] = QtWidgets.QTableWidgetItem()
             self.FitParameterBox[parameterName].setFlags(QtCore.Qt.ItemIsUserCheckable|QtCore.Qt.ItemIsEnabled)
             if self.fitCurveDictionary[self.curveName].parameterFit[i]==True:
                 self.FitParameterBox[parameterName].setCheckState(QtCore.Qt.Checked)
@@ -283,8 +285,8 @@ class AnalysisWindow(QtGui.QWidget):
             self.parameterTable.setItem(i,0,self.FitParameterBox[parameterName])
             i += 1
         
-        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
-        self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values()) + '\']')
+        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(list(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values())) + '\']')
+        self.fittedTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(list(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1].values())) + '\']')
 #        self.connect(self.parameterTable,QtCore.SIGNAL('itemClicked(QListWidgetItem*)'),self.test)
         self.parameterTable.itemClicked.connect(self.updateParameterFit)
         if self.curveName not in ['Cosine','Ramsey Fringes','Rabi Flop']:
@@ -347,7 +349,7 @@ class AnalysisWindow(QtGui.QWidget):
                 sideband_order=self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['Sideband']
                 nmax=self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, 'Rabi Flop'][0]['nmax']
                 # call time evolution via fitRabiflop to get lamb-dicke parameter
-                import timeevolution as te
+                from . import timeevolution as te
                 from labrad import units as U
                 eta=te.time_evolution(U.WithUnit(trap_frequency,'MHz'),sideband_order,nmax).eta
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0]['Rabi Frequency']=1.0/((2.0*eta)**np.abs(sideband_order)*twopitime*10**-6)
@@ -360,13 +362,13 @@ class AnalysisWindow(QtGui.QWidget):
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0]['Frequency']=1.0/(twopitime*10**-6)
                 self.fitCurves(parameters = self.getParameter(),drawCurves = True)
                 self.onActivated()
-            elif self.curveName == 'Rabi Flop': print 'Please use Estimate f_Rabi Button to guess f_Rabi from Pi-Time'
-            else: print 'These spin boxes should be hidden if any curve other than Rabi Flop/Cosine/Ramsey Fringe is selected'
+            elif self.curveName == 'Rabi Flop': print('Please use Estimate f_Rabi Button to guess f_Rabi from Pi-Time')
+            else: print('These spin boxes should be hidden if any curve other than Rabi Flop/Cosine/Ramsey Fringe is selected')
         
     def drawCurvesSignal(self, evt):
         sender = self.sender()
         self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0][self.parameterSpinBoxDict[sender]] = sender.value()
-        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values()) + '\']')
+        self.manualTextBox.setText('\'Fit\', [\''+str(self.index)+'\', \''+ self.curveName + '\', ' + '\'' + str(list(self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][0].values())) + '\']')
         self.fitCurves(drawCurves = True)
 
     def setPiTimeBoxes(self,which):
@@ -398,7 +400,7 @@ class AnalysisWindow(QtGui.QWidget):
                 self.parent.savedAnalysisParameters[self.dataset, self.directory, self.index, self.curveName][1][parameterName] = self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName][i]
                 i += 1
             for solution in self.solutionsDictionary[self.dataset, self.directory, self.index, self.curveName]:
-                item = QtGui.QTableWidgetItem()
+                item = QtWidgets.QTableWidgetItem()
                 item.setText(str(solution))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 self.parameterTable.setItem(i, 2, item)
