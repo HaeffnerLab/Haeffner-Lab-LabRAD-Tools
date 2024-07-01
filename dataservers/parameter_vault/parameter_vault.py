@@ -237,11 +237,14 @@ class ParameterVault(LabradServer):
 
     @inlineCallbacks
     def stopServer(self):
-        try:
-            yield self.save_parameters()
-        except AttributeError:
-            #if values don't exist yet, i.e stopServer was called due to an Identification Error
-            pass
+        pass #I think the lines below were causing problems. I think we should let scriptscanner do the parameter saving.
+        # print('server stopping')
+        # try:
+        #     yield self.save_parameters()
+        # except AttributeError:
+        #     print('Error when saving parameters')
+        #     #if values don't exist yet, i.e stopServer was called due to an Identification Error
+        #     pass
 
 if __name__ == "__main__":
     from labrad import util
