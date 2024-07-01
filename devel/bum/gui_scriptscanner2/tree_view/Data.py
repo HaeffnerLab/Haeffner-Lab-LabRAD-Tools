@@ -206,7 +206,7 @@ class StringNode(Node):
             return self._value
     
     def setData(self, column, value):
-        value = value.value()
+        value = str(value)
         if column == 3:
             self._value = value
 

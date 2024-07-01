@@ -103,10 +103,11 @@ class switchWidget(QtWidgets.QFrame):
         for order,name in enumerate(channels):
             #setting up physical container
             groupBox = QtWidgets.QGroupBox() 
-            if len(name) <= 8:
-                groupBox.setTitle(name)
-            else:
-                groupBox.setTitle(name[:5] + "." + name[-3:])
+            groupBox.setTitle(name)
+            # if len(name) <= 8:
+            #     groupBox.setTitle(name)
+            # else:
+            #     groupBox.setTitle(name[:5] + "." + name[-3:])
             groupBox.setStyleSheet("font-size: 11pt")
 
             groupBoxLayout = QtWidgets.QVBoxLayout()

@@ -194,10 +194,21 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
     def set_parameter(self, index, info):
         node = index.internalPointer()
         node.set_full_info(info)
-        #refresh all columns
-        max_index= self.createIndex(index.row(), node.columns, index.internalPointer())
-        self.dataChanged.emit(index, max_index)
-        
+        self.dataChanged.emit(index, index)
+#        NOTICE: Below is original function definition. (index, max_index) changed to (index, index). This results in speed-up.
+#           If you ever feel that the GUI is out of control and it starting to lie to you about parameters, it is probably
+#           because of this.
+#
+#    def set_parameter(self, index, info):
+#        node = index.internalPointer()
+#        node.set_full_info(info)
+#        #refresh all columns
+#        max_index= self.createIndex(index.row(), node.columns, index.internalPointer())
+#        t0 = time.time()
+#        self.dataChanged.emit(index, max_index) #THIS LINE IS THE CULPRIT
+#        t1 = time.time()
+#        print('{:.3g} s to set parameter'.format(t1-t0))
+
     def clear_model(self):
         rows = self._rootNode.childCount()
         self.beginRemoveRows(QtCore.QModelIndex(), 0, rows)
