@@ -284,13 +284,10 @@ class pulse_sequence(object):
         import scipy.constants as scc
         from scipy.special.orthogonal import eval_genlaguerre as laguerre
         
-        def rabi_model(times_us, Omega_kHz, delta_kHz, f_trap_MHz, n, nbar, scale):
-            m = 40 * scc.atomic_mass * n
-
+        def rabi_model(times_us, Omega_kHz, delta_kHz, eta, nbar, scale):
             times = 1e-6 * times_us
             Omega = 1e3 * 2*np.pi * Omega_kHz
             delta = 1e3 * 2*np.pi * delta_kHz
-            w_trap = 1e6 * 2*np.pi * f_trap_MHz
 
             nmax = 1000
             ns = np.arange(nmax)
@@ -311,7 +308,7 @@ class pulse_sequence(object):
             t_2pi  = 4*(x0-step/2.0)
             return 1e3 * 1.0/(t_2pi)
 
-        model = lambda t, Omega, nbar: rabi_model(t, Omega, 0.0, trap_frequency_MHz, n_ions, nbar, 1.0)
+        model = lambda t, Omega, nbar: rabi_model(t, Omega, 0.0, eta, nbar, 1.0)
         guess_Omega = guess_omega_rabi(time, excitation)
         guess_nbar = 20.0
 
