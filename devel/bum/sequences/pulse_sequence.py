@@ -58,6 +58,20 @@ class pulse_sequence(object):
             amplitude = dds_channel.ampl_conversion(amplitude)
             phase = dds_channel.phase_conversion(phase)
         self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase, profile))
+
+    # def addDDS(self, channel, start, duration, frequency, amplitude, phase = WithUnit(0, 'deg'), freq_ramp_rate = WithUnit(0, 'MHz'), amp_ramp_rate = WithUnit(0, 'dB')):
+    #     """
+    #     add a dds pulse to the pulse sequence
+    #     """
+    #     #print "Profile: ", profile
+    #     dds_channel = dds_config.get(channel, None)
+    #     if dds_channel is not None:
+    #         #additional configuration provided
+    #         channel = dds_channel.name
+    #         frequency = dds_channel.freq_conversion(frequency)
+    #         amplitude = dds_channel.ampl_conversion(amplitude)
+    #         phase = dds_channel.phase_conversion(phase)
+    #     self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase, freq_ramp_rate, amp_ramp_rate))
     
     def addTTL(self, channel, start, duration):
         """
