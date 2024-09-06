@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<sequence name="ExampleSequence">
+  <params>
+    <!---
+	List of scannable parameters
+	in the form:
+	minimum, maximum, value_if_not_scanned, unit
+    -->
+    <par name="RabiExcitation.frequency"> -50, 50, 0, kHz</par>
+    <par name="RabiExcitation.duration"> 1, 1000, 10, us</par>
+  </params>
+
+  <show_params>
+    <!--
+	List of additional parameters to
+	also show in the control window
+	-->
+  </show_params>
+
+  <seq>
+    <!---
+	Ordered list of subsequences
+    -->
+    <s> self.seq.addSequence(exampleSequence.example) </s>
+  </seq>
+
+  <settings>
+    <window name="custom" />
+  </settings>
+</sequence>
