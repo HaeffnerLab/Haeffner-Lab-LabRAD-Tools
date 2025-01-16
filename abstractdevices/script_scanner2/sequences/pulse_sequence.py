@@ -89,7 +89,7 @@ class pulse_sequence(object):
         pulser.add_dds_pulses(self._dds_pulses)
         pulser.program_sequence()
 
-    def calc_freq(self, carrier='S-1/2D-1/2', sideband=None,order=0):
+    def calc_freq(self, carrier='S-1/2D-1/2', sideband=None, order=0):
         '''calculates the frequency of the 729 DP drive from the carriers and sidebands
         in the parameter vault
         '''
@@ -119,7 +119,7 @@ class pulse_sequence(object):
         return freq
 
     # old parameter_vault version 
-    def calc_freq_from_array(self, carrier='S-1/2D-1/2', sideband_selection=[0,0,0,0,0]):
+    def calc_freq_from_array(self, carrier, sideband_selection=[0, 0, 0, 0, 0]):
         '''given calculates the frequency of the 729 DP drive from the carriers and sidebands
         in the parameter vault
         '''
@@ -134,9 +134,6 @@ class pulse_sequence(object):
                                'S+1/2D+5/2':'c8',
                                'S-1/2D+3/2':'c9',
                                }
-#         print "230984", self.parameters.Carriers[carrier_translation[carrier]]
-#         print carrier_translation[carrier]
-        #freq=self.parameters.Carriers[carrier_translation[carrier]]
         try: 
             freq=self.parameters.Carriers[carrier_translation[carrier]]
         except:
@@ -146,7 +143,33 @@ class pulse_sequence(object):
         for order,sideband_frequency in zip(sideband_selection, sideband_frequencies):
             freq += order * sideband_frequency
         return freq
+    
+    @classmethod
+    def calc_spectrum_shift(cls, parameters_dict, line_selection, sideband_selection=[0, 0, 0, 0, 0]):
+        carrier_translation = {'S+1/2D-3/2':'c0',
+                               'S-1/2D-5/2':'c1',
+                               'S+1/2D-1/2':'c2',
+                               'S-1/2D-3/2':'c3',
+                               'S+1/2D+1/2':'c4',
+                               'S-1/2D-1/2':'c5',
+                               'S+1/2D+3/2':'c6',
+                               'S-1/2D+1/2':'c7',
+                               'S+1/2D+5/2':'c8',
+                               'S-1/2D+3/2':'c9',
+                               }
 
+        trapfreq = parameters_dict.TrapFrequencies
+        sideband_frequencies = [trapfreq.radial_frequency_1, trapfreq.radial_frequency_2, trapfreq.axial_frequency, trapfreq.rf_drive_frequency, trapfreq.rotation_frequency]
+        
+        shift = WithUnit(0.0,'MHz')
+        for order, sideband_frequency in zip(sideband_selection, sideband_frequencies):
+            shift += order * sideband_frequency
+        # If display relative frequencies, shift by sideband only (spectrum "0" will be carrier frequency)
+        # Otherwise, shift by sideband + carrier (spectrum "0" will be AO center frequency)
+        if not parameters_dict.Display.relative_frequencies:
+            shift += parameters_dict.Carriers[carrier_translation[line_selection]]
+
+        return shift
 
     def get_params(self):
         return self.parameters    
