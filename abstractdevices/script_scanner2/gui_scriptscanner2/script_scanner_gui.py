@@ -2,7 +2,6 @@ from PyQt5 import QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks
 from .scripting_widget import scripting_widget
 from .tree_view.Controllers import ParametersEditor
-#from parameter_importer.script_explorer_widget import script_explorer_widget
 from .scan_widget import scan_widget
 from .pulse_sequence_visualizer import pulse_sequence_visualizer
 
