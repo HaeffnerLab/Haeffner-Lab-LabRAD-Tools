@@ -66,6 +66,14 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_sideband_selection(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'sideband_selection_spacetime':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_sideband_selection_spacetime(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
+        elif value_type == 'sideband_selection_spacetime_2':
+            collection_node = self._collection[collection_name]
+            node = self._model.insert_sideband_selection_spacetime_2(parameter_name, info, collection_node)
+            self._parameter[collection_name, parameter_name]= node
         elif value_type == 'duration_bandwidth':
             collection_node = self._collection[collection_name]
             node = self._model.insert_duration_bandwidth(parameter_name, info, collection_node)

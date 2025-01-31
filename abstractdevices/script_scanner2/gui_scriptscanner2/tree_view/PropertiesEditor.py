@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from .Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode
-from .Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
+from .Data import SidebandElectorNode, SidebandElectorSpacetimeNode, SidebandElectorSpacetime2Node, SidebandElectorSpacetime2Node, DurationBandwidthNode, SpectrumSensitivityNode
 from .Data import UndefinedParameterNode
 from .editors.parameter_editor import ParameterEditor
 from .editors.scan_editor import ScanEditor
@@ -9,6 +9,8 @@ from .editors.string_editor import StringEditor
 from .editors.selection_editor import SelectionSimpleEditor
 from .editors.line_selection_editor import line_selection_editor
 from .editors.sideband_selection_editor import sideband_selection_editor
+from .editors.sideband_selection_spacetime_editor import sideband_selection_spacetime_editor
+from .editors.sideband_selection_spacetime_2_editor import sideband_selection_spacetime_2_editor
 from .editors.duration_bandwidth_editor import DurationBandwidthEditor
 from .editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
 from .editors.undefined_parameter_editor import UndefinedParameterEditor
@@ -32,12 +34,14 @@ class PropertiesEditor(propBase, propForm):
         self._selectionSimpleEditor = SelectionSimpleEditor(self)
         self._lineSelectionEdtior = line_selection_editor(self)
         self._sideband_selection_editor = sideband_selection_editor(self)
+        self._sideband_selection_spacetime_editor = sideband_selection_spacetime_editor(self)
+        self._sideband_selection_spacetime_2_editor = sideband_selection_spacetime_2_editor(self)
         self._DurationBandwidthEditor = DurationBandwidthEditor(self)
         self._spectrum_sensitivity_editor = spectrum_sensitivity_editor(self)
         self._undefined_parameter_editor = UndefinedParameterEditor(self)
         self._editors = [self._parametersEditor, self._scanEditor, self._stringEditor, 
                          self._boolEditor, self._selectionSimpleEditor, self._lineSelectionEdtior,
-                         self._sideband_selection_editor, self._DurationBandwidthEditor, self._spectrum_sensitivity_editor,
+                         self._sideband_selection_editor, self._sideband_selection_spacetime_editor, self._sideband_selection_spacetime_2_editor, self._DurationBandwidthEditor, self._spectrum_sensitivity_editor,
                          self._undefined_parameter_editor,
                          ]
         #add editors to layout
@@ -63,6 +67,10 @@ class PropertiesEditor(propBase, propForm):
             self.show_only_editor(self._lineSelectionEdtior, current)    
         elif isinstance(node, SidebandElectorNode):
             self.show_only_editor(self._sideband_selection_editor, current)
+        elif isinstance(node, SidebandElectorSpacetimeNode):
+            self.show_only_editor(self._sideband_selection_spacetime_editor, current)
+        elif isinstance(node, SidebandElectorSpacetime2Node):
+            self.show_only_editor(self._sideband_selection_spacetime_2_editor, current)
         elif isinstance(node, DurationBandwidthNode):
             self.show_only_editor(self._DurationBandwidthEditor, current)
         elif isinstance(node, SpectrumSensitivityNode):
