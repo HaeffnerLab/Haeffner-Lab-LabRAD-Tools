@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from .Data import ParameterNode, CollectionNode, ScanNode, BoolNode
-from .Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode, SidebandElectorSpacetimeNode, SidebandElectorSpacetime2Node
+from .Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode, SidebandElectorV2Node
 from .Data import DurationBandwidthNode, SpectrumSensitivityNode
 from .Data import UndefinedParameterNode
 
@@ -164,20 +164,11 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         index = self.index(row_count, 0, parent_index)
         return index
     
-    def insert_sideband_selection_spacetime(self, parameter_name, info, parent_index):
+    def insert_sideband_selection_v2(self, parameter_name, info, parent_index):
         collectionNode = self.getNode(parent_index)
         row_count =  self.rowCount(parent_index)
         self.beginInsertRows(parent_index, row_count, row_count)
-        childNode = SidebandElectorSpacetimeNode(parameter_name, info, collectionNode)
-        self.endInsertRows()
-        index = self.index(row_count, 0, parent_index)
-        return index
-    
-    def insert_sideband_selection_spacetime_2(self, parameter_name, info, parent_index):
-        collectionNode = self.getNode(parent_index)
-        row_count =  self.rowCount(parent_index)
-        self.beginInsertRows(parent_index, row_count, row_count)
-        childNode = SidebandElectorSpacetime2Node(parameter_name, info, collectionNode)
+        childNode = SidebandElectorV2Node(parameter_name, info, collectionNode)
         self.endInsertRows()
         index = self.index(row_count, 0, parent_index)
         return index

@@ -1,8 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from common.abstractdevices.script_scanner2.gui_scriptscanner2.sideband_config import sidebands
 import os
 
 basepath =  os.path.dirname(__file__)
-path = os.path.join(basepath,"..","..","Views", "SidebandSelectionEditor_Spacetime_2.ui")
+path = os.path.join(basepath,"..","..","Views", "SidebandSelectionV2Editor.ui")
 base, form = uic.loadUiType(path)
 
 class simple_selection_delegate(QtWidgets.QAbstractItemDelegate):
@@ -16,7 +17,7 @@ class simple_selection_delegate(QtWidgets.QAbstractItemDelegate):
         if editor == self.parent.uiName or editor == self.parent.uiCollection:
             editor.setText(node.data(index.column()))
         if index.column() == 3:
-            for item in node.data(4):
+            for item in sidebands:
                 if self.parent.uiSelectedMode.findText(item) == -1:
                     self.parent.uiSelectedMode.addItem(item)
             index = self.parent.uiSelectedMode.findText(node.data(index.column()))
@@ -29,9 +30,9 @@ class simple_selection_delegate(QtWidgets.QAbstractItemDelegate):
         if index.column() == 3:
             model.setData(index, QtCore.QVariant(self.parent.uiSelectedMode.currentText()))
 
-class sideband_selection_spacetime_2_editor(base, form):
+class sideband_selection_v2_editor(base, form):
     def __init__(self, parent=None):
-        super(sideband_selection_spacetime_2_editor, self).__init__(parent)
+        super(sideband_selection_v2_editor, self).__init__(parent)
         self.setupUi(self)
         self._dataMapper = QtWidgets.QDataWidgetMapper(self)
         self._dataMapper.setItemDelegate(simple_selection_delegate(self))
