@@ -1,0 +1,12 @@
+sidebands = ['Horizontal COM 1',
+             'Horizontal COM 2',
+             'Vertical COM',
+             'Stretch',
+             'Horizontal Rocking',
+             'Vertical Rocking',
+             'Rotation',
+             'Micromotion',
+             'Extra 1',
+             'Extra 2',
+             'Extra 3',
+             'Extra 4']

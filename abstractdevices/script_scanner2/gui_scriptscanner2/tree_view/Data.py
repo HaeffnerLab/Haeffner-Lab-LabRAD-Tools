@@ -431,103 +431,38 @@ class SidebandElectorNode(Node):
             print('rotation')
             self._rotation = value
 
-
-class SidebandElectorSpacetimeNode(Node):
+class SidebandElectorV2Node(Node):
     
-    columns = 7
+    columns = 4
     
     def __init__(self, name, info, parent=None):
-        super(SidebandElectorSpacetimeNode, self).__init__(name, parent)
+        super(SidebandElectorV2Node, self).__init__(name, parent)
         self._collection = parent.name()
         self.set_full_info(info)
         
     def set_full_info(self, info):
-        self._radial1, self._radial2, self._axial, self._micromotion, self._rotation = info
-        
+        self._selected_mode = info[0]
+        self._order = info[1]
     
     def filter_text(self):
         return self.parent().name() + self.name()
     
     def string_format(self):
-        s = ''
-        labels = ['radial 1 : ', 'radial 2 : ', 'axial : ', 'micromotion : ','rotation : ']
-        values = [self._radial1, self._radial2, self._axial, self._micromotion, self._rotation]
-        for name, sideband in zip(labels, values):
-            if sideband:
-                s += '{0} {1:+d}'.format(name, sideband)
-        return s
+        if self._order > 0:
+            sign = '+'
+        else:
+            sign = '' # don't need to add a sign if it's zero or negative
+        return '{0}: {1}{2}'.format(self._selected_mode, sign, self._order)
     
     def full_parameter(self):
-        return ('sideband_selection_spacetime', [self._radial1, self._radial2, self._axial, self._micromotion, self._rotation])
+        return ('sideband_selection_v2', (self._selected_mode, self._order))
     
     def path(self):
         return (self._collection, self.name())
     
     def data(self, column):
         if column < 1:
-            return super(SidebandElectorSpacetimeNode, self).data(column)
-        elif column == 1:
-            return self.string_format()
-        elif column == 2:
-            return self._collection
-        elif column == 3:
-            return self._radial1
-        elif column == 4:
-            return self._radial2
-        elif column == 5:
-            return self._axial
-        elif column == 6:
-            return self._micromotion
-        elif column == 7:
-            return self._rotation
-    
-    def setData(self, column, value):
-        # New comment since upgrading GUI to python 3: Apparently value is now already just a simple python object to begin with?
-        # value = value.value()
-        if column == 3:
-            self._radial1 = value
-        if column == 4:
-            self._radial2 = value
-        if column == 5:
-            self._axial = value
-        if column == 6:
-            print('micromotion')
-            self._micromotion = value
-        if column == 7:
-            print('rotation')
-            self._rotation = value
-
-
-
-class SidebandElectorSpacetime2Node(Node):
-    
-    columns = 7
-    
-    def __init__(self, name, info, parent=None):
-        super(SidebandElectorSpacetime2Node, self).__init__(name, parent)
-        self._collection = parent.name()
-        self.set_full_info(info)
-        
-    def set_full_info(self, info):
-        self._order = info[0]
-        self._selected_mode = info[1]
-        self._all_modes = info[2]
-    
-    def filter_text(self):
-        return self.parent().name() + self.name()
-    
-    def string_format(self):
-        return 'test display string'
-    
-    def full_parameter(self):
-        return ('sideband_selection_spacetime_2', (self._order, self._selected_mode, self._all_modes))
-    
-    def path(self):
-        return (self._collection, self.name())
-    
-    def data(self, column):
-        if column < 1:
-            return super(SidebandElectorSpacetime2Node, self).data(column)
+            return super(SidebandElectorV2Node, self).data(column)
         elif column == 1:
             return self.string_format()
         elif column == 2:
@@ -535,18 +470,13 @@ class SidebandElectorSpacetime2Node(Node):
         elif column == 3:
             return self._selected_mode
         elif column == 4:
-            return self._all_modes
-        elif column == 5:
             return self._order
     
     def setData(self, column, value):
-        # New comment since upgrading GUI to python 3: Apparently value is now already just a simple python object to begin with?
-        # value = value.value()
         if column == 3:
             self._selected_mode = value
-        if column == 5:
+        if column == 4:
             self._order = value
-
 
 class DurationBandwidthNode(Node):
     

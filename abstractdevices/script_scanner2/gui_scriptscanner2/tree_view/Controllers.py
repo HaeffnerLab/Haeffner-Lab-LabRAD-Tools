@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, uic
-from .Data import Node, ParameterNode, CollectionNode, ScanNode, SidebandElectorNode
+from .Data import Node
 from .FilterModel import FilterModel
 from .Models import ParametersTreeModel
 from .PropertiesEditor import PropertiesEditor
@@ -66,13 +66,9 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_sideband_selection(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
-        elif value_type == 'sideband_selection_spacetime':
+        elif value_type == 'sideband_selection_v2':
             collection_node = self._collection[collection_name]
-            node = self._model.insert_sideband_selection_spacetime(parameter_name, info, collection_node)
-            self._parameter[collection_name, parameter_name]= node
-        elif value_type == 'sideband_selection_spacetime_2':
-            collection_node = self._collection[collection_name]
-            node = self._model.insert_sideband_selection_spacetime_2(parameter_name, info, collection_node)
+            node = self._model.insert_sideband_selection_v2(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
         elif value_type == 'duration_bandwidth':
             collection_node = self._collection[collection_name]
