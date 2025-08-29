@@ -332,7 +332,7 @@ class pulse_sequence_wrapper(object):
 
         
         cxn = labrad.connect()
-        pulser = cxn.pulser
+        pulser = cxn.pulser2
 
         print "!!!!!readout mode:",self.parameters_dict.StateReadout.readout_mode
           
@@ -993,9 +993,9 @@ class pulse_sequence_wrapper(object):
         
         #t0 = time.time()
         from common.okfpgaservers.pulser.pulse_sequences.plot_sequence import SequencePlotter
-        dds = cxn.pulser.human_readable_dds()
-        ttl = cxn.pulser.human_readable_ttl()
-        channels = cxn.pulser.get_channels()
+        dds = cxn.pulser2.human_readable_dds()
+        ttl = cxn.pulser2.human_readable_ttl()
+        channels = cxn.pulser2.get_channels()
         #sp = SequencePlotter(ttl, dds.aslist, channels)
         sp = SequencePlotter(ttl, dds, channels)
         sp.makePDF()

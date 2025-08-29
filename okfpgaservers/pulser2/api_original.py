@@ -1,5 +1,4 @@
 import ok
-import array
 from hardwareConfiguration import hardwareConfiguration
 
 class api(object):
@@ -41,7 +40,7 @@ class api(object):
         
     def programBoard(self, sequence):
         sequence_data = self.padTo16(sequence)
-        self.xem.WriteToBlockPipeIn(0x80, 16, str(sequence_data))
+        self.xem.WriteToBlockPipeIn(0x80, 16, sequence_data)
   
     def startLooped(self):
         '''
@@ -140,9 +139,10 @@ class api(object):
         '''
         Get the time-tagged photon data.
         '''
-        buf = "\x00"*(number*2)
-        # buf = bytearray(number*2)
+        #buf = "\x00"*(number*2)
+        buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa0,2,buf)
+        buf = str(buf)
         return buf
     
     def getNormalTotal(self):
@@ -159,9 +159,10 @@ class api(object):
         '''
         Get the normal PMT counts from the FIFO.
         '''
-        buf = "\x00"* ( number * 2 )
-        # buf = bytearray(number * 2)
+        #buf = "\x00"* ( number * 2 )
+        buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa1,2,buf)
+        buf = str(buf)
         return buf
     
     def getReadoutTotal(self):
@@ -178,9 +179,10 @@ class api(object):
         '''
         Get the readout count data.
         '''
-        buf = "\x00"* ( number * 2 )
-        # buf = bytearray(number*2)
+        #buf = "\x00"* ( number * 2 )
+        buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa2,2,buf)
+        buf = str(buf)
         return buf
     
     def howManySequencesDone(self):
@@ -249,7 +251,7 @@ class api(object):
 #             print "prog dds",i,"=", prog[i]
         ### pad to a multiple of 16 bytes
         prog_padded = self.padTo16(prog)
-        self.xem.WriteToBlockPipeIn(0x81, 16, str(prog_padded))  # very important !!! second argument need to be 16. Don't change this.
+        self.xem.WriteToBlockPipeIn(0x81, 16, prog_padded)  # very important !!! second argument need to be 16. Don't change this.
         #print "program DDS"
     
     def initializeDDS(self):

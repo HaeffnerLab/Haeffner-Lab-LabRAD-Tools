@@ -38,8 +38,8 @@ class switchWidget(QtGui.QFrame):
             print 'SWTICH CONTROL: Pulser not available'
             self.setDisabled(True)
         print "connect"
-        self.cxn.add_on_connect('Pulser', self.reinitialize)
-        self.cxn.add_on_disconnect('Pulser', self.disable)
+        self.cxn.add_on_connect('Pulser2', self.reinitialize)
+        self.cxn.add_on_disconnect('Pulser2', self.disable)
     
     @inlineCallbacks
     def get_displayed_channels(self):
@@ -48,7 +48,7 @@ class switchWidget(QtGui.QFrame):
         listed in the registry. If there is no listing, will display all channels.
         '''
 
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         all_channels = yield server.get_channels(context = self.context)
         all_names = [el[0] for el in all_channels]
         channels_to_display = yield self.registry_load_displayed(all_names)
@@ -75,7 +75,7 @@ class switchWidget(QtGui.QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         if self.initialized:
             yield server.signal__switch_toggled(SIGNALID, context = self.context)
             for name in self.d.keys():
@@ -91,7 +91,7 @@ class switchWidget(QtGui.QFrame):
         
         @var channels: a list of channels to be displayed.
         '''
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         self.d = {}
         #set layout
         layout = QtGui.QGridLayout()
@@ -190,7 +190,7 @@ class switchWidget(QtGui.QFrame):
     
     @inlineCallbacks
     def setupListeners(self):
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         yield server.signal__switch_toggled(SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = SIGNALID, context = self.context)
     

@@ -63,7 +63,8 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def followServerConnect(self, cntx, serverName):
         serverName = serverName[1]
-        if serverName == 'Pulser':
+        if serverName == 'Pulser2':
+            print 'follow Pulser2'
             yield self.connect_pulser()
         elif serverName == 'Data Vault':
             yield self.connect_data_vault()
@@ -71,7 +72,8 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def followServerDisconnect(self, cntx, serverName):
         serverName = serverName[1]
-        if serverName == 'Pulser':
+        if serverName == 'Pulser2':
+            print 'follow pulser2'
             yield self.disconnect_pulser()
         elif serverName == 'Data Vault':
             yield self.disconnect_data_vault()  
@@ -105,16 +107,16 @@ class NormalPMTFlow( LabradServer):
     @inlineCallbacks
     def connect_pulser(self):
         try:
-            self.pulser = yield self.client.pulser
+            self.pulser = yield self.client.pulser2
             self.collectTimeRange = yield self.pulser.get_collection_time()
             if self.recordingInterrupted:
                 yield self.dorecordData()
                 self.onNewSetting(('state', 'on'))
                 self.recordingInterrupted = False
-            #print 'Connected: Pulser'
+            print 'Connected: Pulser'
         except AttributeError:
             self.pulser = None
-            #print 'Not Connected: Pulser'
+            print 'Not Connected: Pulser'
     
     @inlineCallbacks
     def disconnect_pulser(self):

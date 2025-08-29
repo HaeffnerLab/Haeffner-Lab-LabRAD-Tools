@@ -28,7 +28,7 @@ class DDS_CHAN(QCustomFreqPower):
     @inlineCallbacks
     def setupWidget(self, connect = True):
         #get ranges
-        self.server = yield self.cxn.get_server('Pulser')
+        self.server = yield self.cxn.get_server('Pulser2')
         MinPower,MaxPower = yield self.server.get_dds_amplitude_range(self.chan, context = self.context)
         MinFreq,MaxFreq = yield self.server.get_dds_frequency_range(self.chan, context = self.context)
         self.setPowerRange((MinPower,MaxPower))
@@ -124,12 +124,12 @@ class DDS_CONTROL(QtGui.QFrame):
             print e
             print 'DDS CONTROL: Pulser not available'
             self.setDisabled(True)
-        self.cxn.add_on_connect('Pulser', self.reinitialize)
-        self.cxn.add_on_disconnect('Pulser', self.disable)
+        self.cxn.add_on_connect('Pulser2', self.reinitialize)
+        self.cxn.add_on_disconnect('Pulser2', self.disable)
      
     @inlineCallbacks
     def initialize(self):
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
         self.display_channels, self.step_sizes, self.widgets_per_row = yield self.get_displayed_channels()
@@ -143,7 +143,7 @@ class DDS_CONTROL(QtGui.QFrame):
         get a list of all available channels from the pulser. only show the ones
         listed in the registry. If there is no listing, will display all channels.
         '''
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         
         all_channels = yield server.get_dds_channels(context = self.context)
         
@@ -195,7 +195,7 @@ class DDS_CONTROL(QtGui.QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         if not self.initialized:
             yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
             yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)

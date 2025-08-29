@@ -44,12 +44,12 @@ def measure_drifttracker(cxn, d):
     d['drift_tracker_current_center'] = server.get_current_center()    
 
 def measure_linetrigger(cxn, d):
-    server = cxn.pulser
+    server = cxn.pulser2
     d['line_trigger_state'] = server.line_trigger_state()
     d['line_trigger_duration'] = server.line_trigger_duration()        
 
 def measure_dds_gui_values(cxn, d):
-    server = cxn.pulser
+    server = cxn.pulser2
     for k in server.get_dds_channels():        
         d['gui_dds_freq_' + k] = server.frequency(k)
         d['gui_dds_ampl_' + k] = server.amplitude(k)

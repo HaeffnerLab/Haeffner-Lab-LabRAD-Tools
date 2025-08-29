@@ -88,13 +88,13 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         except Exception, e:
             print e
             self.setDisabled(True)
-        yield self.cxn.add_on_connect('Pulser', self.reinitialize_pulser)
-        yield self.cxn.add_on_disconnect('Pulser', self.disable)
+        yield self.cxn.add_on_connect('Pulser2', self.reinitialize_pulser)
+        yield self.cxn.add_on_disconnect('Pulser2', self.disable)
 
     @inlineCallbacks
     # Asynchronously subscribe to the pulser server, listing the below-defined function "on_new_sequence" as the function to execute when a signal is received
     def subscribe_pulser(self):
-        pulser = yield self.cxn.get_server('Pulser')
+        pulser = yield self.cxn.get_server('Pulser2')
         yield pulser.signal__sequence_programmed(config_visualizer.ID, context = self.context)
         yield pulser.addListener(listener = self.on_new_sequence, source = None, ID = config_visualizer.ID, context = self.context)
         self.subscribed = True
@@ -103,7 +103,7 @@ class pulse_sequence_visualizer(QtGui.QWidget):
     # Reinitializes subsciption to pulser if necessary
     def reinitialize_pulser(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server('Pulser2')
         yield server.signal__sequence_programmed(config_visualizer.ID, context = self.context)
         if not self.subscribed:
             yield server.addListener(listener = self.on_new_sequence, source = None, ID = config_visualizer.ID, context = self.context)
@@ -122,7 +122,7 @@ class pulse_sequence_visualizer(QtGui.QWidget):
         signal_time = time.localtime()
         writer_context = signal
         # Asynchronously request pulse sequence information from the pulser
-        pulser = yield self.cxn.get_server('Pulser')
+        pulser = yield self.cxn.get_server('Pulser2')
         dds = yield pulser.human_readable_dds(context=writer_context)
         ttl = yield pulser.human_readable_ttl(context=writer_context)
         channels = yield pulser.get_channels(context=writer_context)
