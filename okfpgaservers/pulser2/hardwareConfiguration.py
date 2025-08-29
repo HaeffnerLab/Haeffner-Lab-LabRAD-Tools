@@ -27,9 +27,9 @@ class ddsConfiguration(object):
         self.boardfreqrange = args.get('boardfreqrange', (0.0, 2000.0))
         self.boardramprange = args.get('boardramprange', (0.000113687, 7.4505806))
         self.board_amp_ramp_range = args.get('board_amp_ramp_range', (0.00174623, 22.8896))
-        self.boardamplrange = args.get('boardamplrange', (-63.0, -3.0)) # NYU: (-48.0, 6.0), RIKEN: (-37.0, 17.0)
+        self.boardamplrange = args.get('boardamplrange', (-48.0, 12.0)) # NYU: (-48.0, 6.0), RIKEN: (-37.0, 17.0)
         self.boardphaserange = args.get('boardphaserange', (0.0, 360.0))
-        self.off_parameters = args.get('off_parameters', (0.0, -63.0)) # NYU: (0.0 -48.0), RIKEN: (0.0, -37.0)
+        self.off_parameters = args.get('off_parameters', (0.0, -48.0)) # NYU: (0.0 -48.0), RIKEN: (0.0, -37.0)
         self.phase_coherent_model = args.get('phase_coherent_model', True)        
         self.remote = args.get('remote', False)
         self.name = None #will get assigned automatically
@@ -47,7 +47,7 @@ class hardwareConfiguration(object):
     timeResolvedResolution = 10.0e-9
     maxSwitches = 1022
     resetstepDuration = 3 #duration of advanceDDS and resetDDS TTL pulses in units of timesteps
-    collectionTimeRange = (0.010, 5.0) #range for normal pmt counting
+    collectionTimeRange = (0.001, 5.0) #range for normal pmt counting
     sequenceTimeRange = (0.0, 85.0) #range for duration of pulse sequence    
     isProgrammed = False
     sequenceType = None #none for not programmed, can be 'one' or 'infinite'
@@ -100,14 +100,14 @@ class hardwareConfiguration(object):
                 }
     #address, allowedfreqrange, allowedamplrange, frequency, amplitude, **args):
     ddsDict =   {
-                 '729DP2':ddsConfiguration(0, (50.0,300.0), (-63.0,-3.0), 220.0, -63.0),
-                 '729DP2_SPTT1':ddsConfiguration(6, (50.0,300.0), (-63.0,-3.0), 80.0, -63.0),
-                 '729DP2_SPTT2':ddsConfiguration(2, (50.0,300.0), (-63.0,-3.0), 80.0, -63.0),
-                 '397DP':ddsConfiguration(1, (50.0,300.0), (-63.0,-3.0), 200.0, -63.0),
-                 '866DP':ddsConfiguration(3, (50.0,110.0), (-63.0,-3.0), 80.0, -63.0),
-                 '854DP':ddsConfiguration(5, (50.0,110.0), (-63.0,-3.0), 80.0, -63.0),
-                 '729DP1':ddsConfiguration(4, (50.0,300.0), (-63.0,-3.0), 220.0, -63.0),
-                 '729DP2_SPST':ddsConfiguration(7, (50.0,300.0), (-63.0,-3.0), 80.0, -63.0),
+                 '729DP2':ddsConfiguration(0, (50.0,300.0), (-48.0,-5.0), 220.0, -48.0),
+                 '729DP2_SPTT1':ddsConfiguration(6, (50.0,300.0), (-48.0,-5.0), 80.0, -48.0),
+                 '729DP2_SPTT2':ddsConfiguration(2, (50.0,300.0), (-48.0,-5.0), 80.0, -48.0),
+                 '397DP':ddsConfiguration(1, (50.0,300.0), (-48.0,-5.0), 200.0, -48.0),
+                 '866DP':ddsConfiguration(3, (50.0,110.0), (-48.0,-5.0), 80.0, -48.0),
+                 '854DP':ddsConfiguration(5, (50.0,110.0), (-48.0,-5.0), 80.0, -48.0),
+                 '729DP1':ddsConfiguration(4, (50.0,300.0), (-48.0,-5.0), 220.0, -48.0),
+                 '729DP2_SPST':ddsConfiguration(7, (50.0,300.0), (-48.0,-5.0), 80.0, -48.0),
 
                  # 'DDS_0':ddsConfiguration(    0,  (0.1,300.0),   (-63.0,-3.0),  40.0,   -63.0),
                  # 'DDS_1':ddsConfiguration(    1,  (0.1,300.0),   (-63.0,-3.0),  40.0,   -63.0),
