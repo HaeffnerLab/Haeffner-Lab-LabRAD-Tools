@@ -9,10 +9,11 @@ from labrad.units import WithUnit
 The DDS Control GUI lets the user control the DDS channels of the Pulser
 '''
 class DDS_CHAN(QCustomFreqPower):
-    def __init__(self, chan, step_size, reactor, cxn, context, parent=None):
+    def __init__(self, chan, step_size, reactor, pulser_name, cxn, context, parent=None):
         super(DDS_CHAN, self).__init__('DDS: {}'.format(chan), True, parent, step_size)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
+        self.pulser_name = pulser_name
         self.context = context
         self.chan = chan
         self.cxn = cxn
@@ -28,7 +29,7 @@ class DDS_CHAN(QCustomFreqPower):
     @inlineCallbacks
     def setupWidget(self, connect = True):
         #get ranges
-        self.server = yield self.cxn.get_server('Pulser2')
+        self.server = yield self.cxn.get_server(self.pulser_name)
         MinPower,MaxPower = yield self.server.get_dds_amplitude_range(self.chan, context = self.context)
         MinFreq,MaxFreq = yield self.server.get_dds_frequency_range(self.chan, context = self.context)
         self.setPowerRange((MinPower,MaxPower))
@@ -101,11 +102,12 @@ class DDS_CONTROL(QtGui.QFrame):
     
     SIGNALID = 319182
     
-    def __init__(self, reactor, cxn = None):
+    def __init__(self, reactor, pulser_name, cxn = None):
         super(DDS_CONTROL, self).__init__()
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
+        self.pulser_name = pulser_name
         self.cxn = cxn
         self.initialized = False
         self.setupDDS()
@@ -124,12 +126,12 @@ class DDS_CONTROL(QtGui.QFrame):
             print e
             print 'DDS CONTROL: Pulser not available'
             self.setDisabled(True)
-        self.cxn.add_on_connect('Pulser2', self.reinitialize)
-        self.cxn.add_on_disconnect('Pulser2', self.disable)
+        self.cxn.add_on_connect(self.pulser_name, self.reinitialize)
+        self.cxn.add_on_disconnect(self.pulser_name, self.disable)
      
     @inlineCallbacks
     def initialize(self):
-        server = yield self.cxn.get_server('Pulser2')
+        server = yield self.cxn.get_server(self.pulser_name)
         yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
         yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
         self.display_channels, self.step_sizes, self.widgets_per_row = yield self.get_displayed_channels()
@@ -143,7 +145,7 @@ class DDS_CONTROL(QtGui.QFrame):
         get a list of all available channels from the pulser. only show the ones
         listed in the registry. If there is no listing, will display all channels.
         '''
-        server = yield self.cxn.get_server('Pulser2')
+        server = yield self.cxn.get_server(self.pulser_name)
         
         all_channels = yield server.get_dds_channels(context = self.context)
         
@@ -195,7 +197,7 @@ class DDS_CONTROL(QtGui.QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('Pulser2')
+        server = yield self.cxn.get_server(self.pulser_name)
         if not self.initialized:
             yield server.signal__new_dds_parameter(self.SIGNALID, context = self.context)
             yield server.addListener(listener = self.followSignal, source = None, ID = self.SIGNALID, context = self.context)
@@ -214,7 +216,7 @@ class DDS_CONTROL(QtGui.QFrame):
         item = 0
         for chan, step_size in zip(self.display_channels, self.step_sizes):
             #print step_size
-            widget = DDS_CHAN(chan, step_size, self.reactor, self.cxn, self.context)
+            widget = DDS_CHAN(chan, step_size, self.reactor, self.pulser_name, self.cxn, self.context)
             self.widgets[chan] = widget
             layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)
             item += 1
@@ -244,6 +246,6 @@ if __name__=="__main__":
     from twisted.internet import reactor
     # from connection import connection
     # from labrad.units import WithUnit
-    trapdriveWidget = DDS_CONTROL(reactor)
+    trapdriveWidget = DDS_CONTROL(reactor, 'Pulser2')
     trapdriveWidget.show()
     reactor.run()
