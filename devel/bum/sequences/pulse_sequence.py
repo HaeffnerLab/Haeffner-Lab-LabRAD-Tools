@@ -45,7 +45,7 @@ class pulse_sequence(object):
                 raise Exception('{0} {1} value not provided for the {2} Pulse Sequence'.format(collection, parameter_name, self.__class__.__name__))
         return new_dict
     
-    def addDDS(self, channel, start, duration, frequency, amplitude, phase = WithUnit(0, 'deg'), profile = 0):
+    def addDDS(self, channel, start, duration, frequency, amplitude, phase = WithUnit(0, 'deg'), profile = 0, freq_ramp_rate=WithUnit(0, 'MHz'), amp_ramp_rate=WithUnit(0, 'dB')):
         """
         add a dds pulse to the pulse sequence
         """
@@ -57,7 +57,8 @@ class pulse_sequence(object):
             frequency = dds_channel.freq_conversion(frequency)
             amplitude = dds_channel.ampl_conversion(amplitude)
             phase = dds_channel.phase_conversion(phase)
-        self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase, profile))
+        # self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase, profile)) #for the old pulser
+        self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase, freq_ramp_rate, amp_ramp_rate)) # for the new pulser
 
     # def addDDS(self, channel, start, duration, frequency, amplitude, phase = WithUnit(0, 'deg'), freq_ramp_rate = WithUnit(0, 'MHz'), amp_ramp_rate = WithUnit(0, 'dB')):
     #     """
