@@ -5,7 +5,8 @@ class multiplexer_control_config(object):
     {channel_name: (hint, display_location)), }
     '''
     info = {'866': ('346.00006', (0,1)),
-            '422': ('354.53918', (0,0)),
+            #'422': ('354.53918', (2,0)),
+            '393': ('761.90455', (0,0)),
             '729 inject': ('411.04250', (1,0)),
             '729 supervisor': ('411.04250', (2,1)),
             #'729 supervisor': ('755.22262', (2,0)),
