@@ -125,7 +125,14 @@ class drift_tracker_global(QtGui.QWidget):
     def create_widget_layout(self):
         layout = QtGui.QGridLayout()
         self.frequency_table = saved_frequencies_table(self.reactor, suffix = ' MHz', sig_figs = 4)
-        self.entry_table = table_dropdowns_with_entry(self.reactor, limits = c.frequency_limit, suffix = ' MHz', sig_figs = 4, favorites = self.favorites, initial_selection = self.initial_selection, initial_values = self.initial_values)
+        self.entry_table = table_dropdowns_with_entry(self.reactor, 
+            limits = c.frequency_limit, 
+            suffix = ' MHz', 
+            sig_figs = 4, 
+            favorites = self.favorites, 
+            initial_selection = self.initial_selection, 
+            initial_values = self.initial_values,
+            )
         
         self.last_B = 0.0
         self.Bfield_entry = QtGui.QDoubleSpinBox()
